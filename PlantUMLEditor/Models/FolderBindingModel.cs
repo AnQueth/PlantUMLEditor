@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
 using System.IO;
-using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace PlantUMLEditor.Models
 {
-   public  class FolderBindingModel : BindingBase
+    public class FolderBindingModel : BindingBase
     {
         private string _name;
 
@@ -18,13 +13,13 @@ namespace PlantUMLEditor.Models
             Name = Path.GetDirectoryName(path);
             IsFile = isFile;
             Children = new ObservableCollection<FolderBindingModel>();
-           
         }
+
         public bool IsSelected { get; set; }
-       
+
         public string FullPath
         {
-            get;set;
+            get; set;
         }
 
         public string Name
@@ -36,22 +31,17 @@ namespace PlantUMLEditor.Models
             set
             {
                 SetValue(ref _name, value);
-
-
             }
         }
 
-  
         public bool IsFile
         {
-            get;set;
+            get; set;
         }
 
         public ObservableCollection<FolderBindingModel> Children
         {
             get;
         }
-    
-
     }
 }

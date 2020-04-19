@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PlantUMLEditor.Models
+﻿namespace PlantUMLEditor.Models
 {
-   public interface IOpenDirectoryService
+    public interface IOpenDirectoryService
     {
         string GetDirectory();
 

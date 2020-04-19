@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace UMLModels
 {
     public class UMLMethod : UMLSignature
     {
-
         public UMLMethod()
         {
-
         }
 
         public UMLMethod(string name, UMLDataType type, params UMLParameter[] parameters)
@@ -19,13 +14,11 @@ namespace UMLModels
             ReturnType = type;
             Parameters = new List<UMLParameter>();
             Parameters.AddRange(parameters);
-
         }
+
         public UMLMethod(UMLDataType type, params UMLParameter[] parameters) : this("constructor", type, parameters)
         {
             IsConstructor = true;
-
-
         }
 
         public bool IsConstructor { get; set; }
@@ -35,8 +28,6 @@ namespace UMLModels
         public List<UMLParameter> Parameters { get; }
 
         public Overridability OverridableType { get; set; }
-
-    
 
         public override string ToString()
         {
@@ -52,8 +43,6 @@ namespace UMLModels
 
             return s;
         }
-
-
     }
 
     public enum Overridability

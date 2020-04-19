@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,20 +8,18 @@ namespace PlantUML
 {
     public class PlantUMLGenerator
     {
-
         public string Create(UMLClassDiagram classDiagram)
         {
             StringBuilder sb = new StringBuilder();
 
             using (TextWriter tw = new StringWriter(sb))
             {
-
                 Create(classDiagram, tw);
             }
 
             return sb.ToString();
-
         }
+
         private void Create(UMLClassDiagram classDiagram, TextWriter writer)
         {
             writer.WriteLine("@startuml");
@@ -40,8 +37,6 @@ namespace PlantUML
                 }
                 foreach (var item in n)
                 {
-
-
                     if (item is UMLInterface)
                         writer.Write("interface ");
                     else
@@ -50,10 +45,8 @@ namespace PlantUML
                     writer.Write(item.Name);
                     writer.WriteLine(" { ");
 
-
                     foreach (var prop in item.Properties)
                     {
-
                         writer.Write(prop.ObjectType.Name);
                         writer.Write(" ");
                         writer.WriteLine(prop.Name);
@@ -61,7 +54,6 @@ namespace PlantUML
 
                     foreach (var me in item.Methods)
                     {
-
                         writer.Write(me.ReturnType.Name);
                         writer.Write(" ");
                         writer.Write(me.Name);
@@ -78,13 +70,13 @@ namespace PlantUML
                                 writer.Write(p.ObjectType.Name);
                                 writer.Write("[]");
                             }
-                            else if(p.ListType == ListTypes.IReadOnlyCollection)
+                            else if (p.ListType == ListTypes.IReadOnlyCollection)
                             {
                                 writer.Write("IReadOnlyCollection<");
                                 writer.Write(p.ObjectType.Name);
                                 writer.Write(">");
                             }
-                            else if(p.ListType == ListTypes.List)
+                            else if (p.ListType == ListTypes.List)
                             {
                                 writer.Write("List<");
                                 writer.Write(p.ObjectType.Name);
@@ -95,10 +87,8 @@ namespace PlantUML
 
                             if (x != me.Parameters.Count - 1)
                                 writer.Write(",");
-
                         }
                         writer.WriteLine(")");
-
                     }
                     writer.WriteLine(" } ");
                 }
@@ -107,7 +97,6 @@ namespace PlantUML
                     writer.WriteLine(" } ");
                 }
             }
-
 
             foreach (var n in classDiagram.DataTypes.GroupBy(p => p.Namespace))
             {
@@ -131,7 +120,6 @@ namespace PlantUML
                     }
                     foreach (var prop in item.Properties)
                     {
-
                         writer.Write(item.Name);
                         if (prop.ListType != ListTypes.None)
                         {
@@ -156,12 +144,10 @@ namespace PlantUML
 
             using (TextWriter tw = new StringWriter(sb))
             {
-
                 Create(sequenceDiagram, tw);
             }
 
             return sb.ToString();
-
         }
 
         private void Create(UMLSequenceDiagram sequenceDiagram, TextWriter writer)
@@ -171,73 +157,57 @@ namespace PlantUML
             writer.Write("title ");
             writer.WriteLine(sequenceDiagram.Title);
 
-          
             foreach (var item in sequenceDiagram.LifeLines)
             {
-               
-
-              
                 writer.Write("participant ");
                 writer.Write(item.DataTypeId);
                 writer.Write(" as ");
                 writer.WriteLine(item.Alias);
             }
 
-
-
-            foreach (var entity in sequenceDiagram.Entities)
-            {
-                if (entity is UMLSequenceBlock block)
-                {
-                    foreach (var sec in block.Sections)
-                    {
-                        if (sec.SectionType == UMLSequenceBlockSection.SectionTypes.If)
-                        {
-
-                            writer.Write("alt ");
-                            writer.WriteLine(sec.Text);
-
-                        }
-                        else if (sec.SectionType == UMLSequenceBlockSection.SectionTypes.Else)
-                        {
-                            writer.Write("else ");
-                            writer.WriteLine(sec.Text);
-                        }
-
-
-                        else if (sec.SectionType == UMLSequenceBlockSection.SectionTypes.Parrallel)
-                        {
-                            writer.Write("par ");
-                            writer.WriteLine(sec.Text);
-
-                        }
-
-
-                        DrawConnections(writer, sec.Connections );
-
-                    
-
-
-
-                        if (sec.SectionType != UMLSequenceBlockSection.SectionTypes.None &&
-                            sec.SectionType != UMLSequenceBlockSection.SectionTypes.If)
-                        {
-                            writer.WriteLine("end");
-                        }
-                    }
-                }
-                else if(entity is UMLSequenceConnection con)
-                {
-
-                    DrawConnection(writer, con);
-
-                }
-            }
+            DrawEntity(sequenceDiagram.Entities, writer);
 
             writer.WriteLine("@enduml");
         }
 
-        private void DrawConnections(TextWriter writer, List<UMLSequenceConnection> connections )
+        private void DrawEntity(List<UMLOrderedEntity> entities, TextWriter writer)
+        {
+            foreach (var entity in entities)
+            {
+                if (entity is UMLSequenceBlockSection block)
+                {
+                    if (block.SectionType == UMLSequenceBlockSection.SectionTypes.If)
+                    {
+                        writer.Write("alt ");
+                        writer.WriteLine(block.Text);
+                    }
+                    else if (block.SectionType == UMLSequenceBlockSection.SectionTypes.Else)
+                    {
+                        writer.Write("else ");
+                        writer.WriteLine(block.Text);
+                    }
+                    else if (block.SectionType == UMLSequenceBlockSection.SectionTypes.Parrallel)
+                    {
+                        writer.Write("par ");
+                        writer.WriteLine(block.Text);
+                    }
+
+                    DrawEntity(block.Entities, writer);
+
+                    if (block.SectionType != UMLSequenceBlockSection.SectionTypes.None &&
+                        block.SectionType != UMLSequenceBlockSection.SectionTypes.If)
+                    {
+                        writer.WriteLine("end");
+                    }
+                }
+                else if (entity is UMLSequenceConnection con)
+                {
+                    DrawConnection(writer, con);
+                }
+            }
+        }
+
+        private void DrawConnections(TextWriter writer, List<UMLSequenceConnection> connections)
         {
             foreach (var item in connections)
             {
@@ -245,11 +215,10 @@ namespace PlantUML
             }
         }
 
-        private static void DrawConnection(TextWriter writer,UMLSequenceConnection item )
+        private static void DrawConnection(TextWriter writer, UMLSequenceConnection item)
         {
             if (item.To == null)
             {
-
                 if (item.Action.IsConstructor && !(item.Action is UMLReturnFromMethod))
                     writer.Write(" <-- ");
                 else
@@ -259,7 +228,6 @@ namespace PlantUML
             }
             else
             {
-
                 if (item.From != null)
                     writer.Write(item.From.Alias);
 
@@ -279,7 +247,6 @@ namespace PlantUML
             }
             else
             {
-
                 writer.Write(item.Action.ReturnType?.Name);
                 writer.Write(" ");
                 writer.Write(item.Action.Name);

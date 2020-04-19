@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace UMLModels
 {
@@ -10,12 +8,10 @@ namespace UMLModels
 
         public UMLDataType()
         {
-
         }
 
         public UMLDataType(string name, string @namespace = "", params UMLInterface[] interfaces)
         {
-
             Namespace = @namespace;
             Name = name;
             Properties = new List<UMLProperty>();
@@ -24,19 +20,15 @@ namespace UMLModels
             this.Interfaces = new List<UMLInterface>();
             if (interfaces != null && interfaces.Length == 0)
                 this.Interfaces.AddRange(interfaces);
-
-
         }
-
 
         public string Id
         {
             get
             {
-                return  Name;
+                return Name;
             }
         }
-
 
         public UMLDataType Base { get; set; }
         public string Name { get; set; }
@@ -45,7 +37,6 @@ namespace UMLModels
 
         public List<UMLInterface> Interfaces { get; set; }
     }
-
 
     public class StringDataType : UMLDataType
     {
@@ -61,14 +52,12 @@ namespace UMLModels
         }
     }
 
-
     public class DecimalDataType : UMLDataType
     {
         public DecimalDataType() : base("decimal")
         {
         }
     }
-
 
     public class BoolDataType : UMLDataType
     {

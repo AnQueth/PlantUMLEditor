@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace PlantUMLEditor.Models
 {
@@ -9,6 +6,6 @@ namespace PlantUMLEditor.Models
     {
         Task<UMLModels.UMLDocumentCollection> Read(string fileName);
 
-        Task Save( UMLModels.UMLDocumentCollection data, string fileName);
+        Task Save(UMLModels.UMLDocumentCollection data, string fileName);
     }
 }

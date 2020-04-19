@@ -1,12 +1,7 @@
 ﻿using Prism.Commands;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Input;
 using UMLModels;
 
@@ -23,7 +18,6 @@ namespace PlantUMLEditor.Models
             set { SetValue(ref documents, value); }
         }
 
-
         public FolderBindingModel Folder
         {
             get { return folder; }
@@ -34,8 +28,11 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
+
         public DelegateCommand CreateNewSequenceDiagram { get; }
         public DelegateCommand CreateNewClassDiagram { get; }
+        public DelegateCommand<DocumentModel> CloseDocument { get; }
+        public DelegateCommand<DocumentModel> CloseDocumentAndSave { get; }
 
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
 
@@ -44,23 +41,38 @@ namespace PlantUMLEditor.Models
             Documents = new UMLModels.UMLDocumentCollection();
             _openDirectoryService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(OpenDirectory);
-            SaveAllCommand = new DelegateCommand(()=>SaveAll());
+            SaveAllCommand = new DelegateCommand(() => SaveAll());
             Folder = new FolderBindingModel(Path.GetTempPath(), false);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<DocumentModel>();
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler);
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler);
-
-
-
+            CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
+            CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
         }
 
+        private void CloseDocumentAndSaveHandler(DocumentModel doc)
+        {
+            Save(doc);
 
+            OpenDocuments.Remove(doc);
+        }
+
+        private async Task Save(DocumentModel doc)
+        {
+            await doc.PrepareSave();
+
+            await File.WriteAllTextAsync(doc.FileName, doc.Content);
+        }
+
+        private void CloseDocumentHandler(DocumentModel doc)
+        {
+            OpenDocuments.Remove(doc);
+        }
 
         private void NewClassDiagramHandler()
         {
             FolderBindingModel selected = GetSelectedFolder(Folder);
-
 
             string dir = selected?.FullPath;
             if (string.IsNullOrEmpty(dir))
@@ -71,6 +83,7 @@ namespace PlantUMLEditor.Models
                 this.NewClassDiagram(nf, Path.GetFileNameWithoutExtension(nf));
             }
         }
+
         private FolderBindingModel GetSelectedFile(FolderBindingModel item)
         {
             if (item.IsSelected && item.IsFile)
@@ -87,6 +100,7 @@ namespace PlantUMLEditor.Models
 
             return null;
         }
+
         private FolderBindingModel GetSelectedFolder(FolderBindingModel item)
         {
             if (item.IsSelected && !item.IsFile)
@@ -103,17 +117,15 @@ namespace PlantUMLEditor.Models
 
             return null;
         }
+
         public void TreeItemClicked(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 1)
                 return;
 
-
-
             FolderBindingModel fbm = GetSelectedFile(Folder);
             if (fbm == null)
                 return;
-
 
             var d = Documents.ClassDocuments.Find(p => p.FileName == fbm.FullPath);
 
@@ -126,11 +138,11 @@ namespace PlantUMLEditor.Models
                 OpenSequenceDiagram(fbm.FullPath);
             }
         }
+
         private void NewSequenceDiagramHandler()
         {
             FolderBindingModel selected = GetSelectedFolder(Folder);
             string dir = selected?.FullPath;
-
 
             if (string.IsNullOrEmpty(dir))
                 return;
@@ -144,10 +156,7 @@ namespace PlantUMLEditor.Models
 
         private void OpenSequenceDiagram(string fileName)
         {
-
             var diagram = this.Documents.SequenceDiagrams.Find(p => p.FileName == fileName);
-
-
 
             var d = new SequenceDiagramDocumentModel(SequenceDiagramModelChanged)
             {
@@ -159,19 +168,14 @@ namespace PlantUMLEditor.Models
                 FileName = fileName,
                 Name = diagram.Title,
                 Content = File.ReadAllText(fileName)
-
-
             };
-
 
             OpenDocuments.Add(d);
         }
+
         private void OpenClassDiagram(string fileName)
         {
-
             var diagram = this.Documents.ClassDocuments.Find(p => p.FileName == fileName);
-
-
 
             var d = new ClassDiagramDocumentModel(ClassDiagramModelChanged)
             {
@@ -180,10 +184,7 @@ namespace PlantUMLEditor.Models
                 Diagram = diagram,
                 FileName = fileName,
                 Name = diagram.Title
-
-
             };
-
 
             OpenDocuments.Add(d);
         }
@@ -193,19 +194,14 @@ namespace PlantUMLEditor.Models
             if (old != null)
             {
                 @new.FileName = old.FileName;
-
             }
 
             Documents.ClassDocuments.Remove(Documents.ClassDocuments.Find(z => z.FileName == @new.FileName));
             Documents.ClassDocuments.Add(@new);
-
-
-
         }
 
         private void NewClassDiagram(string fileName, string title)
         {
-
             var s = new UMLModels.UMLClassDiagram(title, fileName);
 
             var d = new ClassDiagramDocumentModel(ClassDiagramModelChanged)
@@ -215,8 +211,6 @@ namespace PlantUMLEditor.Models
                 Diagram = s,
                 FileName = fileName,
                 Name = title
-
-
             };
 
             Documents.ClassDocuments.Add(s);
@@ -225,7 +219,6 @@ namespace PlantUMLEditor.Models
 
         private void NewSequenceDiagram(string fileName, string title)
         {
-
             var s = new UMLModels.UMLSequenceDiagram(title, fileName);
 
             var d = new SequenceDiagramDocumentModel(SequenceDiagramModelChanged)
@@ -236,8 +229,6 @@ namespace PlantUMLEditor.Models
                 DataTypes = Documents.DataTypes,
                 FileName = fileName,
                 Name = title
-
-
             };
 
             Documents.SequenceDiagrams.Add(s);
@@ -245,14 +236,11 @@ namespace PlantUMLEditor.Models
         }
 
         private void SequenceDiagramModelChanged(UMLSequenceDiagram old, UMLSequenceDiagram @new)
-            {
-                @new.FileName = old.FileName;
+        {
+            @new.FileName = old.FileName;
 
-                Documents.SequenceDiagrams.Remove(old);
-                Documents.SequenceDiagrams.Add(@new);
-
-
-           
+            Documents.SequenceDiagrams.Remove(old);
+            Documents.SequenceDiagrams.Add(@new);
         }
 
         private async Task SaveAll()
@@ -269,9 +257,8 @@ namespace PlantUMLEditor.Models
 
             foreach (var file in OpenDocuments)
             {
-                await File.WriteAllTextAsync(file.FileName, file.Content);
+                await Save(file);
             }
-
 
             await _documentCollectionSerialization.Save(Documents, _metaDataFile);
         }
@@ -289,20 +276,10 @@ namespace PlantUMLEditor.Models
 
             AddFolderItems(dir, Folder);
 
-
-
-
-
             _documentCollectionSerialization.Read(_metaDataFile).ContinueWith(p =>
             {
                 Documents = p.Result;
             });
-
-
-
-
-
-
         }
 
         private string GetWorkingFolder()
@@ -324,7 +301,6 @@ namespace PlantUMLEditor.Models
 
         private void AddFolderItems(string dir, FolderBindingModel model)
         {
-
             foreach (var file in Directory.EnumerateFiles(dir))
             {
                 model.Children.Add(new FolderBindingModel(file, true)
@@ -343,7 +319,6 @@ namespace PlantUMLEditor.Models
 
                 AddFolderItems(item, fm);
             }
-
         }
 
         private readonly IOpenDirectoryService _openDirectoryService;
@@ -354,7 +329,6 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
 
         public ICommand SaveAllCommand
         {

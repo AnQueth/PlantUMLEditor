@@ -1,5 +1,4 @@
-﻿using Prism.Commands;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -17,9 +16,7 @@ namespace PlantUMLEditor.Models
 
         public SequenceDiagramDocumentModel()
         {
-
             MatchingAutoCompletes = new ObservableCollection<string>();
-
         }
 
         public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p) : this()
@@ -36,26 +33,29 @@ namespace PlantUMLEditor.Models
         {
             Task.Run(() =>
            {
-
-               PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes).ContinueWith(z =>
+               PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, true).ContinueWith(z =>
                 {
-                       lock (_locker)
-                       {
-                           ChangedCallback(Diagram, z.Result);
-                           Diagram = z.Result;
-
-
-                       }
-
-                   });
-
+                    lock (_locker)
+                    {
+                        ChangedCallback(Diagram, z.Result);
+                        Diagram = z.Result;
+                    }
+                });
            });
 
-
             base.ContentChanged(ref text);
-
         }
 
+        public override async Task PrepareSave()
+        {
+            var z = await PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, false);
+
+            lock (_locker)
+            {
+                ChangedCallback(Diagram, z);
+                Diagram = z;
+            }
+        }
 
         private int _currentCursorIndex = 0;
 
@@ -70,18 +70,13 @@ namespace PlantUMLEditor.Models
 
             var rec = d.GetRectFromCharacterIndex(d.CaretIndex);
 
-
             var line = d.GetLineIndexFromCharacterIndex(d.CaretIndex);
             string text = d.GetLineText(line).Trim();
-
-
 
             UMLSequenceConnection connection = null;
 
             if (text.StartsWith("participant") || text.StartsWith("actor"))
             {
-
-
                 if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, this.DataTypes, out var lifeline))
                 {
                     lifeline.LineNumber = line;
@@ -89,13 +84,10 @@ namespace PlantUMLEditor.Models
                 }
                 else
                 {
-
                     foreach (var item in this.DataTypes)
                         this.MatchingAutoCompletes.Add(item.Key);
 
-                    this.LeftAutoComplete = rec.BottomRight.X;
-                    this.TopAutoComplete = rec.BottomRight.Y;
-                    AutoCompleteVisibility = Visibility.Visible;
+                    ShowAutoComplete(rec);
 
                     return;
                 }
@@ -108,36 +100,27 @@ namespace PlantUMLEditor.Models
                 }
             }
 
+       
+      
 
-
-
-            if (e.Key == System.Windows.Input.Key.Space   && connection != null && connection.To != null)
+            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.OemSemicolon) && e.KeyboardDevice.IsKeyDown(  System.Windows.Input.Key.RightShift )
+                && connection != null && connection.To != null)
             {
-
-
-
-
-
-
-
-
-
                 this.DataTypes[connection.To.DataTypeId].Methods.ForEach(z => this.MatchingAutoCompletes.Add(z.Signature));
-
-
 
                 this.DataTypes[connection.To.DataTypeId].Properties.ForEach(z => this.MatchingAutoCompletes.Add(z.Signature));
 
 
-
-                this.LeftAutoComplete = rec.BottomRight.X;
-                this.TopAutoComplete = rec.BottomRight.Y;
-                AutoCompleteVisibility = Visibility.Visible;
+                ShowAutoComplete(rec);
             }
-
         }
 
-
+        private void ShowAutoComplete(Rect rec)
+        {
+            this.LeftAutoComplete = rec.BottomRight.X;
+            this.TopAutoComplete = rec.BottomRight.Y;
+            AutoCompleteVisibility = Visibility.Visible;
+        }
 
         public ObservableCollection<string> MatchingAutoCompletes
         {
@@ -158,16 +141,16 @@ namespace PlantUMLEditor.Models
 
                 if (value != null)
                 {
-
                     Content = Content.Insert(_currentCursorIndex + 1, value);
 
-                    this.LeftAutoComplete = -1;
-                    this.TopAutoComplete = -1;
+                 
                     AutoCompleteVisibility = Visibility.Hidden;
                 }
             }
         }
+
         private Visibility _AutoCompleteVisibility;
+
         public Visibility AutoCompleteVisibility
         {
             get
@@ -185,11 +168,11 @@ namespace PlantUMLEditor.Models
             get { return topAutoComplete; }
             set { SetValue(ref topAutoComplete, value); }
         }
+
         public double LeftAutoComplete
         {
             get { return leftAutoComplete; }
             set { SetValue(ref leftAutoComplete, value); }
         }
-
     }
 }

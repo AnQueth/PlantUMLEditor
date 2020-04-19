@@ -1,6 +1,4 @@
-﻿using Prism.Commands;
-using System.Windows.Controls;
-using System.Windows.Input;
+﻿using System.Threading.Tasks;
 
 namespace PlantUMLEditor.Models
 {
@@ -23,21 +21,16 @@ namespace PlantUMLEditor.Models
 
         public DocumentModel()
         {
-             
         }
 
-
-        private string _lastTypedWork;
+       
 
         public virtual void AutoComplete(object sender, System.Windows.Input.KeyEventArgs e)
         {
-   
-            
         }
 
         protected virtual void ContentChanged(ref string text)
         {
-
         }
 
         public DocumentTypes DocumentType
@@ -48,18 +41,22 @@ namespace PlantUMLEditor.Models
         public string Content
         {
             get { return content; }
-            set { SetValue(ref content, value);
+            set
+            {
+                SetValue(ref content, value);
 
                 ContentChanged(ref content);
-
-             
-
             }
         }
 
         public string FileName
         {
             get; set;
+        }
+
+        public virtual Task PrepareSave()
+        {
+            return Task.CompletedTask;
         }
     }
 

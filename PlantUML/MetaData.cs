@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PlantUML
+﻿namespace PlantUML
 {
-    public  class MetaData
+    public class MetaData
     {
-
     }
 }

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace UMLModels
 {
@@ -8,7 +6,6 @@ namespace UMLModels
     {
         public UMLSequenceDiagram()
         {
-
         }
 
         public UMLSequenceDiagram(string title, string fileName)
@@ -17,18 +14,14 @@ namespace UMLModels
             LifeLines = new List<UMLSequenceLifeline>();
             Entities = new List<UMLOrderedEntity>();
             FileName = fileName;
-         
-
-
         }
+
         public List<UMLSequenceLifeline> LifeLines { get; set; }
 
-
-
         public List<UMLOrderedEntity> Entities { get; set; }
-        public string FileName { get;   set; }
+        public string FileName { get; set; }
 
-        public string Title { get;   set; }
+        public string Title { get; set; }
 
         public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to)
         {
@@ -36,15 +29,10 @@ namespace UMLModels
             {
                 From = source,
                 To = to
-
             };
             Entities.Add(f);
 
-
             return f;
-
         }
-
-
     }
 }

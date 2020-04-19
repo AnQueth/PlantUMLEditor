@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -21,16 +20,11 @@ namespace PlantUMLEditor.Models
 
         protected override void ContentChanged(ref string text)
         {
-          
             PlantUML.UMLClassDiagramParser.ReadClassDiagramString(text).ContinueWith(z =>
             {
-                ChangedCallback(Diagram, z.Result); 
+                ChangedCallback(Diagram, z.Result);
                 Diagram = z.Result;
-
-              
-
-
-            }) ;
+            });
 
             base.ContentChanged(ref text);
         }

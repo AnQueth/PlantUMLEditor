@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace PlantUMLEditor.Models
 {
@@ -13,6 +10,7 @@ namespace PlantUMLEditor.Models
             variable = v;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
+
         public event PropertyChangedEventHandler PropertyChanged;
     }
 }

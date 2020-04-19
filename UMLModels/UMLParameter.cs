@@ -1,16 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace UMLModels
+﻿namespace UMLModels
 {
     public class UMLParameter : UMLSignature
     {
-       public UMLParameter()
+        public UMLParameter()
         {
-
         }
-        public UMLParameter(string name, UMLDataType type, ListTypes listTypes = ListTypes.None)  
+
+        public UMLParameter(string name, UMLDataType type, ListTypes listTypes = ListTypes.None)
         {
             Name = name;
             ListType = listTypes;
@@ -18,21 +14,20 @@ namespace UMLModels
             ObjectType = type;
         }
 
-
         public ListTypes ListType
         {
-            get;set;
+            get; set;
         }
+
         public string Name { get; set; }
 
         public UMLDataType ObjectType { get; set; }
 
         public override string ToString()
         {
-
-            if(ListType == ListTypes.Array)
+            if (ListType == ListTypes.Array)
                 return $"{ObjectType.Name}[] {Name}";
-            else if(ListType == ListTypes.IReadOnlyCollection)
+            else if (ListType == ListTypes.IReadOnlyCollection)
             {
                 return $"IReadOnlyCollection<{ObjectType.Name}> {Name}";
             }
@@ -40,13 +35,11 @@ namespace UMLModels
             {
                 return $"List<{ObjectType.Name}> {Name}";
             }
-            else 
+            else
             {
                 return $"{ObjectType.Name} {Name}";
             }
         }
-
-  
     }
 
     public enum ListTypes
