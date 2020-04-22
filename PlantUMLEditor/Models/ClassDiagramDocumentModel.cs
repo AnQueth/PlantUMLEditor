@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using System.Windows.Documents;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -11,7 +13,7 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback)
+        public ClassDiagramDocumentModel(Action< UMLClassDiagram, UMLClassDiagram> changedCallback)
         {
             this.ChangedCallback = changedCallback;
         }
@@ -20,13 +22,20 @@ namespace PlantUMLEditor.Models
 
         protected override void ContentChanged(ref string text)
         {
-            PlantUML.UMLClassDiagramParser.ReadClassDiagramString(text).ContinueWith(z =>
-            {
-                ChangedCallback(Diagram, z.Result);
-                Diagram = z.Result;
-            });
+          //  PlantUML.UMLClassDiagramParser.ReadClassDiagramString(text);
 
             base.ContentChanged(ref text);
+        }
+
+        public override async Task PrepareSave()
+        {
+            var z = await PlantUML.UMLClassDiagramParser.ReadClassDiagramString(Content);
+
+
+            ChangedCallback(Diagram, z);
+            Diagram = z;
+
+            await base.PrepareSave();
         }
     }
 }

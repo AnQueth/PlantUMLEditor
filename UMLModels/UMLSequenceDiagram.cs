@@ -2,7 +2,7 @@
 
 namespace UMLModels
 {
-    public class UMLSequenceDiagram
+    public class UMLSequenceDiagram : UMLDiagram
     {
         public UMLSequenceDiagram()
         {
@@ -19,9 +19,7 @@ namespace UMLModels
         public List<UMLSequenceLifeline> LifeLines { get; set; }
 
         public List<UMLOrderedEntity> Entities { get; set; }
-        public string FileName { get; set; }
-
-        public string Title { get; set; }
+  
 
         public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to)
         {

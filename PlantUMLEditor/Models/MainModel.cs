@@ -1,7 +1,11 @@
 ﻿using Prism.Commands;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 using System.Windows.Input;
 using UMLModels;
 
@@ -11,6 +15,12 @@ namespace PlantUMLEditor.Models
     {
         private string _metaDataFile = "";
         private string _metaDataDirectory = "";
+
+        public DocumentModel CurrentDocument
+        {
+            get { return currentDocument; }
+            set { SetValue(ref currentDocument, value); }
+        }
 
         public UMLModels.UMLDocumentCollection Documents
         {
@@ -72,16 +82,14 @@ namespace PlantUMLEditor.Models
 
         private void NewClassDiagramHandler()
         {
-            FolderBindingModel selected = GetSelectedFolder(Folder);
+            string nf = GetNewFile();
 
-            string dir = selected?.FullPath;
-            if (string.IsNullOrEmpty(dir))
-                return;
-            string nf = _openDirectoryService.NewFile(dir);
             if (!string.IsNullOrEmpty(nf))
             {
                 this.NewClassDiagram(nf, Path.GetFileNameWithoutExtension(nf));
             }
+
+            this.OpenDirectory();
         }
 
         private FolderBindingModel GetSelectedFile(FolderBindingModel item)
@@ -118,7 +126,7 @@ namespace PlantUMLEditor.Models
             return null;
         }
 
-        public void TreeItemClicked(object sender, MouseButtonEventArgs e)
+        public async void TreeItemClicked(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 1)
                 return;
@@ -127,38 +135,68 @@ namespace PlantUMLEditor.Models
             if (fbm == null)
                 return;
 
-            var d = Documents.ClassDocuments.Find(p => p.FileName == fbm.FullPath);
+            if (OpenDocuments.Any(p => p.FileName == fbm.FullPath))
+                return;
 
-            if (d != null)
+            var cd = Documents.ClassDocuments.Find(p => p.FileName == fbm.FullPath);
+            var sd = Documents.SequenceDiagrams.Find(p => p.FileName == fbm.FullPath);
+            if (cd == null &&  sd == null)
             {
-                OpenClassDiagram(fbm.FullPath);
+                 sd = await PlantUML.UMLSequenceDiagramParser.ReadDiagram(fbm.FullPath, Documents.DataTypes, false);
+                if (sd != null)
+                {
+                    Documents.SequenceDiagrams.Add(sd);
+                    
+                }
+                else
+                {
+                    cd = await PlantUML.UMLClassDiagramParser.ReadClassDiagram(fbm.FullPath);
+                    Documents.ClassDocuments.Add(cd);
+                }
+            }
+
+            if (cd != null)
+            {
+                OpenClassDiagram(fbm.FullPath, cd);
             }
             else
             {
-                OpenSequenceDiagram(fbm.FullPath);
+                OpenSequenceDiagram(fbm.FullPath, sd);
             }
+        }
+
+        private string GetNewFile()
+        {
+            FolderBindingModel selected = GetSelectedFolder(Folder);
+
+            string dir = selected?.FullPath ?? _folderBase;
+
+            if (string.IsNullOrEmpty(dir))
+                return null;
+
+            string nf = _openDirectoryService.NewFile(dir);
+            return nf;
         }
 
         private void NewSequenceDiagramHandler()
         {
-            FolderBindingModel selected = GetSelectedFolder(Folder);
-            string dir = selected?.FullPath;
+            string nf = GetNewFile();
 
-            if (string.IsNullOrEmpty(dir))
-                return;
-
-            string nf = _openDirectoryService.NewFile(dir);
             if (!string.IsNullOrEmpty(nf))
             {
                 this.NewSequenceDiagram(nf, Path.GetFileNameWithoutExtension(nf));
             }
+
+            this.OpenDirectory();
         }
 
-        private void OpenSequenceDiagram(string fileName)
+        private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram)
         {
-            var diagram = this.Documents.SequenceDiagrams.Find(p => p.FileName == fileName);
+             
+        
 
-            var d = new SequenceDiagramDocumentModel(SequenceDiagramModelChanged)
+
+            var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new))
             {
                 DataTypes = Documents.DataTypes,
                 DocumentType = DocumentTypes.Sequence,
@@ -171,13 +209,14 @@ namespace PlantUMLEditor.Models
             };
 
             OpenDocuments.Add(d);
+            this.CurrentDocument = d;
         }
 
-        private void OpenClassDiagram(string fileName)
+        private void OpenClassDiagram(string fileName, UMLClassDiagram diagram)
         {
-            var diagram = this.Documents.ClassDocuments.Find(p => p.FileName == fileName);
+             
 
-            var d = new ClassDiagramDocumentModel(ClassDiagramModelChanged)
+            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new))
             {
                 DocumentType = DocumentTypes.Class,
                 Content = File.ReadAllText(fileName),
@@ -187,24 +226,25 @@ namespace PlantUMLEditor.Models
             };
 
             OpenDocuments.Add(d);
+            this.CurrentDocument = d;
         }
 
-        private void ClassDiagramModelChanged(UMLClassDiagram old, UMLClassDiagram @new)
+        private void DiagramModelChanged<T>(List<T> list, T old, T @new) where T : UMLDiagram
         {
             if (old != null)
             {
                 @new.FileName = old.FileName;
             }
 
-            Documents.ClassDocuments.Remove(Documents.ClassDocuments.Find(z => z.FileName == @new.FileName));
-            Documents.ClassDocuments.Add(@new);
+            list.Remove(list.Find(z => z.FileName == @new.FileName || z.Title == @new.Title));
+            list.Add(@new);
         }
 
         private void NewClassDiagram(string fileName, string title)
         {
             var s = new UMLModels.UMLClassDiagram(title, fileName);
 
-            var d = new ClassDiagramDocumentModel(ClassDiagramModelChanged)
+            var d = new ClassDiagramDocumentModel((old, @new)=> DiagramModelChanged(Documents.ClassDocuments, old, @new))
             {
                 DocumentType = DocumentTypes.Class,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
@@ -215,13 +255,14 @@ namespace PlantUMLEditor.Models
 
             Documents.ClassDocuments.Add(s);
             OpenDocuments.Add(d);
+            this.CurrentDocument = d;
         }
 
         private void NewSequenceDiagram(string fileName, string title)
         {
             var s = new UMLModels.UMLSequenceDiagram(title, fileName);
 
-            var d = new SequenceDiagramDocumentModel(SequenceDiagramModelChanged)
+            var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new))
             {
                 DocumentType = DocumentTypes.Sequence,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
@@ -233,15 +274,9 @@ namespace PlantUMLEditor.Models
 
             Documents.SequenceDiagrams.Add(s);
             OpenDocuments.Add(d);
+            this.CurrentDocument = d;
         }
-
-        private void SequenceDiagramModelChanged(UMLSequenceDiagram old, UMLSequenceDiagram @new)
-        {
-            @new.FileName = old.FileName;
-
-            Documents.SequenceDiagrams.Remove(old);
-            Documents.SequenceDiagrams.Add(@new);
-        }
+ 
 
         private async Task SaveAll()
         {
@@ -269,6 +304,8 @@ namespace PlantUMLEditor.Models
             if (string.IsNullOrEmpty(dir))
                 return;
 
+            Folder = new FolderBindingModel("", false);
+
             Folder.Children.Clear();
 
             Folder.FullPath = dir;
@@ -284,11 +321,16 @@ namespace PlantUMLEditor.Models
 
         private string GetWorkingFolder()
         {
-            string dir = _openDirectoryService.GetDirectory();
-            if (string.IsNullOrEmpty(dir))
-                return null;
+            if (string.IsNullOrEmpty(_folderBase))
+            {
+                string dir = _openDirectoryService.GetDirectory();
+                if (string.IsNullOrEmpty(dir))
+                    return null;
 
-            _metaDataDirectory = Path.Combine(dir, ".umlmetadata");
+                _folderBase = dir;
+            }
+
+            _metaDataDirectory = Path.Combine(_folderBase, ".umlmetadata");
 
             if (!Directory.Exists(_metaDataDirectory))
             {
@@ -296,24 +338,27 @@ namespace PlantUMLEditor.Models
             }
 
             _metaDataFile = Path.Combine(_metaDataDirectory, "data.json");
-            return dir;
+            return _folderBase;
         }
 
         private void AddFolderItems(string dir, FolderBindingModel model)
         {
-            foreach (var file in Directory.EnumerateFiles(dir))
+            foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
             {
                 model.Children.Add(new FolderBindingModel(file, true)
                 {
-                    Name = file
+                    Name = Path.GetFileName(file)
                 });
             }
 
             foreach (var item in Directory.EnumerateDirectories(dir))
             {
+                if (!item.StartsWith("."))
+                    continue;
+
                 var fm = new FolderBindingModel(item, false)
                 {
-                    Name = item
+                    Name = Path.GetFileName(item)
                 };
                 model.Children.Add(fm);
 
@@ -324,6 +369,8 @@ namespace PlantUMLEditor.Models
         private readonly IOpenDirectoryService _openDirectoryService;
         private FolderBindingModel folder;
         private UMLModels.UMLDocumentCollection documents;
+        private DocumentModel currentDocument;
+        private string _folderBase;
 
         public ICommand OpenDirectoryCommand
         {

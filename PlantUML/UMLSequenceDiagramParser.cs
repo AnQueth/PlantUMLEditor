@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UMLModels;
 
@@ -58,6 +59,11 @@ namespace PlantUML
             Stack<UMLSequenceBlockSection> activeBlocks = new Stack<UMLSequenceBlockSection>();
 
             int lineNumber = 0;
+            UMLSequenceConnection previous = null;
+            Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+
+            bool swallowingNotes = false;
+
             while ((line = await sr.ReadLineAsync()) != null)
             {
                 lineNumber++;
@@ -70,6 +76,25 @@ namespace PlantUML
 
                 if (!started)
                     continue;
+
+                if (notes.IsMatch(line))
+                {
+                    var m = notes.Match(line);
+                    if (!m.Groups["sl"].Success)
+                    {
+                        swallowingNotes = true;
+                    }
+                }
+
+                if (line.StartsWith("end note"))
+                    swallowingNotes = false;
+
+                if (swallowingNotes)
+                    continue;
+
+
+                if (line.StartsWith("class") || line.StartsWith("interface") || line.StartsWith("package"))
+                    return null;
 
                 if (line.StartsWith("title"))
                 {
@@ -85,11 +110,13 @@ namespace PlantUML
                     continue;
                 }
 
+
+
                 if (!justLifeLines)
                 {
                     UMLSequenceBlockSection sectionBlock = null;
 
-                    if (TryParseAllConnections(line, d, types, out UMLSequenceConnection connection))
+                    if (TryParseAllConnections(line, d, types, previous, out UMLSequenceConnection connection))
                     {
                         connection.LineNumber = lineNumber;
 
@@ -98,7 +125,9 @@ namespace PlantUML
                         else
                             activeBlocks.Peek().Entities.Add(connection);
 
-                       
+                        previous = connection;
+
+
                     }
                     else if ((sectionBlock = UMLSequenceBlockSection.TryParse(line)) != null)
                     {
@@ -135,27 +164,33 @@ namespace PlantUML
 
             return d;
         }
-
-        public static bool TryParseAllConnections(string line, UMLSequenceDiagram diagram, Dictionary<string, UMLDataType> types, out UMLSequenceConnection connection)
+        static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+) *([a-zA-Z0-9\\-><]+) *([a-zA-Z0-9\\-><:]*) *(.+)");
+        public static bool TryParseAllConnections(string line, UMLSequenceDiagram diagram,
+            Dictionary<string, UMLDataType> types, UMLSequenceConnection previous,  out UMLSequenceConnection connection)
         {
             connection = null;
-            var maps = line.Split(new char[] { ' ', ':' }, StringSplitOptions.RemoveEmptyEntries);
+
+         
+
+            var m = lineConnectionRegex.Match(line);
+
+            
 
             try
             {
-                string fromAlias = maps[0][0] != '<' && maps[0][0] != '-' ? maps[0] : null;
-                string arrow = fromAlias == null ? maps[0] : maps[1];
-                string toAlias = fromAlias == null ? maps[1] : maps[2];
+                string fromAlias = m.Groups[1].Value[0] != '<' && m.Groups[1].Value[0] != '-' && m.Groups[1].Value[0] != '>' ? m.Groups[1].Value : null;
+                string arrow = fromAlias == null ? m.Groups[1].Value : m.Groups[2].Value;
+                string toAlias = fromAlias == null ? m.Groups[2].Value : m.Groups[3].Value;
 
                 int l = line.IndexOf(':');
 
-                string actionSignature = l != -1 ? line.Substring(l) : string.Empty;
+                string actionSignature = l != -1 ? line.Substring(l).Trim(':').Trim()  : string.Empty;
 
                 if (fromAlias == null)
                 {
                     if (arrow.StartsWith("<"))
                     {
-                        if (TryParseReturnToEmpty(toAlias, arrow, actionSignature, diagram, types, out connection))
+                        if (TryParseReturnToEmpty(toAlias, arrow, actionSignature, diagram, types, previous, out connection))
                         {
                             return true;
                         }
@@ -178,7 +213,8 @@ namespace PlantUML
         }
 
         private static bool TryParseConnection(string fromAlias, string arrow, string toAlias,
-            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, out UMLSequenceConnection connection)
+            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, 
+            out UMLSequenceConnection connection)
         {
             var from = d.LifeLines.Find(p => p.Alias == fromAlias);
             if (from != null)
@@ -240,7 +276,8 @@ namespace PlantUML
         }
 
         private static bool TryParseReturnToEmpty(string fromAlias, string arrow,
-            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, out UMLSequenceConnection connection)
+            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, UMLSequenceConnection previous,
+            out UMLSequenceConnection connection)
         {
             if (arrow.StartsWith("<"))
             {
@@ -250,7 +287,7 @@ namespace PlantUML
 
                 if (actionSignature.StartsWith("return"))
                 {
-                    method = new UMLReturnFromMethod();
+                    method = new UMLReturnFromMethod(previous?.Action);
                 }
 
                 connection = new UMLSequenceConnection()

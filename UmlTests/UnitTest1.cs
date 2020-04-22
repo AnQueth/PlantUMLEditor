@@ -47,12 +47,12 @@ namespace UmlTests
             var ggg = Enum.ToObject(typeof(W2), bidMask);
 
             UMLInterface i1 = new UMLInterface("ns1", "i1");
-            UMLClass class2 = new UMLClass("ns2", "c1", null, i1);
+            UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
 
-            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), new UMLParameter("parm1", new StringDataType())));
-            class2.Methods.Add(new UMLMethod(class2));
+            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
-            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
             UMLClassDiagram cd = new UMLClassDiagram("a", "");
             cd.DataTypes.Add(i1);
@@ -96,12 +96,12 @@ namespace UmlTests
         public void SequenceDiagram2()
         {
             UMLInterface i1 = new UMLInterface("ns1", "i1");
-            UMLClass class2 = new UMLClass("ns2", "c1", null, i1);
+            UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
 
-            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), new UMLParameter("parm1", new StringDataType())));
-            class2.Methods.Add(new UMLMethod(class2));
+            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public,  new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
-            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
             UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
 
@@ -139,12 +139,12 @@ namespace UmlTests
         public void SequenceDiagram1()
         {
             UMLInterface i1 = new UMLInterface("ns1", "i1");
-            UMLClass class2 = new UMLClass("ns2", "c1", null, i1);
+            UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
 
-            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), new UMLParameter("parm1", new StringDataType())));
-            class2.Methods.Add(new UMLMethod(class2));
+            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
-            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
             UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
 
@@ -167,14 +167,14 @@ namespace UmlTests
         public void ClassDiagram1()
         {
             UMLInterface i1 = new UMLInterface("", "i1");
-            UMLClass class2 = new UMLClass("ns", "c1", null, i1);
+            UMLClass class2 = new UMLClass("ns", true, "c1", null, i1);
 
-            class2.Properties.Add(new UMLProperty("prop1", i1, ListTypes.List));
+            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List));
 
-            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), new UMLParameter("parm1", new StringDataType())));
-            class2.Methods.Add(new UMLMethod(class2));
+            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
-            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
             var d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);
@@ -188,16 +188,16 @@ namespace UmlTests
         public async Task ClassDiagramRead1()
         {
             UMLInterface i1 = new UMLInterface("", "i1");
-            UMLClass class2 = new UMLClass("ns", "c1", null, i1);
+            UMLClass class2 = new UMLClass("ns", true, "c1", null, i1);
 
-            class2.Properties.Add(new UMLProperty("prop1", i1, ListTypes.List));
+            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List));
 
-            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), new UMLParameter("parm1", new StringDataType()),
+            i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType()),
                  new UMLParameter("parm2", new BoolDataType()),
                    new UMLParameter("parm3", new StringDataType(), ListTypes.IReadOnlyCollection)));
-            class2.Methods.Add(new UMLMethod(class2));
+            class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
-            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), new UMLParameter("parm1", new StringDataType())));
+            class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
             var d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);

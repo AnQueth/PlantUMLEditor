@@ -8,17 +8,24 @@ namespace UMLModels
         {
         }
 
-        public UMLMethod(string name, UMLDataType type, params UMLParameter[] parameters)
+        public UMLMethod(string name, UMLDataType type, UMLVisibility visibility, params UMLParameter[] parameters)
         {
             Name = name;
             ReturnType = type;
             Parameters = new List<UMLParameter>();
             Parameters.AddRange(parameters);
+            Visibility = visibility;
         }
 
-        public UMLMethod(UMLDataType type, params UMLParameter[] parameters) : this("constructor", type, parameters)
+        public UMLMethod(UMLDataType type, UMLVisibility visibility, params UMLParameter[] parameters) : this("constructor", type, visibility, parameters)
         {
             IsConstructor = true;
+        }
+
+
+        public UMLVisibility Visibility
+        {
+            get;set;
         }
 
         public bool IsConstructor { get; set; }
@@ -31,7 +38,9 @@ namespace UMLModels
 
         public override string ToString()
         {
-            string s = $"{ReturnType.Name} {Name} (";
+            string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
+
+            string s = $"{vs} {ReturnType.Name} {Name}(";
 
             if (Parameters != null)
                 foreach (var p in Parameters)

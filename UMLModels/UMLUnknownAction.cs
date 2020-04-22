@@ -6,16 +6,11 @@
         {
         }
 
-        public UMLUnknownAction(string text) : this(text, new VoidDataType())
+        public UMLUnknownAction(string text) : base(text, new VoidDataType(), UMLVisibility.Public)
         {
         }
 
-        public UMLUnknownAction(string name, UMLDataType type, params UMLParameter[] parameters) : base(name, type, parameters)
-        {
-        }
-
-        public UMLUnknownAction(UMLDataType type, params UMLParameter[] parameters) : base(type, parameters)
-        {
-        }
+     
+ 
     }
 }

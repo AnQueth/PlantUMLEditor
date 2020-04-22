@@ -10,7 +10,7 @@ namespace PlantUMLEditor.Models
         public FolderBindingModel(string path, bool isFile)
         {
             FullPath = path;
-            Name = Path.GetDirectoryName(path);
+     
             IsFile = isFile;
             Children = new ObservableCollection<FolderBindingModel>();
         }

@@ -2,7 +2,7 @@
 
 namespace UMLModels
 {
-    public class UMLClassDiagram
+    public class UMLClassDiagram : UMLDiagram
     {
         public UMLClassDiagram()
         {
@@ -15,9 +15,9 @@ namespace UMLModels
             FileName = fileName;
         }
 
-        public string Title { get; set; }
+      
 
         public List<UMLDataType> DataTypes { get; set; }
-        public string FileName { get; set; }
+   
     }
 }

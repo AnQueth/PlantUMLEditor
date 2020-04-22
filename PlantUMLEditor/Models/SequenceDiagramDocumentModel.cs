@@ -31,18 +31,10 @@ namespace PlantUMLEditor.Models
 
         protected override void ContentChanged(ref string text)
         {
-            Task.Run(() =>
-           {
-               PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, true).ContinueWith(z =>
-                {
-                    lock (_locker)
-                    {
-                        ChangedCallback(Diagram, z.Result);
-                        Diagram = z.Result;
-                    }
-                });
-           });
-
+            PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, true).ContinueWith(z =>
+            {
+                Diagram = z.Result;
+            });
             base.ContentChanged(ref text);
         }
 
@@ -57,7 +49,11 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private int _currentCursorIndex = 0;
+        public int CurrentCursorIndex
+        {
+            get { return currentCursorIndex; }
+            set  { SetValue(ref  currentCursorIndex , value); }
+        }
 
         public override void AutoComplete(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -66,9 +62,9 @@ namespace PlantUMLEditor.Models
 
             TextBox d = sender as TextBox;
 
-            _currentCursorIndex = d.CaretIndex;
+            CurrentCursorIndex = d.CaretIndex;
 
-            var rec = d.GetRectFromCharacterIndex(d.CaretIndex);
+           var rec = d.GetRectFromCharacterIndex(d.CaretIndex);
 
             var line = d.GetLineIndexFromCharacterIndex(d.CaretIndex);
             string text = d.GetLineText(line).Trim();
@@ -94,7 +90,7 @@ namespace PlantUMLEditor.Models
             }
             else
             {
-                if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, this.Diagram, this.DataTypes, out connection))
+                if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, this.Diagram, this.DataTypes, null, out connection))
                 {
                     connection.LineNumber = line;
                 }
@@ -103,7 +99,7 @@ namespace PlantUMLEditor.Models
        
       
 
-            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.OemSemicolon) && e.KeyboardDevice.IsKeyDown(  System.Windows.Input.Key.RightShift )
+            if (text.EndsWith(':')
                 && connection != null && connection.To != null)
             {
                 this.DataTypes[connection.To.DataTypeId].Methods.ForEach(z => this.MatchingAutoCompletes.Add(z.Signature));
@@ -141,15 +137,22 @@ namespace PlantUMLEditor.Models
 
                 if (value != null)
                 {
-                    Content = Content.Insert(_currentCursorIndex + 1, value);
+                    string insert = " " + value + " ";
+                    if (Content[CurrentCursorIndex + 1] == '\r')
+                        CurrentCursorIndex--;
 
-                 
+                    Content = Content.Insert(CurrentCursorIndex + 1, insert );
+
+                    CurrentCursorIndex = CurrentCursorIndex + insert.Length;
+
+
                     AutoCompleteVisibility = Visibility.Hidden;
                 }
             }
         }
 
         private Visibility _AutoCompleteVisibility;
+        private int currentCursorIndex;
 
         public Visibility AutoCompleteVisibility
         {

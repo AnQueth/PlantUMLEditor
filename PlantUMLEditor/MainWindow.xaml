@@ -13,7 +13,7 @@
 
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
-                    <TextBox   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"   Text="{Binding Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                <TextBox  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"   Text="{Binding Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                             AcceptsReturn="True"  AcceptsTab="True"
                                 Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}"
                                Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}">
@@ -52,6 +52,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                     </b:Interaction.Triggers>
             </TextBlock>
         </HierarchicalDataTemplate>
+        <Thickness x:Key="TabHeaderMargin">5,2,10,2</Thickness>
     </Window.Resources>
 
     <Grid>
@@ -86,20 +87,21 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
         <Grid Grid.Row="1" Grid.Column="2">
             <TabControl ContentTemplate="{DynamicResource TabControlItemTemplate2}"
-
+SelectedItem="{Binding CurrentDocument, Mode=TwoWay}"
                         ItemsSource="{Binding OpenDocuments}" SelectionChanged="TabControl_SelectionChanged">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto" ></ColumnDefinition>
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock Text="{Binding Name}"></TextBlock>
+                            <TextBlock   Text="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></TextBlock>
 
-                            <Button Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
+                            <Button  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
                                 <Button.Content>
                                     <Grid>
                                         <TextBlock Text="Save and Close"></TextBlock>
@@ -107,13 +109,21 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                                 </Button.Content>
                             </Button>
 
-                            <Button Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
+                            <Button  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
                                 <Button.Content>
                                     <Grid>
                                         <TextBlock Text="Close"></TextBlock>
                                     </Grid>
                                 </Button.Content>
                             </Button>
+                            <Button  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3"  Command="{Binding  ShowPreviewCommand}">
+                                <Button.Content>
+                                    <Grid>
+                                        <TextBlock Text="Preview"></TextBlock>
+                                    </Grid>
+                                </Button.Content>
+                            </Button>
+                            
                         </Grid>
                     </DataTemplate>
                 </TabControl.ItemTemplate>

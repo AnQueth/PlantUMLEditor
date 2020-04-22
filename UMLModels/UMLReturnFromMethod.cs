@@ -6,7 +6,7 @@
         {
         }
 
-        public UMLReturnFromMethod(UMLMethod returningFrom) : base(returningFrom.ReturnType)
+        public UMLReturnFromMethod(UMLMethod returningFrom) : base(returningFrom.ReturnType, UMLVisibility.Public)
         {
         }
     }

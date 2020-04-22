@@ -1,4 +1,5 @@
 ﻿using PlantUMLEditor.Models;
+using System.IO;
 using System.Windows.Forms;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
@@ -22,9 +23,12 @@ namespace PlantUMLEditor.Services
             SaveFileDialog ofd = new SaveFileDialog();
             ofd.InitialDirectory = directory;
             ofd.DefaultExt = ".puml";
+            ofd.Filter = "UML|*.puml";
+           
 
             if (ofd.ShowDialog().GetValueOrDefault())
             {
+                File.CreateText(ofd.FileName);
                 return ofd.FileName;
             }
 

@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using Prism.Commands;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace PlantUMLEditor.Models
 {
@@ -21,9 +24,41 @@ namespace PlantUMLEditor.Models
 
         public DocumentModel()
         {
+            ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
         }
 
-       
+        private ImageModel imageModel;
+        private Preview PreviewWindow;
+
+        private void ShowPreviewCommandHandler()
+        {
+            imageModel = new ImageModel();
+
+            PreviewWindow = new Preview();
+
+
+            PreviewWindow.DataContext = imageModel;
+           
+            PreviewWindow.Show();
+            ShowPreviewImage();
+        }
+
+        private async Task ShowPreviewImage()
+        {
+            await imageModel.ShowImage("d:\\downloads\\plantuml.jar", FileName);
+        }
+
+        private async Task ShowPreviewImage(string text)
+        {
+            string tmp = Path.GetTempFileName();
+            await File.WriteAllTextAsync(tmp, text);
+
+            await imageModel.ShowImage("d:\\downloads\\plantuml.jar", tmp);
+    
+            if(File.Exists(tmp))
+                File.Delete(tmp);
+        }
+
 
         public virtual void AutoComplete(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -31,6 +66,8 @@ namespace PlantUMLEditor.Models
 
         protected virtual void ContentChanged(ref string text)
         {
+            if(PreviewWindow != null)
+                ShowPreviewImage(text);
         }
 
         public DocumentTypes DocumentType
@@ -53,6 +90,7 @@ namespace PlantUMLEditor.Models
         {
             get; set;
         }
+        public DelegateCommand ShowPreviewCommand { get; }
 
         public virtual Task PrepareSave()
         {
