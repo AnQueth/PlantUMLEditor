@@ -20,13 +20,7 @@ namespace PlantUMLEditor.Models
 
         public UMLClassDiagram Diagram { get; set; }
 
-        protected override void ContentChanged( string text)
-        {
-          //  PlantUML.UMLClassDiagramParser.ReadClassDiagramString(text);
-
-            base.ContentChanged(  text);
-        }
-
+   
         public override async Task PrepareSave()
         {
             var z = await PlantUML.UMLClassDiagramParser.ReadClassDiagramString(Content);

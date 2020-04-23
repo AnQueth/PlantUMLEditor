@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -31,13 +32,24 @@ namespace PlantUMLEditor.Models
 
         protected override void ContentChanged(  string text)
         {
-            PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, true).ContinueWith(z =>
+            if (text != null)
             {
-            
-                Diagram = z.Result;
-                Diagram.FileName = FileName;
-            });
-            base.ContentChanged(  text);
+
+                Task.Run(() =>
+                {
+
+
+                    PlantUML.UMLSequenceDiagramParser.ReadString(text, DataTypes, true).ContinueWith(z =>
+                    {
+
+                        Diagram = z.Result;
+                        Diagram.FileName = FileName;
+                    });
+                    
+                });
+
+                base.ContentChanged(text);
+            }
         }
 
         public override async Task PrepareSave()
@@ -53,25 +65,16 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public int CurrentCursorIndex
-        {
-            get { return currentCursorIndex; }
-            set  { SetValue(ref  currentCursorIndex , value); }
-        }
+      
+        
 
-        public override void AutoComplete(object sender, System.Windows.Input.KeyEventArgs e)
+        public override void AutoComplete(Rect rec, string text, int line)
         {
             MatchingAutoComplete = null;
             MatchingAutoCompletes.Clear();
 
-            TextBox d = sender as TextBox;
+   
 
-            CurrentCursorIndex = d.CaretIndex;
-
-           var rec = d.GetRectFromCharacterIndex(d.CaretIndex);
-
-            var line = d.GetLineIndexFromCharacterIndex(d.CaretIndex);
-            string text = d.GetLineText(line).Trim();
 
             UMLSequenceConnection connection = null;
 
@@ -142,12 +145,13 @@ namespace PlantUMLEditor.Models
                 if (value != null)
                 {
                     string insert = " " + value + " ";
-                    if (Content[CurrentCursorIndex + 1] == '\r')
-                        CurrentCursorIndex--;
 
-                    Content = Content.Insert(CurrentCursorIndex + 1, insert );
+                    this.InsertText(insert);
 
-                    CurrentCursorIndex = CurrentCursorIndex + insert.Length;
+                   
+                    
+
+                  
 
 
                     AutoCompleteVisibility = Visibility.Hidden;
@@ -156,7 +160,7 @@ namespace PlantUMLEditor.Models
         }
 
         private Visibility _AutoCompleteVisibility;
-        private int currentCursorIndex;
+     
 
         public Visibility AutoCompleteVisibility
         {

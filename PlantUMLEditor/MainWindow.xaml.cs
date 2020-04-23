@@ -27,5 +27,15 @@ namespace PlantUMLEditor
         private void TextBlock_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
         }
+
+        private void RichTextBox_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void RichTextBox_Unloaded(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

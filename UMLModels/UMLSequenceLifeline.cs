@@ -14,7 +14,7 @@
         {
             get
             {
-                return DataTypeId ==  null ? $"{Text} is not a known type for lifeline" : null;
+                return DataTypeId ==  null ? $" {Text} is not a known type for lifeline" : null;
             }
         }
 

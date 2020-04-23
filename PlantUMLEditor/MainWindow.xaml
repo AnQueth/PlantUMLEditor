@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlantUMLEditor"
+    xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
 
         mc:Ignorable="d"
@@ -14,17 +15,14 @@
 
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
-                <TextBox  HorizontalAlignment="Stretch" VerticalAlignment="Stretch"   Text="{Binding Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            AcceptsReturn="True"  AcceptsTab="True"
+                <localControls:MyTextBox BindedDocument="{Binding}"  DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  
+                               
+                            AcceptsReturn="True"  AcceptsTab="True"  
                                 Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}"
                                Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}">
-
-                        <b:Interaction.Triggers>
-                            <b:EventTrigger EventName="PreviewKeyDown">
-                                <b:CallMethodAction MethodName="AutoComplete" TargetObject="{Binding}"></b:CallMethodAction>
-                            </b:EventTrigger>
-                        </b:Interaction.Triggers>
-                    </TextBox>
+                    
+             
+                    </localControls:MyTextBox>
 
                 <Grid Canvas.Top="{Binding TopAutoComplete}" Canvas.Left="{Binding LeftAutoComplete}" Visibility="{Binding AutoCompleteVisibility}">
                     <Grid.RowDefinitions>

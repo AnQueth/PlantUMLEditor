@@ -104,6 +104,7 @@ namespace PlantUMLEditor.Models
                     {
                         FileName = i.o.FileName,
                         Text = i.f.Warning,
+                        LineNumber = i.f.LineNumber,
                         Warning = true
                     });
 
@@ -156,6 +157,7 @@ namespace PlantUMLEditor.Models
                             newMessages.Add(new DocumentMessage()
                             {
                                 FileName = fileName,
+                                LineNumber = g.LineNumber,
                                 Text = g.Warning,
                                 Warning = true
                             });
