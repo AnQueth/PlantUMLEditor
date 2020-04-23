@@ -8,7 +8,7 @@ using System.Windows.Media.Imaging;
 
 namespace PlantUMLEditor.Models
 {
-    public class ImageModel : BindingBase
+    public class PreviewDiagramModel : BindingBase
     {
         private BitmapSource image;
         private string title;

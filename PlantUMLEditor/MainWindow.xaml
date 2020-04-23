@@ -7,8 +7,9 @@
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
 
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Aaron's Plant UML Editor" Height="650" Width="900">
     <Window.Resources>
+       
         <DataTemplate x:Key="TabControlItemTemplate2">
 
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -57,23 +58,30 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="100" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="100"></RowDefinition>
         </Grid.RowDefinitions>
         <Ribbon Grid.ColumnSpan="3">
             <RibbonTab Header="Home">
-                <RibbonButton Label="Load" Command="{Binding OpenDirectoryCommand}" />
-                <RibbonButton Label="Save"  Command="{Binding SaveAllCommand}" />
-                <RibbonButton Label="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />
-                <RibbonButton Label="New Sequence Diagram" Command="{Binding CreateNewSequenceDiagram}" />
+                <RibbonGroup>
+                <RibbonButton Label="Load Folder" Command="{Binding OpenDirectoryCommand}" SmallImageSource="/Images/OpenFolder_16x.png" />
+                    <RibbonButton Label="Save All"  Command="{Binding SaveAllCommand}" SmallImageSource="/Images/SaveAll_16x.png" />
+      
+                </RibbonGroup>
+                <RibbonGroup>
+                    <RibbonButton Label="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />
+                    <RibbonButton Label="New Sequence Diagram" Command="{Binding CreateNewSequenceDiagram}" />
+                </RibbonGroup>
             </RibbonTab>
         </Ribbon>
-        <TreeView Grid.Row="1" ItemsSource="{Binding Folder.Children}">
+        <TreeView Grid.Row="1" Grid.RowSpan="3" ItemsSource="{Binding Folder.Children}">
             <TreeView.ItemContainerStyle>
                 <Style TargetType="{x:Type TreeViewItem}">
                     <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
@@ -83,7 +91,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 <StaticResource ResourceKey="NameTemplate" />
             </TreeView.ItemTemplate>
         </TreeView>
-        <GridSplitter    HorizontalAlignment="Center"
+        <GridSplitter   Grid.RowSpan="3"  HorizontalAlignment="Center"
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
         <Grid Grid.Row="1" Grid.Column="2">
             <TabControl ContentTemplate="{DynamicResource TabControlItemTemplate2}"
@@ -104,7 +112,7 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}"
                             <Button  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
                                 <Button.Content>
                                     <Grid>
-                                        <TextBlock Text="Save and Close"></TextBlock>
+                                        <Image Source="/Images/SaveClose_16x.png"></Image>
                                     </Grid>
                                 </Button.Content>
                             </Button>
@@ -112,14 +120,14 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}"
                             <Button  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
                                 <Button.Content>
                                     <Grid>
-                                        <TextBlock Text="Close"></TextBlock>
+                                        <Image Source="/Images/Close_8x_16x.png" ></Image>
                                     </Grid>
                                 </Button.Content>
                             </Button>
                             <Button  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3"  Command="{Binding  ShowPreviewCommand}">
                                 <Button.Content>
                                     <Grid>
-                                        <TextBlock Text="Preview"></TextBlock>
+                                        <Image Source="/Images/PreviewTransition_16x.png" ></Image>
                                     </Grid>
                                 </Button.Content>
                             </Button>
@@ -129,5 +137,9 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}"
                 </TabControl.ItemTemplate>
             </TabControl>
         </Grid>
+        <GridSplitter Grid.Row="2" ShowsPreview="True" Grid.Column="2" Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
+        <DataGrid Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Messages}" SelectedItem="{Binding SelectedMessage, Mode=TwoWay}">
+            
+        </DataGrid>
     </Grid>
 </Window>

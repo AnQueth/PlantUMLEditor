@@ -1,12 +1,18 @@
 ﻿using Prism.Commands;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Runtime.InteropServices.ComTypes;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Threading;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -28,13 +34,18 @@ namespace PlantUMLEditor.Models
             set { SetValue(ref documents, value); }
         }
 
-        public FolderBindingModel Folder
+        public TreeViewModel Folder
         {
             get { return folder; }
             private set { SetValue(ref folder, value); }
         }
 
         public ObservableCollection<DocumentModel> OpenDocuments
+        {
+            get;
+        }
+
+        public ObservableCollection<DocumentMessage> Messages
         {
             get;
         }
@@ -46,24 +57,150 @@ namespace PlantUMLEditor.Models
 
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
 
+        public DelegateCommand ScanAllFiles { get; }
+
+        private Timer _messageChecker;
+
+
+        public DocumentMessage SelectedMessage
+        {
+            get { return selectedMessage; }
+            set
+            {
+                SetValue(ref selectedMessage, value);
+
+                if (value != null)
+                    AttemptOpeningFile(selectedMessage.FileName);
+
+            }
+        }
+
+        private void CheckMessages(object state)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+
+                List<DocumentMessage> newMessages = new List<DocumentMessage>();
+
+
+                var items = from o in Documents.SequenceDiagrams
+                            let w = from z in o.LifeLines
+                                    where z.Warning != null
+                                    select z
+                            from f in w
+                            where f.Warning != null
+                            select new { o, f };
+
+
+
+
+
+
+                foreach (var i in items)
+                {
+
+
+                    newMessages.Add(new DocumentMessage()
+                    {
+                        FileName = i.o.FileName,
+                        Text = i.f.Warning,
+                        Warning = true
+                    });
+
+
+                }
+
+
+
+                foreach (var i in Documents.SequenceDiagrams)
+                {
+                    CheckEntities(i.FileName, i.Entities);
+
+                }
+
+
+                List<DocumentMessage> removals = new List<DocumentMessage>();
+                foreach (var item in Messages)
+                {
+                    DocumentMessage m;
+                    if ( (m = newMessages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text)) == null)
+                    {
+                        removals.Add(item);
+                      
+                    }
+                }
+
+                removals.ForEach(p => Messages.Remove(p));
+
+                foreach (var item in newMessages)
+                {
+                    DocumentMessage m;
+                    if ((m = Messages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text)) == null)
+                    {
+                        Messages.Add(item);
+                    }
+                }
+
+
+
+
+                _messageChecker.Change(2000, Timeout.Infinite);
+
+
+                void CheckEntities(string fileName, List<UMLOrderedEntity> entities)
+                {
+                    foreach (var g in entities)
+                    {
+                        if (g.Warning != null)
+                        {
+                            newMessages.Add(new DocumentMessage()
+                            {
+                                FileName = fileName,
+                                Text = g.Warning,
+                                Warning = true
+                            });
+                        }
+
+                        if (g is UMLSequenceBlockSection s)
+                        {
+                            CheckEntities(fileName, s.Entities);
+
+                        }
+                    }
+                }
+
+            });
+        }
+
         public MainModel(IOpenDirectoryService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization)
         {
             Documents = new UMLModels.UMLDocumentCollection();
+            _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
             _openDirectoryService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(OpenDirectory);
             SaveAllCommand = new DelegateCommand(() => SaveAll());
-            Folder = new FolderBindingModel(Path.GetTempPath(), false);
+            Folder = new TreeViewModel(Path.GetTempPath(), false);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<DocumentModel>();
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler);
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler);
             CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
+            Messages = new ObservableCollection<DocumentMessage>();
+            ScanAllFiles = new DelegateCommand(ScanAllFilesHandler);
+
+
+
         }
 
-        private void CloseDocumentAndSaveHandler(DocumentModel doc)
+        private void ScanAllFilesHandler()
         {
-            Save(doc);
+
+        }
+
+        private async void CloseDocumentAndSaveHandler(DocumentModel doc)
+        {
+            await Save(doc);
 
             OpenDocuments.Remove(doc);
         }
@@ -92,7 +229,7 @@ namespace PlantUMLEditor.Models
             this.OpenDirectory();
         }
 
-        private FolderBindingModel GetSelectedFile(FolderBindingModel item)
+        private TreeViewModel GetSelectedFile(TreeViewModel item)
         {
             if (item.IsSelected && item.IsFile)
                 return item;
@@ -109,7 +246,7 @@ namespace PlantUMLEditor.Models
             return null;
         }
 
-        private FolderBindingModel GetSelectedFolder(FolderBindingModel item)
+        private TreeViewModel GetSelectedFolder(TreeViewModel item)
         {
             if (item.IsSelected && !item.IsFile)
                 return item;
@@ -131,43 +268,67 @@ namespace PlantUMLEditor.Models
             if (e.ClickCount == 1)
                 return;
 
-            FolderBindingModel fbm = GetSelectedFile(Folder);
+            TreeViewModel fbm = GetSelectedFile(Folder);
             if (fbm == null)
                 return;
 
-            if (OpenDocuments.Any(p => p.FileName == fbm.FullPath))
-                return;
+            await AttemptOpeningFile(fbm.FullPath);
 
-            var cd = Documents.ClassDocuments.Find(p => p.FileName == fbm.FullPath);
-            var sd = Documents.SequenceDiagrams.Find(p => p.FileName == fbm.FullPath);
-            if (cd == null &&  sd == null)
+
+        }
+
+        private async Task AttemptOpeningFile(string fullPath)
+        {
+            var doc = OpenDocuments.FirstOrDefault(p => p.FileName == fullPath);
+
+            if (doc != null)
             {
-                 sd = await PlantUML.UMLSequenceDiagramParser.ReadDiagram(fbm.FullPath, Documents.DataTypes, false);
+                CurrentDocument = doc;
+
+                return;
+            }
+            var cd = Documents.ClassDocuments.Find(p => p.FileName == fullPath);
+            var sd = Documents.SequenceDiagrams.Find(p => p.FileName == fullPath);
+            if (cd == null && sd == null)
+            {
+                try
+                {
+                    sd = await PlantUML.UMLSequenceDiagramParser.ReadDiagram(fullPath, Documents.DataTypes, false);
+                }
+                catch { }
                 if (sd != null)
                 {
                     Documents.SequenceDiagrams.Add(sd);
-                    
+
                 }
                 else
                 {
-                    cd = await PlantUML.UMLClassDiagramParser.ReadClassDiagram(fbm.FullPath);
-                    Documents.ClassDocuments.Add(cd);
+                    try
+                    {
+                        cd = await PlantUML.UMLClassDiagramParser.ReadClassDiagram(fullPath);
+                    }
+                    catch
+                    {
+
+                    }
+                    if (cd != null)
+                        Documents.ClassDocuments.Add(cd);
                 }
             }
 
             if (cd != null)
             {
-                OpenClassDiagram(fbm.FullPath, cd);
+                OpenClassDiagram(fullPath, cd);
             }
-            else
+            else if (sd != null)
             {
-                OpenSequenceDiagram(fbm.FullPath, sd);
+                OpenSequenceDiagram(fullPath, sd);
             }
         }
 
         private string GetNewFile()
         {
-            FolderBindingModel selected = GetSelectedFolder(Folder);
+            TreeViewModel selected = GetSelectedFolder(Folder);
 
             string dir = selected?.FullPath ?? _folderBase;
 
@@ -192,8 +353,8 @@ namespace PlantUMLEditor.Models
 
         private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram)
         {
-             
-        
+
+
 
 
             var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new))
@@ -214,7 +375,7 @@ namespace PlantUMLEditor.Models
 
         private void OpenClassDiagram(string fileName, UMLClassDiagram diagram)
         {
-             
+
 
             var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new))
             {
@@ -231,12 +392,12 @@ namespace PlantUMLEditor.Models
 
         private void DiagramModelChanged<T>(List<T> list, T old, T @new) where T : UMLDiagram
         {
-            if (old != null)
+            if (old != null && string.IsNullOrEmpty(@new.FileName))
             {
                 @new.FileName = old.FileName;
             }
 
-            list.Remove(list.Find(z => z.FileName == @new.FileName || z.Title == @new.Title));
+            list.RemoveAll(z => z.FileName == @new.FileName || z.Title == @new.Title);
             list.Add(@new);
         }
 
@@ -244,7 +405,7 @@ namespace PlantUMLEditor.Models
         {
             var s = new UMLModels.UMLClassDiagram(title, fileName);
 
-            var d = new ClassDiagramDocumentModel((old, @new)=> DiagramModelChanged(Documents.ClassDocuments, old, @new))
+            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new))
             {
                 DocumentType = DocumentTypes.Class,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
@@ -276,7 +437,7 @@ namespace PlantUMLEditor.Models
             OpenDocuments.Add(d);
             this.CurrentDocument = d;
         }
- 
+
 
         private async Task SaveAll()
         {
@@ -304,7 +465,7 @@ namespace PlantUMLEditor.Models
             if (string.IsNullOrEmpty(dir))
                 return;
 
-            Folder = new FolderBindingModel("", false);
+            Folder = new TreeViewModel("", false);
 
             Folder.Children.Clear();
 
@@ -341,11 +502,11 @@ namespace PlantUMLEditor.Models
             return _folderBase;
         }
 
-        private void AddFolderItems(string dir, FolderBindingModel model)
+        private void AddFolderItems(string dir, TreeViewModel model)
         {
             foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
             {
-                model.Children.Add(new FolderBindingModel(file, true)
+                model.Children.Add(new TreeViewModel(file, true)
                 {
                     Name = Path.GetFileName(file)
                 });
@@ -356,7 +517,7 @@ namespace PlantUMLEditor.Models
                 if (!item.StartsWith("."))
                     continue;
 
-                var fm = new FolderBindingModel(item, false)
+                var fm = new TreeViewModel(item, false)
                 {
                     Name = Path.GetFileName(item)
                 };
@@ -367,10 +528,11 @@ namespace PlantUMLEditor.Models
         }
 
         private readonly IOpenDirectoryService _openDirectoryService;
-        private FolderBindingModel folder;
+        private TreeViewModel folder;
         private UMLModels.UMLDocumentCollection documents;
         private DocumentModel currentDocument;
         private string _folderBase;
+        private DocumentMessage selectedMessage;
 
         public ICommand OpenDirectoryCommand
         {

@@ -3,16 +3,16 @@ using System.IO;
 
 namespace PlantUMLEditor.Models
 {
-    public class FolderBindingModel : BindingBase
+    public class TreeViewModel : BindingBase
     {
         private string _name;
 
-        public FolderBindingModel(string path, bool isFile)
+        public TreeViewModel(string path, bool isFile)
         {
             FullPath = path;
      
             IsFile = isFile;
-            Children = new ObservableCollection<FolderBindingModel>();
+            Children = new ObservableCollection<TreeViewModel>();
         }
 
         public bool IsSelected { get; set; }
@@ -39,7 +39,7 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
-        public ObservableCollection<FolderBindingModel> Children
+        public ObservableCollection<TreeViewModel> Children
         {
             get;
         }

@@ -40,7 +40,7 @@ namespace UMLModels
         {
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
-            string s = $"{vs} {ReturnType.Name} {Name}(";
+            string s = $"{ReturnType.Name} {Name}(";
 
             if (Parameters != null)
                 foreach (var p in Parameters)

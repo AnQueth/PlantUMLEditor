@@ -29,13 +29,15 @@ namespace PlantUMLEditor.Models
 
         private object _locker = new object();
 
-        protected override void ContentChanged(ref string text)
+        protected override void ContentChanged(  string text)
         {
             PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, true).ContinueWith(z =>
             {
+            
                 Diagram = z.Result;
+                Diagram.FileName = FileName;
             });
-            base.ContentChanged(ref text);
+            base.ContentChanged(  text);
         }
 
         public override async Task PrepareSave()
@@ -44,6 +46,8 @@ namespace PlantUMLEditor.Models
 
             lock (_locker)
             {
+                z.FileName = FileName;
+
                 ChangedCallback(Diagram, z);
                 Diagram = z;
             }

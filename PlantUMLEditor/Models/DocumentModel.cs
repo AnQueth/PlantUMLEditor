@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Windows.Documents;
 
 namespace PlantUMLEditor.Models
 {
@@ -27,15 +28,15 @@ namespace PlantUMLEditor.Models
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
         }
 
-        private ImageModel imageModel;
+        private PreviewDiagramModel imageModel;
         private Preview PreviewWindow;
 
         private void ShowPreviewCommandHandler()
         {
-            imageModel = new ImageModel();
+            imageModel = new PreviewDiagramModel();
 
             PreviewWindow = new Preview();
-
+            imageModel.Title = Name;
 
             PreviewWindow.DataContext = imageModel;
            
@@ -64,7 +65,7 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        protected virtual void ContentChanged(ref string text)
+        protected virtual void ContentChanged(  string text)
         {
             if(PreviewWindow != null)
                 ShowPreviewImage(text);
@@ -75,6 +76,8 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
+
+       
         public string Content
         {
             get { return content; }
@@ -82,7 +85,7 @@ namespace PlantUMLEditor.Models
             {
                 SetValue(ref content, value);
 
-                ContentChanged(ref content);
+                ContentChanged(  content);
             }
         }
 

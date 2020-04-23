@@ -40,7 +40,12 @@ namespace PlantUML
                 var items = line.Split(new string[] { " ", "as" }, StringSplitOptions.RemoveEmptyEntries);
                 if (items.Length == 3)
                 {
-                    lifeline = new UMLSequenceLifeline(items[1], items[2], types[items[1]].Id);
+                    if (!types.ContainsKey(items[1]))
+                    {
+                        lifeline = new UMLSequenceLifeline(items[1], items[2], null);
+                    }
+                    else
+                        lifeline = new UMLSequenceLifeline(items[1], items[2], types[items[1]].Id);
                     return true;
                 }
             }
@@ -68,7 +73,7 @@ namespace PlantUML
             {
                 lineNumber++;
                 line = line.Trim();
-                
+
                 if (line == "@startuml")
                 {
                     started = true;
@@ -133,10 +138,10 @@ namespace PlantUML
                     {
                         sectionBlock.LineNumber = lineNumber;
 
-                        if(sectionBlock.TakeOverOwnership)
+                        if (sectionBlock.TakeOverOwnership)
                         {
                             activeBlocks.Pop();
-                    
+
 
                         }
 
@@ -156,8 +161,8 @@ namespace PlantUML
 
                     }
                     else if (activeBlocks.Count != 0 && activeBlocks.Peek().IsEnding(line))
-                    { 
-                            activeBlocks.Pop();
+                    {
+                        activeBlocks.Pop();
                     }
                 }
             }
@@ -166,15 +171,15 @@ namespace PlantUML
         }
         static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+) *([a-zA-Z0-9\\-><]+) *([a-zA-Z0-9\\-><:]*) *(.+)");
         public static bool TryParseAllConnections(string line, UMLSequenceDiagram diagram,
-            Dictionary<string, UMLDataType> types, UMLSequenceConnection previous,  out UMLSequenceConnection connection)
+            Dictionary<string, UMLDataType> types, UMLSequenceConnection previous, out UMLSequenceConnection connection)
         {
             connection = null;
 
-         
+
 
             var m = lineConnectionRegex.Match(line);
 
-            
+
 
             try
             {
@@ -184,7 +189,7 @@ namespace PlantUML
 
                 int l = line.IndexOf(':');
 
-                string actionSignature = l != -1 ? line.Substring(l).Trim(':').Trim()  : string.Empty;
+                string actionSignature = l != -1 ? line.Substring(l).Trim(':').Trim() : string.Empty;
 
                 if (fromAlias == null)
                 {
@@ -213,7 +218,7 @@ namespace PlantUML
         }
 
         private static bool TryParseConnection(string fromAlias, string arrow, string toAlias,
-            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, 
+            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types,
             out UMLSequenceConnection connection)
         {
             var from = d.LifeLines.Find(p => p.Alias == fromAlias);
@@ -223,11 +228,19 @@ namespace PlantUML
                 if (to != null)
                 {
                     bool isCreate = arrow == "-->";
+                    UMLMethod action = null;
+                    if (to.DataTypeId != null && types.ContainsKey(to.DataTypeId))
+                    {
 
-                    var toType = types[to.DataTypeId];
 
-                    var action = toType.Methods.Find(p => p.Signature == actionSignature);
 
+                        var toType = types[to.DataTypeId];
+               
+                        if (toType != null)
+                        {
+                            action = toType.Methods.Find(p => p.Signature == actionSignature);
+                        }
+                    }
                     if (action == null)
                         action = new UMLUnknownAction(actionSignature);
 
@@ -255,12 +268,22 @@ namespace PlantUML
 
                 var to = d.LifeLines.Find(p => p.Alias == toAlias);
 
-                var toType = types[to.DataTypeId];
+                UMLMethod action = null;
+                if (types.ContainsKey(to.DataTypeId))
+                {
 
-                var action = toType.Methods.Find(p => p.Signature == actionSignature);
 
+
+                    var toType = types[to.DataTypeId];
+
+                    if (toType != null)
+                    {
+                        action = toType.Methods.Find(p => p.Signature == actionSignature);
+                    }
+                }
                 if (action == null)
                     action = new UMLUnknownAction(actionSignature);
+
 
                 connection = new UMLSequenceConnection()
                 {
