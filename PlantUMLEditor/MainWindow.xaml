@@ -71,7 +71,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 <RibbonGroup>
                 <RibbonButton Label="Load Folder" Command="{Binding OpenDirectoryCommand}" SmallImageSource="/Images/OpenFolder_16x.png" />
                     <RibbonButton Label="Save All"  Command="{Binding SaveAllCommand}" SmallImageSource="/Images/SaveAll_16x.png" />
-      
+                    <RibbonButton Label="Scan" Command="{Binding ScanAllFiles}"></RibbonButton>
                 </RibbonGroup>
                 <RibbonGroup>
                     <RibbonButton Label="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace UMLModels
 {
@@ -48,7 +49,8 @@ namespace UMLModels
             Finally,
             Parrallel,
             Break,
-            IfNoElse
+            IfNoElse,
+            Loop
         }
 
         public bool TakeOverOwnership
@@ -59,26 +61,39 @@ namespace UMLModels
             }
         }
 
+        private static Regex _blockSection = new Regex("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.+)");
+
         public static UMLSequenceBlockSection TryParse(string line)
         {
-            if (line.StartsWith("alt"))
-                return new UMLSequenceBlockSection(line.Substring(4), UMLSequenceBlockSection.SectionTypes.If);
-            else if (line.StartsWith("else"))
-                return new UMLSequenceBlockSection(line.Substring(5), SectionTypes.Else);
-            else if (line.StartsWith("par"))
-                return new UMLSequenceBlockSection(line.Substring(4), SectionTypes.Parrallel);
-            else if (line.StartsWith("opt"))
-                return new UMLSequenceBlockSection(line.Substring(4), SectionTypes.If);
-            else if (line.StartsWith("try"))
-                return new UMLSequenceBlockSection(line.Substring(4), SectionTypes.Try);
-            else if (line.StartsWith("catch"))
-                return new UMLSequenceBlockSection(line.Substring(6), SectionTypes.Catch);
-            else if (line.StartsWith("finally"))
-                return new UMLSequenceBlockSection(line.Substring(8), SectionTypes.Finally);
-            else if (line.StartsWith("break"))
-                return new UMLSequenceBlockSection(line.Substring(6), SectionTypes.Break);
-            else
-                return null;
+            var blockSection = _blockSection.Match(line);
+            if (blockSection.Success)
+            {
+                var name = blockSection.Groups["type"].Value;
+                string text = blockSection.Groups["text"].Value;
+
+                switch (name.ToLowerInvariant())
+                {
+                    case "opt":
+                    case "alt":
+                        return new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.If);
+                    case "else":
+                        return new UMLSequenceBlockSection(text, SectionTypes.Else);
+                    case "par":
+                        return new UMLSequenceBlockSection(text, SectionTypes.Parrallel);
+                    case "try":
+                        return new UMLSequenceBlockSection(text, SectionTypes.Try);
+                    case "catch":
+                        return new UMLSequenceBlockSection(text, SectionTypes.Catch);
+                    case "finally":
+                        return new UMLSequenceBlockSection(text, SectionTypes.Finally);
+                    case "break":
+                        return new UMLSequenceBlockSection(text, SectionTypes.Break);
+                    case "loop":
+                        return new UMLSequenceBlockSection(text, SectionTypes.Loop);
+                }
+
+            }
+            return null;
         }
     }
 }

@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Markup;
 using UMLModels;
 
 namespace PlantUML
 {
     public class UMLClassDiagramParser
     {
-        public static async Task<UMLClassDiagram> ReadClassDiagramString(string s)
+        public static async Task<UMLClassDiagram> ReadString(string s)
         {
             using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(s)))
             {
@@ -24,7 +26,7 @@ namespace PlantUML
             }
         }
 
-        public static async Task<UMLClassDiagram> ReadClassDiagram(string file)
+        public static async Task<UMLClassDiagram> ReadFile(string file)
         {
             using (StreamReader sr = new StreamReader(file))
             {
@@ -34,22 +36,32 @@ namespace PlantUML
             }
         }
 
+        private const string PACKAGE = "package";
+        static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w ]+)\\\"* *\\{");
+        static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>\\w+)\\s+{");
+        static Regex baseClass = new Regex("(?<first>\\w+) (?<arrow>[\\-\\.]+) (?<second>\\w+)");
+
+        static Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\!\\<]*[\\-\\.]+[\\*o\\!\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)");
+
+        static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+
+        static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*(?<type>[\\w\\<\\>]+)\\s*(?<name>\\w+)\\((?<params>((?<pt>\\w+)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
+        static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>]+)\\s+(?<name>[\\w]+)$");
+
         private static async Task<UMLClassDiagram> ReadClassDiagram(StreamReader sr, string fileName)
         {
             UMLClassDiagram d = new UMLClassDiagram(string.Empty, fileName);
             bool started = false;
             string line = null;
-            string currentPackage = string.Empty;
+
+            Stack<string> packages = new Stack<string>();
 
             Dictionary<string, UMLDataType> aliases = new Dictionary<string, UMLDataType>();
 
-            Regex baseClass = new Regex("(?<first>\\w+) (?<arrow>[\\-\\.]+) (?<second>\\w+)");
-
-            Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\!\\<]*[\\-\\.]+[\\*o\\!\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)");
-
-            Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
 
             bool swallowingNotes = false;
+
+            Stack<string> brackets = new Stack<string>();
 
             while ((line = await sr.ReadLineAsync()) != null)
             {
@@ -85,45 +97,72 @@ namespace PlantUML
 
                 UMLDataType DataType = null;
 
+                if (line == "}" && brackets.Peek() == PACKAGE)
+                {
+                    brackets.Pop();
+                    packages.Pop();
+                }
+
+
                 if (line.StartsWith("title"))
                 {
                     d.Title = line.Substring(6);
                     continue;
                 }
-                else if (line.StartsWith("package"))
+                else if (_packageRegex.IsMatch(line))
                 {
-                    currentPackage = Clean(line.Substring(8));
+                    var s = _packageRegex.Match(line);
+
+                    packages.Push(Clean(s.Groups[PACKAGE].Value));
+                    brackets.Push(PACKAGE);
+
                     continue;
                 }
-                else if (line.StartsWith("abstract"))
+
+                else if (_class.IsMatch(line))
                 {
-                    if (line.Length > 15)
-                        DataType = new UMLClass(currentPackage, true, Clean(line.Substring(15)));
+                    var g = _class.Match(line);
+                    if (string.IsNullOrEmpty(g.Groups["name"].Value))
+                        continue;
+
+                    string package = GetPackage(packages);
+
+
+                    DataType = new UMLClass(package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
+                        , Clean(g.Groups["name"].Value));
+
+                    if (line.EndsWith("{"))
+                    {
+                        brackets.Push("class");
+                    }
+
                 }
-                else if (line.StartsWith("class")  )
-                {
-                    if (line.Length > 5)
-                        DataType = new UMLClass(currentPackage, false, Clean(line.Substring(6)));
-                }
+
                 else if (line.StartsWith("interface"))
                 {
+                    string package = GetPackage(packages);
                     if (line.Length > 8)
-                        DataType = new UMLInterface(currentPackage, Clean(line.Substring(9)));
+                        DataType = new UMLInterface(package, Clean(line.Substring(9)));
+
+                    if (line.EndsWith("{"))
+                    {
+                        brackets.Push("interface");
+                    }
                 }
                 else if (baseClass.IsMatch(line))
                 {
 
                     var m = baseClass.Match(line);
 
-                    d.DataTypes.Find(p=> p.Name == m.Groups["first"].Value).Base = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value);
+                    d.DataTypes.Find(p => p.Name == m.Groups["first"].Value).Base = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value);
                 }
                 else if (composition.IsMatch(line))
                 {
 
                     var m = composition.Match(line);
 
-                  
-                    if(m.Groups["text"].Success)
+
+                    if (m.Groups["text"].Success)
                     {
                         var propType = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value);
                         var fromType = d.DataTypes.Find(p => p.Name == m.Groups["first"].Value);
@@ -135,7 +174,7 @@ namespace PlantUML
                         }
                         if (m.Groups["sm"].Success)
                         {
-                            if(m.Groups["sm"].Value == "*")
+                            if (m.Groups["sm"].Value == "*")
                             {
                                 l = ListTypes.List;
                             }
@@ -145,16 +184,16 @@ namespace PlantUML
 
                         fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value, propType, UMLVisibility.Public, ListTypes.None));
                     }
-                         
-                       
-                    
-                    
+
+
+
+
                 }
-           
 
-                if (DataType != null)
+
+                if (DataType != null && line.EndsWith("{"))
                 {
-
+                    string currentPackage = GetPackage(packages);
 
                     d.DataTypes.Add(DataType);
                     while ((line = await sr.ReadLineAsync()) != null)
@@ -162,33 +201,45 @@ namespace PlantUML
                         line = line.Trim();
 
                         if (line == "}")
-                            break;
-
-                        if (line.EndsWith(")"))
                         {
-                            var items = line.Split(new char[] { ' ', ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (brackets.Peek() != PACKAGE)
+                                brackets.Pop();
+                            break;
+                        }
 
-                            int index;
-                            UMLVisibility visibility;
-                            ReadVisibility(items, out index, out visibility);
+                        var methodMatch = _classLine.Match(line);
+                        if (methodMatch.Success)
+                        {
+
+                            UMLVisibility visibility = ReadVisibility(methodMatch.Groups["visibility"].Value);
+                            string name = methodMatch.Groups["name"].Value;
+                            string returntype = methodMatch.Groups["type"].Value;
+                            string modifier = methodMatch.Groups["modifier"].Value;
+
+
+
+
 
                             UMLDataType c;
 
-                            if (aliases.ContainsKey(items[index]))
+                            if (aliases.ContainsKey(returntype))
                             {
-                                c = aliases[items[index]];
+                                c = aliases[returntype];
                             }
                             else
                             {
-                                c = new UMLDataType(items[index], currentPackage);
-                                aliases.Add(items[index], c);
+                                c = new UMLDataType(returntype, currentPackage);
+                                aliases.Add(returntype, c);
                             }
 
                             List<UMLParameter> pars = new List<UMLParameter>();
 
-                            for (int x = 2 + index; x < items.Length; x += 2)
+                            for (int x = 0; x < methodMatch.Groups["params"].Captures.Count ; x++)
                             {
-                                Tuple<ListTypes, string> p = CreateFrom(items[x]);
+                                string pt = methodMatch.Groups["pt"].Captures[x].Value;
+                                string pn = methodMatch.Groups["pn"].Captures[x].Value;
+
+                                Tuple<ListTypes, string> p = CreateFrom(pt);
 
                                 if (aliases.ContainsKey(p.Item2))
                                 {
@@ -200,23 +251,23 @@ namespace PlantUML
                                     aliases.Add(p.Item2, c);
                                 }
 
-                                pars.Add(new UMLParameter(items[x + 1], c, p.Item1));
+                                pars.Add(new UMLParameter(pn, c, p.Item1));
                             }
 
-                            DataType.Methods.Add(new UMLMethod(items[1 + index], c, visibility, pars.ToArray()));
+                            DataType.Methods.Add(new UMLMethod(name, c, visibility, pars.ToArray())
+                            {
+                                IsStatic = modifier == "static"
+                            });
                         }
-                        else
+                        else if (_propertyLine.IsMatch(line))
                         {
-                            var items = line.Split(new char[] { ' ', ',', '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
-                            if (items.Length < 2)
-                                continue;
-                            int index = 0;
-                            UMLVisibility visibility;
-
-                            ReadVisibility(items, out index, out visibility);
+                            var g = _propertyLine.Match(line);
 
 
-                            Tuple<ListTypes, string> p = CreateFrom(items[index]);
+                            UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
+
+
+                            Tuple<ListTypes, string> p = CreateFrom(g.Groups["type"].Value);
 
                             UMLDataType c;
 
@@ -230,11 +281,10 @@ namespace PlantUML
                                 aliases.Add(p.Item2, c);
                             }
 
-                            DataType.Properties.Add(new UMLProperty(items[1 + index], c, visibility, p.Item1));
+                            DataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.Item1));
                         }
 
-                        if (line == "}")
-                            break;
+
                     }
                 }
             }
@@ -242,26 +292,35 @@ namespace PlantUML
             return d;
         }
 
-        private static void ReadVisibility(string[] items, out int index, out UMLVisibility visibility)
+        private static string GetPackage(Stack<string> packages)
         {
-            index = 0;
-            visibility = UMLVisibility.None;
-            if (items[0] == "-")
-                visibility = UMLVisibility.Private;
-            else if (items[0] == "#")
-                visibility = UMLVisibility.Protected;
-            else if (items[0] == "+")
-                visibility = UMLVisibility.Public;
-
-            if (visibility == UMLVisibility.None)
+            StringBuilder sb = new StringBuilder();
+            int x = 0;
+            foreach (var item in packages)
             {
-                visibility = UMLVisibility.Public;
+                sb.Append(item);
+                if (x < item.Length - 1)
+                    sb.Append(".");
+                x++;
+            }
 
-            }
-            else
-            {
-                index++;
-            }
+            return sb.ToString();
+        }
+
+        private static UMLVisibility ReadVisibility(string item)
+        {
+            return UMLVisibility.None;
+            if (item == "-")
+                return UMLVisibility.Private;
+            else if (item == "#")
+                return UMLVisibility.Protected;
+            else if (item == "+")
+                return UMLVisibility.Public;
+
+
+            return UMLVisibility.Public;
+
+
         }
 
         private static string Clean(string name)

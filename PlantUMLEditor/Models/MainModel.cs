@@ -195,9 +195,15 @@ namespace PlantUMLEditor.Models
 
         }
 
-        private void ScanAllFilesHandler()
+        private async void ScanAllFilesHandler()
         {
+            var folder = GetWorkingFolder();
 
+            foreach (var file in Directory.EnumerateFiles("*.puml"))
+            {
+                var (cd, sd) = await TryFindOrAddDocument(file);
+
+            }
         }
 
         private async void CloseDocumentAndSaveHandler(DocumentModel doc)
@@ -289,13 +295,28 @@ namespace PlantUMLEditor.Models
 
                 return;
             }
+
+            var (cd, sd) = await TryFindOrAddDocument(fullPath);
+
+            if (cd != null)
+            {
+                OpenClassDiagram(fullPath, cd);
+            }
+            else if (sd != null)
+            {
+                OpenSequenceDiagram(fullPath, sd);
+            }
+        }
+
+        private async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd)> TryFindOrAddDocument(string fullPath)
+        {
             var cd = Documents.ClassDocuments.Find(p => p.FileName == fullPath);
             var sd = Documents.SequenceDiagrams.Find(p => p.FileName == fullPath);
             if (cd == null && sd == null)
             {
                 try
                 {
-                    sd = await PlantUML.UMLSequenceDiagramParser.ReadDiagram(fullPath, Documents.DataTypes, false);
+                    sd = await PlantUML.UMLSequenceDiagramParser.ReadFile(fullPath, Documents.DataTypes, false);
                 }
                 catch { }
                 if (sd != null)
@@ -307,7 +328,7 @@ namespace PlantUMLEditor.Models
                 {
                     try
                     {
-                        cd = await PlantUML.UMLClassDiagramParser.ReadClassDiagram(fullPath);
+                        cd = await PlantUML.UMLClassDiagramParser.ReadFile(fullPath);
                     }
                     catch
                     {
@@ -317,15 +338,7 @@ namespace PlantUMLEditor.Models
                         Documents.ClassDocuments.Add(cd);
                 }
             }
-
-            if (cd != null)
-            {
-                OpenClassDiagram(fullPath, cd);
-            }
-            else if (sd != null)
-            {
-                OpenSequenceDiagram(fullPath, sd);
-            }
+            return (cd, sd);
         }
 
         private string GetNewFile()
@@ -516,7 +529,7 @@ namespace PlantUMLEditor.Models
 
             foreach (var item in Directory.EnumerateDirectories(dir))
             {
-                if (!item.StartsWith("."))
+                if (Path.GetFileName(item).StartsWith("."))
                     continue;
 
                 var fm = new TreeViewModel(item, false)

@@ -206,7 +206,7 @@ namespace UmlTests
             PlantUMLGenerator p = new PlantUMLGenerator();
             var s = p.Create(d);
 
-            var gg = await UMLClassDiagramParser.ReadClassDiagramString(s);
+            var gg = await UMLClassDiagramParser.ReadString(s);
         }
     }
 }

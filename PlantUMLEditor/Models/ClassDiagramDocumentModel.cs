@@ -23,7 +23,7 @@ namespace PlantUMLEditor.Models
    
         public override async Task PrepareSave()
         {
-            var z = await PlantUML.UMLClassDiagramParser.ReadClassDiagramString(Content);
+            var z = await PlantUML.UMLClassDiagramParser.ReadString(Content);
 
 
             ChangedCallback(Diagram, z);

@@ -25,7 +25,7 @@ namespace UMLModels
 
         public UMLVisibility Visibility
         {
-            get;set;
+            get; set;
         }
 
         public bool IsConstructor { get; set; }
@@ -35,6 +35,9 @@ namespace UMLModels
         public List<UMLParameter> Parameters { get; }
 
         public Overridability OverridableType { get; set; }
+
+
+        public bool IsStatic {get;set;}
 
         public override string ToString()
         {

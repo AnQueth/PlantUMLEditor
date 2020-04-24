@@ -23,7 +23,7 @@ namespace PlantUML
             }
         }
 
-        public static async Task<UMLSequenceDiagram> ReadDiagram(string file, Dictionary<string, UMLDataType> types, bool justLifeLines)
+        public static async Task<UMLSequenceDiagram> ReadFile(string file, Dictionary<string, UMLDataType> types, bool justLifeLines)
         {
             using (StreamReader sr = new StreamReader(file))
             {
@@ -33,21 +33,30 @@ namespace PlantUML
             }
         }
 
+
+        private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database)\\s+(?<name>\\w+)(\\s+as (?<alias>\\w+))*");
+
         public static bool TryParseLifeline(string line, Dictionary<string, UMLDataType> types, out UMLSequenceLifeline lifeline)
         {
-            if (line.StartsWith("participant ") || line.StartsWith("actor "))
+            var m = _lifeLineRegex.Match(line);
+            if(m.Success)
             {
-                var items = line.Split(new string[] { " ", "as" }, StringSplitOptions.RemoveEmptyEntries);
-                if (items.Length == 3)
-                {
-                    if (!types.ContainsKey(items[1]))
+
+
+                string name = m.Groups["name"].Value;
+                string alias = m.Groups["alias"].Value;
+                if (string.IsNullOrEmpty(alias))
+                    alias = name;
+
+
+                    if (!types.ContainsKey(name))
                     {
-                        lifeline = new UMLSequenceLifeline(items[1], items[2], null);
+                        lifeline = new UMLSequenceLifeline(name, alias, null);
                     }
                     else
-                        lifeline = new UMLSequenceLifeline(items[1], items[2], types[items[1]].Id);
+                        lifeline = new UMLSequenceLifeline(name, alias, types[name].Id);
                     return true;
-                }
+                
             }
             lifeline = null;
             return false;
@@ -59,8 +68,7 @@ namespace PlantUML
             bool started = false;
             string line = null;
 
-            Dictionary<string, string> aliases = new Dictionary<string, string>();
-
+    
             Stack<UMLSequenceBlockSection> activeBlocks = new Stack<UMLSequenceBlockSection>();
 
             int lineNumber = 0;
@@ -108,7 +116,8 @@ namespace PlantUML
 
                 if (TryParseLifeline(line, types, out var lifeline))
                 {
-                    aliases.Add(lifeline.Alias, lifeline.DataTypeId);
+               
+            
                     d.LifeLines.Add(lifeline);
                     lifeline.LineNumber = lineNumber;
 
