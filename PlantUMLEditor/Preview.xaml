@@ -7,8 +7,18 @@
         mc:Ignorable="d"
         Title="{Binding Title}" Height="450" Width="800">
     <Grid>
-        <ScrollViewer>
-            <Image Source="{Binding Image}" Stretch="None" ></Image>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal">
+            <Button Content="Print" Command="{Binding PrintImageCommand}"></Button>
+        </StackPanel>
+        <ScrollViewer Grid.Row="1">
+           
+                <Image Source="{Binding Image}" Stretch="None" ></Image>
+                
+           
         </ScrollViewer>
       
     </Grid>

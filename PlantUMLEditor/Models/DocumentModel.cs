@@ -38,7 +38,7 @@ namespace PlantUMLEditor.Models
         private Preview PreviewWindow;
         private string _textValue;
 
-        private object _lock = new object();
+   
 
         private void ShowPreviewCommandHandler()
         {
@@ -60,28 +60,25 @@ namespace PlantUMLEditor.Models
 
         private async Task ShowPreviewImage()
         {
-            await imageModel.ShowImage("d:\\downloads\\plantuml.jar", FileName);
+            await imageModel.ShowImage("d:\\downloads\\plantuml.jar", FileName, false);
         }
 
         private async Task ShowPreviewImage(string text)
         {
-            Task.Run(async () =>
-            {
 
-               
-                    string tmp = Path.GetTempFileName();
-                    await File.WriteAllTextAsync(tmp, text);
 
-                    await imageModel.ShowImage("d:\\downloads\\plantuml.jar", tmp);
+            string tmp = Path.GetTempFileName();
+            await File.WriteAllTextAsync(tmp, text);
 
-                    if (File.Exists(tmp))
-                        File.Delete(tmp);
-               
-            });
+            await imageModel.ShowImage("d:\\downloads\\plantuml.jar", tmp, true);
+
+
+
+
         }
 
 
-       
+
         protected virtual void ContentChanged(string text)
         {
             if (PreviewWindow != null)
@@ -117,7 +114,7 @@ namespace PlantUMLEditor.Models
 
         public virtual void AutoComplete(Rect rec, string text, int line)
         {
-             
+
         }
 
         public void TextChanged(string text)

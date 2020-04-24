@@ -74,6 +74,7 @@ namespace PlantUMLEditor.Controls
 
         private string ReadText()
         {
+             
             return this.Text;
         }
 
