@@ -197,6 +197,11 @@ namespace PlantUMLEditor.Models
 
         private async void ScanAllFilesHandler()
         {
+
+            Documents.ClassDocuments.Clear();
+            Documents.SequenceDiagrams.Clear();
+
+
             var folder = GetWorkingFolder();
             List<string> potentialSequenceDiagrams = new List<string>();
             await ScanForFiles(folder, potentialSequenceDiagrams);

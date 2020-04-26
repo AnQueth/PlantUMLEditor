@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -37,16 +38,17 @@ namespace PlantUML
         }
 
         private const string PACKAGE = "package";
-        static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w ]+)\\\"* *\\{");
-        static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>\\w+)\\s+{");
+        static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{");
+        static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{");
         static Regex baseClass = new Regex("(?<first>\\w+) (?<arrow>[\\-\\.]+) (?<second>\\w+)");
 
         static Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\!\\<]*[\\-\\.]+[\\*o\\!\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)");
 
         static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
 
-        static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*(?<type>[\\w\\<\\>]+)\\s*(?<name>\\w+)\\((?<params>((?<pt>\\w+)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
-        static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>]+)\\s+(?<name>[\\w]+)$");
+        static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*(?<name>\\w+)\\((?<params>((?<pt>[\\w\\[\\]]+|\\w+\\<.*\\>?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
+        static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>]+)\\s+(?<name>[\\w]+)");
+
 
         private static async Task<UMLClassDiagram> ReadClassDiagram(StreamReader sr, string fileName)
         {
@@ -66,6 +68,7 @@ namespace PlantUML
             while ((line = await sr.ReadLineAsync()) != null)
             {
                 line = line.Trim();
+                Debug.WriteLine(line);
 
                 if (line == "@startuml")
                 {
@@ -137,7 +140,17 @@ namespace PlantUML
                     }
 
                 }
+                else if (line.StartsWith("enum"))
+                {
+                    string package = GetPackage(packages);
+                    if (line.Length > 4)
+                        DataType = new UMLEnum(package, Clean(line.Substring(5)));
 
+                    if (line.EndsWith("{"))
+                    {
+                        brackets.Push("interface");
+                    }
+                }
                 else if (line.StartsWith("interface"))
                 {
                     string package = GetPackage(packages);
@@ -199,7 +212,7 @@ namespace PlantUML
                     while ((line = await sr.ReadLineAsync()) != null)
                     {
                         line = line.Trim();
-
+                        Debug.WriteLine(line);
                         if (line == "}")
                         {
                             if (brackets.Peek() != PACKAGE)
@@ -220,16 +233,16 @@ namespace PlantUML
 
 
 
-                            UMLDataType c;
+                            UMLDataType returnType;
 
                             if (aliases.ContainsKey(returntype))
                             {
-                                c = aliases[returntype];
+                                returnType = aliases[returntype];
                             }
                             else
                             {
-                                c = new UMLDataType(returntype, currentPackage);
-                                aliases.Add(returntype, c);
+                                returnType = new UMLDataType(returntype, currentPackage);
+                                aliases.Add(returntype, returnType);
                             }
 
                             List<UMLParameter> pars = new List<UMLParameter>();
@@ -241,20 +254,23 @@ namespace PlantUML
 
                                 Tuple<ListTypes, string> p = CreateFrom(pt);
 
+                                UMLDataType paramType;
+
+
                                 if (aliases.ContainsKey(p.Item2))
                                 {
-                                    c = aliases[p.Item2];
+                                    paramType = aliases[p.Item2];
                                 }
                                 else
                                 {
-                                    c = new UMLDataType(p.Item2, currentPackage);
-                                    aliases.Add(p.Item2, c);
+                                    paramType = new UMLDataType(p.Item2, currentPackage);
+                                    aliases.Add(p.Item2, paramType);
                                 }
 
-                                pars.Add(new UMLParameter(pn, c, p.Item1));
+                                pars.Add(new UMLParameter(pn, paramType, p.Item1));
                             }
 
-                            DataType.Methods.Add(new UMLMethod(name, c, visibility, pars.ToArray())
+                            DataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
                             {
                                 IsStatic = modifier == "static"
                             });
@@ -299,7 +315,7 @@ namespace PlantUML
             foreach (var item in packages)
             {
                 sb.Append(item);
-                if (x < item.Length - 1)
+                if (x < packages.Count - 1)
                     sb.Append(".");
                 x++;
             }

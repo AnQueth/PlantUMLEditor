@@ -1,6 +1,7 @@
 ﻿using PlantUMLEditor.Models;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,7 +9,7 @@ using System.Windows.Documents;
 
 namespace PlantUMLEditor.Controls
 {
-    public class MyTextBox : TextBox
+    public class MyTextBox : TextBox, INotifyPropertyChanged
     {
 
         public static readonly DependencyProperty BindedDocumentProperty =
@@ -40,6 +41,20 @@ namespace PlantUMLEditor.Controls
 
         }
 
+        private FixedDocument styledDocument = new FixedDocument();
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public FixedDocument StyledDocument
+        {
+            get { return styledDocument; }
+            set
+            {
+                styledDocument = value;
+                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StyledDocument)));
+
+            }
+        }
         public DocumentModel BindedDocument
         {
             get
@@ -83,6 +98,11 @@ namespace PlantUMLEditor.Controls
             
             BindedDocument.TextChanged(ReadText());
             base.OnTextChanged(e);
+
+            SynatxFlowDocument syntaxFlowDocument = new SynatxFlowDocument();
+            syntaxFlowDocument.SetText(this.Text);
+            StyledDocument = syntaxFlowDocument.Document;
+
         }
 
 

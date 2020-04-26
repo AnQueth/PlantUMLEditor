@@ -278,7 +278,7 @@ namespace PlantUML
                 var to = d.LifeLines.Find(p => p.Alias == toAlias);
 
                 UMLMethod action = null;
-                if (types.ContainsKey(to.DataTypeId))
+                if (to.DataTypeId != null && types.ContainsKey(to.DataTypeId))
                 {
 
 

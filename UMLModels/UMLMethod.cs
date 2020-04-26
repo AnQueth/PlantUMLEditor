@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Security.Cryptography.X509Certificates;
 
 namespace UMLModels
 {
@@ -43,12 +44,14 @@ namespace UMLModels
         {
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
-            string s = $"{ReturnType.Name} {Name}(";
+            string s = $"{ReturnType?.Name} {Name}(";
 
             if (Parameters != null)
-                foreach (var p in Parameters)
+                for (var x  =0; x < Parameters.Count; x++)
                 {
-                    s += p.ToString();
+                    s += Parameters[x].ToString();
+                    if (x < Parameters.Count - 1)
+                        s += ",";
                 }
 
             s += ")";
