@@ -1,6 +1,8 @@
-﻿namespace UMLModels
+﻿using System;
+
+namespace UMLModels
 {
-    public class UMLSequenceLifeline: UMLOrderedEntity
+    public class UMLSequenceLifeline : UMLOrderedEntity
     {
         public string DataTypeId
         {
@@ -8,19 +10,26 @@
         }
 
         public string Alias { get; set; }
-
+        public string LifeLineType { get; }
         public string Text { get; set; }
+
+        public bool FreeFormed { get => LifeLineType != "participant" && LifeLineType != "component"; }
+
         public override string Warning
         {
             get
             {
-                return DataTypeId ==  null ? $" {Text} is not a known type for lifeline" : null;
+                if (!FreeFormed)
+                    return DataTypeId == null ? $" {Text} is not a known type for lifeline" : null;
+
+                return null;
             }
         }
 
 
-        public UMLSequenceLifeline(string name, string alias, string dataTypeId)
+        public UMLSequenceLifeline(string type, string name, string alias, string dataTypeId)
         {
+            LifeLineType = type;
             Text = name;
             DataTypeId = dataTypeId;
             Alias = alias;

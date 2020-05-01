@@ -8,7 +8,7 @@ namespace PlantUML
 {
     public class PlantUMLGenerator
     {
-        public string Create(UMLClassDiagram classDiagram)
+        public static string Create(UMLClassDiagram classDiagram)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -20,7 +20,7 @@ namespace PlantUML
             return sb.ToString();
         }
 
-        private void Create(UMLClassDiagram classDiagram, TextWriter writer)
+        private static void Create(UMLClassDiagram classDiagram, TextWriter writer)
         {
             writer.WriteLine("@startuml");
 
@@ -138,7 +138,7 @@ namespace PlantUML
             writer.WriteLine("@enduml");
         }
 
-        public string Create(UMLSequenceDiagram sequenceDiagram)
+        public static string Create(UMLSequenceDiagram sequenceDiagram)
         {
             StringBuilder sb = new StringBuilder();
 
@@ -150,7 +150,7 @@ namespace PlantUML
             return sb.ToString();
         }
 
-        private void Create(UMLSequenceDiagram sequenceDiagram, TextWriter writer)
+        private static void Create(UMLSequenceDiagram sequenceDiagram, TextWriter writer)
         {
             writer.WriteLine("@startuml");
 
@@ -170,7 +170,7 @@ namespace PlantUML
             writer.WriteLine("@enduml");
         }
 
-        private void DrawEntity(List<UMLOrderedEntity> entities, TextWriter writer)
+        private static void DrawEntity(List<UMLOrderedEntity> entities, TextWriter writer)
         {
             foreach (var entity in entities)
             {
@@ -207,7 +207,7 @@ namespace PlantUML
             }
         }
 
-        private void DrawConnections(TextWriter writer, List<UMLSequenceConnection> connections)
+        private static void DrawConnections(TextWriter writer, List<UMLSequenceConnection> connections)
         {
             foreach (var item in connections)
             {
@@ -217,48 +217,40 @@ namespace PlantUML
 
         private static void DrawConnection(TextWriter writer, UMLSequenceConnection item)
         {
-            if (item.To == null)
-            {
-                if (item.Action.IsConstructor && !(item.Action is UMLReturnFromMethod))
-                    writer.Write(" <-- ");
-                else
-                    writer.Write(" <- ");
+            //if (item.To == null)
+            //{
+            //    if (item.Action.IsConstructor && !(item.Action is UMLReturnFromMethod))
+            //        writer.Write(" <-- ");
+            //    else
+            //        writer.Write(" <- ");
 
-                writer.Write(item.From.Alias);
-            }
-            else
-            {
-                if (item.From != null)
-                    writer.Write(item.From.Alias);
+            //    writer.Write(item.From.Alias);
+            //}
+            //else
+            //{
+            //    if (item.From != null)
+            //        writer.Write(item.From.Alias);
 
-                if (item.Action.IsConstructor && !(item.Action is UMLReturnFromMethod))
-                    writer.Write(" --> ");
-                else
-                    writer.Write(" -> ");
+            //    if (item.Action.IsConstructor && !(item.Action is UMLReturnFromMethod))
+            //        writer.Write(" --> ");
+            //    else
+            //        writer.Write(" -> ");
 
-                writer.Write(item.To.Alias);
-            }
-            writer.Write(" : ");
+            //    writer.Write(item.To.Alias);
+            //}
+            //writer.Write(" : ");
 
-            if (item.Action is UMLReturnFromMethod)
-            {
-                writer.Write(" return ");
-                writer.WriteLine(item.Action.ReturnType.Name);
-            }
-            else
-            {
-                writer.Write(item.Action.ReturnType?.Name);
-                writer.Write(" ");
-                writer.Write(item.Action.Name);
-                writer.Write("(");
-                foreach (var p in item.Action.Parameters)
-                {
-                    writer.Write(p.Name);
-                    writer.Write(" ");
-                }
-                writer.Write(")");
-            }
-            writer.WriteLine();
+            //if (item.Action is UMLReturnFromMethod)
+            //{
+            //    writer.Write(" return ");
+            //    writer.WriteLine(item.Action.Signature);
+            //}
+            //else
+            //{
+            //    writer.Write(item.Action.Signature);
+                
+            //}
+            //writer.WriteLine();
         }
     }
 }

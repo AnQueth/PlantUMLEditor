@@ -8,9 +8,12 @@
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
 
         mc:Ignorable="d"
-        Title="Aaron's Plant UML Editor" Height="650" Width="900">
+        Title="Aaron's Plant UML Editor" Height="850" Width="1000"
+    
+    xmlns:System="clr-namespace:System;assembly=System.Runtime">
     <Window.Resources>
        
+        <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
 
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -21,6 +24,10 @@
                         <ColumnDefinition Width="Auto"></ColumnDefinition>
                         <ColumnDefinition Width="*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
                 <localControls:MyTextBox Grid.Column="0" BindedDocument="{Binding}"  DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"  
                             
                             AcceptsReturn="True"  AcceptsTab="True"  
@@ -33,19 +40,33 @@
                     <DocumentViewer Grid.Column="2" Document="{Binding Mode=OneWay, Path=Children[0].StyledDocument,  RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}">
                         
                     </DocumentViewer>
+
+                    <Button Command="{Binding RegenDocument}" Grid.Row="1" Content="Regenerate From Memory"></Button>
                 </Grid>
-                <Grid Canvas.Top="{Binding TopAutoComplete}" Canvas.Left="{Binding LeftAutoComplete}" Visibility="{Binding AutoCompleteVisibility}">
+                <Grid x:Name="AutoCompleteGrid" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
-                    <ListBox  ItemsSource="{Binding MatchingAutoCompletes}" SelectedItem="{Binding MatchingAutoComplete, Mode=TwoWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+   
+                    <ListBox x:Name="AutoCompleteBox" Grid.Row="2" Grid.ColumnSpan="2"
+                             MaxHeight="100"
+                             Opacity="{DynamicResource AutoCompleteOpacity}" ItemsSource="{Binding MatchingAutoCompletes}"  >
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding}"></TextBlock>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+         
+                    <TextBox x:Name="AutoCompleteTextBox" Grid.Row="1" MinWidth="100" Opacity="{DynamicResource AutoCompleteOpacity}"></TextBox>
+                    <Button x:Name="Add" Content="Add" Grid.Row="1"  Grid.Column="1"  Opacity="{DynamicResource AutoCompleteOpacity}"></Button>
+                    
                 </Grid>
                 </Canvas>
         </DataTemplate>
@@ -66,7 +87,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="200" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
@@ -87,6 +108,9 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                     <RibbonButton Label="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />
                     <RibbonButton Label="New Sequence Diagram" Command="{Binding CreateNewSequenceDiagram}" />
                 </RibbonGroup>
+                <RibbonGroup>
+                    <RibbonTextBox Text="{Binding JarLocation, FallbackValue='d:\downloads\plantuml.jar', Mode=TwoWay}"></RibbonTextBox>
+                </RibbonGroup>
             </RibbonTab>
         </Ribbon>
         <TreeView Grid.Row="1" Grid.RowSpan="3" ItemsSource="{Binding Folder.Children}">
@@ -103,7 +127,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
         <Grid Grid.Row="1" Grid.Column="2">
             <TabControl ContentTemplate="{DynamicResource TabControlItemTemplate2}"
-SelectedItem="{Binding CurrentDocument, Mode=TwoWay}"
+SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" x:Name="Tabs"
                         ItemsSource="{Binding OpenDocuments}" SelectionChanged="TabControl_SelectionChanged">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
@@ -146,8 +170,11 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}"
             </TabControl>
         </Grid>
         <GridSplitter Grid.Row="2" ShowsPreview="True" Grid.Column="2" Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
-        <DataGrid Grid.Row="3" Grid.Column="2" ItemsSource="{Binding Messages}" SelectedItem="{Binding SelectedMessage, Mode=TwoWay}">
-            
+        <DataGrid Grid.Row="3" Grid.Column="2" AutoGenerateColumns="false"  ItemsSource="{Binding Messages}"   SelectedItem="{Binding SelectedMessage, Mode=TwoWay}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Text}"></DataGridTextColumn>
+                <DataGridTextColumn Binding="{Binding LineNunber}"></DataGridTextColumn>
+            </DataGrid.Columns>
         </DataGrid>
     </Grid>
 </Window>

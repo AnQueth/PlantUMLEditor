@@ -22,6 +22,7 @@ namespace PlantUMLEditor.Models
     {
         private BitmapSource image;
         private string title;
+        private bool _running = false;
 
         public string Title
         {
@@ -42,7 +43,7 @@ namespace PlantUMLEditor.Models
             PrintImageCommand = new DelegateCommand(PrintImageHandler);
             Width = 1024;
             Height = 1024;
-
+            _running = true;
             Task.Run(Runner);
 
         }
@@ -90,6 +91,12 @@ namespace PlantUMLEditor.Models
             images.Add(vis);
 
 
+        }
+
+        internal void Stop()
+        {
+            _running = false;
+            _are.Set();
         }
 
         public float Width
@@ -167,7 +174,7 @@ namespace PlantUMLEditor.Models
         private void Runner()
         {
 
-            while (true)
+            while (_running)
             {
                 _are.WaitOne();
 

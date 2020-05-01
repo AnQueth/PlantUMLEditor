@@ -18,12 +18,12 @@ namespace PlantUMLEditor.Services
             return null;
         }
 
-        public string NewFile(string directory)
+        public string NewFile(string directory, string fileExtension)
         {
             SaveFileDialog ofd = new SaveFileDialog();
             ofd.InitialDirectory = directory;
-            ofd.DefaultExt = ".puml";
-            ofd.Filter = "UML|*.puml";
+            ofd.DefaultExt = fileExtension;
+            ofd.Filter = "UML|*" + fileExtension;
            
 
             if (ofd.ShowDialog().GetValueOrDefault())

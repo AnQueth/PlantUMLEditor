@@ -15,12 +15,6 @@ namespace UMLModels
 
         public List<UMLSequenceDiagram> SequenceDiagrams { get; set; }
 
-        public Dictionary<string, UMLDataType> DataTypes
-        {
-            get
-            {
-                return ClassDocuments.SelectMany(z => z.DataTypes).ToDictionary(p => p.Name, p => p);
-            }
-        }
+        
     }
 }

@@ -124,7 +124,7 @@ namespace PlantUMLEditor.Controls
                  
             string text = _currentCursorIndex.GetTextInRun(LogicalDirection.Backward);
 
-            BindedDocument.AutoComplete(rec, text, -line);
+            BindedDocument.AutoComplete(rec, text, -line, "", 0, 0);
 
 
 

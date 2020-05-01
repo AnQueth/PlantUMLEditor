@@ -1,10 +1,15 @@
-﻿using System;
+﻿using PlantUML;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration.Internal;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Markup;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -12,45 +17,26 @@ namespace PlantUMLEditor.Models
     internal class SequenceDiagramDocumentModel : DocumentModel
     {
         private Action<UMLSequenceDiagram, UMLSequenceDiagram> ChangedCallback;
-        private double topAutoComplete;
-        private double leftAutoComplete;
 
-        public SequenceDiagramDocumentModel()
+
+        public SequenceDiagramDocumentModel(IAutoComplete autoComplete, IConfiguration configuration) : base(autoComplete, configuration)
         {
-            MatchingAutoCompletes = new ObservableCollection<string>();
+
         }
 
-        public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p) : this()
+        public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p, IAutoComplete autoComplete, IConfiguration configuration)
+            : this(autoComplete, configuration)
         {
             this.ChangedCallback = p;
         }
 
         public UMLSequenceDiagram Diagram { get; set; }
-        public Dictionary<string, UMLDataType> DataTypes { get; internal set; }
+        public List<UMLClassDiagram> DataTypes { get; internal set; }
 
         private object _locker = new object();
-
-        protected override void ContentChanged(  string text)
-        {
-            if (text != null)
-            {
-
-                Task.Run(() =>
-                {
+        private UMLDataType _currentAutoCompleteLifeLineType;
 
 
-                    PlantUML.UMLSequenceDiagramParser.ReadString(text, DataTypes, true).ContinueWith(z =>
-                    {
-
-                        Diagram = z.Result;
-                        Diagram.FileName = FileName;
-                    });
-                    
-                });
-
-                base.ContentChanged(text);
-            }
-        }
 
         public override async Task PrepareSave()
         {
@@ -63,127 +49,120 @@ namespace PlantUMLEditor.Models
                 ChangedCallback(Diagram, z);
                 Diagram = z;
             }
+
+            await base.PrepareSave();
         }
 
-      
-        
 
-        public override void AutoComplete(Rect rec, string text, int line)
+
+
+        public override async void AutoComplete(Rect rec, string text, int line, string word, int position, int typedLength)
         {
-            MatchingAutoComplete = null;
+            text = text.Trim();
+            _currentAutoCompleteLifeLineType = null;
+            base.AutoComplete(rec, text, line, word, position, typedLength);
+
             MatchingAutoCompletes.Clear();
 
-   
 
+            var types = this.DataTypes.SelectMany(p => p.DataTypes).ToDictionary(p => p.Name);
 
             UMLSequenceConnection connection = null;
 
             if (text.StartsWith("participant") || text.StartsWith("actor"))
             {
-                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, this.DataTypes, out var lifeline))
+
+
+                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, out var lifeline))
                 {
                     lifeline.LineNumber = line;
                     return;
                 }
                 else
                 {
-                    foreach (var item in this.DataTypes)
-                        this.MatchingAutoCompletes.Add(item.Key);
+                    foreach (var item in types)
+                        if (string.IsNullOrEmpty(word) || item.Key.StartsWith(word, StringComparison.InvariantCultureIgnoreCase))
+                            this.MatchingAutoCompletes.Add(item.Key);
 
-                    ShowAutoComplete(rec);
+                    if (this.MatchingAutoCompletes.Count > 0)
+                        ShowAutoComplete(rec, false);
 
                     return;
                 }
             }
-            else
+
+
+
+            var diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(this.TextRead(), DataTypes, true);
+
+
+
+            if (text.EndsWith(':') && PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out connection))
             {
-                if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, this.Diagram, this.DataTypes, null, out connection))
+                if (connection.To != null && connection.To.DataTypeId != null)
                 {
-                    connection.LineNumber = line;
+                    AddAll(types[connection.To.DataTypeId], this.MatchingAutoCompletes, word);
+
+
+                    _currentAutoCompleteLifeLineType = types[connection.To.DataTypeId];
+
+                    if (this.MatchingAutoCompletes.Count > 0)
+                        ShowAutoComplete(rec, true);
+
+                    return;
                 }
             }
 
-       
-      
-
-            if (text.EndsWith(':')
-                && connection != null && connection.To != null)
+            if (text.EndsWith("return"))
             {
-                this.DataTypes[connection.To.DataTypeId].Methods.ForEach(z => this.MatchingAutoCompletes.Add(z.Signature));
+                foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(word) || p.Text.StartsWith(word, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
+                    this.MatchingAutoCompletes.Add(item);
 
-                this.DataTypes[connection.To.DataTypeId].Properties.ForEach(z => this.MatchingAutoCompletes.Add(z.Signature));
-
-
-                ShowAutoComplete(rec);
+                if (this.MatchingAutoCompletes.Count > 0)
+                    ShowAutoComplete(rec, false);
+                
+                return;
             }
+
+
+
+            foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(word) || p.Alias.StartsWith(word, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
+                this.MatchingAutoCompletes.Add(item);
+
+            if (this.MatchingAutoCompletes.Count > 0)
+                ShowAutoComplete(rec, false);
+
         }
 
-        private void ShowAutoComplete(Rect rec)
+        public override void NewAutoComplete(string text)
         {
-            this.LeftAutoComplete = rec.BottomRight.X;
-            this.TopAutoComplete = rec.BottomRight.Y;
-            AutoCompleteVisibility = Visibility.Visible;
+            base.NewAutoComplete(text);
+
+
+            //UMLClassDiagramParser.TryParseLineForDataType(text, new Dictionary<string, UMLDataType>(), _currentAutoCompleteLifeLineType);
+
+            base.InsertTextAt(text, base.LastIndex, base.LastWordLength);
+
         }
 
-        public ObservableCollection<string> MatchingAutoCompletes
+        private void AddAll(UMLDataType uMLDataType, ObservableCollection<string> matchingAutoCompletes, string word)
         {
-            get;
-        }
-
-        private string _selected;
-
-        public string MatchingAutoComplete
-        {
-            get
+            uMLDataType.Methods.ForEach(z =>
             {
-                return _selected;
-            }
-            set
+                if (string.IsNullOrEmpty(word) || z.Signature.StartsWith(word, StringComparison.InvariantCultureIgnoreCase))
+                    this.MatchingAutoCompletes.Add(z.Signature);
+            });
+            uMLDataType.Properties.ForEach(z =>
             {
-                SetValue(ref _selected, value);
+                if (string.IsNullOrEmpty(word) || z.Signature.StartsWith(word, StringComparison.InvariantCultureIgnoreCase))
+                    this.MatchingAutoCompletes.Add(z.Signature);
+            });
 
-                if (value != null)
-                {
-                    string insert = " " + value + " ";
+            if (uMLDataType.Base != null)
+                AddAll(uMLDataType.Base, matchingAutoCompletes, word);
 
-                    this.InsertText(insert);
-
-                   
-                    
-
-                  
-
-
-                    AutoCompleteVisibility = Visibility.Hidden;
-                }
-            }
         }
 
-        private Visibility _AutoCompleteVisibility;
-     
 
-        public Visibility AutoCompleteVisibility
-        {
-            get
-            {
-                return _AutoCompleteVisibility;
-            }
-            set
-            {
-                SetValue(ref _AutoCompleteVisibility, value);
-            }
-        }
-
-        public double TopAutoComplete
-        {
-            get { return topAutoComplete; }
-            set { SetValue(ref topAutoComplete, value); }
-        }
-
-        public double LeftAutoComplete
-        {
-            get { return leftAutoComplete; }
-            set { SetValue(ref leftAutoComplete, value); }
-        }
     }
 }

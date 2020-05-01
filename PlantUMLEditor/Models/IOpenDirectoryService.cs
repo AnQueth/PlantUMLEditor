@@ -4,6 +4,6 @@
     {
         string GetDirectory();
 
-        string NewFile(string directory);
+        string NewFile(string directory, string fileExtension);
     }
 }

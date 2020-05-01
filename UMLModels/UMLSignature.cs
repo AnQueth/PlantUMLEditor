@@ -1,6 +1,6 @@
 ﻿namespace UMLModels
 {
-    public abstract class UMLSignature
+    public   class UMLSignature
     {
         public string Signature
         {

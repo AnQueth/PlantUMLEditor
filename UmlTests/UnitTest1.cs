@@ -86,10 +86,10 @@ namespace UmlTests
 
             d.AddConnection(l1, null).Action = new UMLReturnFromMethod(i1.Methods[0]);
 
-            PlantUMLGenerator p = new PlantUMLGenerator();
-            var s = p.Create(d);
+          
+            var s = PlantUMLGenerator.Create(d);
 
-            var sq = await UMLSequenceDiagramParser.ReadString(s, cd.DataTypes.ToDictionary(p => p.Id, p => p), false);
+            var sq = await UMLSequenceDiagramParser.ReadString(s, new List<UMLClassDiagram>( new[] { cd }), false);
         }
 
         [Test]
@@ -131,8 +131,8 @@ namespace UmlTests
 
             d.AddConnection(l1, null).Action = new UMLReturnFromMethod(i1.Methods[0]);
 
-            PlantUMLGenerator p = new PlantUMLGenerator();
-            var s = p.Create(d);
+         
+            var s = PlantUMLGenerator.Create(d);
         }
 
         [Test]
@@ -158,9 +158,8 @@ namespace UmlTests
             d.AddConnection(l1, l2).Action = class2.Methods[0];
             d.AddConnection(l2, l1).Action = new UMLReturnFromMethod(class2.Methods[0]);
             d.AddConnection(l1, null).Action = new UMLReturnFromMethod(i1.Methods[0]);
-
-            PlantUMLGenerator p = new PlantUMLGenerator();
-            var s = p.Create(d);
+ 
+            var s = PlantUMLGenerator.Create(d);
         }
 
         [Test]
@@ -179,9 +178,8 @@ namespace UmlTests
             var d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);
             d.DataTypes.Add(class2);
-
-            PlantUMLGenerator p = new PlantUMLGenerator();
-            var s = p.Create(d);
+ 
+            var s = PlantUMLGenerator.Create(d);
         }
 
         [Test]
@@ -202,9 +200,8 @@ namespace UmlTests
             var d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);
             d.DataTypes.Add(class2);
-
-            PlantUMLGenerator p = new PlantUMLGenerator();
-            var s = p.Create(d);
+ 
+            var s = PlantUMLGenerator.Create(d);
 
             var gg = await UMLClassDiagramParser.ReadString(s);
         }

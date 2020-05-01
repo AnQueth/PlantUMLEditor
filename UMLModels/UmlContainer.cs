@@ -30,6 +30,8 @@ namespace UMLModels
             }
         }
 
+     
+
         public UMLDataType Base { get; set; }
         public string Name { get; set; }
         public List<UMLProperty> Properties { get; set; }

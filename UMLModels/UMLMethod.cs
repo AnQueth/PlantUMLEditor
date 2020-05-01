@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace UMLModels
 {
@@ -44,19 +45,28 @@ namespace UMLModels
         {
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
-            string s = $"{ReturnType?.Name} {Name}(";
+            StringBuilder sb = new StringBuilder();
+            if (ReturnType != null && !string.IsNullOrEmpty( ReturnType.Name))
+            {
+                sb.Append(ReturnType.Name);
+                sb.Append(" ");
+            }
+            sb.Append(Name);
+            sb.Append("(");
+
+         
 
             if (Parameters != null)
                 for (var x  =0; x < Parameters.Count; x++)
                 {
-                    s += Parameters[x].ToString();
+                    sb.Append( Parameters[x].ToString());
                     if (x < Parameters.Count - 1)
-                        s += ",";
+                        sb.Append( ",");
                 }
 
-            s += ")";
+            sb.Append( ")");
 
-            return s;
+            return sb.ToString();
         }
     }
 

@@ -10,5 +10,7 @@
         }
 
         public bool IsAbstract { get;   set; }
+
+
     }
 }
