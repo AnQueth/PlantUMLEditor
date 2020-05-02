@@ -1,28 +1,75 @@
 ﻿using Prism.Commands;
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel.Design;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
 
 namespace PlantUMLEditor.Models
 {
+    public enum DocumentTypes
+    {
+        Class,
+        Sequence
+    }
+
     public class DocumentModel : BindingBase, IAutoCompleteCallback
     {
+        private readonly IAutoComplete _autoComplete;
+        private readonly string _jarLocation;
+
+        private AutoCompleteParameters _autoCompleteParameters;
+        private ITextEditor _textEditor;
+        private string _textValue;
+        private PreviewDiagramModel imageModel;
         private string name;
-        private int _typedLength;
-        private int _lastIndex = 0;
+        private Preview PreviewWindow;
+
+        public DocumentModel(IAutoComplete autoComplete, IConfiguration configuration)
+        {
+            _jarLocation = configuration.JarLocation;
+            _autoComplete = autoComplete;
+            ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
+            MatchingAutoCompletes = new ObservableCollection<string>();
+
+            RegenDocument = new DelegateCommand(RegenDocumentHandler);
+        }
+
+        protected AutoCompleteParameters AutoCompleteParameters => _autoCompleteParameters;
+        protected ITextEditor TextEditor { get => _textEditor; }
+
+        public string Content
+        {
+            get
+            {
+                return _textValue;
+            }
+            set
+            {
+                _textValue = value;
+                _textEditor?.TextWrite(value);
+            }
+        }
+
+        public DocumentTypes DocumentType
+        {
+            get; set;
+        }
+
+        public string FileName
+        {
+            get; set;
+        }
 
         public bool IsDirty
         {
-            get;set;
-
+            get; set;
         }
 
-
+        public ObservableCollection<string> MatchingAutoCompletes
+        {
+            get;
+        }
 
         public string Name
         {
@@ -36,26 +83,9 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public DocumentModel(IAutoComplete autoComplete, IConfiguration configuration)
-        {
-            _jarLocation = configuration.JarLocation;
-            _autoComplete = autoComplete;
-            ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
-            MatchingAutoCompletes = new ObservableCollection<string>();
-      
-            RegenDocument = new DelegateCommand(RegenDocumentHandler);
-        }
+        public DelegateCommand RegenDocument { get; }
 
-        protected virtual void RegenDocumentHandler()
-        {
-           
-        }
- 
-        private PreviewDiagramModel imageModel;
-        private Preview PreviewWindow;
-        private string _textValue;
-
-   
+        public DelegateCommand ShowPreviewCommand { get; }
 
         private void ShowPreviewCommandHandler()
         {
@@ -70,11 +100,6 @@ namespace PlantUMLEditor.Models
             ShowPreviewImage();
         }
 
-        internal void Binded()
-        {
-            this.TextWrite(_textValue);
-        }
-
         private async Task ShowPreviewImage()
         {
             await imageModel.ShowImage(_jarLocation, FileName, false);
@@ -82,18 +107,51 @@ namespace PlantUMLEditor.Models
 
         private async Task ShowPreviewImage(string text)
         {
-
-
             string tmp = Path.GetTempFileName();
             await File.WriteAllTextAsync(tmp, text);
 
             await imageModel.ShowImage(_jarLocation, tmp, true);
-
-
-
-
         }
 
+        protected virtual void ContentChanged(string text)
+        {
+            IsDirty = true;
+
+            if (PreviewWindow != null)
+                ShowPreviewImage(text);
+        }
+
+        protected virtual void RegenDocumentHandler()
+        {
+        }
+
+        protected void ShowAutoComplete(Rect rec, bool allowTyping = false)
+        {
+            _autoComplete.FocusAutoComplete(rec, this, allowTyping);
+        }
+
+        internal void Binded(ITextEditor textEditor)
+        {
+            _textEditor = textEditor;
+            _textEditor.TextWrite(_textValue);
+        }
+
+        internal void CloseAutoComplete()
+        {
+            this._autoComplete.CloseAutoComplete();
+        }
+
+        internal void KeyPressed()
+        {
+            this._autoComplete.CloseAutoComplete();
+        }
+
+        public virtual void AutoComplete(AutoCompleteParameters p)
+        {
+            _autoCompleteParameters = p;
+
+            this._autoComplete.CloseAutoComplete();
+        }
 
         public void Close()
         {
@@ -102,76 +160,10 @@ namespace PlantUMLEditor.Models
                 PreviewWindow.Close();
         }
 
-        protected virtual void ContentChanged(string text)
+        public virtual void NewAutoComplete(string text)
         {
-            IsDirty = true;
-
-
-            if (PreviewWindow != null)
-                ShowPreviewImage(text);
         }
 
-        public DocumentTypes DocumentType
-        {
-            get; set;
-        }
-
-
-
-        public string Content
-        {
-            get
-            {
-                return _textValue;
-
-
-            }
-            set
-            {
-                
-                _textValue = value;
-                this.TextWrite?.Invoke(value);
-
-
-
-
-            }
-        }
-
-        public virtual void AutoComplete(Rect rec, string text, int line, string word, int position, int typedLength)
-        {
-            _typedLength = typedLength;
-            _lastIndex = position;
-            this._autoComplete.CloseAutoComplete();
-        }
-
-        public void TextChanged(string text)
-        {
-            _textValue = text;
-            ContentChanged(text);
-        }
-
-        internal void CloseAutoComplete()
-        {
-            this._autoComplete.CloseAutoComplete();
-
-        }
-
-        public string FileName
-        {
-            get; set;
-        }
-
-        private readonly string _jarLocation;
-        private readonly IAutoComplete _autoComplete;
-
-        public DelegateCommand ShowPreviewCommand { get; }
-        public Action<string> TextWrite { get; internal set; }
-        public Func<string> TextRead { get; internal set; }
-        public Action<string> InsertText { get; internal set; }
-        public Action<string, int, int> InsertTextAt { get; internal set; }
-
-        public Action TextClear { get; internal set; }
         public virtual Task PrepareSave()
         {
             IsDirty = false;
@@ -179,41 +171,15 @@ namespace PlantUMLEditor.Models
             return Task.CompletedTask;
         }
 
-        protected void ShowAutoComplete(Rect rec, bool allowTyping = false)
-        {
-           
-            _autoComplete.FocusAutoComplete(rec, this, allowTyping);
-        }
-
         public void Selection(string selection)
         {
-            this.InsertTextAt(selection, LastIndex, LastWordLength);
+            _textEditor.InsertTextAt(selection, _autoCompleteParameters.CaretPosition, _autoCompleteParameters.WordLength);
         }
 
-        public virtual void NewAutoComplete(string text)
+        public void TextChanged(string text)
         {
-            
+            _textValue = text;
+            ContentChanged(text);
         }
-
-        public ObservableCollection<string> MatchingAutoCompletes
-        {
-            get;
-        }
- 
-
-        internal void KeyPressed()
-        {
-            this._autoComplete.CloseAutoComplete();
-        }
-
-        public DelegateCommand RegenDocument { get; }
-        public int LastIndex { get => _lastIndex; }
-        public int LastWordLength { get => _typedLength; }
-    }
-
-    public enum DocumentTypes
-    {
-        Class,
-        Sequence
     }
 }

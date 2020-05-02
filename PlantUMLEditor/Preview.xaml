@@ -5,21 +5,22 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlantUMLEditor"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="450" Width="800">
+        Title="{Binding Title}" Height="1024" Width="1084">
+    <Window.Resources>
+        <Thickness x:Key="Margin">5,5,5,5</Thickness>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
-            <Button Content="Print" Command="{Binding PrintImageCommand}"></Button>
+            <Button Content="Print" Command="{Binding PrintImageCommand}" Margin="{DynamicResource Margin}"></Button>
+            <Button Content="Copy" Command="{Binding CopyImage}" Margin="{DynamicResource Margin}"></Button>
         </StackPanel>
         <ScrollViewer Grid.Row="1">
-           
-                <Image Source="{Binding Image}" Stretch="None" ></Image>
-                
-           
+
+            <Image Source="{Binding Image}" Stretch="None" ></Image>
         </ScrollViewer>
-      
     </Grid>
 </Window>

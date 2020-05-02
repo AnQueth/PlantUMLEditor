@@ -13,43 +13,56 @@ using UMLModels;
 
 namespace PlantUML
 {
-    public class UMLClassDiagramParser
+    public class UMLClassDiagramParser : IPlantUMLParser
     {
-        public static async Task<UMLClassDiagram> ReadString(string s)
-        {
-            using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(s)))
-            {
-                using (StreamReader sr = new StreamReader(ms))
-                {
-                    UMLClassDiagram c = await ReadClassDiagram(sr, "");
-
-                    return c;
-                }
-            }
-        }
-
-        public static async Task<UMLClassDiagram> ReadFile(string file)
-        {
-            using (StreamReader sr = new StreamReader(file))
-            {
-                UMLClassDiagram c = await ReadClassDiagram(sr, file);
-
-                return c;
-            }
-        }
-
         private const string PACKAGE = "package";
-        static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{");
-        static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{");
-        static Regex baseClass = new Regex("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*");
 
-        static Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\!\\<]*[\\-\\.]+[\\*o\\!\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)");
+        private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{");
 
-        static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\((?<params>((?<pt>[\\w\\[\\]]+|\\w+\\<.*\\>?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
 
-        static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\((?<params>((?<pt>[\\w\\[\\]]+|\\w+\\<.*\\>?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
-        static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>]+)\\s+(?<name>[\\w]+)");
+        private static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{");
 
+        private static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>]+)\\s+(?<name>[\\w]+)");
+
+        private static Regex baseClass = new Regex("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*");
+
+        private static Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\!\\<]*[\\-\\.]+[\\*o\\!\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)");
+
+        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+
+        private static string Clean(string name)
+        {
+            var t = name.Trim();
+            return t.TrimEnd('{').Trim();
+        }
+
+        private static Tuple<ListTypes, string> CreateFrom(string v)
+        {
+            if (v.StartsWith("ireadonlycollection<", StringComparison.InvariantCultureIgnoreCase))
+                return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v.Substring(20).Trim('>'));
+            else if (v.StartsWith("list<", StringComparison.InvariantCultureIgnoreCase))
+                return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(6).Trim('>'));
+            else if (v.EndsWith("[]"))
+                return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim().Substring(0, v.Trim().Length - 2));
+            else
+                return new Tuple<ListTypes, string>(ListTypes.None, v);
+        }
+
+        private static string GetPackage(Stack<string> packages)
+        {
+            StringBuilder sb = new StringBuilder();
+            int x = 0;
+            foreach (var item in packages)
+            {
+                sb.Append(item);
+                if (x < packages.Count - 1)
+                    sb.Append(".");
+                x++;
+            }
+
+            return sb.ToString();
+        }
 
         private static async Task<UMLClassDiagram> ReadClassDiagram(StreamReader sr, string fileName)
         {
@@ -61,12 +74,10 @@ namespace PlantUML
 
             Dictionary<string, UMLDataType> aliases = new Dictionary<string, UMLDataType>();
 
-
             bool swallowingNotes = false;
 
             Stack<string> brackets = new Stack<string>();
             Regex removeGenerics = new Regex("\\w+");
-
 
             while ((line = await sr.ReadLineAsync()) != null)
             {
@@ -96,10 +107,8 @@ namespace PlantUML
                 if (swallowingNotes)
                     continue;
 
-
                 if (line.StartsWith("participant") || line.StartsWith("actor"))
                     return null;
-
 
                 UMLDataType DataType = null;
 
@@ -108,7 +117,6 @@ namespace PlantUML
                     brackets.Pop();
                     packages.Pop();
                 }
-
 
                 if (line.StartsWith("title"))
                 {
@@ -124,7 +132,6 @@ namespace PlantUML
 
                     continue;
                 }
-
                 else if (_class.IsMatch(line))
                 {
                     var g = _class.Match(line);
@@ -133,7 +140,6 @@ namespace PlantUML
 
                     string package = GetPackage(packages);
 
-
                     DataType = new UMLClass(package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
                         , Clean(g.Groups["name"].Value));
 
@@ -141,7 +147,6 @@ namespace PlantUML
                     {
                         brackets.Push("class");
                     }
-
                 }
                 else if (line.StartsWith("enum"))
                 {
@@ -167,20 +172,14 @@ namespace PlantUML
                 }
                 else if (baseClass.IsMatch(line))
                 {
-
                     var m = baseClass.Match(line);
 
-
-
-
                     d.DataTypes.Find(p => p.Name == m.Groups["first"].Value).Base = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value
-                || removeGenerics.Match( p.Name).Value  == m.Groups["second"].Value);
+                || removeGenerics.Match(p.Name).Value == m.Groups["second"].Value);
                 }
                 else if (composition.IsMatch(line))
                 {
-
                     var m = composition.Match(line);
-
 
                     if (m.Groups["text"].Success)
                     {
@@ -190,7 +189,6 @@ namespace PlantUML
                         ListTypes l = ListTypes.None;
                         if (m.Groups["fm"].Success)
                         {
-
                         }
                         if (m.Groups["sm"].Success)
                         {
@@ -200,16 +198,9 @@ namespace PlantUML
                             }
                         }
 
-
-
                         fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value, propType, UMLVisibility.Public, ListTypes.None));
                     }
-
-
-
-
                 }
-
 
                 if (DataType != null && line.EndsWith("{"))
                 {
@@ -228,7 +219,6 @@ namespace PlantUML
                         }
 
                         TryParseLineForDataType(line, aliases, DataType);
-
                     }
                 }
             }
@@ -236,20 +226,51 @@ namespace PlantUML
             return d;
         }
 
+        private static UMLVisibility ReadVisibility(string item)
+        {
+            return UMLVisibility.None;
+            if (item == "-")
+                return UMLVisibility.Private;
+            else if (item == "#")
+                return UMLVisibility.Protected;
+            else if (item == "+")
+                return UMLVisibility.Public;
+
+            return UMLVisibility.Public;
+        }
+
+        public static async Task<UMLClassDiagram> ReadFile(string file)
+        {
+            using (StreamReader sr = new StreamReader(file))
+            {
+                UMLClassDiagram c = await ReadClassDiagram(sr, file);
+
+                return c;
+            }
+        }
+
+        public static async Task<UMLClassDiagram> ReadString(string s)
+        {
+            using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(s)))
+            {
+                using (StreamReader sr = new StreamReader(ms))
+                {
+                    UMLClassDiagram c = await ReadClassDiagram(sr, "");
+
+                    return c;
+                }
+            }
+        }
+
         public static void TryParseLineForDataType(string line, Dictionary<string, UMLDataType> aliases, UMLDataType DataType)
         {
             var methodMatch = _classLine.Match(line);
             if (methodMatch.Success)
             {
-
                 UMLVisibility visibility = ReadVisibility(methodMatch.Groups["visibility"].Value);
                 string name = methodMatch.Groups["name"].Value;
                 string returntype = methodMatch.Groups["type"].Value;
                 string modifier = methodMatch.Groups["modifier"].Value;
-
-
-
-
 
                 UMLDataType returnType;
 
@@ -274,7 +295,6 @@ namespace PlantUML
 
                     UMLDataType paramType;
 
-
                     if (aliases.ContainsKey(p.Item2))
                     {
                         paramType = aliases[p.Item2];
@@ -297,9 +317,7 @@ namespace PlantUML
             {
                 var g = _propertyLine.Match(line);
 
-
                 UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
-
 
                 Tuple<ListTypes, string> p = CreateFrom(g.Groups["type"].Value);
 
@@ -317,55 +335,6 @@ namespace PlantUML
 
                 DataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.Item1));
             }
-        }
-
-        private static string GetPackage(Stack<string> packages)
-        {
-            StringBuilder sb = new StringBuilder();
-            int x = 0;
-            foreach (var item in packages)
-            {
-                sb.Append(item);
-                if (x < packages.Count - 1)
-                    sb.Append(".");
-                x++;
-            }
-
-            return sb.ToString();
-        }
-
-        private static UMLVisibility ReadVisibility(string item)
-        {
-            return UMLVisibility.None;
-            if (item == "-")
-                return UMLVisibility.Private;
-            else if (item == "#")
-                return UMLVisibility.Protected;
-            else if (item == "+")
-                return UMLVisibility.Public;
-
-
-            return UMLVisibility.Public;
-
-
-        }
-
-        private static string Clean(string name)
-        {
-            var t = name.Trim();
-            return t.TrimEnd('{').Trim();
-        }
-
-        private static Tuple<ListTypes, string> CreateFrom(string v)
-        {
-            if (v.StartsWith("ireadonlycollection<", StringComparison.InvariantCultureIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v.Substring(20).Trim('>'));
-            else if (v.StartsWith("list<", StringComparison.InvariantCultureIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(6).Trim('>'));
-            else if (v.EndsWith("[]"))
-                return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim().Substring(0, v.Trim().Length - 2));
-            else
-                return new Tuple<ListTypes, string>(ListTypes.None, v);
         }
     }
 }

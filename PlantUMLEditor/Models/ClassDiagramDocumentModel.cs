@@ -18,52 +18,34 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        public ClassDiagramDocumentModel(Action< UMLClassDiagram, UMLClassDiagram> changedCallback, IAutoComplete autoComplete, IConfiguration configuration)
+        public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback, IAutoComplete autoComplete, IConfiguration configuration)
             : base(autoComplete, configuration)
         {
             this.ChangedCallback = changedCallback;
-
         }
+
+        public UMLClassDiagram Diagram { get; set; }
 
         protected override void RegenDocumentHandler()
         {
             base.RegenDocumentHandler();
 
-            this.TextClear();
+            TextEditor.TextClear();
 
-            this.TextWrite(PlantUMLGenerator.Create(Diagram));
-
+            TextEditor.TextWrite(PlantUMLGenerator.Create(Diagram));
         }
 
-        public UMLClassDiagram Diagram { get; set; }
-
-   
-        public override async Task PrepareSave()
+        public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
-            var z = await PlantUML.UMLClassDiagramParser.ReadString(Content);
-
-
-            ChangedCallback(Diagram, z);
-            Diagram = z;
-
-            await base.PrepareSave();
-        }
-
-   
-
-        public override async void AutoComplete(Rect rec, string text, int line, string word, int position, int typedLength)
-        {
-     
-
-            base.AutoComplete(rec, text, line, word, position, typedLength);
+            base.AutoComplete(autoCompleteParameters);
             base.MatchingAutoCompletes.Clear();
 
-            var z = await PlantUML.UMLClassDiagramParser.ReadString(this.TextRead());
+            var z = await PlantUML.UMLClassDiagramParser.ReadString(TextEditor.TextRead());
             _autoCompleteItems = z.DataTypes.Select(p => p.Name);
 
-            if (!string.IsNullOrEmpty(word))
+            if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart))
             {
-                foreach (var item in _autoCompleteItems.Where(p=>p.StartsWith(word, StringComparison.InvariantCultureIgnoreCase)))
+                foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                     base.MatchingAutoCompletes.Add(item);
             }
             else
@@ -71,10 +53,18 @@ namespace PlantUMLEditor.Models
                 foreach (var item in _autoCompleteItems)
                     base.MatchingAutoCompletes.Add(item);
             }
-            if(MatchingAutoCompletes.Count > 0) 
-                base.ShowAutoComplete(rec);
+            if (MatchingAutoCompletes.Count > 0)
+                base.ShowAutoComplete(autoCompleteParameters.Position);
+        }
 
+        public override async Task PrepareSave()
+        {
+            var z = await PlantUML.UMLClassDiagramParser.ReadString(Content);
 
+            ChangedCallback(Diagram, z);
+            Diagram = z;
+
+            await base.PrepareSave();
         }
     }
 }

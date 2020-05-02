@@ -37,15 +37,21 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand PrintImageCommand { get; }
-
+        public DelegateCommand CopyImage { get; }
         public PreviewDiagramModel()
         {
             PrintImageCommand = new DelegateCommand(PrintImageHandler);
+            CopyImage = new DelegateCommand(CopyImageHandler);
             Width = 1024;
             Height = 1024;
             _running = true;
             Task.Run(Runner);
 
+        }
+
+        private void CopyImageHandler()
+        {
+            Clipboard.SetImage(Image.Clone());
         }
 
         private void PrintImageHandler()

@@ -60,8 +60,8 @@ namespace UmlTests
 
             UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
 
-            var l1 = new UMLSequenceLifeline("i1", "ss", i1.Id);
-            var l2 = new UMLSequenceLifeline("c1", "cS", class2.Id);
+            var l1 = new UMLSequenceLifeline("participant", "i1", "ss", i1.Id);
+            var l2 = new UMLSequenceLifeline("participant", "c1", "cS", class2.Id);
 
             d.LifeLines.Add(l1);
             d.LifeLines.Add(l2);
@@ -105,8 +105,8 @@ namespace UmlTests
 
             UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
 
-            var l1 = new UMLSequenceLifeline("ddd", "ddd", i1.Id);
-            var l2 = new UMLSequenceLifeline("c2", "eee", class2.Id);
+            var l1 = new UMLSequenceLifeline("participant", "ddd", "ddd", i1.Id);
+            var l2 = new UMLSequenceLifeline("participant", "c2", "eee", class2.Id);
 
             d.LifeLines.Add(l1);
             d.LifeLines.Add(l2);
@@ -148,8 +148,8 @@ namespace UmlTests
 
             UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
 
-            var l1 = new UMLSequenceLifeline("i1", "i1a", i1.Id);
-            var l2 = new UMLSequenceLifeline("c2", "c2a", class2.Id);
+            var l1 = new UMLSequenceLifeline("participant", "i1", "i1a", i1.Id);
+            var l2 = new UMLSequenceLifeline("participant", "c2", "c2a", class2.Id);
 
             d.LifeLines.Add(l1);
             d.LifeLines.Add(l2);

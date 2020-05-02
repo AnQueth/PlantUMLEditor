@@ -13,38 +13,24 @@ using System.Windows.Media;
 
 namespace PlantUMLEditor.Controls
 {
-    public class MyRichTextBox : RichTextBox, INotifyPropertyChanged
+    public class MyRichTextBox : RichTextBox, INotifyPropertyChanged, ITextEditor
     {
+        private static MyRichTextBox Me;
+
+        private FlowDocument styledDocument;
 
         public static readonly DependencyProperty BindedDocumentProperty =
-       DependencyProperty.Register(
+                       DependencyProperty.Register(
        nameof(BindedDocument), typeof(DocumentModel),
        typeof(MyRichTextBox), new PropertyMetadata(BindedDocumentPropertyChanged)
        );
 
-
-        private static void BindedDocumentPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public MyRichTextBox()
         {
-            var m = d as MyRichTextBox;
-            var value = (DocumentModel)e.NewValue;
-
-            if (value != null)
-            {
-                value.TextWrite = m.SetText;
-                value.TextRead = m.ReadText;
-                value.InsertText = m.InsertText;
-                value.Binded();
-            }
-
-            value = (DocumentModel)e.OldValue;
-            if (value != null)
-            {
-                value.TextWrite = null;
-                value.TextRead = null;
-                value.InsertText = null;
-            }
-
+            Me = this;
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public DocumentModel BindedDocument
         {
@@ -55,7 +41,6 @@ namespace PlantUMLEditor.Controls
             set
             {
                 SetValue(BindedDocumentProperty, value);
-
             }
         }
 
@@ -66,29 +51,24 @@ namespace PlantUMLEditor.Controls
             {
                 styledDocument = value;
                 this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StyledDocument)));
-
             }
         }
 
-        public void InsertText(string text)
+        private static void BindedDocumentPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
+            var m = d as MyRichTextBox;
+            var value = (DocumentModel)e.NewValue;
 
-            CaretPosition.InsertTextInRun(text);
+            if (value != null)
+            {
+                value.Binded(Me);
+            }
+
+            value = (DocumentModel)e.OldValue;
+            if (value != null)
+            {
+            }
         }
-
-        private void SetText(string text)
-        {
-            TextRange tr = new TextRange(Document.ContentStart, Document.ContentEnd);
-            tr.Text = text;
-
-
-        }
- 
-        private FlowDocument styledDocument;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-     
 
         private string ReadText()
         {
@@ -96,43 +76,56 @@ namespace PlantUMLEditor.Controls
             return tr.Text;
         }
 
-        protected override void OnTextChanged(TextChangedEventArgs e)
+        private void SetText(string text)
         {
-
-            BindedDocument.TextChanged(ReadText());
-            base.OnTextChanged(e);
+            TextRange tr = new TextRange(Document.ContentStart, Document.ContentEnd);
+            tr.Text = text;
         }
-
- 
 
         protected override void OnPreviewKeyUp(KeyEventArgs e)
         {
             base.OnPreviewKeyUp(e);
 
-
             var _currentCursorIndex = CaretPosition;
-
-
-
 
             var rec = _currentCursorIndex.GetCharacterRect(LogicalDirection.Forward);
 
             _currentCursorIndex.GetLineStartPosition(-int.MaxValue, out var line);
 
-
-           
-                 
             string text = _currentCursorIndex.GetTextInRun(LogicalDirection.Backward);
 
-            BindedDocument.AutoComplete(rec, text, -line, "", 0, 0);
-
-
-
-
-
-
-
+            BindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, -line, "", 0, 0));
         }
 
+        protected override void OnTextChanged(TextChangedEventArgs e)
+        {
+            BindedDocument.TextChanged(ReadText());
+            base.OnTextChanged(e);
+        }
+
+        public void InsertText(string text)
+        {
+            CaretPosition.InsertTextInRun(text);
+        }
+
+        public void InsertTextAt(string text, int where, int originalLength)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TextClear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public string TextRead()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TextWrite(string text)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
