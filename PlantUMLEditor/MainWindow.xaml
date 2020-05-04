@@ -12,8 +12,7 @@
 
     xmlns:System="clr-namespace:System;assembly=System.Runtime">
     <Window.Resources>
-
-        <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
+   <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
 
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
@@ -77,6 +76,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             </TextBlock>
         </HierarchicalDataTemplate>
         <Thickness x:Key="TabHeaderMargin">5,2,10,2</Thickness>
+      
     </Window.Resources>
 
     <Grid>
