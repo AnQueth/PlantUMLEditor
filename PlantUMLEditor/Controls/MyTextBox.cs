@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,6 +12,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace PlantUMLEditor.Controls
 {
@@ -22,7 +25,7 @@ namespace PlantUMLEditor.Controls
         private FixedDocument styledDocument = new FixedDocument();
 
         public static readonly DependencyProperty BindedDocumentProperty =
-                               DependencyProperty.Register(
+                                                       DependencyProperty.Register(
        nameof(BindedDocument), typeof(DocumentModel),
        typeof(MyTextBox), new PropertyMetadata(BindedDocumentPropertyChanged)
        );
@@ -78,11 +81,6 @@ namespace PlantUMLEditor.Controls
             {
                 BindedDocument.TextChanged(this.Text);
 
-                SynatxFlowDocument syntaxFlowDocument = new SynatxFlowDocument();
-                syntaxFlowDocument.SetText(this.Text);
-
-                StyledDocument = syntaxFlowDocument.Document;
-
                 var rec = GetRectFromCharacterIndex(CaretIndex);
 
                 var line = GetLineIndexFromCharacterIndex(CaretIndex);
@@ -116,6 +114,11 @@ namespace PlantUMLEditor.Controls
             });
         }
 
+        protected override void OnInitialized(EventArgs e)
+        {
+            base.OnInitialized(e);
+        }
+
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
@@ -130,6 +133,12 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 this.InsertText("    ");
                 CaretIndex += 4;
+            }
+
+            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.F) && e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
+            {
+                var c = ((TextBlock)((FixedPage)StyledDocument.Pages[0].Child).Children[0]);
+                this.Text = new TextRange(c.ContentStart, c.ContentEnd).Text;
             }
         }
 
@@ -148,7 +157,26 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                SynatxFlowDocument syntaxFlowDocument = new SynatxFlowDocument();
+                syntaxFlowDocument.SetText(this.Text);
+
+                StyledDocument = syntaxFlowDocument.Document;
+            }));
             base.OnTextChanged(e);
+        }
+
+        public void GotoLine(int lineNumber)
+        {
+            if (lineNumber == 0)
+                lineNumber = 1;
+
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber);
+                Keyboard.Focus(this);
+            }));
         }
 
         public void InsertText(string text)
@@ -164,16 +192,14 @@ namespace PlantUMLEditor.Controls
         {
             this.SelectionStart = index;
 
-            if (this.Text[typedLength] != char.MinValue)
+            if (this.Text[index + typedLength] != char.MinValue)
             {
-                while (char.IsLetterOrDigit(this.Text[typedLength]) && this.Text[typedLength] != '\r')
+                while (char.IsLetterOrDigit(this.Text[index + typedLength]) && this.Text[index + typedLength] != '\r' && index + typedLength < Text.Length)
                 {
                     typedLength++;
                 }
             }
 
-            if (this.Text[typedLength] == '\r')
-                typedLength--;
             if (typedLength > this.SelectionLength)
                 this.SelectionLength = typedLength;
 

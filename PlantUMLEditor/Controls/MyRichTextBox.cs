@@ -103,6 +103,10 @@ namespace PlantUMLEditor.Controls
             base.OnTextChanged(e);
         }
 
+        public void GotoLine(int lineNumber)
+        {
+        }
+
         public void InsertText(string text)
         {
             CaretPosition.InsertTextInRun(text);

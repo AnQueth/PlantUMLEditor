@@ -13,7 +13,7 @@ namespace PlantUML
     {
         private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database)\\s+\\\"*(?<name>[\\w]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*");
 
-        private static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+) *([a-zA-Z0-9\\-><]+) *([a-zA-Z0-9\\-><:]*) *(.+)");
+        private static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+)\\s*([a-zA-Z0-9\\-><]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*([\\s\\w]*)$");
 
         private static string Clean(string name)
         {
@@ -186,22 +186,22 @@ namespace PlantUML
             var from = d.LifeLines.Find(p => p.Alias == fromAlias);
             if (from != null)
             {
+                UMLSignature action = null;
                 var to = d.LifeLines.Find(p => p.Alias == toAlias);
                 if (to != null)
                 {
                     bool isCreate = arrow == "-->";
-                    UMLSignature action = GetActionSignature(actionSignature, types, to, previous, d);
-
-                    connection = new UMLSequenceConnection()
-                    {
-                        ToShouldBeUsed = true,
-                        From = from,
-                        To = to,
-                        Action = action
-                    };
-
-                    return true;
+                    action = GetActionSignature(actionSignature, types, to, previous, d);
                 }
+                connection = new UMLSequenceConnection()
+                {
+                    ToShouldBeUsed = true,
+                    From = from,
+                    To = to,
+                    Action = action
+                };
+
+                return true;
             }
             connection = null;
             return false;
@@ -251,7 +251,8 @@ namespace PlantUML
                 {
                     ToShouldBeUsed = true,
                     To = to,
-                    Action = action
+                    Action = action,
+                    ToName = toAlias
                 };
 
                 return true;

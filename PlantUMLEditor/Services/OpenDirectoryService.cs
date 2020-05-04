@@ -24,11 +24,10 @@ namespace PlantUMLEditor.Services
             ofd.InitialDirectory = directory;
             ofd.DefaultExt = fileExtension;
             ofd.Filter = "UML|*" + fileExtension;
-           
 
             if (ofd.ShowDialog().GetValueOrDefault())
             {
-                File.CreateText(ofd.FileName);
+                File.CreateText(ofd.FileName).Dispose();
                 return ofd.FileName;
             }
 

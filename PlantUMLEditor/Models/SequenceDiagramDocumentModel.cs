@@ -16,6 +16,7 @@ namespace PlantUMLEditor.Models
 {
     internal class SequenceDiagramDocumentModel : DocumentModel
     {
+        private string _autoCompleteAppend = string.Empty;
         private UMLDataType _currentAutoCompleteLifeLineType;
         private object _locker = new object();
         private Action<UMLSequenceDiagram, UMLSequenceDiagram> ChangedCallback;
@@ -33,7 +34,7 @@ namespace PlantUMLEditor.Models
         public List<UMLClassDiagram> DataTypes { get; internal set; }
         public UMLSequenceDiagram Diagram { get; set; }
 
-        private void AddAll(UMLDataType uMLDataType, ObservableCollection<string> matchingAutoCompletes, string word)
+        private void AddAll(UMLDataType uMLDataType, List<string> matchingAutoCompletes, string word)
         {
             uMLDataType.Methods.ForEach(z =>
             {
@@ -50,8 +51,15 @@ namespace PlantUMLEditor.Models
                 AddAll(uMLDataType.Base, matchingAutoCompletes, word);
         }
 
+        protected override string AppendAutoComplete(string selection)
+        {
+            return selection + _autoCompleteAppend;
+        }
+
         public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
+            _autoCompleteAppend = string.Empty;
+
             var text = autoCompleteParameters.Text.Trim();
             _currentAutoCompleteLifeLineType = null;
             base.AutoComplete(autoCompleteParameters);
@@ -84,6 +92,9 @@ namespace PlantUMLEditor.Models
 
             var diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(TextEditor.TextRead(), DataTypes, true);
 
+            if (diagram == null)
+                return;
+
             if (text.EndsWith(':') && PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out connection))
             {
                 if (connection.To != null && connection.To.DataTypeId != null)
@@ -112,6 +123,13 @@ namespace PlantUMLEditor.Models
 
             foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
                 this.MatchingAutoCompletes.Add(item);
+
+            if (!autoCompleteParameters.Text.Contains("-"))
+                _autoCompleteAppend = " -> ";
+            else
+                _autoCompleteAppend = " : ";
+
+            this.MatchingAutoCompletes.Add("participant");
 
             if (this.MatchingAutoCompletes.Count > 0)
                 ShowAutoComplete(autoCompleteParameters.Position, false);

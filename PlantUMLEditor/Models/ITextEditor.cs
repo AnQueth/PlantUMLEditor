@@ -6,6 +6,8 @@ namespace PlantUMLEditor.Models
 {
     public interface ITextEditor
     {
+        void GotoLine(int lineNumber);
+
         void InsertText(string text);
 
         void InsertTextAt(string text, int where, int originalLength);

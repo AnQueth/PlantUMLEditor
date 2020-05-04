@@ -1,7 +1,9 @@
 ﻿using Prism.Commands;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -10,7 +12,8 @@ namespace PlantUMLEditor.Models
     public enum DocumentTypes
     {
         Class,
-        Sequence
+        Sequence,
+        Unknown
     }
 
     public class DocumentModel : BindingBase, IAutoCompleteCallback
@@ -19,6 +22,7 @@ namespace PlantUMLEditor.Models
         private readonly string _jarLocation;
 
         private AutoCompleteParameters _autoCompleteParameters;
+        private int _lineNumber;
         private ITextEditor _textEditor;
         private string _textValue;
         private PreviewDiagramModel imageModel;
@@ -30,8 +34,8 @@ namespace PlantUMLEditor.Models
             _jarLocation = configuration.JarLocation;
             _autoComplete = autoComplete;
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
-            MatchingAutoCompletes = new ObservableCollection<string>();
-
+            MatchingAutoCompletes = new List<string>();
+            SortedMatchingAutoCompletes = new ObservableCollection<string>();
             RegenDocument = new DelegateCommand(RegenDocumentHandler);
         }
 
@@ -66,7 +70,7 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
-        public ObservableCollection<string> MatchingAutoCompletes
+        public List<string> MatchingAutoCompletes
         {
             get;
         }
@@ -86,6 +90,11 @@ namespace PlantUMLEditor.Models
         public DelegateCommand RegenDocument { get; }
 
         public DelegateCommand ShowPreviewCommand { get; }
+
+        public ObservableCollection<string> SortedMatchingAutoCompletes
+        {
+            get;
+        }
 
         private void ShowPreviewCommandHandler()
         {
@@ -113,6 +122,11 @@ namespace PlantUMLEditor.Models
             await imageModel.ShowImage(_jarLocation, tmp, true);
         }
 
+        protected virtual string AppendAutoComplete(string selection)
+        {
+            return selection;
+        }
+
         protected virtual void ContentChanged(string text)
         {
             IsDirty = true;
@@ -127,6 +141,11 @@ namespace PlantUMLEditor.Models
 
         protected void ShowAutoComplete(Rect rec, bool allowTyping = false)
         {
+            SortedMatchingAutoCompletes.Clear();
+
+            foreach (var item in MatchingAutoCompletes.OrderBy(p => p))
+                SortedMatchingAutoCompletes.Add(item);
+
             _autoComplete.FocusAutoComplete(rec, this, allowTyping);
         }
 
@@ -134,6 +153,7 @@ namespace PlantUMLEditor.Models
         {
             _textEditor = textEditor;
             _textEditor.TextWrite(_textValue);
+            this.TextEditor.GotoLine(_lineNumber);
         }
 
         internal void CloseAutoComplete()
@@ -160,6 +180,11 @@ namespace PlantUMLEditor.Models
                 PreviewWindow.Close();
         }
 
+        public void GotoLineNumber(int lineNumber)
+        {
+            _lineNumber = lineNumber;
+        }
+
         public virtual void NewAutoComplete(string text)
         {
         }
@@ -173,6 +198,8 @@ namespace PlantUMLEditor.Models
 
         public void Selection(string selection)
         {
+            selection = AppendAutoComplete(selection);
+
             _textEditor.InsertTextAt(selection, _autoCompleteParameters.CaretPosition, _autoCompleteParameters.WordLength);
         }
 
