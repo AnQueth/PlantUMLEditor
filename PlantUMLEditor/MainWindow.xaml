@@ -12,13 +12,14 @@
 
     xmlns:System="clr-namespace:System;assembly=System.Runtime">
     <Window.Resources>
-   <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
+        <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
 
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Grid   Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}"
                                Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}">
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
                         <ColumnDefinition Width="*"></ColumnDefinition>
                         <ColumnDefinition Width="Auto"></ColumnDefinition>
                         <ColumnDefinition Width="*"></ColumnDefinition>
@@ -27,14 +28,15 @@
                         <RowDefinition Height="*"></RowDefinition>
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
-                    <localControls:MyTextBox Grid.Column="0" BindedDocument="{Binding}"  DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
+                    <localControls:MyTextBox Grid.Column="1" BindedDocument="{Binding}"  DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 
                             AcceptsReturn="True"  AcceptsTab="True"
                                FontFamily="Calibri" FontSize="14">
                     </localControls:MyTextBox>
-                    <GridSplitter Grid.Column="1" ResizeDirection="Columns" Width="5" HorizontalAlignment="Center"
+                    <GridSplitter Grid.Column="2" ResizeDirection="Columns" Width="5" HorizontalAlignment="Center"
               VerticalAlignment="Stretch" ShowsPreview="True"></GridSplitter>
-                    <DocumentViewer Grid.Column="2" Document="{Binding Mode=OneWay, Path=Children[0].StyledDocument,  RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}">
+                    <DocumentViewer Grid.Column="3" Document="{Binding Mode=OneWay, Path=Children[1].StyledDocument,  RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}">
                     </DocumentViewer>
                 </Grid>
                 <Grid x:Name="AutoCompleteGrid" Visibility="Collapsed">
@@ -76,7 +78,6 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             </TextBlock>
         </HierarchicalDataTemplate>
         <Thickness x:Key="TabHeaderMargin">5,2,10,2</Thickness>
-      
     </Window.Resources>
 
     <Grid>

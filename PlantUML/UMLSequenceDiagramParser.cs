@@ -13,7 +13,7 @@ namespace PlantUML
     {
         private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database)\\s+\\\"*(?<name>[\\w]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*");
 
-        private static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+)\\s*([a-zA-Z0-9\\-><]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*([\\s\\w]*)$");
+        private static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+)\\s*([a-zA-Z0-9\\-><]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*(.*)$");
 
         private static string Clean(string name)
         {

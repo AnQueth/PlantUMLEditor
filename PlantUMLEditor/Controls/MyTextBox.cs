@@ -13,6 +13,7 @@ using System.Windows.Documents;
 
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace PlantUMLEditor.Controls
 {
@@ -20,6 +21,7 @@ namespace PlantUMLEditor.Controls
     {
         private static MyTextBox Me;
 
+        private ImageSource _lineNumbers;
         private Timer _timer = null;
 
         private FixedDocument styledDocument = new FixedDocument();
@@ -46,6 +48,19 @@ namespace PlantUMLEditor.Controls
             set
             {
                 SetValue(BindedDocumentProperty, value);
+            }
+        }
+
+        public ImageSource LineNumbers
+        {
+            get
+            {
+                return _lineNumbers;
+            }
+            set
+            {
+                _lineNumbers = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineNumbers)));
             }
         }
 
@@ -114,6 +129,45 @@ namespace PlantUMLEditor.Controls
             });
         }
 
+        private void RenderLineNumbers()
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                if (this.ActualHeight > 0)
+                {
+                    int lines = this.GetLastVisibleLineIndex();
+                    var p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+
+                    Typeface tf = new Typeface(this.FontFamily, this.FontStyle, this.FontWeight, this.FontStretch);
+                    DrawingVisual dv = new DrawingVisual();
+                    var context = dv.RenderOpen();
+                    Point pt = new Point(0, 0);
+
+                    context.PushTransform(new TranslateTransform(0, -this.VerticalOffset));
+
+                    for (var x = 0; x <= lines; x++)
+                    {
+                        FormattedText ft = new FormattedText((x + 1).ToString(), CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, this.FontSize, Brushes.Black,
+                          p);
+                        context.DrawText(ft, pt);
+                        pt.Y += ft.Height;
+                    }
+
+                    context.Close();
+
+                    RenderTargetBitmap rtb = new RenderTargetBitmap(25, (int)this.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+                    rtb.Render(dv);
+
+                    this.LineNumbers = rtb;
+                }
+            }));
+        }
+
+        private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            this.RenderLineNumbers();
+        }
+
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
@@ -153,6 +207,11 @@ namespace PlantUMLEditor.Controls
             this._timer.Change(500, Timeout.Infinite);
 
             base.OnPreviewKeyUp(e);
+
+            if (e.Key == Key.Enter)
+            {
+                this.RenderLineNumbers();
+            }
         }
 
         protected override void OnTextChanged(TextChangedEventArgs e)
@@ -165,6 +224,34 @@ namespace PlantUMLEditor.Controls
                 StyledDocument = syntaxFlowDocument.Document;
             }));
             base.OnTextChanged(e);
+        }
+
+        public static T FindDescendant<T>(DependencyObject obj) where T : DependencyObject
+        {
+            if (obj == null) return default(T);
+            int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
+            if (numberChildren == 0) return default(T);
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child is T)
+                {
+                    return (T)(object)child;
+                }
+            }
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                var potentialMatch = FindDescendant<T>(child);
+                if (potentialMatch != default(T))
+                {
+                    return potentialMatch;
+                }
+            }
+
+            return default(T);
         }
 
         public void GotoLine(int lineNumber)
@@ -208,6 +295,17 @@ namespace PlantUMLEditor.Controls
             this.SelectionStart = index;
 
             this.SelectedText = text;
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            var sv = FindDescendant<ScrollViewer>(this);
+            if (sv != null)
+            {
+                sv.ScrollChanged += Sv_ScrollChanged;
+            }
         }
 
         public void TextClear()
