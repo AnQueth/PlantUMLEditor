@@ -52,7 +52,7 @@
 
                     <ListBox x:Name="AutoCompleteBox" Grid.Row="2" Grid.ColumnSpan="2"
                              MaxHeight="100"
-                             Opacity="{DynamicResource AutoCompleteOpacity}" ItemsSource="{Binding SortedMatchingAutoCompletes}">
+                           ItemsSource="{Binding SortedMatchingAutoCompletes}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding}"></TextBlock>

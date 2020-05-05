@@ -53,7 +53,9 @@ namespace PlantUMLEditor.Models
 
         protected override string AppendAutoComplete(string selection)
         {
-            return selection + _autoCompleteAppend;
+            if (selection != "participant")
+                return selection + _autoCompleteAppend;
+            return selection;
         }
 
         public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
@@ -105,9 +107,9 @@ namespace PlantUMLEditor.Models
 
                     if (this.MatchingAutoCompletes.Count > 0)
                         ShowAutoComplete(autoCompleteParameters.Position, true);
-
-                    return;
                 }
+
+                return;
             }
 
             if (text.EndsWith("return"))

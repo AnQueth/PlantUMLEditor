@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -14,6 +15,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml.Serialization;
 
 namespace PlantUMLEditor.Controls
 {
@@ -21,6 +23,7 @@ namespace PlantUMLEditor.Controls
     {
         private static MyTextBox Me;
 
+        private IAutoComplete _autoComplete;
         private ImageSource _lineNumbers;
         private Timer _timer = null;
 
@@ -194,10 +197,30 @@ namespace PlantUMLEditor.Controls
                 var c = ((TextBlock)((FixedPage)StyledDocument.Pages[0].Child).Children[0]);
                 this.Text = new TextRange(c.ContentStart, c.ContentEnd).Text;
             }
+            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter))
+            {
+                _autoComplete.SendEvent(e);
+                e.Handled = true;
+                return;
+            }
+
+            if (_autoComplete.IsVisible && e.Key == Key.Space)
+            {
+                this.CaretIndex = this.SelectionStart + this.SelectionLength;
+                _autoComplete.CloseAutoComplete();
+            }
+            base.OnPreviewKeyDown(e);
         }
 
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
+            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter))
+            {
+                e.Handled = true;
+                return;
+            }
+            Debug.WriteLine(e.Key);
+
             BindedDocument.KeyPressed();
             if (this._timer == null)
             {
@@ -206,12 +229,12 @@ namespace PlantUMLEditor.Controls
 
             this._timer.Change(500, Timeout.Infinite);
 
-            base.OnPreviewKeyUp(e);
-
             if (e.Key == Key.Enter)
             {
                 this.RenderLineNumbers();
             }
+
+            base.OnPreviewKeyUp(e);
         }
 
         protected override void OnTextChanged(TextChangedEventArgs e)
@@ -306,6 +329,11 @@ namespace PlantUMLEditor.Controls
             {
                 sv.ScrollChanged += Sv_ScrollChanged;
             }
+        }
+
+        public void SetAutoComplete(IAutoComplete autoComplete)
+        {
+            _autoComplete = autoComplete;
         }
 
         public void TextClear()

@@ -152,6 +152,7 @@ namespace PlantUMLEditor.Models
         internal void Binded(ITextEditor textEditor)
         {
             _textEditor = textEditor;
+            _textEditor.SetAutoComplete(_autoComplete);
             _textEditor.TextWrite(_textValue);
             this.TextEditor.GotoLine(_lineNumber);
         }
@@ -163,7 +164,7 @@ namespace PlantUMLEditor.Models
 
         internal void KeyPressed()
         {
-            this._autoComplete.CloseAutoComplete();
+            //  this._autoComplete.CloseAutoComplete();
         }
 
         public virtual void AutoComplete(AutoCompleteParameters p)

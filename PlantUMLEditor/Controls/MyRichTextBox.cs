@@ -117,6 +117,11 @@ namespace PlantUMLEditor.Controls
             throw new NotImplementedException();
         }
 
+        public void SetAutoComplete(IAutoComplete autoComplete)
+        {
+            throw new NotImplementedException();
+        }
+
         public void TextClear()
         {
             throw new NotImplementedException();
