@@ -183,29 +183,32 @@ namespace PlantUML
             string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, UMLSequenceConnection previous,
             out UMLSequenceConnection connection)
         {
-            var from = d.LifeLines.Find(p => p.Alias == fromAlias);
-            if (from != null)
-            {
-                UMLSignature action = null;
-                var to = d.LifeLines.Find(p => p.Alias == toAlias);
-                if (to != null)
-                {
-                    bool isCreate = arrow == "-->";
-                    action = GetActionSignature(actionSignature, types, to, previous, d);
-                }
-                connection = new UMLSequenceConnection()
-                {
-                    ToShouldBeUsed = true,
-                    From = from,
-                    To = to,
-                    Action = action,
-                    ToName = toAlias
-                };
-
-                return true;
-            }
             connection = null;
-            return false;
+
+            if (!arrow.Contains("->"))
+                return false;
+
+            var from = d.LifeLines.Find(p => p.Alias == fromAlias);
+
+            UMLSignature action = null;
+            var to = d.LifeLines.Find(p => p.Alias == toAlias);
+            if (to != null)
+            {
+                bool isCreate = arrow == "-->";
+                action = GetActionSignature(actionSignature, types, to, previous, d);
+            }
+            connection = new UMLSequenceConnection()
+            {
+                ToShouldBeUsed = true,
+                From = from,
+                To = to,
+                Action = action,
+                ToName = toAlias,
+                FromShouldBeUsed = true,
+                FromName = fromAlias
+            };
+
+            return true;
         }
 
         private static bool TryParseReturnToEmpty(string fromAlias, string arrow,
@@ -323,7 +326,7 @@ namespace PlantUML
                 }
                 else if (TryParseConnection(fromAlias, arrow, toAlias, actionSignature, diagram, types, previous, out connection))
                 {
-                    return true;
+                    return !string.IsNullOrWhiteSpace(connection.ToName) && !string.IsNullOrWhiteSpace(connection.FromName);
                 }
             }
             catch

@@ -16,6 +16,7 @@
         <DataTemplate x:Key="TabControlItemTemplate2">
 
             <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+
                 <Grid   Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}"
                                Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}">
                     <Grid.ColumnDefinitions>
@@ -29,11 +30,14 @@
                         <RowDefinition Height="Auto"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
-                    <localControls:MyTextBox Grid.Column="1" BindedDocument="{Binding}"  DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                    <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True"
+                                              UndoLimit="100"
+                                             BindedDocument="{Binding}"  DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 
                             AcceptsReturn="True"  AcceptsTab="True"
                                FontFamily="Calibri" FontSize="14">
                     </localControls:MyTextBox>
+
                     <GridSplitter Grid.Column="2" ResizeDirection="Columns" Width="5" HorizontalAlignment="Center"
               VerticalAlignment="Stretch" ShowsPreview="True"></GridSplitter>
                     <DocumentViewer Grid.Column="3" Document="{Binding Mode=OneWay, Path=Children[1].StyledDocument,  RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}">
@@ -170,5 +174,6 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" x:Name="Tabs"
                 <DataGridTextColumn IsReadOnly="true" Binding="{Binding LineNumber}"></DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+      
     </Grid>
 </Window>

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-
+using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -23,10 +24,13 @@ namespace PlantUMLEditor.Controls
     {
         private static MyTextBox Me;
 
+        private readonly Grid _find;
+        private readonly TextBox _findText;
+        private readonly TextBox _replaceText;
         private IAutoComplete _autoComplete;
         private ImageSource _lineNumbers;
+        private Timer _syntaxDocument = null;
         private Timer _timer = null;
-
         private FixedDocument styledDocument = new FixedDocument();
 
         public static readonly DependencyProperty BindedDocumentProperty =
@@ -37,7 +41,49 @@ namespace PlantUMLEditor.Controls
 
         public MyTextBox()
         {
+            //  DefaultStyleKey = typeof(MyTextBox);
             Me = this;
+
+            _find = new Grid();
+
+            _find.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+            _find.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+            _find.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            _find.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            _find.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+
+            _findText = new TextBox();
+            _find.Children.Add(_findText);
+            Grid.SetRow(_findText, 0);
+            _findText.Width = 200;
+
+            _replaceText = new TextBox();
+            _find.Children.Add(_replaceText);
+            _replaceText.Width = 200;
+            Grid.SetRow(_replaceText, 1);
+
+            Button find = new Button();
+            find.Content = "Find";
+            _find.Children.Add(find);
+            Grid.SetColumn(find, 1);
+
+            Button replace = new Button();
+            replace.Content = "Replace";
+            _find.Children.Add(replace);
+            Grid.SetColumn(replace, 1);
+            Grid.SetRow(replace, 1);
+
+            Button close = new Button();
+            close.Content = "Close";
+            _find.Children.Add(close);
+            Grid.SetColumn(close, 1);
+            Grid.SetRow(close, 2);
+
+            close.Click += Close_Click;
+            find.Click += Find_Click;
+            replace.Click += Replace_Click;
+
+            _find.Visibility = Visibility.Collapsed;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -90,6 +136,24 @@ namespace PlantUMLEditor.Controls
             value = (DocumentModel)e.OldValue;
             if (value != null)
             {
+            }
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            _find.Visibility = Visibility.Collapsed;
+        }
+
+        private void Find_Click(object sender, RoutedEventArgs e)
+        {
+            Regex r = new Regex(_findText.Text);
+            var m = r.Matches(this.Text);
+
+            Keyboard.Focus(this);
+
+            foreach (Group item in m)
+            {
+                this.Select(item.Index, item.Length);
             }
         }
 
@@ -166,14 +230,43 @@ namespace PlantUMLEditor.Controls
             }));
         }
 
+        private void Replace_Click(object sender, RoutedEventArgs e)
+        {
+            Regex r = new Regex(_findText.Text);
+            this.Text = r.Replace(this.Text, (s) =>
+             {
+                 return _replaceText.Text;
+             });
+        }
+
+        private void ShowFind()
+        {
+            _find.Visibility = Visibility.Visible;
+        }
+
         private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             this.RenderLineNumbers();
         }
 
+        private void SyntaxDocumentCreator(object state)
+        {
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                SynatxFlowDocument syntaxFlowDocument = new SynatxFlowDocument();
+                syntaxFlowDocument.SetText(this.Text);
+
+                StyledDocument = syntaxFlowDocument.Document;
+            }));
+        }
+
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
+
+            ((Grid)this.Parent).Children.Add(_find);
+            Grid.SetColumn(_find, Grid.GetColumn(this));
+            Grid.SetRow(_find, Grid.GetRow(this));
         }
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
@@ -191,13 +284,17 @@ namespace PlantUMLEditor.Controls
                 this.InsertText("    ");
                 CaretIndex += 4;
             }
-
-            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.F) && e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
+            if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
+            {
+                ShowFind();
+            }
+            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
             {
                 var c = ((TextBlock)((FixedPage)StyledDocument.Pages[0].Child).Children[0]);
                 this.Text = new TextRange(c.ContentStart, c.ContentEnd).Text;
             }
-            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter))
+            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter) &&
+                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
             {
                 _autoComplete.SendEvent(e);
                 e.Handled = true;
@@ -214,12 +311,12 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
-            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter))
+            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter) &&
+                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
             {
                 e.Handled = true;
                 return;
             }
-            Debug.WriteLine(e.Key);
 
             BindedDocument.KeyPressed();
             if (this._timer == null)
@@ -229,23 +326,31 @@ namespace PlantUMLEditor.Controls
 
             this._timer.Change(500, Timeout.Infinite);
 
+            //if(this._syntaxDocument == null)
+            //{
+            //    _syntaxDocument = new Timer(SyntaxDocumentCreator);
+
+            //}
+            //this._syntaxDocument.Change(1000, Timeout.Infinite);
+
             if (e.Key == Key.Enter)
             {
+                SyntaxDocumentCreator(null);
                 this.RenderLineNumbers();
             }
 
             base.OnPreviewKeyUp(e);
         }
 
+        protected override void OnRender(DrawingContext drawingContext)
+        {
+            base.OnRender(drawingContext);
+
+            //  drawingContext.DrawRectangle(Brushes.Blue, new Pen(Brushes.Purple, 11), new Rect(0, 0, 100, 100));
+        }
+
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                SynatxFlowDocument syntaxFlowDocument = new SynatxFlowDocument();
-                syntaxFlowDocument.SetText(this.Text);
-
-                StyledDocument = syntaxFlowDocument.Document;
-            }));
             base.OnTextChanged(e);
         }
 
@@ -284,7 +389,8 @@ namespace PlantUMLEditor.Controls
 
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber);
+                CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
+                this.ScrollToLine(lineNumber - 1);
                 Keyboard.Focus(this);
             }));
         }

@@ -163,7 +163,7 @@ namespace PlantUMLEditor.Models
             if (doc != null)
             {
                 CurrentDocument = doc;
-
+                doc.GotoLineNumber(lineNumber);
                 return;
             }
 

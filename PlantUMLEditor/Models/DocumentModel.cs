@@ -171,7 +171,7 @@ namespace PlantUMLEditor.Models
         {
             _autoCompleteParameters = p;
 
-            this._autoComplete.CloseAutoComplete();
+            //  this._autoComplete.CloseAutoComplete();
         }
 
         public void Close()
@@ -184,6 +184,8 @@ namespace PlantUMLEditor.Models
         public void GotoLineNumber(int lineNumber)
         {
             _lineNumber = lineNumber;
+            if (this.TextEditor != null)
+                this.TextEditor.GotoLine(_lineNumber);
         }
 
         public virtual void NewAutoComplete(string text)

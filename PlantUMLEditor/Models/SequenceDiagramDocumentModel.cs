@@ -74,7 +74,7 @@ namespace PlantUMLEditor.Models
 
             if (text.StartsWith("participant") || text.StartsWith("actor"))
             {
-                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, out var lifeline))
+                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, out var lifeline) && lifeline.DataTypeId != null)
                 {
                     lifeline.LineNumber = autoCompleteParameters.LineNumber;
                     return;

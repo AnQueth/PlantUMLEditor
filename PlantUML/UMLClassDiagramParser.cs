@@ -82,7 +82,6 @@ namespace PlantUML
             while ((line = await sr.ReadLineAsync()) != null)
             {
                 line = line.Trim();
-                Debug.WriteLine(line);
 
                 if (line == "@startuml")
                 {
@@ -120,7 +119,8 @@ namespace PlantUML
 
                 if (line.StartsWith("title"))
                 {
-                    d.Title = line.Substring(6);
+                    if (line.Length > 6)
+                        d.Title = line.Substring(6);
                     continue;
                 }
                 else if (_packageRegex.IsMatch(line))
@@ -210,7 +210,7 @@ namespace PlantUML
                     while ((line = await sr.ReadLineAsync()) != null)
                     {
                         line = line.Trim();
-                        Debug.WriteLine(line);
+
                         if (line == "}")
                         {
                             if (brackets.Peek() != PACKAGE)
