@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -25,12 +26,33 @@ namespace PlantUMLEditor.Controls
         private static MyTextBox Me;
 
         private readonly Grid _find;
+
         private readonly TextBox _findText;
+
         private readonly TextBox _replaceText;
+
         private IAutoComplete _autoComplete;
+
+        private Dictionary<Regex, Color> _colorCodes = new Dictionary<Regex, Color>()
+        {
+            {new Regex("(\\{|\\})") , Colors.Purple},
+             {new Regex("@startuml|@enduml") , Colors.Gray},
+                {new Regex("\\s*(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|participant|actor|database|component|end)"), Colors.Blue}
+        };
+
+        private List<(int start, int length)> _found = new List<(int start, int length)>();
         private ImageSource _lineNumbers;
-        private Timer _syntaxDocument = null;
+
+        private Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
+        {
+            {new Regex("(participant|actor|database|component|class|interface)\\s+\\w+\\s+"), (Colors.Green, false ) },
+              {new Regex("title.*"), (Colors.Green, false ) },
+               {new Regex("(\\:.+)"), (Colors.DarkBlue, true) }
+        };
+
         private Timer _timer = null;
+
+        private (int selectionStart, int match) SelectedBraces;
         private FixedDocument styledDocument = new FixedDocument();
 
         public static readonly DependencyProperty BindedDocumentProperty =
@@ -41,8 +63,10 @@ namespace PlantUMLEditor.Controls
 
         public MyTextBox()
         {
-            //  DefaultStyleKey = typeof(MyTextBox);
+            DefaultStyleKey = typeof(MyTextBox);
             Me = this;
+            this.Foreground = Brushes.Transparent;
+            this.Background = Brushes.Transparent;
 
             _find = new Grid();
 
@@ -113,16 +137,6 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        public FixedDocument StyledDocument
-        {
-            get { return styledDocument; }
-            set
-            {
-                styledDocument = value;
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(StyledDocument)));
-            }
-        }
-
         private static void BindedDocumentPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var m = d as MyTextBox;
@@ -139,13 +153,45 @@ namespace PlantUMLEditor.Controls
             }
         }
 
+        private static T FindDescendant<T>(DependencyObject obj) where T : DependencyObject
+        {
+            if (obj == null) return default(T);
+            int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
+            if (numberChildren == 0) return default(T);
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child is T)
+                {
+                    return (T)(object)child;
+                }
+            }
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                var potentialMatch = FindDescendant<T>(child);
+                if (potentialMatch != default(T))
+                {
+                    return potentialMatch;
+                }
+            }
+
+            return default(T);
+        }
+
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             _find.Visibility = Visibility.Collapsed;
+            _found.Clear();
+            this.InvalidateVisual();
         }
 
         private void Find_Click(object sender, RoutedEventArgs e)
         {
+            _found.Clear();
+
             Regex r = new Regex(_findText.Text);
             var m = r.Matches(this.Text);
 
@@ -153,8 +199,57 @@ namespace PlantUMLEditor.Controls
 
             foreach (Group item in m)
             {
-                this.Select(item.Index, item.Length);
+                _found.Add((item.Index, item.Length));
             }
+            this.InvalidateVisual();
+        }
+
+        private void FindMatchingBrace(int selectionStart)
+        {
+            string text = this.Text;
+            int ends = 1;
+            int match = 0;
+            for (var c = selectionStart + 1; ends != 0 && c < text.Length - 1; c++)
+            {
+                if (text[c] == '{')
+                {
+                    ends++;
+                }
+                if (text[c] == '}')
+                {
+                    ends--;
+                }
+
+                match = c;
+            }
+
+            SelectedBraces = (selectionStart, match);
+
+            this.InvalidateVisual();
+        }
+
+        private void FindMatchingStart(int selectionStart)
+        {
+            string text = this.Text;
+            int ends = 1;
+            int match = 0;
+            for (var c = selectionStart - 1; ends != 0 && c >= 0; c--)
+            {
+                if (text[c] == '}')
+                {
+                    ends++;
+                }
+                if (text[c] == '{')
+                {
+                    ends--;
+                }
+
+                match = c;
+            }
+
+            SelectedBraces = (selectionStart, match);
+
+            this.InvalidateVisual();
         }
 
         private void ProcessAutoComplete(object state)
@@ -180,7 +275,7 @@ namespace PlantUMLEditor.Controls
                     {
                         while (x > text.Length - 1 && x > 0)
                             x--;
-                        if (text[x] == ' ')
+                        if (text[x] == ' ' || text[x] == '<' || text[x] == '>' || text[x] == '(' || text[x] == ')')
                             break;
                         chars.Push(text[x]);
                     }
@@ -247,17 +342,59 @@ namespace PlantUMLEditor.Controls
         private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             this.RenderLineNumbers();
+            this.InvalidateVisual();
         }
 
-        private void SyntaxDocumentCreator(object state)
+        private void UpdateSpan(string text, FormattedText formattedText)
         {
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                SynatxFlowDocument syntaxFlowDocument = new SynatxFlowDocument();
-                syntaxFlowDocument.SetText(this.Text);
+            Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par)$");
+            Regex tabStop = new Regex("\\}|end$");
+            Regex tabReset = new Regex("else\\s?.*");
 
-                StyledDocument = syntaxFlowDocument.Document;
-            }));
+            Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+
+            Typeface tf = new Typeface(this.FontFamily, this.FontStyle, this.FontWeight, this.FontStretch);
+
+            FormattedText lineHeightFT = new FormattedText("A", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf,
+          this.FontSize, Brushes.Red, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+            var mn = notes.Matches(text);
+            foreach (Match m in mn)
+            {
+                formattedText.SetForegroundBrush(Brushes.Red, m.Index, m.Length);
+
+                return;
+            }
+            foreach (var item in _mcolorCodes)
+            {
+                foreach (Match m in item.Key.Matches(text))
+                {
+                    formattedText.SetForegroundBrush(new SolidColorBrush(item.Value.Item1), m.Index, m.Length);
+                    if (item.Value.Item2)
+                    {
+                        formattedText.SetFontStyle(FontStyles.Italic, m.Index, m.Length);
+                    }
+                }
+            }
+            foreach (var item in _colorCodes)
+            {
+                foreach (Match m in item.Key.Matches(text))
+                {
+                    formattedText.SetForegroundBrush(new SolidColorBrush(item.Value), m.Index, m.Length);
+                }
+            }
+        }
+
+        protected void BracesMatcher(int start, char c)
+        {
+            if (c == '{')
+            {
+                FindMatchingBrace(start);
+            }
+            else if (c == '}')
+            {
+                FindMatchingStart(start);
+            }
         }
 
         protected override void OnInitialized(EventArgs e)
@@ -273,7 +410,7 @@ namespace PlantUMLEditor.Controls
         {
             base.OnMouseDown(e);
 
-            BindedDocument.CloseAutoComplete();
+            _autoComplete.CloseAutoComplete();
         }
 
         protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
@@ -290,8 +427,8 @@ namespace PlantUMLEditor.Controls
             }
             if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
             {
-                var c = ((TextBlock)((FixedPage)StyledDocument.Pages[0].Child).Children[0]);
-                this.Text = new TextRange(c.ContentStart, c.ContentEnd).Text;
+                Indenter i = new Indenter();
+                this.Text = i.Process(this.TextRead());
             }
             if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter) &&
                 (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
@@ -300,12 +437,12 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-
-            if (_autoComplete.IsVisible && e.Key == Key.Space)
+            if (_autoComplete.IsVisible && (e.Key == Key.Space || e.Key == Key.Enter))
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
             }
+
             base.OnPreviewKeyDown(e);
         }
 
@@ -318,7 +455,6 @@ namespace PlantUMLEditor.Controls
                 return;
             }
 
-            BindedDocument.KeyPressed();
             if (this._timer == null)
             {
                 _timer = new Timer(ProcessAutoComplete);
@@ -333,53 +469,48 @@ namespace PlantUMLEditor.Controls
             //}
             //this._syntaxDocument.Change(1000, Timeout.Infinite);
 
-            if (e.Key == Key.Enter)
+            if (e.Key == Key.Enter || e.Key == Key.Space)
             {
-                SyntaxDocumentCreator(null);
                 this.RenderLineNumbers();
             }
 
             base.OnPreviewKeyUp(e);
         }
 
+        protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
+        {
+            base.OnPreviewMouseDown(e);
+
+            int item = this.GetCharacterIndexFromPoint(e.GetPosition(this), true);
+            if (item < this.Text.Length)
+            {
+                char c = this.Text[item];
+                BracesMatcher(item, c);
+            }
+        }
+
+        protected override void OnPreviewTextInput(TextCompositionEventArgs e)
+        {
+            if (_autoComplete.IsVisible && (e.Text == "(" || e.Text == ")" || e.Text == "<" || e.Text == ">"))
+            {
+                this.CaretIndex = this.SelectionStart + this.SelectionLength;
+                _autoComplete.CloseAutoComplete();
+            }
+
+            base.OnPreviewTextInput(e);
+        }
+
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
-
-            //  drawingContext.DrawRectangle(Brushes.Blue, new Pen(Brushes.Purple, 11), new Rect(0, 0, 100, 100));
+            drawingContext.PushTransform(new TranslateTransform(0, -this.VerticalOffset));
+            SetText(this.TextRead(), false, drawingContext);
         }
 
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
             base.OnTextChanged(e);
-        }
-
-        public static T FindDescendant<T>(DependencyObject obj) where T : DependencyObject
-        {
-            if (obj == null) return default(T);
-            int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
-            if (numberChildren == 0) return default(T);
-
-            for (int i = 0; i < numberChildren; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                if (child is T)
-                {
-                    return (T)(object)child;
-                }
-            }
-
-            for (int i = 0; i < numberChildren; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                var potentialMatch = FindDescendant<T>(child);
-                if (potentialMatch != default(T))
-                {
-                    return potentialMatch;
-                }
-            }
-
-            return default(T);
+            this.InvalidateVisual();
         }
 
         public void GotoLine(int lineNumber)
@@ -442,6 +573,34 @@ namespace PlantUMLEditor.Controls
             _autoComplete = autoComplete;
         }
 
+        public void SetText(string text, bool format, DrawingContext col)
+        {
+            FormattedText formattedText = new FormattedText(
+   this.Text,
+   CultureInfo.GetCultureInfo("en-us"),
+   FlowDirection.LeftToRight,
+   new Typeface(this.FontFamily.Source),
+   this.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+            UpdateSpan(this.TextRead(), formattedText);
+
+            foreach (var item in _found)
+            {
+                var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+                col.DrawGeometry(Brushes.LightBlue, null, g);
+            }
+
+            if (SelectedBraces.selectionStart != 0 && SelectedBraces.match != 0)
+            {
+                var g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.selectionStart, 1);
+                col.DrawGeometry(Brushes.DarkBlue, null, g);
+                g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.match, 1);
+                col.DrawGeometry(Brushes.DarkBlue, null, g);
+            }
+
+            col.DrawText(formattedText, new Point(4, 0));
+        }
+
         public void TextClear()
         {
             this.Text = "";
@@ -455,6 +614,11 @@ namespace PlantUMLEditor.Controls
         public void TextWrite(string text)
         {
             this.Text = text;
+
+            this.SelectedBraces = default;
+            this._found.Clear();
+
+            this.InvalidateVisual();
         }
     }
 }

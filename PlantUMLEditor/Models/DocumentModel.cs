@@ -162,11 +162,6 @@ namespace PlantUMLEditor.Models
             this._autoComplete.CloseAutoComplete();
         }
 
-        internal void KeyPressed()
-        {
-            //  this._autoComplete.CloseAutoComplete();
-        }
-
         public virtual void AutoComplete(AutoCompleteParameters p)
         {
             _autoCompleteParameters = p;

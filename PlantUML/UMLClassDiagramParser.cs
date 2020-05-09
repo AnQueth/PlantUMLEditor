@@ -53,7 +53,7 @@ namespace PlantUML
         {
             StringBuilder sb = new StringBuilder();
             int x = 0;
-            foreach (var item in packages)
+            foreach (var item in packages.Reverse())
             {
                 sb.Append(item);
                 if (x < packages.Count - 1)

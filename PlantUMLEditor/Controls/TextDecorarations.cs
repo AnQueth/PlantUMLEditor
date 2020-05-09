@@ -11,133 +11,89 @@ using System.Windows.Media;
 
 namespace PlantUMLEditor.Controls
 {
-    internal class TextDecorarations : Adorner
+    internal class Indenter
     {
-        private Dictionary<Regex, Color> _colorCodes = new Dictionary<Regex, Color>()
+        private Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+
+        private Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par)");
+        private Regex tabReset = new Regex("^else\\s?.*");
+        private Regex tabStop = new Regex("^\\}|end");
+
+        private int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {
-            {new Regex("^(\\{|\\})") , Colors.Purple},
+            if (string.IsNullOrEmpty(line.Trim()))
+                return indentLevel;
 
-                {new Regex("^(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|participant|actor|database|component)$"), Colors.Blue}
-        };
-
-        private Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
-        {
-            {new Regex("(participant|actor|database|component|class|interface)\\s+\\w+\\s+$"), (Colors.Green, false ) },
-               {new Regex("(\\:.+)$"), (Colors.DarkBlue, true) }
-        };
-
-        private Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par)$");
-
-        private Regex tabReset = new Regex("else\\s?.*");
-
-        private Regex tabStop = new Regex("\\}|end$");
-
-        public TextDecorarations(UIElement adornedElement) : base(adornedElement)
-        {
-        }
-
-        private FormattedText FormatWord(string previous, string word, ref int indentLevel)
-        {
-            Brush foreGround = Brushes.Black;
-            FontStyle fontStyle = FontStyles.Normal;
-
-            bool processed = false;
-            foreach (var item in _colorCodes)
+            if (notes.IsMatch(line))
             {
-                if (item.Key.IsMatch(word))
-                {
-                    foreGround = new SolidColorBrush(item.Value);
+                sb.AppendLine();
+                sb.AppendLine(line);
+                sb.AppendLine();
 
-                    processed = true;
-                }
+                return indentLevel;
             }
 
-            string p = previous + " " + word;
-
-            foreach (var item in _mcolorCodes)
+            StringBuilder sbWordsSoFar = new StringBuilder();
+            if (tabStop.IsMatch(line))
             {
-                if (item.Key.IsMatch(p))
-                {
-                    foreGround = new SolidColorBrush(item.Value.Item1);
-                    if (item.Value.Item2)
-                        fontStyle = FontStyles.Italic;
-
-                    processed = true;
-                }
+                indentLevel--;
+            }
+            if (tabReset.IsMatch(line))
+            {
+                indentLevel--;
             }
 
-            Typeface tf = new Typeface(new FontFamily("Calibri"), fontStyle, FontWeights.Normal, FontStretches.Normal);
+            for (int indent = 0; indent < indentLevel; indent++)
+            {
+                sb.Append("    ");
+            }
 
-            FormattedText ft = new FormattedText(word, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, 14, foreGround,
-                VisualTreeHelper.GetDpi(AdornedElement).PixelsPerDip);
+            sb.AppendLine(line);
+            if (tabReset.IsMatch(line))
+            {
+                indentLevel++;
+            }
+            if (tab.IsMatch(line))
+            {
+                indentLevel++;
+            }
 
-            return ft;
+            if (indentLevel < 0)
+                indentLevel = 0;
+
+            return indentLevel;
         }
 
-        protected override void OnRender(DrawingContext drawingContext)
+        public string Process(string text)
         {
-            base.OnRender(drawingContext);
-
-            var txt = (TextBox)this.AdornedElement;
-
-            Regex reg = new Regex("\\r\\n");
-            Regex wordsRegex = new Regex("\\s");
+            Regex reg = new Regex("\n");
+            string[] lines = reg.Split(text);
 
             int indentLevel = 0;
 
-            List<FormattedText> list = new List<FormattedText>();
+            string oldLine = "";
 
-            double currentX = 0;
-            double currentY = 0;
+            StringBuilder sb = new StringBuilder();
 
-            Typeface tf = new Typeface(new FontFamily("Calibri"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
-            FormattedText indentText = new FormattedText("    ", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, 14, Brushes.Black,
-                VisualTreeHelper.GetDpi(AdornedElement).PixelsPerDip);
+            Regex newLineAfter = new Regex("participant|actor|database|component|class|interface");
 
-            foreach (var line in reg.Split(txt.Text))
+            for (var x = 0; x < lines.Length; x++)
             {
-                string[] words = wordsRegex.Split(line.Trim());
-                if (words.Length < 0)
+                if (string.IsNullOrWhiteSpace(lines[x]))
                     continue;
 
-                if (tabStop.IsMatch(words[0].Trim()))
+                if (oldLine.StartsWith("title") || oldLine.StartsWith("@startuml"))
+                    sb.AppendLine();
+
+                if (newLineAfter.IsMatch(oldLine) && !newLineAfter.IsMatch(lines[x]))
                 {
-                    indentLevel--;
+                    sb.AppendLine();
                 }
-                if (tabReset.IsMatch(words[0].Trim()))
-                {
-                    indentLevel--;
-                }
+                oldLine = lines[x].Trim();
 
-                for (int i = 0; i < indentLevel; i++)
-                {
-                    drawingContext.DrawText(indentText, new Point(currentX, currentY));
-                    currentX += indentText.WidthIncludingTrailingWhitespace;
-                }
-
-                for (var x = 0; x < words.Length; x++)
-                {
-                    var ft = FormatWord(x > 0 ? words[x - 1].Trim() : string.Empty, words[x].Trim() + " ", ref indentLevel);
-
-                    if (tabReset.IsMatch(words[x].Trim()))
-                    {
-                        indentLevel++;
-                    }
-                    if (tab.IsMatch(words[x].Trim()))
-                    {
-                        indentLevel++;
-                    }
-
-                    if (indentLevel < 0)
-                        indentLevel = 0;
-
-                    drawingContext.DrawText(ft, new Point(currentX, currentY));
-
-                    currentX += ft.WidthIncludingTrailingWhitespace;
-                }
-                currentY += indentText.Height;
-                currentX = 0;
+                ProcessLine(sb, lines[x].Trim(), ref indentLevel);
             }
+            return sb.ToString();
         }
     }
 }

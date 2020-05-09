@@ -49,15 +49,6 @@ namespace PlantUMLEditor.Models
 
         public UMLClassDiagram Diagram { get; set; }
 
-        protected override void RegenDocumentHandler()
-        {
-            base.RegenDocumentHandler();
-
-            TextEditor.TextClear();
-
-            TextEditor.TextWrite(PlantUMLGenerator.Create(Diagram));
-        }
-
         public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
             base.AutoComplete(autoCompleteParameters);
@@ -65,7 +56,7 @@ namespace PlantUMLEditor.Models
 
             lock (_locker)
             {
-                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart))
+                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart) && !autoCompleteParameters.WordStart.EndsWith("<"))
                 {
                     foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                         base.MatchingAutoCompletes.Add(item);
