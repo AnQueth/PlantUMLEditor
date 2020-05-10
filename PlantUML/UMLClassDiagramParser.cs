@@ -98,14 +98,21 @@ namespace PlantUML
                     {
                         swallowingNotes = true;
                     }
+
+                    d.DataTypes.Add(new UMLNote(line));
                 }
 
                 if (line.StartsWith("end note"))
                     swallowingNotes = false;
 
                 if (swallowingNotes)
+                {
+                    if (d.DataTypes.Last() is UMLNote n)
+                    {
+                        n.Text += "\r\n" + line;
+                    }
                     continue;
-
+                }
                 if (line.StartsWith("participant") || line.StartsWith("actor"))
                     return null;
 
@@ -129,6 +136,8 @@ namespace PlantUML
 
                     packages.Push(Clean(s.Groups[PACKAGE].Value));
                     brackets.Push(PACKAGE);
+
+                    d.DataTypes.Add(new UMLPackage(Clean(s.Groups[PACKAGE].Value)));
 
                     continue;
                 }

@@ -412,8 +412,8 @@ namespace PlantUMLEditor.Controls
             {
                 _timer = new Timer(ProcessAutoComplete);
             }
-            if (!_autoComplete.IsVisible)
-                this._timer.Change(500, Timeout.Infinite);
+
+            this._timer.Change(500, Timeout.Infinite);
 
             //if(this._syntaxDocument == null)
             //{
@@ -535,23 +535,29 @@ namespace PlantUMLEditor.Controls
    CultureInfo.GetCultureInfo("en-us"),
    FlowDirection.LeftToRight,
    new Typeface(this.FontFamily.Source),
-   this.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+   this.FontSize, Brushes.DarkBlue, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-            ColorCoding coding = new ColorCoding();
-            coding.FormatText(this.TextRead(), formattedText);
-
-            foreach (var item in _found)
+            try
             {
-                var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
-                col.DrawGeometry(Brushes.LightBlue, null, g);
+                ColorCoding coding = new ColorCoding();
+                coding.FormatText(this.TextRead(), formattedText);
+
+                foreach (var item in _found)
+                {
+                    var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+                    col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                }
+
+                if (SelectedBraces.selectionStart != 0 && SelectedBraces.match != 0)
+                {
+                    var g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.selectionStart, 1);
+                    col.DrawGeometry(Brushes.DarkRed, null, g);
+                    g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.match, 1);
+                    col.DrawGeometry(Brushes.DarkRed, null, g);
+                }
             }
-
-            if (SelectedBraces.selectionStart != 0 && SelectedBraces.match != 0)
+            catch (Exception ex)
             {
-                var g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.selectionStart, 1);
-                col.DrawGeometry(Brushes.DarkBlue, null, g);
-                g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.match, 1);
-                col.DrawGeometry(Brushes.DarkBlue, null, g);
             }
 
             col.DrawText(formattedText, new Point(4, 0));

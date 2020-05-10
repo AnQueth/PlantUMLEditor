@@ -77,7 +77,7 @@ namespace PlantUML
 
         private static async Task<UMLSequenceDiagram> ReadDiagram(StreamReader sr, List<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
         {
-            var types = classDiagrams.SelectMany(p => p.DataTypes).ToDictionary(p => p.Name);
+            var types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToDictionary(p => p.Name);
 
             UMLSequenceDiagram d = new UMLSequenceDiagram(string.Empty, fileName);
             bool started = false;

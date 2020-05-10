@@ -68,7 +68,7 @@ namespace PlantUMLEditor.Models
 
             MatchingAutoCompletes.Clear();
 
-            var types = this.DataTypes.SelectMany(p => p.DataTypes).ToDictionary(p => p.Name);
+            var types = this.DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToDictionary(p => p.Name);
 
             UMLSequenceConnection connection = null;
 
