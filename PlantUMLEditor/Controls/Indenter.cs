@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.DirectoryServices.ActiveDirectory;
 using System.Globalization;
 using System.Text;
@@ -17,21 +18,21 @@ namespace PlantUMLEditor.Controls
 
         private Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par)");
         private Regex tabReset = new Regex("^else\\s?.*");
-        private Regex tabStop = new Regex("^\\}|end");
+        private Regex tabStop = new Regex("^\\}|end(?! note)");
 
         private int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {
             if (string.IsNullOrEmpty(line.Trim()))
                 return indentLevel;
 
-            if (notes.IsMatch(line))
-            {
-                sb.AppendLine();
-                sb.AppendLine(line);
-                sb.AppendLine();
+            //if (notes.IsMatch(line))
+            //{
+            //    sb.AppendLine();
+            //    sb.AppendLine(line);
+            //    sb.AppendLine();
 
-                return indentLevel;
-            }
+            //    return indentLevel;
+            //}
 
             StringBuilder sbWordsSoFar = new StringBuilder();
             if (tabStop.IsMatch(line))
@@ -82,7 +83,7 @@ namespace PlantUMLEditor.Controls
                 if (string.IsNullOrWhiteSpace(lines[x]))
                     continue;
 
-                if (oldLine.StartsWith("title") || oldLine.StartsWith("@startuml"))
+                if (oldLine.StartsWith("title") || oldLine.StartsWith("@startuml") || (oldLine == "}" && lines[x].Trim() != "}"))
                     sb.AppendLine();
 
                 if (newLineAfter.IsMatch(oldLine) && !newLineAfter.IsMatch(lines[x]))

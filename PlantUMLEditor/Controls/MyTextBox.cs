@@ -37,7 +37,7 @@ namespace PlantUMLEditor.Controls
         {
             {new Regex("(\\{|\\})") , Colors.Purple},
              {new Regex("@startuml|@enduml") , Colors.Gray},
-                {new Regex("\\s*(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|participant|actor|database|component|end)"), Colors.Blue}
+                {new Regex("^\\s*(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|participant|actor|database|component|end)", RegexOptions.Multiline | RegexOptions.IgnoreCase), Colors.Blue}
         };
 
         private List<(int start, int length)> _found = new List<(int start, int length)>();
@@ -45,7 +45,7 @@ namespace PlantUMLEditor.Controls
 
         private Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
         {
-            {new Regex("(participant|actor|database|component|class|interface)\\s+\\w+\\s+"), (Colors.Green, false ) },
+            {new Regex("^\\s*(participant|actor|database|component|class|interface)\\s+\\w+\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
               {new Regex("title.*"), (Colors.Green, false ) },
                {new Regex("(\\:.+)"), (Colors.DarkBlue, true) }
         };
@@ -351,7 +351,7 @@ namespace PlantUMLEditor.Controls
             Regex tabStop = new Regex("\\}|end$");
             Regex tabReset = new Regex("else\\s?.*");
 
-            Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+            Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)[.\\s\\S\\W\\r\\n]*end note| as (?<alias>\\w+)[.\\s\\S\\W\\r\\n]*end note)");
 
             Typeface tf = new Typeface(this.FontFamily, this.FontStyle, this.FontWeight, this.FontStretch);
 
@@ -359,12 +359,7 @@ namespace PlantUMLEditor.Controls
           this.FontSize, Brushes.Red, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
             var mn = notes.Matches(text);
-            foreach (Match m in mn)
-            {
-                formattedText.SetForegroundBrush(Brushes.Red, m.Index, m.Length);
 
-                return;
-            }
             foreach (var item in _mcolorCodes)
             {
                 foreach (Match m in item.Key.Matches(text))
@@ -382,6 +377,10 @@ namespace PlantUMLEditor.Controls
                 {
                     formattedText.SetForegroundBrush(new SolidColorBrush(item.Value), m.Index, m.Length);
                 }
+            }
+            foreach (Match m in mn)
+            {
+                formattedText.SetForegroundBrush(Brushes.Red, m.Index, m.Length);
             }
         }
 
@@ -491,6 +490,8 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewTextInput(TextCompositionEventArgs e)
         {
+            SelectedBraces = default;
+
             if (_autoComplete.IsVisible && (e.Text == "(" || e.Text == ")" || e.Text == "<" || e.Text == ">"))
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;

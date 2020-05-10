@@ -457,38 +457,42 @@ namespace PlantUMLEditor.Models
         private async Task SaveAll()
         {
             _fileSave.WaitOne();
-
-            if (string.IsNullOrEmpty(_metaDataFile))
+            try
             {
-                GetWorkingFolder();
-            }
+                if (string.IsNullOrEmpty(_metaDataFile))
+                {
+                    GetWorkingFolder();
+                }
 
-            if (string.IsNullOrEmpty(_metaDataFile))
+                if (string.IsNullOrEmpty(_metaDataFile))
+                {
+                    return;
+                }
+
+                List<DocumentModel> c = new List<DocumentModel>();
+                List<DocumentModel> s = new List<DocumentModel>();
+                lock (_docLock)
+                {
+                    c = OpenDocuments.Where(p => p is ClassDiagramDocumentModel).ToList();
+                    s = OpenDocuments.Where(p => p is SequenceDiagramDocumentModel).ToList();
+                }
+
+                foreach (var file in c)
+                {
+                    await Save(file);
+                }
+
+                foreach (var file in s)
+                {
+                    await Save(file);
+                }
+
+                await _documentCollectionSerialization.Save(Documents, _metaDataFile);
+            }
+            finally
             {
-                return;
+                _fileSave.Release();
             }
-
-            List<DocumentModel> c = new List<DocumentModel>();
-            List<DocumentModel> s = new List<DocumentModel>();
-            lock (_docLock)
-            {
-                c = OpenDocuments.Where(p => p is ClassDiagramDocumentModel).ToList();
-                s = OpenDocuments.Where(p => p is SequenceDiagramDocumentModel).ToList();
-            }
-
-            foreach (var file in c)
-            {
-                await Save(file);
-            }
-
-            foreach (var file in s)
-            {
-                await Save(file);
-            }
-
-            await _documentCollectionSerialization.Save(Documents, _metaDataFile);
-
-            _fileSave.Release();
         }
 
         private void SaveAllHandler()
