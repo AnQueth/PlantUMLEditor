@@ -25,7 +25,7 @@ namespace PlantUMLEditor.Controls
     {
         private static MyTextBox Me;
 
-        private readonly Grid _find;
+        private readonly Border _find;
 
         private readonly TextBox _findText;
 
@@ -33,22 +33,8 @@ namespace PlantUMLEditor.Controls
 
         private IAutoComplete _autoComplete;
 
-        private Dictionary<Regex, Color> _colorCodes = new Dictionary<Regex, Color>()
-        {
-            {new Regex("(\\{|\\})") , Colors.Purple},
-             {new Regex("@startuml|@enduml") , Colors.Gray},
-                {new Regex("^\\s*(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|participant|actor|database|component|end)", RegexOptions.Multiline | RegexOptions.IgnoreCase), Colors.Blue}
-        };
-
         private List<(int start, int length)> _found = new List<(int start, int length)>();
         private ImageSource _lineNumbers;
-
-        private Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
-        {
-            {new Regex("^\\s*(participant|actor|database|component|class|interface)\\s+\\w+\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
-              {new Regex("title.*"), (Colors.Green, false ) },
-               {new Regex("(\\:.+)"), (Colors.DarkBlue, true) }
-        };
 
         private Timer _timer = null;
 
@@ -68,45 +54,52 @@ namespace PlantUMLEditor.Controls
             this.Foreground = Brushes.Transparent;
             this.Background = Brushes.Transparent;
 
-            _find = new Grid();
+            _find = new Border();
+            _find.Background = Brushes.Black;
+            _find.BorderThickness = new Thickness(2);
+            _find.BorderBrush = Brushes.Blue;
+            _find.HorizontalAlignment = HorizontalAlignment.Stretch;
+            _find.VerticalAlignment = System.Windows.VerticalAlignment.Top;
 
-            _find.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
-            _find.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
-            _find.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
-            _find.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
-            _find.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            var findGrid = new Grid();
+
+            findGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+            findGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
+            findGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            findGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
+            findGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
 
             _findText = new TextBox();
-            _find.Children.Add(_findText);
+            findGrid.Children.Add(_findText);
             Grid.SetRow(_findText, 0);
             _findText.Width = 200;
 
             _replaceText = new TextBox();
-            _find.Children.Add(_replaceText);
+            findGrid.Children.Add(_replaceText);
             _replaceText.Width = 200;
             Grid.SetRow(_replaceText, 1);
 
             Button find = new Button();
             find.Content = "Find";
-            _find.Children.Add(find);
+            findGrid.Children.Add(find);
             Grid.SetColumn(find, 1);
 
             Button replace = new Button();
             replace.Content = "Replace";
-            _find.Children.Add(replace);
+            findGrid.Children.Add(replace);
             Grid.SetColumn(replace, 1);
             Grid.SetRow(replace, 1);
 
             Button close = new Button();
             close.Content = "Close";
-            _find.Children.Add(close);
+            findGrid.Children.Add(close);
             Grid.SetColumn(close, 1);
             Grid.SetRow(close, 2);
 
             close.Click += Close_Click;
             find.Click += Find_Click;
             replace.Click += Replace_Click;
-
+            _find.Child = findGrid;
             _find.Visibility = Visibility.Collapsed;
         }
 
@@ -345,45 +338,6 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
-        private void UpdateSpan(string text, FormattedText formattedText)
-        {
-            Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par)$");
-            Regex tabStop = new Regex("\\}|end$");
-            Regex tabReset = new Regex("else\\s?.*");
-
-            Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)[.\\s\\S\\W\\r\\n]*end note| as (?<alias>\\w+)[.\\s\\S\\W\\r\\n]*end note)");
-
-            Typeface tf = new Typeface(this.FontFamily, this.FontStyle, this.FontWeight, this.FontStretch);
-
-            FormattedText lineHeightFT = new FormattedText("A", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf,
-          this.FontSize, Brushes.Red, VisualTreeHelper.GetDpi(this).PixelsPerDip);
-
-            var mn = notes.Matches(text);
-
-            foreach (var item in _mcolorCodes)
-            {
-                foreach (Match m in item.Key.Matches(text))
-                {
-                    formattedText.SetForegroundBrush(new SolidColorBrush(item.Value.Item1), m.Index, m.Length);
-                    if (item.Value.Item2)
-                    {
-                        formattedText.SetFontStyle(FontStyles.Italic, m.Index, m.Length);
-                    }
-                }
-            }
-            foreach (var item in _colorCodes)
-            {
-                foreach (Match m in item.Key.Matches(text))
-                {
-                    formattedText.SetForegroundBrush(new SolidColorBrush(item.Value), m.Index, m.Length);
-                }
-            }
-            foreach (Match m in mn)
-            {
-                formattedText.SetForegroundBrush(Brushes.Red, m.Index, m.Length);
-            }
-        }
-
         protected void BracesMatcher(int start, char c)
         {
             if (c == '{')
@@ -458,8 +412,8 @@ namespace PlantUMLEditor.Controls
             {
                 _timer = new Timer(ProcessAutoComplete);
             }
-
-            this._timer.Change(500, Timeout.Infinite);
+            if (!_autoComplete.IsVisible)
+                this._timer.Change(500, Timeout.Infinite);
 
             //if(this._syntaxDocument == null)
             //{
@@ -583,7 +537,8 @@ namespace PlantUMLEditor.Controls
    new Typeface(this.FontFamily.Source),
    this.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-            UpdateSpan(this.TextRead(), formattedText);
+            ColorCoding coding = new ColorCoding();
+            coding.FormatText(this.TextRead(), formattedText);
 
             foreach (var item in _found)
             {
