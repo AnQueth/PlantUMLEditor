@@ -162,6 +162,11 @@ namespace PlantUMLEditor.Models
             this._autoComplete.CloseAutoComplete();
         }
 
+        internal void ReportMessage(DocumentMessage d)
+        {
+            _textEditor.ReportError(d.LineNumber, 0);
+        }
+
         public virtual void AutoComplete(AutoCompleteParameters p)
         {
             _autoCompleteParameters = p;

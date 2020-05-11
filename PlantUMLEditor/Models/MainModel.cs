@@ -204,6 +204,15 @@ namespace PlantUMLEditor.Models
                 DocumentMessageGenerator documentMessageGenerator = new DocumentMessageGenerator(Documents, Messages);
                 documentMessageGenerator.Generate();
 
+                foreach (var d in Messages)
+                {
+                    var docs = OpenDocuments.Where(p => p.FileName == d.FileName);
+                    foreach (var doc in docs)
+                    {
+                        doc.ReportMessage(d);
+                    }
+                }
+
                 _messageChecker.Change(2000, Timeout.Infinite);
             });
         }

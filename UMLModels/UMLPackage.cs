@@ -9,6 +9,12 @@ namespace UMLModels
         public UMLPackage(string text) : base("UMLPackage")
         {
             Text = text;
+            Children = new List<UMLDataType>();
+        }
+
+        public List<UMLDataType> Children
+        {
+            get; set;
         }
 
         public string Text

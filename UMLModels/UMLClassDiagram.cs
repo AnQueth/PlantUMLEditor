@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.IO.Compression;
 
 namespace UMLModels
 {
@@ -11,13 +14,37 @@ namespace UMLModels
         public UMLClassDiagram(string title, string fileName)
         {
             Title = title;
-            DataTypes = new List<UMLDataType>();
+
             FileName = fileName;
         }
 
-      
+        public List<UMLDataType> DataTypes
+        {
+            get
+            {
+                List<UMLDataType> dt = new List<UMLDataType>();
 
-        public List<UMLDataType> DataTypes { get; set; }
-   
+                AddMore(Package, dt);
+
+                return dt;
+            }
+        }
+
+        public UMLPackage Package { get; set; }
+
+        private void AddMore(UMLPackage p, List<UMLDataType> dt)
+        {
+            foreach (var c in p.Children)
+            {
+                if (c is UMLPackage z)
+                {
+                    AddMore(z, dt);
+                }
+                else if (!(c is UMLNote))
+                {
+                    dt.Add(c);
+                }
+            }
+        }
     }
 }

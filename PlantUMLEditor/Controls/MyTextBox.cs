@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -16,6 +17,7 @@ using System.Windows.Documents;
 using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Xml.Serialization;
 
@@ -25,6 +27,7 @@ namespace PlantUMLEditor.Controls
     {
         private static MyTextBox Me;
 
+        private readonly List<(int line, int character)> _errors = new List<(int line, int character)>();
         private readonly Border _find;
 
         private readonly TextBox _findText;
@@ -33,13 +36,11 @@ namespace PlantUMLEditor.Controls
 
         private IAutoComplete _autoComplete;
 
+        private (int selectionStart, int match) _braces;
         private List<(int start, int length)> _found = new List<(int start, int length)>();
         private ImageSource _lineNumbers;
 
         private Timer _timer = null;
-
-        private (int selectionStart, int match) SelectedBraces;
-        private FixedDocument styledDocument = new FixedDocument();
 
         public static readonly DependencyProperty BindedDocumentProperty =
                                                        DependencyProperty.Register(
@@ -183,56 +184,20 @@ namespace PlantUMLEditor.Controls
 
         private void Find_Click(object sender, RoutedEventArgs e)
         {
-            _found.Clear();
-
-            Regex r = new Regex(_findText.Text);
-            var m = r.Matches(this.Text);
-
-            Keyboard.Focus(this);
-
-            foreach (Group item in m)
-            {
-                _found.Add((item.Index, item.Length));
-            }
-            this.InvalidateVisual();
+            RunFind(_findText.Text);
         }
 
-        private void FindMatchingBrace(int selectionStart)
+        private void FindMatchingBackwards(string text, int selectionStart, char inc, char matchChar)
         {
-            string text = this.Text;
-            int ends = 1;
-            int match = 0;
-            for (var c = selectionStart + 1; ends != 0 && c < text.Length - 1; c++)
-            {
-                if (text[c] == '{')
-                {
-                    ends++;
-                }
-                if (text[c] == '}')
-                {
-                    ends--;
-                }
-
-                match = c;
-            }
-
-            SelectedBraces = (selectionStart, match);
-
-            this.InvalidateVisual();
-        }
-
-        private void FindMatchingStart(int selectionStart)
-        {
-            string text = this.Text;
             int ends = 1;
             int match = 0;
             for (var c = selectionStart - 1; ends != 0 && c >= 0; c--)
             {
-                if (text[c] == '}')
+                if (text[c] == inc)
                 {
                     ends++;
                 }
-                if (text[c] == '{')
+                if (text[c] == matchChar)
                 {
                     ends--;
                 }
@@ -240,7 +205,30 @@ namespace PlantUMLEditor.Controls
                 match = c;
             }
 
-            SelectedBraces = (selectionStart, match);
+            _braces = (selectionStart, match);
+
+            this.InvalidateVisual();
+        }
+
+        private void FindMatchingForward(string text, int selectionStart, char inc, char matchChar)
+        {
+            int ends = 1;
+            int match = 0;
+            for (var c = selectionStart + 1; ends != 0 && c < text.Length - 1; c++)
+            {
+                if (text[c] == inc)
+                {
+                    ends++;
+                }
+                if (text[c] == matchChar)
+                {
+                    ends--;
+                }
+
+                match = c;
+            }
+
+            _braces = (selectionStart, match);
 
             this.InvalidateVisual();
         }
@@ -321,10 +309,31 @@ namespace PlantUMLEditor.Controls
         private void Replace_Click(object sender, RoutedEventArgs e)
         {
             Regex r = new Regex(_findText.Text);
-            this.Text = r.Replace(this.Text, (s) =>
-             {
-                 return _replaceText.Text;
-             });
+            this.Text = r.Replace(this.Text, _replaceText.Text);
+
+            _found.Clear();
+            this.InvalidateVisual();
+        }
+
+        private void RunFind(string text)
+        {
+            _found.Clear();
+            try
+            {
+                Regex r = new Regex(text);
+                var m = r.Matches(this.Text);
+
+                Keyboard.Focus(this);
+
+                foreach (Group item in m)
+                {
+                    _found.Add((item.Index, item.Length));
+                }
+            }
+            catch
+            {
+            }
+            this.InvalidateVisual();
         }
 
         private void ShowFind()
@@ -342,11 +351,27 @@ namespace PlantUMLEditor.Controls
         {
             if (c == '{')
             {
-                FindMatchingBrace(start);
+                FindMatchingForward(this.Text, start, c, '}');
             }
             else if (c == '}')
             {
-                FindMatchingStart(start);
+                FindMatchingBackwards(this.Text, start, c, '{');
+            }
+            else if (c == '(')
+            {
+                FindMatchingForward(this.Text, start, c, ')');
+            }
+            else if (c == ')')
+            {
+                FindMatchingBackwards(this.Text, start, c, '(');
+            }
+            else if (c == '<')
+            {
+                FindMatchingForward(this.Text, start, c, '>');
+            }
+            else if (c == '>')
+            {
+                FindMatchingBackwards(this.Text, start, c, '<');
             }
         }
 
@@ -378,12 +403,17 @@ namespace PlantUMLEditor.Controls
             {
                 ShowFind();
             }
+            if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
+            {
+                _findText.Text = this.SelectedText.Trim();
+                ShowFind();
+            }
             if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
             {
                 Indenter i = new Indenter();
                 this.Text = i.Process(this.TextRead());
             }
-            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter) &&
+            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
                 (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
             {
                 _autoComplete.SendEvent(e);
@@ -394,6 +424,11 @@ namespace PlantUMLEditor.Controls
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
+                if (e.Key == Key.Space)
+                {
+                    e.Handled = true;
+                    return;
+                }
             }
 
             base.OnPreviewKeyDown(e);
@@ -401,19 +436,12 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
-            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up || e.Key == Key.Enter) &&
+            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
                 (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
             {
                 e.Handled = true;
                 return;
             }
-
-            if (this._timer == null)
-            {
-                _timer = new Timer(ProcessAutoComplete);
-            }
-
-            this._timer.Change(500, Timeout.Infinite);
 
             //if(this._syntaxDocument == null)
             //{
@@ -427,13 +455,32 @@ namespace PlantUMLEditor.Controls
                 this.RenderLineNumbers();
             }
 
+            if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right)
+            {
+                int l = CaretIndex - 1;
+                if (l < 0)
+                    l = 0;
+                char c = this.Text[l];
+                BracesMatcher(l, c);
+                this._autoComplete.CloseAutoComplete();
+            }
+            else
+            {
+                if (this._timer == null)
+                {
+                    _timer = new Timer(ProcessAutoComplete);
+                }
+
+                this._timer.Change(500, Timeout.Infinite);
+            }
+
             base.OnPreviewKeyUp(e);
         }
 
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
-
+            _found.Clear();
             int item = this.GetCharacterIndexFromPoint(e.GetPosition(this), true);
             if (item < this.Text.Length)
             {
@@ -444,7 +491,7 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewTextInput(TextCompositionEventArgs e)
         {
-            SelectedBraces = default;
+            _braces = default;
 
             if (_autoComplete.IsVisible && (e.Text == "(" || e.Text == ")" || e.Text == "<" || e.Text == ">"))
             {
@@ -462,8 +509,26 @@ namespace PlantUMLEditor.Controls
             SetText(this.TextRead(), false, drawingContext);
         }
 
+        protected override void OnSelectionChanged(RoutedEventArgs e)
+        {
+            base.OnSelectionChanged(e);
+
+            if (!string.IsNullOrWhiteSpace(this.SelectedText))
+                RunFind(this.SelectedText);
+        }
+
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
+            _found.Clear();
+            if (!string.IsNullOrWhiteSpace(this.SelectedText))
+                this.RunFind(this.SelectedText);
+            if (!string.IsNullOrEmpty(this._findText.Text))
+                this.RunFind(this._findText.Text);
+
+            _braces = default;
+
+            _errors.Clear();
+
             base.OnTextChanged(e);
             this.InvalidateVisual();
         }
@@ -523,6 +588,15 @@ namespace PlantUMLEditor.Controls
             }
         }
 
+        public void ReportError(int line, int character)
+        {
+            if (!_errors.Contains((line, character)))
+            {
+                _errors.Add((line, character));
+                this.InvalidateVisual();
+            }
+        }
+
         public void SetAutoComplete(IAutoComplete autoComplete)
         {
             _autoComplete = autoComplete;
@@ -548,12 +622,32 @@ namespace PlantUMLEditor.Controls
                     col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
                 }
 
-                if (SelectedBraces.selectionStart != 0 && SelectedBraces.match != 0)
+                if (_braces.selectionStart != 0 && _braces.match != 0)
                 {
-                    var g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.selectionStart, 1);
+                    var g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.selectionStart, 1);
                     col.DrawGeometry(Brushes.DarkRed, null, g);
-                    g = formattedText.BuildHighlightGeometry(new Point(4, 0), SelectedBraces.match, 1);
+                    g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.match, 1);
                     col.DrawGeometry(Brushes.DarkRed, null, g);
+                }
+
+                foreach (var item in _errors)
+                {
+                    try
+                    {
+                        var l = GetCharacterIndexFromLineIndex(item.line - 1);
+                        var len = GetLineLength(item.line - 1);
+
+                        TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
+                            new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
+                             TextDecorationUnit.FontRecommended);
+                        TextDecorationCollection textDecorations = new TextDecorationCollection();
+                        textDecorations.Add(td);
+
+                        formattedText.SetTextDecorations(textDecorations, l, len);
+                    }
+                    catch
+                    {
+                    }
                 }
             }
             catch (Exception ex)
@@ -577,7 +671,7 @@ namespace PlantUMLEditor.Controls
         {
             this.Text = text;
 
-            this.SelectedBraces = default;
+            this._braces = default;
             this._found.Clear();
 
             this.InvalidateVisual();

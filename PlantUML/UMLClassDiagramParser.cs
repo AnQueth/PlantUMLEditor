@@ -78,6 +78,12 @@ namespace PlantUML
 
             Stack<string> brackets = new Stack<string>();
             Regex removeGenerics = new Regex("\\w+");
+            Stack<UMLPackage> packagesStack = new Stack<UMLPackage>();
+
+            UMLPackage defaultPackage = new UMLPackage("");
+            d.Package = defaultPackage;
+            packagesStack.Push(defaultPackage);
+            var currentPackage = defaultPackage;
 
             while ((line = await sr.ReadLineAsync()) != null)
             {
@@ -99,7 +105,7 @@ namespace PlantUML
                         swallowingNotes = true;
                     }
 
-                    d.DataTypes.Add(new UMLNote(line));
+                    currentPackage.Children.Add(new UMLNote(line));
                 }
 
                 if (line.StartsWith("end note"))
@@ -118,10 +124,12 @@ namespace PlantUML
 
                 UMLDataType DataType = null;
 
-                if (line == "}" && brackets.Peek() == PACKAGE)
+                if (line == "}" && brackets.Count > 0 && brackets.Peek() == PACKAGE)
                 {
                     brackets.Pop();
                     packages.Pop();
+                    packagesStack.Pop();
+                    currentPackage = packagesStack.Last();
                 }
 
                 if (line.StartsWith("title"))
@@ -137,7 +145,11 @@ namespace PlantUML
                     packages.Push(Clean(s.Groups[PACKAGE].Value));
                     brackets.Push(PACKAGE);
 
-                    d.DataTypes.Add(new UMLPackage(Clean(s.Groups[PACKAGE].Value)));
+                    var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value));
+                    currentPackage.Children.Add(c);
+                    currentPackage = c;
+
+                    packagesStack.Push(c);
 
                     continue;
                 }
@@ -213,9 +225,7 @@ namespace PlantUML
 
                 if (DataType != null && line.EndsWith("{"))
                 {
-                    string currentPackage = GetPackage(packages);
-
-                    d.DataTypes.Add(DataType);
+                    currentPackage.Children.Add(DataType);
                     while ((line = await sr.ReadLineAsync()) != null)
                     {
                         line = line.Trim();

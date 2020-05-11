@@ -12,6 +12,8 @@ namespace PlantUMLEditor.Models
 
         void InsertTextAt(string text, int where, int originalLength);
 
+        void ReportError(int line, int character);
+
         void SetAutoComplete(IAutoComplete autoComplete);
 
         void TextClear();
