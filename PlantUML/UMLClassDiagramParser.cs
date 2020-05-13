@@ -104,6 +104,8 @@ namespace PlantUML
                     {
                         swallowingNotes = true;
                     }
+                    else
+                        swallowingNotes = false;
 
                     currentPackage.Children.Add(new UMLNote(line));
                 }
@@ -129,7 +131,7 @@ namespace PlantUML
                     brackets.Pop();
                     packages.Pop();
                     packagesStack.Pop();
-                    currentPackage = packagesStack.Last();
+                    currentPackage = packagesStack.First();
                 }
 
                 if (line.StartsWith("title"))
@@ -205,21 +207,25 @@ namespace PlantUML
                     if (m.Groups["text"].Success)
                     {
                         var propType = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value);
+
                         var fromType = d.DataTypes.Find(p => p.Name == m.Groups["first"].Value);
 
-                        ListTypes l = ListTypes.None;
-                        if (m.Groups["fm"].Success)
+                        if (!fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
                         {
-                        }
-                        if (m.Groups["sm"].Success)
-                        {
-                            if (m.Groups["sm"].Value == "*")
+                            ListTypes l = ListTypes.None;
+                            if (m.Groups["fm"].Success)
                             {
-                                l = ListTypes.List;
                             }
-                        }
+                            if (m.Groups["sm"].Success)
+                            {
+                                if (m.Groups["sm"].Value == "*")
+                                {
+                                    l = ListTypes.List;
+                                }
+                            }
 
-                        fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value, propType, UMLVisibility.Public, ListTypes.None));
+                            fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, ListTypes.None));
+                        }
                     }
                 }
 

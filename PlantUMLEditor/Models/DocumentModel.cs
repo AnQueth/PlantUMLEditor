@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using PlantUML;
+using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -6,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
@@ -16,7 +18,7 @@ namespace PlantUMLEditor.Models
         Unknown
     }
 
-    public class DocumentModel : BindingBase, IAutoCompleteCallback
+    public abstract class DocumentModel : BindingBase, IAutoCompleteCallback
     {
         private readonly IAutoComplete _autoComplete;
         private readonly string _jarLocation;
@@ -51,7 +53,7 @@ namespace PlantUMLEditor.Models
             set
             {
                 _textValue = value;
-                _textEditor?.TextWrite(value);
+                _textEditor?.TextWrite(value, false);
             }
         }
 
@@ -130,7 +132,7 @@ namespace PlantUMLEditor.Models
         protected virtual void ContentChanged(string text)
         {
             IsDirty = true;
-
+            _textValue = text;
             if (PreviewWindow != null)
                 ShowPreviewImage(text);
         }
@@ -153,7 +155,7 @@ namespace PlantUMLEditor.Models
         {
             _textEditor = textEditor;
             _textEditor.SetAutoComplete(_autoComplete);
-            _textEditor.TextWrite(_textValue);
+            _textEditor.TextWrite(_textValue, false);
             this.TextEditor.GotoLine(_lineNumber);
         }
 
@@ -165,6 +167,11 @@ namespace PlantUMLEditor.Models
         internal void ReportMessage(DocumentMessage d)
         {
             _textEditor.ReportError(d.LineNumber, 0);
+        }
+
+        internal void UpdateDiagram(UMLClassDiagram doc)
+        {
+            this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
         }
 
         public virtual void AutoComplete(AutoCompleteParameters p)
@@ -181,6 +188,8 @@ namespace PlantUMLEditor.Models
                 PreviewWindow.Close();
         }
 
+        public abstract Task<UMLDiagram> GetEditedDiagram();
+
         public void GotoLineNumber(int lineNumber)
         {
             _lineNumber = lineNumber;
@@ -190,13 +199,6 @@ namespace PlantUMLEditor.Models
 
         public virtual void NewAutoComplete(string text)
         {
-        }
-
-        public virtual Task PrepareSave()
-        {
-            IsDirty = false;
-
-            return Task.CompletedTask;
         }
 
         public void Selection(string selection)

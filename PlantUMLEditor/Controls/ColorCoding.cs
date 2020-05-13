@@ -20,7 +20,7 @@ namespace PlantUMLEditor.Controls
         {
             {new Regex("^\\s*(participant|actor|database|component|class|interface)\\s+\\w+\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
 
-               {new Regex("(\\:.+)"), (Colors.DarkBlue, true) }
+               {new Regex("(\\:.+)"), (Colors.Firebrick, true) }
         };
 
         private Regex brackets = new Regex("(\\{|\\})");

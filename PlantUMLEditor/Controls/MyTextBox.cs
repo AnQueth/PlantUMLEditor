@@ -178,7 +178,8 @@ namespace PlantUMLEditor.Controls
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             _find.Visibility = Visibility.Collapsed;
-            _found.Clear();
+            lock (_found)
+                _found.Clear();
             this.InvalidateVisual();
         }
 
@@ -237,8 +238,6 @@ namespace PlantUMLEditor.Controls
         {
             Dispatcher.Invoke(() =>
             {
-                BindedDocument.TextChanged(this.Text);
-
                 var rec = GetRectFromCharacterIndex(CaretIndex);
 
                 var line = GetLineIndexFromCharacterIndex(CaretIndex);
@@ -310,30 +309,39 @@ namespace PlantUMLEditor.Controls
         {
             Regex r = new Regex(_findText.Text);
             this.Text = r.Replace(this.Text, _replaceText.Text);
-
-            _found.Clear();
+            lock (_found)
+                _found.Clear();
             this.InvalidateVisual();
         }
 
         private void RunFind(string text)
         {
-            _found.Clear();
-            try
+            lock (_found)
+                _found.Clear();
+            if (_autoComplete.IsVisible)
+                return;
+
+            string t = this.Text;
+
+            Task.Run(() =>
             {
-                Regex r = new Regex(text);
-                var m = r.Matches(this.Text);
-
-                Keyboard.Focus(this);
-
-                foreach (Group item in m)
+                try
                 {
-                    _found.Add((item.Index, item.Length));
+                    Regex r = new Regex(text);
+                    var m = r.Matches(t);
+
+                    foreach (Group item in m)
+                    {
+                        lock (_found)
+                            _found.Add((item.Index, item.Length));
+                    }
                 }
-            }
-            catch
-            {
-            }
-            this.InvalidateVisual();
+                catch
+                {
+                }
+
+                Dispatcher.Invoke(this.InvalidateVisual);
+            });
         }
 
         private void ShowFind()
@@ -402,16 +410,22 @@ namespace PlantUMLEditor.Controls
             if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
             {
                 ShowFind();
+                e.Handled = true;
+                return;
             }
             if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
             {
                 _findText.Text = this.SelectedText.Trim();
                 ShowFind();
+                e.Handled = true;
+                return;
             }
             if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
             {
                 Indenter i = new Indenter();
                 this.Text = i.Process(this.TextRead());
+                e.Handled = true;
+                return;
             }
             if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
                 (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
@@ -426,8 +440,10 @@ namespace PlantUMLEditor.Controls
                 _autoComplete.CloseAutoComplete();
                 if (e.Key == Key.Space)
                 {
-                    e.Handled = true;
-                    return;
+                    //this.InsertText(" ");
+
+                    //e.Handled = true;
+                    //return;
                 }
             }
 
@@ -480,7 +496,8 @@ namespace PlantUMLEditor.Controls
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
-            _found.Clear();
+            lock (_found)
+                _found.Clear();
             int item = this.GetCharacterIndexFromPoint(e.GetPosition(this), true);
             if (item < this.Text.Length)
             {
@@ -506,6 +523,7 @@ namespace PlantUMLEditor.Controls
         {
             base.OnRender(drawingContext);
             drawingContext.PushTransform(new TranslateTransform(0, -this.VerticalOffset));
+            drawingContext.PushClip(new RectangleGeometry(new Rect(0, this.VerticalOffset, this.ActualWidth, this.VerticalOffset + this.ActualHeight)));
             SetText(this.TextRead(), false, drawingContext);
         }
 
@@ -519,12 +537,16 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
-            _found.Clear();
-            if (!string.IsNullOrWhiteSpace(this.SelectedText))
-                this.RunFind(this.SelectedText);
-            if (!string.IsNullOrEmpty(this._findText.Text))
-                this.RunFind(this._findText.Text);
-
+            BindedDocument.TextChanged(this.Text);
+            lock (_found)
+                _found.Clear();
+            if (!_autoComplete.IsVisible)
+            {
+                if (!string.IsNullOrWhiteSpace(this.SelectedText))
+                    this.RunFind(this.SelectedText);
+                if (!string.IsNullOrEmpty(this._findText.Text))
+                    this.RunFind(this._findText.Text);
+            }
             _braces = default;
 
             _errors.Clear();
@@ -615,13 +637,14 @@ namespace PlantUMLEditor.Controls
             {
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
-
-                foreach (var item in _found)
+                lock (_found)
                 {
-                    var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
-                    col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                    foreach (var item in _found)
+                    {
+                        var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+                        col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                    }
                 }
-
                 if (_braces.selectionStart != 0 && _braces.match != 0)
                 {
                     var g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.selectionStart, 1);
@@ -664,16 +687,22 @@ namespace PlantUMLEditor.Controls
 
         public string TextRead()
         {
-            return this.Text;
+            return Dispatcher.Invoke<string>(() => { return this.Text; });
         }
 
-        public void TextWrite(string text)
+        public void TextWrite(string text, bool format)
         {
             this.Text = text;
 
             this._braces = default;
-            this._found.Clear();
+            lock (_found)
+                this._found.Clear();
 
+            if (format)
+            {
+                Indenter indenter = new Indenter();
+                this.Text = indenter.Process(text);
+            }
             this.InvalidateVisual();
         }
     }

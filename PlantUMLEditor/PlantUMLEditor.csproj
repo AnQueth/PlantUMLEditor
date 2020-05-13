@@ -8,14 +8,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Images\CLASS.png" />
     <None Remove="Images\Close_8x_16x.png" />
     <None Remove="Images\OpenFolder_16x.png" />
     <None Remove="Images\PreviewTransition_16x.png" />
     <None Remove="Images\SaveAll_16x.png" />
     <None Remove="Images\SaveClose_16x.png" />
+    <None Remove="Images\SEQUENCE.png" />
+    <None Remove="Images\uml.png" />
+    <None Remove="plantuml.jar" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Images\CLASS.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\Close_8x_16x.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -31,6 +38,12 @@
     <Content Include="Images\SaveClose_16x.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Images\SEQUENCE.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\uml.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -42,6 +55,12 @@
   <ItemGroup>
     <ProjectReference Include="..\PlantUML\PlantUML.csproj" />
     <ProjectReference Include="..\UMLModels\UMLModels.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="plantuml.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

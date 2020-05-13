@@ -58,13 +58,6 @@ namespace PlantUMLEditor
             return null;
         }
 
-        private void NewItemClicked(object sender, RoutedEventArgs e)
-        {
-            var g = FindVisualChild<Grid>(tabs);
-            var b = (TextBox)g.Children[1];
-            _currentCallback.NewAutoComplete(b.Text);
-        }
-
         public void CloseAutoComplete()
         {
             _isVisible = false;
@@ -87,23 +80,7 @@ namespace PlantUMLEditor
 
             _cb = (ListBox)g.Children[0];
 
-            var t = (TextBox)g.Children[1];
-            var b = (Button)g.Children[2];
-
-            if (allowTyping)
-            {
-                t.Visibility = Visibility.Visible;
-                b.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                t.Visibility = Visibility.Collapsed;
-                b.Visibility = Visibility.Collapsed;
-            }
-
-            //cb.Focus();
-
-            b.Click += NewItemClicked;
+            _cb.SelectionChanged -= AutoCompleteItemSelected;
             _cb.SelectionChanged += AutoCompleteItemSelected;
         }
 

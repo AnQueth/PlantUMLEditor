@@ -76,7 +76,7 @@ namespace PlantUMLEditor.Controls
 
             StringBuilder sb = new StringBuilder();
 
-            Regex newLineAfter = new Regex("participant|actor|database|component|class|interface");
+            Regex newLineAfter = new Regex("participant|actor|database|component|class|interface|entity");
 
             for (var x = 0; x < lines.Length; x++)
             {
@@ -86,7 +86,7 @@ namespace PlantUMLEditor.Controls
                 if (oldLine.StartsWith("title") || oldLine.StartsWith("@startuml") || (oldLine == "}" && lines[x].Trim() != "}"))
                     sb.AppendLine();
 
-                if (newLineAfter.IsMatch(oldLine) && !newLineAfter.IsMatch(lines[x]))
+                if (!string.IsNullOrWhiteSpace(oldLine) && newLineAfter.IsMatch(oldLine) && !newLineAfter.IsMatch(lines[x]))
                 {
                     sb.AppendLine();
                 }

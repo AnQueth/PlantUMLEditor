@@ -6,7 +6,7 @@
         xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
         xmlns:local="clr-namespace:PlantUMLEditor" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="1024" Width="1084">
+        Title="{Binding Title}" Height="1024" Width="1084" Icon="/Images/uml.png">
     <Window.Resources>
         <Thickness x:Key="Margin">5,5,5,5</Thickness>
     </Window.Resources>
@@ -16,8 +16,8 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
-            <Button Content="Print" Command="{Binding PrintImageCommand}" Margin="{DynamicResource Margin}"></Button>
-            <Button Content="Copy" Command="{Binding CopyImage}" Margin="{DynamicResource Margin}"></Button>
+            <Button Content="Print" Command="{Binding PrintImageCommand}" Margin="{DynamicResource Margin}" ToolTip="Print the image"></Button>
+            <Button Content="Copy" Command="{Binding CopyImage}" Margin="{DynamicResource Margin}" ToolTip="Copy the image for pasting"></Button>
         </StackPanel>
         <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" PanningMode="Both">
             <Behaviors:Interaction.Behaviors>

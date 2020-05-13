@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -37,6 +38,11 @@ namespace PlantUMLEditor.Models
             }
 
             base.ContentChanged(text);
+        }
+
+        public override Task<UMLDiagram> GetEditedDiagram()
+        {
+            return Task.FromResult<UMLDiagram>(null);
         }
     }
 }

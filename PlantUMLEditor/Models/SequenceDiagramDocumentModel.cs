@@ -38,12 +38,12 @@ namespace PlantUMLEditor.Models
         {
             uMLDataType.Methods.ForEach(z =>
             {
-                if (string.IsNullOrEmpty(word) || z.Signature.StartsWith(word, StringComparison.InvariantCultureIgnoreCase))
+                if (string.IsNullOrEmpty(word) || z.Signature.Contains(word, StringComparison.InvariantCultureIgnoreCase))
                     this.MatchingAutoCompletes.Add(z.Signature);
             });
             uMLDataType.Properties.ForEach(z =>
             {
-                if (string.IsNullOrEmpty(word) || z.Signature.StartsWith(word, StringComparison.InvariantCultureIgnoreCase))
+                if (string.IsNullOrEmpty(word) || z.Signature.Contains(word, StringComparison.InvariantCultureIgnoreCase))
                     this.MatchingAutoCompletes.Add(z.Signature);
             });
 
@@ -97,7 +97,7 @@ namespace PlantUMLEditor.Models
             if (diagram == null)
                 return;
 
-            if (text.EndsWith(':') && PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out connection))
+            if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out connection))
             {
                 if (connection.To != null && connection.To.DataTypeId != null)
                 {
@@ -108,8 +108,6 @@ namespace PlantUMLEditor.Models
                     if (this.MatchingAutoCompletes.Count > 0)
                         ShowAutoComplete(autoCompleteParameters.Position, true);
                 }
-
-                return;
             }
 
             if (text.EndsWith("return"))
@@ -126,39 +124,15 @@ namespace PlantUMLEditor.Models
             foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
                 this.MatchingAutoCompletes.Add(item);
 
-            if (!autoCompleteParameters.Text.Contains("-"))
-                _autoCompleteAppend = " -> ";
-            else
-                _autoCompleteAppend = " : ";
-
             this.MatchingAutoCompletes.Add("participant");
 
             if (this.MatchingAutoCompletes.Count > 0)
                 ShowAutoComplete(autoCompleteParameters.Position, false);
         }
 
-        public override void NewAutoComplete(string text)
+        public override async Task<UMLDiagram> GetEditedDiagram()
         {
-            base.NewAutoComplete(text);
-
-            //UMLClassDiagramParser.TryParseLineForDataType(text, new Dictionary<string, UMLDataType>(), _currentAutoCompleteLifeLineType);
-
-            TextEditor.InsertTextAt(text, base.AutoCompleteParameters.CaretPosition, base.AutoCompleteParameters.WordLength);
-        }
-
-        public override async Task PrepareSave()
-        {
-            var z = await PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, false);
-
-            lock (_locker)
-            {
-                z.FileName = FileName;
-
-                ChangedCallback(Diagram, z);
-                Diagram = z;
-            }
-
-            await base.PrepareSave();
+            return await PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, false);
         }
     }
 }

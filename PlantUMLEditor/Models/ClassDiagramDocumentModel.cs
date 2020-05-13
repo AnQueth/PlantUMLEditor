@@ -40,14 +40,24 @@ namespace PlantUMLEditor.Models
                        }));
 
                         var z = await PlantUML.UMLClassDiagramParser.ReadString(text);
-                        lock (_locker)
-                            _autoCompleteItems = z.DataTypes.Select(p => p.Name);
+                        if (z != null)
+                            lock (_locker)
+                                _autoCompleteItems = z.DataTypes.Select(p => p.Name);
                     }
                 }
             });
         }
 
         public UMLClassDiagram Diagram { get; set; }
+
+        protected override void RegenDocumentHandler()
+        {
+            string t = PlantUMLGenerator.Create(this.Diagram);
+
+            this.TextEditor.TextWrite(t, true);
+
+            base.RegenDocumentHandler();
+        }
 
         public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
@@ -71,14 +81,9 @@ namespace PlantUMLEditor.Models
                 base.ShowAutoComplete(autoCompleteParameters.Position);
         }
 
-        public override async Task PrepareSave()
+        public override async Task<UMLDiagram> GetEditedDiagram()
         {
-            var z = await PlantUML.UMLClassDiagramParser.ReadString(Content);
-
-            ChangedCallback(Diagram, z);
-            Diagram = z;
-
-            await base.PrepareSave();
+            return await PlantUML.UMLClassDiagramParser.ReadString(Content);
         }
     }
 }

@@ -20,6 +20,6 @@ namespace PlantUMLEditor.Models
 
         string TextRead();
 
-        void TextWrite(string text);
+        void TextWrite(string text, bool format);
     }
 }

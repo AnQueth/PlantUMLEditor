@@ -4,6 +4,13 @@ using System.Text;
 
 namespace UMLModels
 {
+    public enum Overridability
+    {
+        None,
+        Virtual,
+        Abstract
+    }
+
     public class UMLMethod : UMLSignature
     {
         public UMLMethod()
@@ -24,29 +31,29 @@ namespace UMLModels
             IsConstructor = true;
         }
 
+        public bool IsConstructor { get; set; }
+
+        public bool IsStatic { get; set; }
+
+        public string Name { get; set; }
+
+        public Overridability OverridableType { get; set; }
+
+        public List<UMLParameter> Parameters { get; }
+
+        public UMLDataType ReturnType { get; set; }
 
         public UMLVisibility Visibility
         {
             get; set;
         }
 
-        public bool IsConstructor { get; set; }
-
-        public string Name { get; set; }
-        public UMLDataType ReturnType { get; set; }
-        public List<UMLParameter> Parameters { get; }
-
-        public Overridability OverridableType { get; set; }
-
-
-        public bool IsStatic {get;set;}
-
         public override string ToString()
         {
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
             StringBuilder sb = new StringBuilder();
-            if (ReturnType != null && !string.IsNullOrEmpty( ReturnType.Name))
+            if (ReturnType != null && !string.IsNullOrEmpty(ReturnType.Name))
             {
                 sb.Append(ReturnType.Name);
                 sb.Append(" ");
@@ -54,26 +61,17 @@ namespace UMLModels
             sb.Append(Name);
             sb.Append("(");
 
-         
-
             if (Parameters != null)
-                for (var x  =0; x < Parameters.Count; x++)
+                for (var x = 0; x < Parameters.Count; x++)
                 {
-                    sb.Append( Parameters[x].ToString());
+                    sb.Append(Parameters[x].ToString());
                     if (x < Parameters.Count - 1)
-                        sb.Append( ",");
+                        sb.Append(", ");
                 }
 
-            sb.Append( ")");
+            sb.Append(")");
 
             return sb.ToString();
         }
-    }
-
-    public enum Overridability
-    {
-        None,
-        Virtual,
-        Abstract
     }
 }

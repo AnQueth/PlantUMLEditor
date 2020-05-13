@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using PlantUML;
+using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -53,7 +54,7 @@ namespace PlantUMLEditor.Models
 
             Configuration = new AppConfiguration()
             {
-                JarLocation = "d:\\downloads\\plantuml.jar"
+                JarLocation = "plantuml.jar"
             };
         }
 
@@ -135,7 +136,7 @@ namespace PlantUMLEditor.Models
         {
             foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
             {
-                model.Children.Add(new TreeViewModel(file, true, "")
+                model.Children.Add(new TreeViewModel(file, true, !file.Contains(".seq.puml") ? "images\\class.png" : "images\\sequence.png")
                 {
                     Name = Path.GetFileName(file)
                 });
@@ -153,6 +154,29 @@ namespace PlantUMLEditor.Models
                 model.Children.Add(fm);
 
                 AddFolderItems(item, fm);
+            }
+        }
+
+        private void AddMethodToClassDigramHandler(DocumentMessage sender)
+        {
+            foreach (var doc in Documents.ClassDocuments)
+            {
+                var d = doc.DataTypes.FirstOrDefault(p => p.Id == sender.DataTypeId);
+                if (d == null)
+                    continue;
+
+                UMLClassDiagramParser.TryParseLineForDataType(sender.OffendingText.Trim(), new Dictionary<string, UMLDataType>(), d);
+
+                var od = OpenDocuments.FirstOrDefault(p => p.FileName == doc.FileName);
+                if (od != null)
+                {
+                    CurrentDocument = od;
+                    od.UpdateDiagram(doc);
+                }
+                else
+                {
+                    OpenClassDiagram(doc.FileName, doc, 0);
+                }
             }
         }
 
@@ -194,27 +218,46 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            await this.SaveAll();
-
             if (Application.Current == null)
                 return;
+            List<UMLDiagram> diagrams = new List<UMLDiagram>();
+
+            try
+            {
+                foreach (var doc in OpenDocuments)
+                {
+                    var d = await doc.GetEditedDiagram();
+                    d.FileName = doc.FileName;
+                    diagrams.Add(d);
+                }
+            }
+            catch
+            {
+                _messageChecker.Change(2000, Timeout.Infinite);
+                return;
+            }
 
             Application.Current.Dispatcher.Invoke(() =>
-            {
-                DocumentMessageGenerator documentMessageGenerator = new DocumentMessageGenerator(Documents, Messages);
-                documentMessageGenerator.Generate();
+          {
+              Messages.Clear();
 
-                foreach (var d in Messages)
-                {
-                    var docs = OpenDocuments.Where(p => p.FileName == d.FileName);
-                    foreach (var doc in docs)
-                    {
-                        doc.ReportMessage(d);
-                    }
-                }
+              DocumentMessageGenerator documentMessageGenerator = new DocumentMessageGenerator(diagrams, Messages);
+              documentMessageGenerator.Generate();
 
-                _messageChecker.Change(2000, Timeout.Infinite);
-            });
+              foreach (var d in Messages)
+              {
+                  d.CreateMissingMethodCommand = new DelegateCommand<DocumentMessage>(AddMethodToClassDigramHandler);
+
+                  var docs = OpenDocuments.Where(p => p.FileName == d.FileName);
+                  foreach (var doc in docs)
+                  {
+                      if (CurrentDocument == doc)
+                          doc.ReportMessage(d);
+                  }
+              }
+
+              _messageChecker.Change(2000, Timeout.Infinite);
+          });
         }
 
         private void Close(DocumentModel doc)
@@ -455,12 +498,7 @@ namespace PlantUMLEditor.Models
 
         private async Task Save(DocumentModel doc)
         {
-            if (doc.IsDirty)
-            {
-                await doc.PrepareSave();
-
-                await File.WriteAllTextAsync(doc.FileName, doc.Content);
-            }
+            await File.WriteAllTextAsync(doc.FileName, doc.Content);
         }
 
         private async Task SaveAll()
@@ -494,6 +532,49 @@ namespace PlantUMLEditor.Models
                 foreach (var file in s)
                 {
                     await Save(file);
+                }
+
+                List<(UMLDiagram, UMLDiagram)> list = new List<(UMLDiagram, UMLDiagram)>();
+
+                foreach (var document in OpenDocuments)
+                {
+                    var e = await document.GetEditedDiagram();
+                    e.FileName = document.FileName;
+
+                    if (e is UMLClassDiagram cd)
+                    {
+                        foreach (var oldCd in Documents.ClassDocuments)
+                        {
+                            if (oldCd.FileName == cd.FileName)
+                            {
+                                list.Add((oldCd, cd));
+                            }
+                        }
+                    }
+                    if (e is UMLSequenceDiagram sd)
+                    {
+                        foreach (var oldCd in Documents.SequenceDiagrams)
+                        {
+                            if (oldCd.FileName == sd.FileName)
+                            {
+                                list.Add((oldCd, sd));
+                            }
+                        }
+                    }
+                }
+
+                foreach (var item in list)
+                {
+                    if (item.Item1 is UMLClassDiagram cd)
+                    {
+                        documents.ClassDocuments.Remove(cd);
+                        documents.ClassDocuments.Add(item.Item2 as UMLClassDiagram);
+                    }
+                    else
+                    {
+                        documents.SequenceDiagrams.Remove(item.Item1 as UMLSequenceDiagram);
+                        documents.SequenceDiagrams.Add(item.Item2 as UMLSequenceDiagram);
+                    }
                 }
 
                 await _documentCollectionSerialization.Save(Documents, _metaDataFile);

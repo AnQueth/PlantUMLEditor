@@ -1,5 +1,13 @@
 ﻿namespace UMLModels
 {
+    public enum ListTypes
+    {
+        None,
+        List,
+        Array,
+        IReadOnlyCollection
+    }
+
     public class UMLParameter : UMLSignature
     {
         public UMLParameter()
@@ -40,13 +48,5 @@
                 return $"{ObjectType.Name} {Name}";
             }
         }
-    }
-
-    public enum ListTypes
-    {
-        None,
-        List,
-        Array,
-        IReadOnlyCollection
     }
 }
