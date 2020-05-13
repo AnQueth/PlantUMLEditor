@@ -221,7 +221,7 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" x:Name="Tabs"
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"></ColumnDefinition>
                             <ColumnDefinition Width="50"></ColumnDefinition>
-                            <ColumnDefinition Width="100"></ColumnDefinition>
+                            <ColumnDefinition Width="200"></ColumnDefinition>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{Binding Text}" Grid.Column="0" Margin="10,5,10,5" ></TextBlock>
                         <TextBlock Text="{Binding LineNumber}" Grid.Column="1" Margin="10,5,10,5"></TextBlock>
