@@ -13,6 +13,17 @@
 
     xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/Images/uml.png">
     <Window.Resources>
+        <ContextMenu x:Key="FolderMenu">
+            <MenuItem Header="New Class Diagram" Command="{Binding DataContext.CreateNewClassDiagram , RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}" ></MenuItem>
+            <MenuItem Header="New Sequence Diagram" Command="{Binding DataContext.CreateNewSequenceDiagram , RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:MainWindow}}}" ></MenuItem>
+            <Separator></Separator>
+
+            <MenuItem Header="New Folder" Command="{Binding NewFolderCommand}"></MenuItem>
+            <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
+        </ContextMenu>
+        <ContextMenu x:Key="FileMenu">
+            <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
+        </ContextMenu>
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
 
@@ -70,18 +81,49 @@
                     </ColumnDefinition>
                     <ColumnDefinition Width="*"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="MouseLeftButtonDown">
+                        <b:CallMethodAction MethodName="TreeItemClicked" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
+AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
                 <Image Source="{Binding Icon}" Width="20">
                 </Image>
-                <TextBlock Grid.Column="1" Text="{Binding Name}" FontWeight="Bold">
-
+                <TextBox x:Name="rename" Text="{Binding Rename, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <b:Interaction.Triggers>
-                        <b:EventTrigger EventName="MouseLeftButtonDown">
-                            <b:CallMethodAction MethodName="TreeItemClicked" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
-AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
-                        </b:EventTrigger>
+                        <b:KeyTrigger Key="Return" ActiveOnFocus="True">
+
+                            <b:InvokeCommandAction  Command="{Binding  DoRenameCommand}"></b:InvokeCommandAction>
+                        </b:KeyTrigger>
                     </b:Interaction.Triggers>
+                </TextBox>
+                <TextBlock x:Name="txt" Grid.Column="1" Text="{Binding Name}" FontWeight="Bold">
                 </TextBlock>
             </Grid>
+            <HierarchicalDataTemplate.Triggers>
+                <DataTrigger Value="true">
+                    <DataTrigger.Binding>
+                        <Binding  Path="IsRenaming"></Binding>
+                    </DataTrigger.Binding>
+                    <DataTrigger.Setters>
+                        <Setter Property="Visibility"  TargetName="rename" Value="Visible">
+                        </Setter>
+                        <Setter Property="Visibility"  TargetName="txt" Value="Collapsed">
+                        </Setter>
+                    </DataTrigger.Setters>
+                </DataTrigger>
+                <DataTrigger Value="false">
+                    <DataTrigger.Binding>
+                        <Binding  Path="IsRenaming"></Binding>
+                    </DataTrigger.Binding>
+                    <DataTrigger.Setters>
+                        <Setter Property="Visibility"  TargetName="rename" Value="Collapsed">
+                        </Setter>
+                        <Setter Property="Visibility"  TargetName="txt" Value="Visible">
+                        </Setter>
+                    </DataTrigger.Setters>
+                </DataTrigger>
+            </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
         <Thickness x:Key="TabHeaderMargin">5,2,10,2</Thickness>
         <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3" />
@@ -159,14 +201,27 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             </RibbonTab>
         </Ribbon>
         <TreeView Grid.Row="1" Grid.RowSpan="3" ItemsSource="{Binding Folder.Children}">
-            <TreeView.ItemContainerStyle>
-                <Style TargetType="{x:Type TreeViewItem}">
-                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
-                </Style>
-            </TreeView.ItemContainerStyle>
+
             <TreeView.ItemTemplate>
                 <StaticResource ResourceKey="NameTemplate" />
             </TreeView.ItemTemplate>
+
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}">
+                    <Setter Property="IsExpanded" Value="True"></Setter>
+                    <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsFile}" Value="false">
+                            <Setter Property="ContextMenu" Value="{StaticResource FolderMenu}">
+                            </Setter>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsFile}" Value="true">
+                            <Setter Property="ContextMenu" Value="{StaticResource FileMenu}">
+                            </Setter>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TreeView.ItemContainerStyle>
         </TreeView>
         <GridSplitter   Grid.RowSpan="3"  HorizontalAlignment="Center"
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />

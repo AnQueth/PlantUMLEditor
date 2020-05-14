@@ -15,9 +15,10 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    public class MainModel : BindingBase
+    public class MainModel : BindingBase, IFolderChangeNotifactions
     {
         private readonly IAutoComplete _autoComplete;
+
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly Timer _messageChecker;
         private readonly IOpenDirectoryService _openDirectoryService;
@@ -27,11 +28,8 @@ namespace PlantUMLEditor.Models
         private string _metaDataDirectory = "";
         private string _metaDataFile = "";
         private DocumentModel currentDocument;
-
         private UMLModels.UMLDocumentCollection documents;
-
         private TreeViewModel folder;
-
         private DocumentMessage selectedMessage;
 
         public MainModel(IOpenDirectoryService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization, IAutoComplete autoComplete)
@@ -41,7 +39,7 @@ namespace PlantUMLEditor.Models
             _openDirectoryService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(OpenDirectoryHandler);
             SaveAllCommand = new DelegateCommand(SaveAllHandler);
-            Folder = new TreeViewModel(Path.GetTempPath(), false, "");
+            Folder = new TreeViewModel(Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<DocumentModel>();
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler);
@@ -59,13 +57,9 @@ namespace PlantUMLEditor.Models
         }
 
         private AppConfiguration Configuration { get; }
-
         public DelegateCommand<DocumentModel> CloseDocument { get; }
-
         public DelegateCommand<DocumentModel> CloseDocumentAndSave { get; }
-
         public DelegateCommand CreateNewClassDiagram { get; }
-
         public DelegateCommand CreateNewSequenceDiagram { get; }
 
         public DocumentModel CurrentDocument
@@ -136,9 +130,8 @@ namespace PlantUMLEditor.Models
         {
             foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
             {
-                model.Children.Add(new TreeViewModel(file, true, !file.Contains(".seq.puml") ? "images\\class.png" : "images\\sequence.png")
+                model.Children.Add(new TreeViewModel(file, true, !file.Contains(".seq.puml") ? "images\\class.png" : "images\\sequence.png", this)
                 {
-                    Name = Path.GetFileName(file)
                 });
             }
 
@@ -147,9 +140,8 @@ namespace PlantUMLEditor.Models
                 if (Path.GetFileName(item).StartsWith("."))
                     continue;
 
-                var fm = new TreeViewModel(item, false, "")
+                var fm = new TreeViewModel(item, false, "", this)
                 {
-                    Name = Path.GetFileName(item)
                 };
                 model.Children.Add(fm);
 
@@ -606,14 +598,15 @@ namespace PlantUMLEditor.Models
 
         private void ScanDirectory(string dir)
         {
-            Folder = new TreeViewModel("", false, "");
+            Folder = new TreeViewModel("", false, "", this);
 
             Folder.Children.Clear();
 
-            Folder.FullPath = dir;
-            Folder.Name = Path.GetDirectoryName(dir);
+            var start = new TreeViewModel(dir, false, "", this);
 
-            AddFolderItems(dir, Folder);
+            Folder.Children.Add(start);
+
+            AddFolderItems(dir, start);
 
             ScanAllFilesHandler();
         }
@@ -632,6 +625,15 @@ namespace PlantUMLEditor.Models
             {
                 await ScanForFiles(file, potentialSequenceDiagrams);
             }
+        }
+
+        public void Change(string fullPath)
+        {
+            string dir = GetWorkingFolder();
+            if (string.IsNullOrEmpty(dir))
+                return;
+
+            ScanDirectory(dir);
         }
 
         public async void TreeItemClicked(object sender, MouseButtonEventArgs e)
