@@ -169,11 +169,6 @@ namespace PlantUMLEditor.Models
             _textEditor.ReportError(d.LineNumber, 0);
         }
 
-        internal void UpdateDiagram(UMLClassDiagram doc)
-        {
-            this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
-        }
-
         public virtual void AutoComplete(AutoCompleteParameters p)
         {
             _autoCompleteParameters = p;

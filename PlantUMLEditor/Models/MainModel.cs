@@ -161,7 +161,7 @@ namespace PlantUMLEditor.Models
 
                 UMLClassDiagramParser.TryParseLineForDataType(sender.OffendingText.Trim(), new Dictionary<string, UMLDataType>(), d);
 
-                var od = OpenDocuments.FirstOrDefault(p => p.FileName == doc.FileName);
+                var od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == doc.FileName);
                 if (od != null)
                 {
                     CurrentDocument = od;
@@ -528,7 +528,7 @@ namespace PlantUMLEditor.Models
 
                 List<(UMLDiagram, UMLDiagram)> list = new List<(UMLDiagram, UMLDiagram)>();
 
-                foreach (var document in OpenDocuments)
+                foreach (var document in OpenDocuments.OfType<ClassDiagramDocumentModel>())
                 {
                     var e = await document.GetEditedDiagram();
                     e.FileName = document.FileName;
@@ -543,6 +543,12 @@ namespace PlantUMLEditor.Models
                             }
                         }
                     }
+                }
+                foreach (var document in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
+                {
+                    var e = await document.GetEditedDiagram();
+                    e.FileName = document.FileName;
+
                     if (e is UMLSequenceDiagram sd)
                     {
                         foreach (var oldCd in Documents.SequenceDiagrams)
@@ -567,6 +573,11 @@ namespace PlantUMLEditor.Models
                         documents.SequenceDiagrams.Remove(item.Item1 as UMLSequenceDiagram);
                         documents.SequenceDiagrams.Add(item.Item2 as UMLSequenceDiagram);
                     }
+                }
+
+                foreach (var document in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
+                {
+                    document.UpdateDiagram(documents.ClassDocuments);
                 }
 
                 await _documentCollectionSerialization.Save(Documents, _metaDataFile);
@@ -602,6 +613,11 @@ namespace PlantUMLEditor.Models
             UMLDiagramTypeDiscovery discovery = new UMLDiagramTypeDiscovery();
             foreach (var seq in potentialSequenceDiagrams)
                 await discovery.TryCreateSequenceDiagram(Documents, seq);
+
+            foreach (var doc in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
+            {
+                doc.UpdateDiagram(Documents.ClassDocuments);
+            }
         }
 
         private void ScanDirectory(string dir)

@@ -59,6 +59,11 @@ namespace PlantUMLEditor.Models
             base.RegenDocumentHandler();
         }
 
+        internal void UpdateDiagram(UMLClassDiagram doc)
+        {
+            this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
+        }
+
         public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
             base.AutoComplete(autoCompleteParameters);

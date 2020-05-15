@@ -58,6 +58,11 @@ namespace PlantUMLEditor.Models
             return selection;
         }
 
+        internal void UpdateDiagram(List<UMLClassDiagram> classDocuments)
+        {
+            this.DataTypes = classDocuments;
+        }
+
         public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
             _autoCompleteAppend = string.Empty;
