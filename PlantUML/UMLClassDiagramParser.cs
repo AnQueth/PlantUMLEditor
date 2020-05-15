@@ -19,7 +19,7 @@ namespace PlantUML
 
         private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{");
 
-        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\((?<params>((?<pt>[\\w\\[\\]]+|\\w+\\<.*\\>?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
+        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\(\\s*(?<params>((?<pt>[\\w\\[\\]]+?|[\\w+\\<.*\\>]+?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
 
         private static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{");
 

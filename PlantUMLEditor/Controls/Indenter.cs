@@ -18,7 +18,7 @@ namespace PlantUMLEditor.Controls
 
         private Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par)\\s+");
         private Regex tabReset = new Regex("^else\\s?.*");
-        private Regex tabStop = new Regex("^\\}|end(?! note)");
+        private Regex tabStop = new Regex("^(\\}|end(?! note))");
 
         private int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {

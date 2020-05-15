@@ -107,6 +107,7 @@ namespace PlantUMLEditor.Models
 
                     if (this.MatchingAutoCompletes.Count > 0)
                         ShowAutoComplete(autoCompleteParameters.Position, true);
+                    return;
                 }
             }
 

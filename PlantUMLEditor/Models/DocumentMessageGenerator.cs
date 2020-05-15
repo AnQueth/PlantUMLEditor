@@ -81,6 +81,7 @@ namespace PlantUMLEditor.Models
                             OffendingText = c.Action?.Signature,
                             DataTypeId = c.To?.DataTypeId,
                             Diagram = o,
+                            MissingMethod = true,
                             Warning = true
                         });
                     }

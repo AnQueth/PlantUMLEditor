@@ -28,6 +28,11 @@ namespace PlantUMLEditor.Models
 
         public int LineNumber { get; set; }
 
+        public bool MissingMethod
+        {
+            get; set;
+        }
+
         public string OffendingText { get; set; }
 
         public string Text { get; set; }

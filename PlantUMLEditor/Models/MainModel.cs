@@ -46,6 +46,7 @@ namespace PlantUMLEditor.Models
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler);
             CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
+            SaveCommand = new DelegateCommand<DocumentModel>(SaveCommandHandler);
             Messages = new ObservableCollection<DocumentMessage>();
             ScanAllFiles = new DelegateCommand(ScanAllFilesHandler);
             _autoComplete = autoComplete;
@@ -112,6 +113,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
+        public DelegateCommand<DocumentModel> SaveCommand { get; }
         public DelegateCommand ScanAllFiles { get; }
 
         public DocumentMessage SelectedMessage
@@ -263,9 +265,7 @@ namespace PlantUMLEditor.Models
         {
             _fileSave.WaitOne();
             await Save(doc);
-
             _fileSave.Release();
-
             Close(doc);
         }
 
@@ -580,6 +580,14 @@ namespace PlantUMLEditor.Models
         private void SaveAllHandler()
         {
             SaveAll();
+        }
+
+        private async void SaveCommandHandler(DocumentModel doc)
+        {
+            _fileSave.WaitOne();
+            await Save(doc);
+
+            _fileSave.Release();
         }
 
         private async void ScanAllFilesHandler()

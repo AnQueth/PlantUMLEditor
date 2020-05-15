@@ -15,6 +15,7 @@
     <None Remove="Images\PreviewTransition_16x.png" />
     <None Remove="Images\SaveAll_16x.png" />
     <None Remove="Images\SaveClose_16x.png" />
+    <None Remove="Images\Save_16x.png" />
     <None Remove="Images\SEQUENCE.png" />
     <None Remove="Images\uml.png" />
     <None Remove="plantuml.jar" />
@@ -63,6 +64,12 @@
 
   <ItemGroup>
     <Content Include="plantuml.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Images\Save_16x.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

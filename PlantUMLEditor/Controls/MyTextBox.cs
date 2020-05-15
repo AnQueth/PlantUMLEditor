@@ -346,6 +346,7 @@ namespace PlantUMLEditor.Controls
 
         private void ShowFind()
         {
+            _findText.Text = this.SelectedText;
             _find.Visibility = Visibility.Visible;
         }
 
@@ -496,8 +497,8 @@ namespace PlantUMLEditor.Controls
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
-            lock (_found)
-                _found.Clear();
+            //lock (_found)
+            //    _found.Clear();
             int item = this.GetCharacterIndexFromPoint(e.GetPosition(this), true);
             if (item < this.Text.Length)
             {
@@ -522,8 +523,9 @@ namespace PlantUMLEditor.Controls
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
-            drawingContext.PushTransform(new TranslateTransform(0, -this.VerticalOffset));
-            drawingContext.PushClip(new RectangleGeometry(new Rect(0, this.VerticalOffset, this.ActualWidth, this.VerticalOffset + this.ActualHeight)));
+            drawingContext.PushTransform(new TranslateTransform(-this.HorizontalOffset, -this.VerticalOffset));
+            drawingContext.PushClip(new RectangleGeometry(new Rect(this.HorizontalOffset, this.VerticalOffset,
+                this.ViewportWidth, this.ViewportHeight)));
             SetText(this.TextRead(), false, drawingContext);
         }
 
@@ -635,14 +637,20 @@ namespace PlantUMLEditor.Controls
 
             try
             {
+                int start = GetCharacterIndexFromLineIndex(GetFirstVisibleLineIndex());
+                int end = GetCharacterIndexFromLineIndex(GetLastVisibleLineIndex()) + GetLineLength(GetLastVisibleLineIndex());
+
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
                 lock (_found)
                 {
                     foreach (var item in _found)
                     {
-                        var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
-                        col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                        if (item.start >= start && item.start <= end)
+                        {
+                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+                            col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                        }
                     }
                 }
                 if (_braces.selectionStart != 0 && _braces.match != 0)
@@ -659,14 +667,16 @@ namespace PlantUMLEditor.Controls
                     {
                         var l = GetCharacterIndexFromLineIndex(item.line - 1);
                         var len = GetLineLength(item.line - 1);
+                        if (l >= start && l <= end)
+                        {
+                            TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
+                                new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
+                                 TextDecorationUnit.FontRecommended);
+                            TextDecorationCollection textDecorations = new TextDecorationCollection();
+                            textDecorations.Add(td);
 
-                        TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
-                            new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
-                             TextDecorationUnit.FontRecommended);
-                        TextDecorationCollection textDecorations = new TextDecorationCollection();
-                        textDecorations.Add(td);
-
-                        formattedText.SetTextDecorations(textDecorations, l, len);
+                            formattedText.SetTextDecorations(textDecorations, l, len);
+                        }
                     }
                     catch
                     {
