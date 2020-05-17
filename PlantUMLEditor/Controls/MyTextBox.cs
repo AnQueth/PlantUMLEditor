@@ -467,7 +467,7 @@ namespace PlantUMLEditor.Controls
             //}
             //this._syntaxDocument.Change(1000, Timeout.Infinite);
 
-            if (e.Key == Key.Enter || e.Key == Key.Space)
+            if (e.Key == Key.Enter)
             {
                 this.RenderLineNumbers();
             }
@@ -481,14 +481,14 @@ namespace PlantUMLEditor.Controls
                 BracesMatcher(l, c);
                 this._autoComplete.CloseAutoComplete();
             }
-            else
+            else if (e.Key != Key.Enter && e.Key != Key.Space)
             {
                 if (this._timer == null)
                 {
                     _timer = new Timer(ProcessAutoComplete);
                 }
 
-                this._timer.Change(500, Timeout.Infinite);
+                this._timer.Change(250, Timeout.Infinite);
             }
 
             base.OnPreviewKeyUp(e);

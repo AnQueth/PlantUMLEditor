@@ -22,6 +22,8 @@ namespace PlantUMLEditor.Models
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly Timer _messageChecker;
         private readonly IOpenDirectoryService _openDirectoryService;
+        private bool _AllowContinue;
+        private bool _confirmOpen;
         private object _docLock = new object();
         private Semaphore _fileSave = new Semaphore(1, 1);
         private string _folderBase;
@@ -58,8 +60,35 @@ namespace PlantUMLEditor.Models
         }
 
         private AppConfiguration Configuration { get; }
+
+        public bool AllowContinue
+        {
+            get
+            {
+                return _AllowContinue;
+            }
+            set
+            {
+                SetValue(ref _AllowContinue, value);
+            }
+        }
+
         public DelegateCommand<DocumentModel> CloseDocument { get; }
+
         public DelegateCommand<DocumentModel> CloseDocumentAndSave { get; }
+
+        public bool ConfirmOpen
+        {
+            get
+            {
+                return _confirmOpen;
+            }
+            set
+            {
+                SetValue(ref _confirmOpen, value);
+            }
+        }
+
         public DelegateCommand CreateNewClassDiagram { get; }
         public DelegateCommand CreateNewSequenceDiagram { get; }
 
@@ -271,6 +300,9 @@ namespace PlantUMLEditor.Models
 
         private void CloseDocumentHandler(DocumentModel doc)
         {
+            if (doc.IsDirty)
+            {
+            }
             Close(doc);
         }
 
@@ -491,6 +523,7 @@ namespace PlantUMLEditor.Models
         private async Task Save(DocumentModel doc)
         {
             await File.WriteAllTextAsync(doc.FileName, doc.Content);
+            doc.IsDirty = false;
         }
 
         private async Task SaveAll()

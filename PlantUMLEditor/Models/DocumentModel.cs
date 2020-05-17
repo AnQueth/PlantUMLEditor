@@ -24,6 +24,7 @@ namespace PlantUMLEditor.Models
         private readonly string _jarLocation;
 
         private AutoCompleteParameters _autoCompleteParameters;
+        private bool _isDirty;
         private int _lineNumber;
         private ITextEditor _textEditor;
         private string _textValue;
@@ -69,7 +70,14 @@ namespace PlantUMLEditor.Models
 
         public bool IsDirty
         {
-            get; set;
+            get
+            {
+                return _isDirty;
+            }
+            set
+            {
+                SetValue(ref _isDirty, value);
+            }
         }
 
         public List<string> MatchingAutoCompletes

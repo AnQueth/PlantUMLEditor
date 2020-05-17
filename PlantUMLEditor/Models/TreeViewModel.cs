@@ -11,6 +11,7 @@ namespace PlantUMLEditor.Models
         private readonly IFolderChangeNotifactions _folderChangeNotifactions;
         private bool _isRenaming = false;
         private string _name;
+        private string _rename;
 
         public TreeViewModel(string path, bool isFile, string icon, IFolderChangeNotifactions folderChangeNotifactions)
         {
@@ -54,7 +55,7 @@ namespace PlantUMLEditor.Models
             {
                 return _isRenaming;
             }
-            internal set
+            set
             {
                 SetValue(ref _isRenaming, value);
             }
@@ -78,8 +79,14 @@ namespace PlantUMLEditor.Models
 
         public string Rename
         {
-            get;
-            set;
+            get
+            {
+                return _rename;
+            }
+            set
+            {
+                SetValue(ref _rename, value);
+            }
         }
 
         public DelegateCommand StartRenameCommand { get; }
