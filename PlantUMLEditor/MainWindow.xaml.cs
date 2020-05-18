@@ -20,7 +20,7 @@ namespace PlantUMLEditor
         public MainWindow()
         {
             InitializeComponent();
-            _model = new MainModel(new OpenDirectoryService(), new UMLDocumentCollectionSerialization(), new AutoCompleteUI(Tabs));
+            _model = new MainModel(new OpenDirectoryService(), new UMLDocumentCollectionSerialization());
             DataContext = _model;
         }
     }

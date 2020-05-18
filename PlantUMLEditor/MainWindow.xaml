@@ -26,65 +26,93 @@
         </ContextMenu>
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
-            <Border BorderThickness="2">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsDirty}" Value="true">
-                                <DataTrigger.Setters>
-                                    <Setter   Property="BorderBrush" Value="Red">
-                                    </Setter>
-                                </DataTrigger.Setters>
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding IsDirty}" Value="false">
-                                <DataTrigger.Setters>
-                                    <Setter   Property="BorderBrush" Value="Green">
-                                    </Setter>
-                                </DataTrigger.Setters>
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+            <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+                <Border BorderThickness="2">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDirty}" Value="true">
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="BorderBrush" Value="Red">
+                                        </Setter>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsDirty}" Value="false">
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="BorderBrush" Value="Green">
+                                        </Setter>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
 
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
 
-                        <RowDefinition Height="*"></RowDefinition>
-                        <RowDefinition Height="5">
-                        </RowDefinition>
-                        <RowDefinition Height="Auto" ></RowDefinition>
-                    </Grid.RowDefinitions>
-                    <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
-                    <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True"
+                            <RowDefinition Height="*"></RowDefinition>
+                            <RowDefinition Height="5">
+                            </RowDefinition>
+                            <RowDefinition Height="Auto" ></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
+                        <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True"
                                               UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                             DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                             AcceptsReturn="True"  AcceptsTab="True"
                                FontFamily="Calibri" FontSize="14">
-                    </localControls:MyTextBox>
+                            <localControls:MyTextBox.PopupControl>
+                                <Popup>
 
-                    <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
-                    <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black" Width="{Binding Width, ElementName=Editor}">
+                                    <Grid x:Name="AutoCompleteGrid">
+                                        <Grid.RowDefinitions>
 
-                        <Grid Width="{Binding ActualWidth, ElementName=Editor}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="200" ></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="200" ></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                                <RowDefinition></RowDefinition>
-                            </Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        </Grid.ColumnDefinitions>
 
-                            <!--<Button Grid.Column="1">
+                                        <ListBox x:Name="AutoCompleteBox" Grid.Row="2" Grid.ColumnSpan="2"
+                             MaxHeight="100"
+                           ItemsSource="{Binding SortedMatchingAutoCompletes}">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}"></TextBlock>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Grid>
+                                </Popup>
+                            </localControls:MyTextBox.PopupControl>
+                        </localControls:MyTextBox>
+
+                        <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
+                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black" Width="{Binding Width, ElementName=Editor}">
+
+                            <Grid Width="{Binding ActualWidth, ElementName=Editor}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" ></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="200" ></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition></RowDefinition>
+                                </Grid.RowDefinitions>
+
+                                <!--<Button Grid.Column="1">
                                 <Button.Content>Close</Button.Content>
                                 <b:Interaction.Triggers>
                                     <b:EventTrigger EventName="Click">
@@ -92,56 +120,31 @@
                                     </b:EventTrigger>
                                 </b:Interaction.Triggers>
                             </Button>-->
-                            <TextBox Grid.Row="0" Text="{Binding FindText, Mode=TwoWay, ElementName=Editor}">
-                                <b:Interaction.Triggers>
-                                    <b:KeyTrigger Key="Return">
-                                        <b:InvokeCommandAction Command="{Binding FindCommand, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></b:InvokeCommandAction>
-                                    </b:KeyTrigger>
-                                </b:Interaction.Triggers>
-                            </TextBox>
-                            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
-                            <Button Grid.Column="1" Command="{Binding FindCommand, ElementName=Editor}" Content="Find" ></Button>
-                            <Button Grid.Column="3" Command="{Binding ReplaceCommand, ElementName=Editor}" Content="Replace"  ></Button>
-                            <Button Grid.Column="4" Command="{Binding ClearCommand, ElementName=Editor}" Content="Clear"  ></Button>
+                                <TextBox Grid.Row="0" Text="{Binding FindText, Mode=TwoWay, ElementName=Editor}">
+                                    <b:Interaction.Triggers>
+                                        <b:KeyTrigger Key="Return">
+                                            <b:InvokeCommandAction Command="{Binding FindCommand, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></b:InvokeCommandAction>
+                                        </b:KeyTrigger>
+                                    </b:Interaction.Triggers>
+                                </TextBox>
+                                <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                                <Button Grid.Column="1" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding FindCommand, ElementName=Editor}" Content="Find" ></Button>
+                                <Button Grid.Column="3"  Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ReplaceCommand, ElementName=Editor}" Content="Replace"  ></Button>
+                                <Button Grid.Column="4" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ClearCommand, ElementName=Editor}" Content="Clear"  ></Button>
 
-                            <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="6" MaxHeight="300"
+                                <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="6" MaxHeight="300"
                                  AutoGenerateColumns="False"     SelectedItem="{Binding SelectedFindResult, Mode=TwoWay, ElementName=Editor}">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn  Header="Line"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
-                                    <DataGridTextColumn Header="Match" Binding="{Binding Line}" ></DataGridTextColumn>
-                                    <DataGridTextColumn Header="Replace" Binding="{Binding ReplacePreview}" ></DataGridTextColumn>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </Grid>
-                    </Border>
-
-                    <Popup x:Name="AutoCompletePopup">
-
-                        <Grid x:Name="AutoCompleteGrid">
-                            <Grid.RowDefinitions>
-
-                                <RowDefinition Height="Auto"></RowDefinition>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-
-                            <ListBox x:Name="AutoCompleteBox" Grid.Row="2" Grid.ColumnSpan="2"
-                             MaxHeight="100"
-                           ItemsSource="{Binding SortedMatchingAutoCompletes}">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding}"></TextBlock>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Grid>
-                    </Popup>
-                </Grid>
-            </Border>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn  Header="Line"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
+                                        <DataGridTextColumn Header="Match" Binding="{Binding Line}" ></DataGridTextColumn>
+                                        <DataGridTextColumn Header="Replace" Binding="{Binding ReplacePreview}" ></DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
         </DataTemplate>
 
         <HierarchicalDataTemplate  DataType="{x:Type  models:TreeViewModel}" ItemsSource="{Binding Children}">
@@ -441,7 +444,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
         <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
         <Style TargetType="Button">
-
+            <Setter Property="Padding" Value="5,2,5,2"></Setter>
             <Setter Property="BorderThickness" Value="2"></Setter>
             <Setter Property="BorderBrush"  Value="Purple"></Setter>
             <Setter Property="Template">
@@ -473,6 +476,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 </Setter.Value>
             </Setter>
         </Style>
+        <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
     </Window.Resources>
 
     <Grid>
@@ -505,13 +510,32 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <GridSplitter   Grid.RowSpan="3"  HorizontalAlignment="Center"
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
         <Grid Grid.Row="1" Grid.Column="2">
-            <TabControl ContentTemplate="{DynamicResource TabControlItemTemplate2}"
-SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" x:Name="Tabs"
-                        ItemsSource="{Binding OpenDocuments}">
-                <TabControl.ItemTemplate>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*"></RowDefinition>
+            </Grid.RowDefinitions>
+
+            <ItemsControl ItemsSource="{Binding OpenDocuments}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+
+                <ItemsControl.ItemTemplate>
                     <DataTemplate>
 
-                        <Grid>
+                        <Grid IsHitTestVisible="True">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Visible}" Value="0">
+                                            <Setter Property="Background"  Value="#FF800080"></Setter>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                                 <ColumnDefinition Width="Auto" ></ColumnDefinition>
@@ -520,15 +544,15 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" x:Name="Tabs"
                                 <ColumnDefinition Width="Auto"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
 
-                            <TextBlock  FontWeight="ExtraBold" VerticalAlignment="Center"  Text="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></TextBlock>
-                            <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
+                            <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></Button>
+                            <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                                 <Button.Content>
                                     <Grid>
                                         <Image Source="/Images/Save_16x.png"></Image>
                                     </Grid>
                                 </Button.Content>
                             </Button>
-                            <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
+                            <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                                 <Button.Content>
                                     <Grid>
                                         <Image Source="/Images/SaveClose_16x.png"></Image>
@@ -536,7 +560,7 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" x:Name="Tabs"
                                 </Button.Content>
                             </Button>
 
-                            <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type TabControl}}}">
+                            <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                                 <Button.Content>
                                     <Grid>
                                         <Image Source="/Images/Close_8x_16x.png" ></Image>
@@ -552,8 +576,13 @@ SelectedItem="{Binding CurrentDocument, Mode=TwoWay}" x:Name="Tabs"
                             </Button>
                         </Grid>
                     </DataTemplate>
-                </TabControl.ItemTemplate>
-            </TabControl>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <ItemsControl Grid.Row="1" x:Name="Tabs"
+                          ItemsSource="{Binding OpenDocuments}"
+                          ItemTemplate="{StaticResource TabControlItemTemplate2}">
+            </ItemsControl>
         </Grid>
         <GridSplitter Grid.Row="2" ShowsPreview="True" Grid.Column="2" Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
         <ListBox Grid.Row="3" Grid.Column="2"  ItemsSource="{Binding Messages}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding SelectedMessage}">

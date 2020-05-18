@@ -8,7 +8,7 @@ namespace PlantUMLEditor.Models
 {
     public interface IAutoComplete
     {
-        bool IsVisible { get; }
+        bool IsPopupVisible { get; }
 
         void CloseAutoComplete();
 

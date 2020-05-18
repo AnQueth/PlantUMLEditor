@@ -16,12 +16,12 @@ namespace PlantUMLEditor.Models
         private object _locker = new object();
         private bool _running = true;
 
-        public ClassDiagramDocumentModel(IAutoComplete autoComplete, IConfiguration configuration) : base(autoComplete, configuration)
+        public ClassDiagramDocumentModel(IConfiguration configuration) : base(configuration)
         {
         }
 
-        public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback, IAutoComplete autoComplete, IConfiguration configuration)
-            : base(autoComplete, configuration)
+        public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback, IConfiguration configuration)
+            : base(configuration)
         {
             this.ChangedCallback = changedCallback;
 

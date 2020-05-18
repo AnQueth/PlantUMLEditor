@@ -12,7 +12,7 @@ using System.Windows.Media;
 
 namespace PlantUMLEditor
 {
-    public class AutoCompleteUI : IAutoComplete
+    public class AutoCompleteUI
     {
         private ListBox _cb;
         private IAutoCompleteCallback _currentCallback = null;
@@ -73,56 +73,6 @@ namespace PlantUMLEditor
                 }
             }
             return null;
-        }
-
-        public void CloseAutoComplete()
-        {
-            popup.Value.IsOpen = false;
-        }
-
-        public void FocusAutoComplete(Rect rec, IAutoCompleteCallback autoCompleteCallback, bool allowTyping)
-        {
-            _currentCallback = autoCompleteCallback;
-
-            var g = popup.Value;
-
-            g.IsOpen = true;
-            g.Placement = PlacementMode.RelativePoint;
-            g.HorizontalOffset = rec.Left;
-            g.VerticalOffset = rec.Bottom;
-
-            g.Visibility = Visibility.Visible;
-
-            _cb = (ListBox)((Grid)g.Child).Children[0];
-
-            _cb.SelectionChanged -= AutoCompleteItemSelected;
-            _cb.SelectionChanged += AutoCompleteItemSelected;
-        }
-
-        public void SendEvent(KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-                this.CloseAutoComplete();
-
-            int index = _cb.SelectedIndex;
-
-            if (e.Key == Key.Up)
-            {
-                index--;
-            }
-            else if (e.Key == Key.Down)
-            {
-                index++;
-            }
-
-            if (index < 0)
-                index = 0;
-            if (index > _cb.Items.Count - 1)
-                index = _cb.Items.Count - 1;
-            Debug.WriteLine(index);
-            _cb.SelectedIndex = index;
-
-            _cb.ScrollIntoView(_cb.SelectedItem);
         }
     }
 }

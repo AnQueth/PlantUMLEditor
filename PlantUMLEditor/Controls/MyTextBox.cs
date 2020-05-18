@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Transactions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
@@ -26,7 +27,7 @@ using System.Xml.Serialization;
 
 namespace PlantUMLEditor.Controls
 {
-    public class MyTextBox : TextBox, INotifyPropertyChanged, ITextEditor
+    public class MyTextBox : TextBox, INotifyPropertyChanged, ITextEditor, IAutoComplete
     {
         private readonly List<(int line, int character)> _errors = new List<(int line, int character)>();
 
@@ -34,15 +35,20 @@ namespace PlantUMLEditor.Controls
 
         private DocumentModel _bindedDocument;
         private (int selectionStart, int match) _braces;
+        private ListBox _cb;
+        private IAutoCompleteCallback _currentCallback = null;
         private List<(int start, int length)> _found = new List<(int start, int length)>();
         private ImageSource _lineNumbers;
 
+        private FindResult _selectedFindResult = null;
         private Timer _timer = null;
 
         private bool findReplaceVisible;
         private ObservableCollection<FindResult> findResults = new ObservableCollection<FindResult>();
         private string findText;
         private string replaceText;
+
+        public static DependencyProperty PopupControlProperty = DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
 
         public MyTextBox()
         {
@@ -86,6 +92,8 @@ namespace PlantUMLEditor.Controls
             }
         }
 
+        public bool IsPopupVisible => PopupControl != null ? PopupControl.IsOpen : false;
+
         public ImageSource LineNumbers
         {
             get
@@ -97,6 +105,13 @@ namespace PlantUMLEditor.Controls
                 _lineNumbers = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineNumbers)));
             }
+        }
+
+        public Popup PopupControl
+        {
+            get { return (Popup)GetValue(PopupControlProperty); }
+
+            set { SetValue(PopupControlProperty, value); }
         }
 
         public DelegateCommand ReplaceCommand { get; }
@@ -116,10 +131,11 @@ namespace PlantUMLEditor.Controls
         {
             get
             {
-                return null;
+                return _selectedFindResult;
             }
             set
             {
+                _selectedFindResult = value;
                 if (value != null)
                     GotoLine(value.LineNumber);
             }
@@ -151,6 +167,16 @@ namespace PlantUMLEditor.Controls
             }
 
             return default(T);
+        }
+
+        private void AutoCompleteItemSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                string currentSelected = e.AddedItems[0] as string;
+
+                _currentCallback.Selection(currentSelected);
+            }
         }
 
         private void ClearHandler()
@@ -314,7 +340,7 @@ namespace PlantUMLEditor.Controls
         {
             lock (_found)
                 _found.Clear();
-            if (_autoComplete.IsVisible)
+            if (_autoComplete.IsPopupVisible)
                 return;
 
             string t = this.Text;
@@ -424,14 +450,14 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
+            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
                 (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
             {
                 _autoComplete.SendEvent(e);
                 e.Handled = true;
                 return;
             }
-            if (_autoComplete.IsVisible && (e.Key == Key.Space || e.Key == Key.Enter))
+            if (_autoComplete.IsPopupVisible && (e.Key == Key.Space || e.Key == Key.Enter))
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
@@ -449,7 +475,7 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
-            if (_autoComplete.IsVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
+            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
                 (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
             {
                 e.Handled = true;
@@ -507,7 +533,7 @@ namespace PlantUMLEditor.Controls
         {
             _braces = default;
 
-            if (_autoComplete.IsVisible && (e.Text == "(" || e.Text == ")" || e.Text == "<" || e.Text == ">"))
+            if (_autoComplete.IsPopupVisible && (e.Text == "(" || e.Text == ")" || e.Text == "<" || e.Text == ">"))
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
@@ -541,7 +567,7 @@ namespace PlantUMLEditor.Controls
             _bindedDocument.TextChanged(this.Text);
             lock (_found)
                 _found.Clear();
-            if (!_autoComplete.IsVisible)
+            if (!_autoComplete.IsPopupVisible)
             {
                 if (!string.IsNullOrWhiteSpace(this.SelectedText))
                     this.RunFind(this.SelectedText);
@@ -554,6 +580,36 @@ namespace PlantUMLEditor.Controls
 
             base.OnTextChanged(e);
             this.InvalidateVisual();
+        }
+
+        public void CloseAutoComplete()
+        {
+            PopupControl.IsOpen = false;
+        }
+
+        public void FocusAutoComplete(Rect rec, IAutoCompleteCallback autoCompleteCallback, bool allowTyping)
+        {
+            _currentCallback = autoCompleteCallback;
+            if (PopupControl.Parent == null)
+            {
+                if (this.Parent is Grid gf)
+                {
+                    gf.Children.Add(PopupControl);
+                }
+            }
+            var g = PopupControl;
+
+            g.IsOpen = true;
+            g.Placement = PlacementMode.RelativePoint;
+            g.HorizontalOffset = rec.Left;
+            g.VerticalOffset = rec.Bottom;
+
+            g.Visibility = Visibility.Visible;
+
+            _cb = (ListBox)((Grid)g.Child).Children[0];
+
+            _cb.SelectionChanged -= AutoCompleteItemSelected;
+            _cb.SelectionChanged += AutoCompleteItemSelected;
         }
 
         public void GotoLine(int lineNumber)
@@ -618,6 +674,32 @@ namespace PlantUMLEditor.Controls
                 _errors.Add((line, character));
                 this.InvalidateVisual();
             }
+        }
+
+        public void SendEvent(KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                this.CloseAutoComplete();
+
+            int index = _cb.SelectedIndex;
+
+            if (e.Key == Key.Up)
+            {
+                index--;
+            }
+            else if (e.Key == Key.Down)
+            {
+                index++;
+            }
+
+            if (index < 0)
+                index = 0;
+            if (index > _cb.Items.Count - 1)
+                index = _cb.Items.Count - 1;
+            Debug.WriteLine(index);
+            _cb.SelectedIndex = index;
+
+            _cb.ScrollIntoView(_cb.SelectedItem);
         }
 
         public void SetAutoComplete(IAutoComplete autoComplete)

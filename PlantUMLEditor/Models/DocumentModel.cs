@@ -20,22 +20,30 @@ namespace PlantUMLEditor.Models
 
     public abstract class DocumentModel : BindingBase, IAutoCompleteCallback
     {
-        private readonly IAutoComplete _autoComplete;
         private readonly string _jarLocation;
-
+        private IAutoComplete _autoComplete;
         private AutoCompleteParameters _autoCompleteParameters;
+
         private bool _isDirty;
+
         private int _lineNumber;
+
         private ITextEditor _textEditor;
+
         private string _textValue;
+
         private PreviewDiagramModel imageModel;
+
         private string name;
+
         private Preview PreviewWindow;
 
-        public DocumentModel(IAutoComplete autoComplete, IConfiguration configuration)
+        private Visibility visible;
+
+        public DocumentModel(IConfiguration configuration)
         {
             _jarLocation = configuration.JarLocation;
-            _autoComplete = autoComplete;
+
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
             MatchingAutoCompletes = new List<string>();
             SortedMatchingAutoCompletes = new ObservableCollection<string>();
@@ -43,6 +51,7 @@ namespace PlantUMLEditor.Models
         }
 
         protected AutoCompleteParameters AutoCompleteParameters => _autoCompleteParameters;
+
         protected ITextEditor TextEditor { get => _textEditor; }
 
         public string Content
@@ -106,6 +115,11 @@ namespace PlantUMLEditor.Models
             get;
         }
 
+        public Visibility Visible
+        {
+            get => visible; set { SetValue(ref visible, value); }
+        }
+
         private void ShowPreviewCommandHandler()
         {
             imageModel = new PreviewDiagramModel();
@@ -162,6 +176,7 @@ namespace PlantUMLEditor.Models
         internal void Binded(ITextEditor textEditor)
         {
             _textEditor = textEditor;
+            _autoComplete = textEditor as IAutoComplete;
             _textEditor.SetAutoComplete(_autoComplete);
             _textEditor.TextWrite(_textValue, false);
             this.TextEditor.GotoLine(_lineNumber);
@@ -186,6 +201,7 @@ namespace PlantUMLEditor.Models
 
         public void Close()
         {
+            Visible = Visibility.Collapsed;
             imageModel?.Stop();
             if (PreviewWindow != null)
                 PreviewWindow.Close();
@@ -209,6 +225,11 @@ namespace PlantUMLEditor.Models
             selection = AppendAutoComplete(selection);
 
             _textEditor.InsertTextAt(selection, _autoCompleteParameters.CaretPosition, _autoCompleteParameters.WordLength);
+        }
+
+        public void SetActive()
+        {
+            Visible = Visibility.Visible;
         }
 
         public void TextChanged(string text)

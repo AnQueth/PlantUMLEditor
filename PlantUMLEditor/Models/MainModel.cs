@@ -17,8 +17,6 @@ namespace PlantUMLEditor.Models
 {
     public class MainModel : BindingBase, IFolderChangeNotifactions
     {
-        private readonly IAutoComplete _autoComplete;
-
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly Timer _messageChecker;
         private readonly IOpenDirectoryService _openDirectoryService;
@@ -34,7 +32,7 @@ namespace PlantUMLEditor.Models
         private TreeViewModel folder;
         private DocumentMessage selectedMessage;
 
-        public MainModel(IOpenDirectoryService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization, IAutoComplete autoComplete)
+        public MainModel(IOpenDirectoryService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization)
         {
             Documents = new UMLModels.UMLDocumentCollection();
             _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
@@ -50,8 +48,9 @@ namespace PlantUMLEditor.Models
             CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
             SaveCommand = new DelegateCommand<DocumentModel>(SaveCommandHandler);
             Messages = new ObservableCollection<DocumentMessage>();
+            SelectDocumentCommand = new DelegateCommand<DocumentModel>(SelectDocumentHandler);
+
             ScanAllFiles = new DelegateCommand(ScanAllFilesHandler);
-            _autoComplete = autoComplete;
 
             Configuration = new AppConfiguration()
             {
@@ -90,12 +89,21 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand CreateNewClassDiagram { get; }
+
         public DelegateCommand CreateNewSequenceDiagram { get; }
 
         public DocumentModel CurrentDocument
         {
             get { return currentDocument; }
-            set { SetValue(ref currentDocument, value); }
+            set
+            {
+                if (currentDocument != null)
+                    currentDocument.Visible = Visibility.Collapsed;
+
+                SetValue(ref currentDocument, value);
+                if (value != null)
+                    value.Visible = Visibility.Visible;
+            }
         }
 
         public UMLModels.UMLDocumentCollection Documents
@@ -143,7 +151,10 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand<DocumentModel> SaveCommand { get; }
+
         public DelegateCommand ScanAllFiles { get; }
+
+        public ICommand SelectDocumentCommand { get; }
 
         public DocumentMessage SelectedMessage
         {
@@ -390,7 +401,7 @@ namespace PlantUMLEditor.Models
         {
             var s = new UMLModels.UMLClassDiagram(title, fileName);
 
-            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), this._autoComplete, Configuration)
+            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), Configuration)
             {
                 DocumentType = DocumentTypes.Class,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
@@ -422,7 +433,7 @@ namespace PlantUMLEditor.Models
         {
             var s = new UMLModels.UMLSequenceDiagram(title, fileName);
 
-            var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new), this._autoComplete, Configuration)
+            var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new), Configuration)
             {
                 DocumentType = DocumentTypes.Sequence,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
@@ -452,7 +463,7 @@ namespace PlantUMLEditor.Models
 
         private void OpenClassDiagram(string fileName, UMLClassDiagram diagram, int lineNumber)
         {
-            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), this._autoComplete, Configuration)
+            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), Configuration)
             {
                 DocumentType = DocumentTypes.Class,
                 Content = File.ReadAllText(fileName),
@@ -482,7 +493,7 @@ namespace PlantUMLEditor.Models
 
         private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram, int lineNumber)
         {
-            var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new), this._autoComplete, Configuration)
+            var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new), Configuration)
             {
                 DataTypes = Documents.ClassDocuments,
                 DocumentType = DocumentTypes.Sequence,
@@ -505,7 +516,7 @@ namespace PlantUMLEditor.Models
         {
             var d = new UnknownDocumentModel((old, @new) =>
             {
-            }, this._autoComplete, Configuration)
+            }, Configuration)
             {
                 DocumentType = DocumentTypes.Unknown,
                 Diagrams = Documents,
@@ -682,6 +693,11 @@ namespace PlantUMLEditor.Models
             {
                 await ScanForFiles(file, potentialSequenceDiagrams);
             }
+        }
+
+        private void SelectDocumentHandler(DocumentModel model)
+        {
+            CurrentDocument = model;
         }
 
         public void Change(string fullPath)

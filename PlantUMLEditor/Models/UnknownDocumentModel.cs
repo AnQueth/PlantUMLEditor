@@ -11,12 +11,12 @@ namespace PlantUMLEditor.Models
         private readonly Action<UMLDiagram, UMLDiagram> ChangedCallback = null;
         private IEnumerable<string> _autoCompleteItems;
 
-        public UnknownDocumentModel(IAutoComplete autoComplete, IConfiguration configuration) : base(autoComplete, configuration)
+        public UnknownDocumentModel(IConfiguration configuration) : base(configuration)
         {
         }
 
-        public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IAutoComplete autoComplete, IConfiguration configuration)
-            : base(autoComplete, configuration)
+        public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration)
+            : base(configuration)
         {
             this.ChangedCallback = changedCallback;
         }

@@ -21,12 +21,12 @@ namespace PlantUMLEditor.Models
         private object _locker = new object();
         private Action<UMLSequenceDiagram, UMLSequenceDiagram> ChangedCallback;
 
-        public SequenceDiagramDocumentModel(IAutoComplete autoComplete, IConfiguration configuration) : base(autoComplete, configuration)
+        public SequenceDiagramDocumentModel(IConfiguration configuration) : base(configuration)
         {
         }
 
-        public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p, IAutoComplete autoComplete, IConfiguration configuration)
-            : this(autoComplete, configuration)
+        public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p, IConfiguration configuration)
+            : this(configuration)
         {
             this.ChangedCallback = p;
         }
