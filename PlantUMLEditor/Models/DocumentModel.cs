@@ -213,8 +213,11 @@ namespace PlantUMLEditor.Models
 
         public void TextChanged(string text)
         {
-            _textValue = text;
-            ContentChanged(text);
+            if (_textValue != text)
+            {
+                _textValue = text;
+                ContentChanged(text);
+            }
         }
     }
 }

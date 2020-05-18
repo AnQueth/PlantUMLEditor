@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -15,17 +16,33 @@ namespace PlantUMLEditor
     {
         private ListBox _cb;
         private IAutoCompleteCallback _currentCallback = null;
-        private bool _isVisible;
+
+        private Lazy<Popup> popup;
         private DependencyObject tabs;
 
         public AutoCompleteUI(DependencyObject tabs)
         {
-            this.tabs = tabs;
+            popup = new Lazy<Popup>(() =>
+            {
+                var g = FindVisualChild<Popup>(tabs);
+                if (g == null)
+                    throw new ArgumentNullException(nameof(g));
+
+                return g;
+            }, System.Threading.LazyThreadSafetyMode.PublicationOnly);
         }
 
         public bool IsVisible
         {
-            get => _isVisible;
+            get
+            {
+                try
+                {
+                    return popup.Value.IsOpen;
+                }
+                catch { }
+                return false;
+            }
         }
 
         private void AutoCompleteItemSelected(object sender, SelectionChangedEventArgs e)
@@ -44,7 +61,7 @@ namespace PlantUMLEditor
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(obj); i++)
             {
                 DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                if (child != null && child is childItem && (string)child.GetValue(FrameworkElement.NameProperty) == "AutoCompleteGrid")
+                if (child != null && child is childItem && (string)child.GetValue(FrameworkElement.NameProperty) == "AutoCompletePopup")
                 {
                     return (childItem)child;
                 }
@@ -60,25 +77,23 @@ namespace PlantUMLEditor
 
         public void CloseAutoComplete()
         {
-            _isVisible = false;
-
-            var g = FindVisualChild<Grid>(tabs);
-            g.Visibility = Visibility.Collapsed;
+            popup.Value.IsOpen = false;
         }
 
         public void FocusAutoComplete(Rect rec, IAutoCompleteCallback autoCompleteCallback, bool allowTyping)
         {
-            _isVisible = true;
             _currentCallback = autoCompleteCallback;
 
-            var g = FindVisualChild<Grid>(tabs);
+            var g = popup.Value;
+
+            g.IsOpen = true;
+            g.Placement = PlacementMode.RelativePoint;
+            g.HorizontalOffset = rec.Left;
+            g.VerticalOffset = rec.Bottom;
 
             g.Visibility = Visibility.Visible;
 
-            Canvas.SetLeft(g, rec.BottomRight.X);
-            Canvas.SetTop(g, rec.BottomRight.Y);
-
-            _cb = (ListBox)g.Children[0];
+            _cb = (ListBox)((Grid)g.Child).Children[0];
 
             _cb.SelectionChanged -= AutoCompleteItemSelected;
             _cb.SelectionChanged += AutoCompleteItemSelected;

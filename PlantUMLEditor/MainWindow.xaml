@@ -45,50 +45,102 @@
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <Canvas HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 
-                    <Grid   Height="{Binding ActualHeight, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}"
-                               Width="{Binding ActualWidth, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Canvas}}}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"></ColumnDefinition>
-                            <ColumnDefinition Width="*"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*"></RowDefinition>
-                            <RowDefinition Height="Auto"></RowDefinition>
-                        </Grid.RowDefinitions>
-                        <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
-                        <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True"
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+
+                        <RowDefinition Height="*"></RowDefinition>
+                        <RowDefinition Height="5">
+                        </RowDefinition>
+                        <RowDefinition Height="Auto" ></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
+                    <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True"
                                               UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
-                                             BindedDocument="{Binding}"  DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
- Style="{DynamicResource TextBoxStyle1}"
+                                            DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                             AcceptsReturn="True"  AcceptsTab="True"
                                FontFamily="Calibri" FontSize="14">
-                        </localControls:MyTextBox>
-                        <Button Visibility="Collapsed" Command="{Binding RegenDocument}" Content="Regen" Grid.Row="1"></Button>
-                    </Grid>
-                    <Grid x:Name="AutoCompleteGrid" Visibility="Collapsed">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"></RowDefinition>
-                            <RowDefinition Height="Auto"></RowDefinition>
-                            <RowDefinition Height="Auto"></RowDefinition>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"></ColumnDefinition>
-                            <ColumnDefinition Width="Auto"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
+                    </localControls:MyTextBox>
 
-                        <ListBox x:Name="AutoCompleteBox" Grid.Row="2" Grid.ColumnSpan="2"
+                    <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
+                    <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black" Width="{Binding Width, ElementName=Editor}">
+
+                        <Grid Width="{Binding ActualWidth, ElementName=Editor}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200" ></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="200" ></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition></RowDefinition>
+                            </Grid.RowDefinitions>
+
+                            <!--<Button Grid.Column="1">
+                                <Button.Content>Close</Button.Content>
+                                <b:Interaction.Triggers>
+                                    <b:EventTrigger EventName="Click">
+                                        <b:ChangePropertyAction TargetName="FindReplace" PropertyName="IsOpen" Value="false"></b:ChangePropertyAction>
+                                    </b:EventTrigger>
+                                </b:Interaction.Triggers>
+                            </Button>-->
+                            <TextBox Grid.Row="0" Text="{Binding FindText, Mode=TwoWay, ElementName=Editor}">
+                                <b:Interaction.Triggers>
+                                    <b:KeyTrigger Key="Return">
+                                        <b:InvokeCommandAction Command="{Binding FindCommand, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></b:InvokeCommandAction>
+                                    </b:KeyTrigger>
+                                </b:Interaction.Triggers>
+                            </TextBox>
+                            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                            <Button Grid.Column="1" Command="{Binding FindCommand, ElementName=Editor}" Content="Find" ></Button>
+                            <Button Grid.Column="3" Command="{Binding ReplaceCommand, ElementName=Editor}" Content="Replace"  ></Button>
+                            <Button Grid.Column="4" Command="{Binding ClearCommand, ElementName=Editor}" Content="Clear"  ></Button>
+
+                            <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="6" MaxHeight="300"
+                                 AutoGenerateColumns="False"     SelectedItem="{Binding SelectedFindResult, Mode=TwoWay, ElementName=Editor}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn  Header="Line"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
+                                    <DataGridTextColumn Header="Match" Binding="{Binding Line}" ></DataGridTextColumn>
+                                    <DataGridTextColumn Header="Replace" Binding="{Binding ReplacePreview}" ></DataGridTextColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <Popup x:Name="AutoCompletePopup">
+
+                        <Grid x:Name="AutoCompleteGrid">
+                            <Grid.RowDefinitions>
+
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                                <RowDefinition Height="Auto"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <ListBox x:Name="AutoCompleteBox" Grid.Row="2" Grid.ColumnSpan="2"
                              MaxHeight="100"
                            ItemsSource="{Binding SortedMatchingAutoCompletes}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}"></TextBlock>
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
-                </Canvas>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}"></TextBlock>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </Grid>
+                    </Popup>
+                </Grid>
             </Border>
         </DataTemplate>
 

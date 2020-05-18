@@ -1,11 +1,14 @@
 ﻿using PlantUMLEditor.Models;
+using Prism.Commands;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 
 using System.Globalization;
 using System.IO;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -25,96 +28,61 @@ namespace PlantUMLEditor.Controls
 {
     public class MyTextBox : TextBox, INotifyPropertyChanged, ITextEditor
     {
-        private static MyTextBox Me;
-
         private readonly List<(int line, int character)> _errors = new List<(int line, int character)>();
-        private readonly Border _find;
-
-        private readonly TextBox _findText;
-
-        private readonly TextBox _replaceText;
 
         private IAutoComplete _autoComplete;
 
+        private DocumentModel _bindedDocument;
         private (int selectionStart, int match) _braces;
         private List<(int start, int length)> _found = new List<(int start, int length)>();
         private ImageSource _lineNumbers;
 
         private Timer _timer = null;
 
-        public static readonly DependencyProperty BindedDocumentProperty =
-                                                       DependencyProperty.Register(
-       nameof(BindedDocument), typeof(DocumentModel),
-       typeof(MyTextBox), new PropertyMetadata(BindedDocumentPropertyChanged)
-       );
+        private bool findReplaceVisible;
+        private ObservableCollection<FindResult> findResults = new ObservableCollection<FindResult>();
+        private string findText;
+        private string replaceText;
 
         public MyTextBox()
         {
+            DataContextChanged += MyTextBox_DataContextChanged;
+
             DefaultStyleKey = typeof(MyTextBox);
-            Me = this;
+
             this.Foreground = Brushes.Transparent;
             this.Background = Brushes.Transparent;
-
-            _find = new Border();
-            _find.Background = Brushes.Black;
-            _find.BorderThickness = new Thickness(2);
-            _find.BorderBrush = Brushes.Blue;
-            _find.HorizontalAlignment = HorizontalAlignment.Stretch;
-            _find.VerticalAlignment = System.Windows.VerticalAlignment.Top;
-
-            var findGrid = new Grid();
-
-            findGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
-            findGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = GridLength.Auto });
-            findGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
-            findGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
-            findGrid.RowDefinitions.Add(new RowDefinition() { Height = GridLength.Auto });
-
-            _findText = new TextBox();
-            findGrid.Children.Add(_findText);
-            Grid.SetRow(_findText, 0);
-            _findText.Width = 200;
-
-            _replaceText = new TextBox();
-            findGrid.Children.Add(_replaceText);
-            _replaceText.Width = 200;
-            Grid.SetRow(_replaceText, 1);
-
-            Button find = new Button();
-            find.Content = "Find";
-            findGrid.Children.Add(find);
-            Grid.SetColumn(find, 1);
-
-            Button replace = new Button();
-            replace.Content = "Replace";
-            findGrid.Children.Add(replace);
-            Grid.SetColumn(replace, 1);
-            Grid.SetRow(replace, 1);
-
-            Button close = new Button();
-            close.Content = "Close";
-            findGrid.Children.Add(close);
-            Grid.SetColumn(close, 1);
-            Grid.SetRow(close, 2);
-
-            close.Click += Close_Click;
-            find.Click += Find_Click;
-            replace.Click += Replace_Click;
-            _find.Child = findGrid;
-            _find.Visibility = Visibility.Collapsed;
+            FindCommand = new DelegateCommand(FindHandler);
+            ReplaceCommand = new DelegateCommand(ReplaceHandler);
+            ClearCommand = new DelegateCommand(ClearHandler);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public DocumentModel BindedDocument
+        public DelegateCommand ClearCommand { get; }
+
+        public DelegateCommand FindCommand { get; }
+
+        public bool FindReplaceVisible
         {
-            get
-            {
-                return (DocumentModel)GetValue(BindedDocumentProperty);
-            }
+            get => findReplaceVisible;
             set
             {
-                SetValue(BindedDocumentProperty, value);
+                findReplaceVisible = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FindReplaceVisible)));
+            }
+        }
+
+        public ObservableCollection<FindResult> FindResults { get => findResults; set => findResults = value; }
+
+        public string FindText
+        {
+            get => findText;
+
+            set
+            {
+                findText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FindText)));
             }
         }
 
@@ -131,19 +99,29 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        private static void BindedDocumentPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public DelegateCommand ReplaceCommand { get; }
+
+        public string ReplaceText
         {
-            var m = d as MyTextBox;
-            var value = (DocumentModel)e.NewValue;
+            get => replaceText;
 
-            if (value != null)
+            set
             {
-                value.Binded(Me);
+                replaceText = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReplaceText)));
             }
+        }
 
-            value = (DocumentModel)e.OldValue;
-            if (value != null)
+        public FindResult SelectedFindResult
+        {
+            get
             {
+                return null;
+            }
+            set
+            {
+                if (value != null)
+                    GotoLine(value.LineNumber);
             }
         }
 
@@ -175,17 +153,24 @@ namespace PlantUMLEditor.Controls
             return default(T);
         }
 
+        private void ClearHandler()
+        {
+            FindResults.Clear();
+            FindText = "";
+            ReplaceText = "";
+        }
+
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            _find.Visibility = Visibility.Collapsed;
+            FindReplaceVisible = false;
             lock (_found)
                 _found.Clear();
             this.InvalidateVisual();
         }
 
-        private void Find_Click(object sender, RoutedEventArgs e)
+        private void FindHandler()
         {
-            RunFind(_findText.Text);
+            RunFind(FindText);
         }
 
         private void FindMatchingBackwards(string text, int selectionStart, char inc, char matchChar)
@@ -234,6 +219,13 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
+        private void MyTextBox_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            _bindedDocument = e.NewValue as DocumentModel;
+
+            _bindedDocument?.Binded(this);
+        }
+
         private void ProcessAutoComplete(object state)
         {
             Dispatcher.Invoke(() =>
@@ -267,7 +259,7 @@ namespace PlantUMLEditor.Controls
                         word += chars.Pop();
                 }
 
-                BindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word, where, typedLength));
+                _bindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word, where, typedLength));
             });
         }
 
@@ -305,12 +297,16 @@ namespace PlantUMLEditor.Controls
             }));
         }
 
-        private void Replace_Click(object sender, RoutedEventArgs e)
+        private void ReplaceHandler()
         {
-            Regex r = new Regex(_findText.Text);
-            this.Text = r.Replace(this.Text, _replaceText.Text);
+            if (string.IsNullOrEmpty(FindText))
+                return;
+
+            Regex r = new Regex(FindText);
+            this.Text = r.Replace(this.Text, ReplaceText);
             lock (_found)
                 _found.Clear();
+
             this.InvalidateVisual();
         }
 
@@ -323,31 +319,40 @@ namespace PlantUMLEditor.Controls
 
             string t = this.Text;
 
-            Task.Run(() =>
+            try
             {
-                try
-                {
-                    Regex r = new Regex(text);
-                    var m = r.Matches(t);
+                FindResults.Clear();
 
-                    foreach (Group item in m)
+                Regex r = new Regex(text);
+                var m = r.Matches(t);
+
+                foreach (Group item in m)
+                {
+                    lock (_found)
+                        _found.Add((item.Index, item.Length));
+                    int l = GetLineIndexFromCharacterIndex(item.Index);
+
+                    string line = GetLineText(l);
+                    string reps = "";
+                    if (!string.IsNullOrEmpty(ReplaceText))
                     {
-                        lock (_found)
-                            _found.Add((item.Index, item.Length));
+                        reps = r.Replace(line, ReplaceText);
                     }
-                }
-                catch
-                {
-                }
 
-                Dispatcher.Invoke(this.InvalidateVisual);
-            });
+                    FindResults.Add(new FindResult(item.Index, line.Trim(), l + 1, reps));
+                }
+            }
+            catch
+            {
+            }
+
+            Dispatcher.Invoke(this.InvalidateVisual);
         }
 
         private void ShowFind()
         {
-            _findText.Text = this.SelectedText;
-            _find.Visibility = Visibility.Visible;
+            FindText = this.SelectedText;
+            FindReplaceVisible = true;
         }
 
         private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
@@ -384,15 +389,6 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        protected override void OnInitialized(EventArgs e)
-        {
-            base.OnInitialized(e);
-
-            ((Grid)this.Parent).Children.Add(_find);
-            Grid.SetColumn(_find, Grid.GetColumn(this));
-            Grid.SetRow(_find, Grid.GetRow(this));
-        }
-
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
@@ -416,7 +412,7 @@ namespace PlantUMLEditor.Controls
             }
             if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
             {
-                _findText.Text = this.SelectedText.Trim();
+                FindText = this.SelectedText.Trim();
                 ShowFind();
                 e.Handled = true;
                 return;
@@ -533,21 +529,24 @@ namespace PlantUMLEditor.Controls
         {
             base.OnSelectionChanged(e);
 
-            if (!string.IsNullOrWhiteSpace(this.SelectedText))
+            if (!string.IsNullOrWhiteSpace(this.SelectedText) && this.SelectedText.Length > 4)
+            {
+                this.FindText = this.SelectedText;
                 RunFind(this.SelectedText);
+            }
         }
 
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
-            BindedDocument.TextChanged(this.Text);
+            _bindedDocument.TextChanged(this.Text);
             lock (_found)
                 _found.Clear();
             if (!_autoComplete.IsVisible)
             {
                 if (!string.IsNullOrWhiteSpace(this.SelectedText))
                     this.RunFind(this.SelectedText);
-                if (!string.IsNullOrEmpty(this._findText.Text))
-                    this.RunFind(this._findText.Text);
+                if (!string.IsNullOrEmpty(FindText))
+                    this.RunFind(FindText);
             }
             _braces = default;
 
@@ -637,8 +636,8 @@ namespace PlantUMLEditor.Controls
 
             try
             {
-                int start = GetCharacterIndexFromLineIndex(GetFirstVisibleLineIndex());
-                int end = GetCharacterIndexFromLineIndex(GetLastVisibleLineIndex()) + GetLineLength(GetLastVisibleLineIndex());
+                int start = int.MinValue;
+                int end = int.MaxValue;
 
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
@@ -703,6 +702,7 @@ namespace PlantUMLEditor.Controls
         public void TextWrite(string text, bool format)
         {
             this.Text = text;
+            FindReplaceVisible = false;
 
             this._braces = default;
             lock (_found)
