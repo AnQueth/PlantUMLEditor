@@ -41,6 +41,7 @@ namespace PlantUMLEditor.Controls
         private ImageSource _lineNumbers;
 
         private FindResult _selectedFindResult = null;
+        private Timer _selectionHandler;
         private Timer _timer = null;
 
         private bool findReplaceVisible;
@@ -349,6 +350,11 @@ namespace PlantUMLEditor.Controls
             {
                 FindResults.Clear();
 
+                if (!text.StartsWith("("))
+                    text = "(" + text;
+                if (!text.EndsWith(")"))
+                    text = text + ")";
+
                 Regex r = new Regex(text);
                 var m = r.Matches(t);
 
@@ -362,7 +368,7 @@ namespace PlantUMLEditor.Controls
                     string reps = "";
                     if (!string.IsNullOrEmpty(ReplaceText))
                     {
-                        reps = r.Replace(line, ReplaceText);
+                        reps = r.Replace(line, ReplaceText).Trim();
                     }
 
                     FindResults.Add(new FindResult(item.Index, line.Trim(), l + 1, reps));
@@ -557,8 +563,17 @@ namespace PlantUMLEditor.Controls
 
             if (!string.IsNullOrWhiteSpace(this.SelectedText) && this.SelectedText.Length > 4)
             {
+                if (_selectionHandler != null)
+                {
+                    _selectionHandler.Dispose();
+                }
+                _selectionHandler = new Timer((o) =>
+                {
+                    Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText); }));
+                    ;
+                }, null, 250, Timeout.Infinite);
+
                 this.FindText = this.SelectedText;
-                RunFind(this.SelectedText);
             }
         }
 
