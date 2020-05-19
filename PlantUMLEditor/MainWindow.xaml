@@ -27,7 +27,8 @@
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="2">
+                <Border BorderThickness="2" CornerRadius="4">
+
                     <Border.Style>
                         <Style TargetType="Border">
                             <Style.Triggers>
@@ -524,7 +525,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border BorderThickness="2" Margin="2,2,2,0">
+                        <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="4">
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Style.Triggers>
