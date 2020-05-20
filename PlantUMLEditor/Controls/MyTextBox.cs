@@ -255,6 +255,11 @@ namespace PlantUMLEditor.Controls
 
         private void ProcessAutoComplete(object state)
         {
+            int k = (int)(Key)state;
+
+            if (k != 18 && (k < 34 || k > 69))
+                return;
+
             Dispatcher.Invoke(() =>
             {
                 var rec = GetRectFromCharacterIndex(CaretIndex);
@@ -286,7 +291,7 @@ namespace PlantUMLEditor.Controls
                         word += chars.Pop();
                 }
 
-                _bindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word, where, typedLength));
+                _bindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word, where, typedLength, (Key)state));
             });
         }
 
@@ -509,14 +514,12 @@ namespace PlantUMLEditor.Controls
                 BracesMatcher(l, c);
                 this._autoComplete.CloseAutoComplete();
             }
-            else if (e.Key != Key.Enter && e.Key != Key.Space)
+            else if (e.Key != Key.Enter && e.SystemKey == Key.None)
             {
-                if (this._timer == null)
-                {
-                    _timer = new Timer(ProcessAutoComplete);
-                }
+                if (_timer != null)
+                    _timer.Dispose();
 
-                this._timer.Change(250, Timeout.Infinite);
+                _timer = new Timer(ProcessAutoComplete, e.Key, 100, Timeout.Infinite);
             }
 
             base.OnPreviewKeyUp(e);

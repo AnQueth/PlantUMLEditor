@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Windows;
+using System.Windows.Input;
 
 namespace PlantUMLEditor.Models
 {
@@ -12,9 +13,10 @@ namespace PlantUMLEditor.Models
         public Rect Position;
         public string Text;
         public int WordLength;
+
         public string WordStart;
 
-        public AutoCompleteParameters(Rect rec, string text, int line, string word, int where, int typedLength)
+        public AutoCompleteParameters(Rect rec, string text, int line, string word, int where, int typedLength, System.Windows.Input.Key k)
         {
             this.Position = rec;
             this.Text = text;
@@ -22,6 +24,9 @@ namespace PlantUMLEditor.Models
             this.WordStart = word;
             this.CaretPosition = where;
             this.WordLength = typedLength;
+            this.Key = k;
         }
+
+        public Key Key { get; }
     }
 }
