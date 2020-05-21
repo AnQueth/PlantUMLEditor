@@ -13,12 +13,12 @@ namespace PlantUMLEditor.Controls
         {
              {new Regex("(@startuml|@enduml)") , Colors.Gray},
             {new Regex("^\\s*(class|interface)\\s+.+?{([\\s.\\w\\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline), Colors.Firebrick },
-                {new Regex("^\\s*(title|class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|end|participant|actor|control|component|database|boundary|entity|collections)\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), Colors.Blue}
+                {new Regex("^\\s*(title|class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|entity|collections)\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), Colors.Blue}
         };
 
         private Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
         {
-            {new Regex("^\\s*(participant|actor|database|component|class|interface)\\s+\\w+\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
+            {new Regex("^\\s*(participant|actor|database|component|class|interface|enum)\\s+\\w+\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
 
                {new Regex("(\\:.+)"), (Colors.Firebrick, true) }
         };

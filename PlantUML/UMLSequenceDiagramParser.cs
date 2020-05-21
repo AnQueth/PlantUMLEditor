@@ -21,7 +21,7 @@ namespace PlantUML
             return t.TrimEnd('{').Trim();
         }
 
-        private static UMLSignature GetActionSignature(string actionSignature, Dictionary<string, UMLDataType> types,
+        private static UMLSignature GetActionSignature(string actionSignature, ILookup<string, UMLDataType> types,
             UMLSequenceLifeline to, UMLSequenceConnection previous, UMLSequenceDiagram d)
         {
             UMLSignature action = null;
@@ -34,16 +34,24 @@ namespace PlantUML
 
             if (to != null && to.DataTypeId != null)
             {
-                var toType = types[to.DataTypeId];
-                while (toType != null)
+                foreach (var toType in types[to.DataTypeId])
                 {
-                    action = toType.Methods.Find(p => p.Signature == actionSignature);
-                    if (action == null)
-                        action = toType.Properties.Find(p => p.Signature == actionSignature);
+                    var innerToType = toType;
+                    while (innerToType != null)
+                    {
+                        action = innerToType.Methods.Find(p => p.Signature == actionSignature);
+                        if (action == null)
+                            action = innerToType.Properties.Find(p => p.Signature == actionSignature);
 
+                        if (action != null)
+                        {
+                            innerToType = null;
+                            break;
+                        }
+                        innerToType = toType.Base;
+                    }
                     if (action != null)
                         break;
-                    toType = toType.Base;
                 }
             }
 
@@ -77,7 +85,7 @@ namespace PlantUML
 
         private static async Task<UMLSequenceDiagram> ReadDiagram(StreamReader sr, List<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
         {
-            var types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToDictionary(p => p.Name);
+            var types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
 
             UMLSequenceDiagram d = new UMLSequenceDiagram(string.Empty, fileName);
             bool started = false;
@@ -180,7 +188,7 @@ namespace PlantUML
         }
 
         private static bool TryParseConnection(string fromAlias, string arrow, string toAlias,
-            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, UMLSequenceConnection previous,
+            string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types, UMLSequenceConnection previous,
             out UMLSequenceConnection connection)
         {
             connection = null;
@@ -212,7 +220,7 @@ namespace PlantUML
         }
 
         private static bool TryParseReturnToEmpty(string fromAlias, string arrow,
-            string actionSignature, UMLSequenceDiagram d, Dictionary<string, UMLDataType> types, UMLSequenceConnection previous,
+            string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types, UMLSequenceConnection previous,
             out UMLSequenceConnection connection)
         {
             if (arrow.StartsWith("<"))
@@ -237,7 +245,7 @@ namespace PlantUML
 
         private static bool TypeParseConnectionFromEmpty(string arrow, string toAlias,
             string actionSignature, UMLSequenceDiagram d,
-            Dictionary<string, UMLDataType> types, UMLSequenceConnection previous, out UMLSequenceConnection connection)
+            ILookup<string, UMLDataType> types, UMLSequenceConnection previous, out UMLSequenceConnection connection)
         {
             if (arrow.StartsWith("-"))
             {
@@ -246,7 +254,7 @@ namespace PlantUML
                 var to = d.LifeLines.Find(p => p.Alias == toAlias);
 
                 UMLSignature action = null;
-                if (to != null && to.DataTypeId != null && types.ContainsKey(to.DataTypeId))
+                if (to != null && to.DataTypeId != null && types.Contains(to.DataTypeId))
                 {
                     action = GetActionSignature(actionSignature, types, to, previous, d);
                 }
@@ -290,7 +298,7 @@ namespace PlantUML
         }
 
         public static bool TryParseAllConnections(string line, UMLSequenceDiagram diagram,
-            Dictionary<string, UMLDataType> types, UMLSequenceConnection previous, out UMLSequenceConnection connection)
+            ILookup<string, UMLDataType> types, UMLSequenceConnection previous, out UMLSequenceConnection connection)
         {
             connection = null;
 
@@ -336,7 +344,7 @@ namespace PlantUML
             return false;
         }
 
-        public static bool TryParseLifeline(string line, Dictionary<string, UMLDataType> types, out UMLSequenceLifeline lifeline)
+        public static bool TryParseLifeline(string line, ILookup<string, UMLDataType> types, out UMLSequenceLifeline lifeline)
         {
             var m = _lifeLineRegex.Match(line);
             if (m.Success)
@@ -347,12 +355,12 @@ namespace PlantUML
                 if (string.IsNullOrEmpty(alias))
                     alias = name;
 
-                if (!types.ContainsKey(name))
+                if (!types.Contains(name))
                 {
                     lifeline = new UMLSequenceLifeline(type, name, alias, null);
                 }
                 else
-                    lifeline = new UMLSequenceLifeline(type, name, alias, types[name].Id);
+                    lifeline = new UMLSequenceLifeline(type, name, alias, types[name].First().Id);
                 return true;
             }
             lifeline = null;

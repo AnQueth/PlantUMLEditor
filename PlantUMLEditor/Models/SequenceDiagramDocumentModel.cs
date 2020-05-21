@@ -73,7 +73,7 @@ namespace PlantUMLEditor.Models
 
             MatchingAutoCompletes.Clear();
 
-            var types = this.DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToDictionary(p => p.Name);
+            var types = this.DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
 
             UMLSequenceConnection connection = null;
 
@@ -106,10 +106,12 @@ namespace PlantUMLEditor.Models
             {
                 if (connection.To != null && connection.To.DataTypeId != null)
                 {
-                    AddAll(types[connection.To.DataTypeId], this.MatchingAutoCompletes, autoCompleteParameters.WordStart);
+                    foreach (var t in types[connection.To.DataTypeId])
+                    {
+                        AddAll(t, this.MatchingAutoCompletes, autoCompleteParameters.WordStart);
 
-                    _currentAutoCompleteLifeLineType = types[connection.To.DataTypeId];
-
+                        _currentAutoCompleteLifeLineType = t;
+                    }
                     if (this.MatchingAutoCompletes.Count > 0)
                         ShowAutoComplete(autoCompleteParameters.Position, true);
                     return;

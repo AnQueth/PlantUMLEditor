@@ -185,6 +185,10 @@ namespace PlantUMLEditor.Controls
             FindResults.Clear();
             FindText = "";
             ReplaceText = "";
+            lock (_found)
+                _found.Clear();
+
+            this.InvalidateVisual();
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -197,7 +201,7 @@ namespace PlantUMLEditor.Controls
 
         private void FindHandler()
         {
-            RunFind(FindText);
+            RunFind(FindText, true);
         }
 
         private void FindMatchingBackwards(string text, int selectionStart, char inc, char matchChar)
@@ -342,7 +346,7 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
-        private void RunFind(string text)
+        private void RunFind(string text, bool invalidate)
         {
             lock (_found)
                 _found.Clear();
@@ -382,8 +386,8 @@ namespace PlantUMLEditor.Controls
             catch
             {
             }
-
-            Dispatcher.Invoke(this.InvalidateVisual);
+            if (invalidate)
+                Dispatcher.Invoke(this.InvalidateVisual);
         }
 
         private void ShowFind()
@@ -435,11 +439,16 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
         {
+            lock (_found)
+            { _found.Clear(); }
+
             if (e.Key == Key.Tab)
             {
                 e.Handled = true;
                 this.InsertText("    ");
                 CaretIndex += 4;
+                e.Handled = true;
+                return;
             }
             if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
             {
@@ -458,11 +467,13 @@ namespace PlantUMLEditor.Controls
             {
                 Indenter i = new Indenter();
                 this.Text = i.Process(this.TextRead());
+                this._autoComplete.CloseAutoComplete();
+
                 e.Handled = true;
                 return;
             }
-            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
-                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
+            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up)
+                /*  && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))*/)
             {
                 _autoComplete.SendEvent(e);
                 e.Handled = true;
@@ -480,25 +491,30 @@ namespace PlantUMLEditor.Controls
                     //return;
                 }
             }
+            if (e.Key == Key.Escape)
+            {
+                _autoComplete.CloseAutoComplete();
+                _found.Clear();
+            }
 
             base.OnPreviewKeyDown(e);
         }
 
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
-            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up) &&
-                (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)))
+            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up)
+              /*  && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))*/)
             {
+                _autoComplete.SendEvent(e);
                 e.Handled = true;
                 return;
             }
 
-            //if(this._syntaxDocument == null)
-            //{
-            //    _syntaxDocument = new Timer(SyntaxDocumentCreator);
-
-            //}
-            //this._syntaxDocument.Change(1000, Timeout.Infinite);
+            if (e.Key == Key.Tab)
+            {
+                e.Handled = true;
+                return;
+            }
 
             if (e.Key == Key.Enter)
             {
@@ -564,17 +580,16 @@ namespace PlantUMLEditor.Controls
         {
             base.OnSelectionChanged(e);
 
-            if (!string.IsNullOrWhiteSpace(this.SelectedText) && this.SelectedText.Length > 4)
+            if (!string.IsNullOrWhiteSpace(this.SelectedText))
             {
-                if (_selectionHandler != null)
-                {
-                    _selectionHandler.Dispose();
-                }
-                _selectionHandler = new Timer((o) =>
-                {
-                    Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText); }));
-                    ;
-                }, null, 250, Timeout.Infinite);
+                //if (_selectionHandler != null)
+                //{
+                //    _selectionHandler.Dispose();
+                //}
+                //_selectionHandler = new Timer((o) =>
+                //{
+                //    Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText, true); }));
+                //}, null, 250, Timeout.Infinite);
 
                 this.FindText = this.SelectedText;
             }
@@ -587,10 +602,10 @@ namespace PlantUMLEditor.Controls
                 _found.Clear();
             if (!_autoComplete.IsPopupVisible)
             {
-                if (!string.IsNullOrWhiteSpace(this.SelectedText))
-                    this.RunFind(this.SelectedText);
-                if (!string.IsNullOrEmpty(FindText))
-                    this.RunFind(FindText);
+                //if (!string.IsNullOrWhiteSpace(this.SelectedText))
+                //    this.RunFind(this.SelectedText, false);
+                //if (!string.IsNullOrEmpty(FindText))
+                //    this.RunFind(FindText, false);
             }
             _braces = default;
 
