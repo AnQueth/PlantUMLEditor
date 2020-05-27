@@ -17,6 +17,7 @@ namespace PlantUMLEditor.Models
 {
     public class MainModel : BindingBase, IFolderChangeNotifactions
     {
+        private readonly ObservableCollection<string> _dataTypes = new ObservableCollection<string>();
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly Timer _messageChecker;
         private readonly IOpenDirectoryService _openDirectoryService;
@@ -103,6 +104,14 @@ namespace PlantUMLEditor.Models
                 SetValue(ref currentDocument, value);
                 if (value != null)
                     value.Visible = Visibility.Visible;
+            }
+        }
+
+        public ObservableCollection<string> DataTypes
+        {
+            get
+            {
+                return _dataTypes;
             }
         }
 
@@ -661,6 +670,11 @@ namespace PlantUMLEditor.Models
             foreach (var doc in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
             {
                 doc.UpdateDiagram(Documents.ClassDocuments);
+            }
+
+            foreach (var item in Documents.ClassDocuments.SelectMany(p => p.DataTypes).OrderBy(p => p.Namespace))
+            {
+                _dataTypes.Add(item.Namespace + "." + item.Name);
             }
         }
 
