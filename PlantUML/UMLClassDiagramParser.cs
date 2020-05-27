@@ -17,19 +17,19 @@ namespace PlantUML
     {
         private const string PACKAGE = "package";
 
-        private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{");
+        private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{", RegexOptions.Compiled);
 
-        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\(\\s*(?<params>((?<pt>[\\w\\[\\]]+?|[\\w+\\<.*\\>]+?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)");
+        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\(\\s*(?<params>((?<pt>[\\w\\[\\]]+?|[\\w+\\<.*\\>]+?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)", RegexOptions.Compiled);
 
-        private static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{");
+        private static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{", RegexOptions.Compiled);
 
-        private static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>]+)\\s+(?<name>[\\w]+)");
+        private static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\, ]+)\\s+(?<name>[\\w]+)", RegexOptions.Compiled);
 
-        private static Regex baseClass = new Regex("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*");
+        private static Regex baseClass = new Regex("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
-        private static Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\!\\<]*[\\-\\.]+[\\*o\\!\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)");
+        private static Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\!\\<]*[\\-\\.]+[\\*o\\!\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)", RegexOptions.Compiled);
 
-        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static string Clean(string name)
         {
@@ -39,9 +39,9 @@ namespace PlantUML
 
         private static Tuple<ListTypes, string> CreateFrom(string v)
         {
-            if (v.StartsWith("ireadonlycollection<", StringComparison.InvariantCultureIgnoreCase))
+            if (v.StartsWith("ireadonlycollection<", StringComparison.OrdinalIgnoreCase))
                 return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v.Substring(20).Trim('>'));
-            else if (v.StartsWith("list<", StringComparison.InvariantCultureIgnoreCase))
+            else if (v.StartsWith("list<", StringComparison.OrdinalIgnoreCase))
                 return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(6).Trim('>'));
             else if (v.EndsWith("[]"))
                 return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim().Substring(0, v.Trim().Length - 2));

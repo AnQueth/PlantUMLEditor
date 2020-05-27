@@ -430,6 +430,13 @@ namespace PlantUMLEditor.Controls
             }
         }
 
+        protected override void OnLostFocus(RoutedEventArgs e)
+        {
+            base.OnLostFocus(e);
+
+            this._autoComplete.CloseAutoComplete();
+        }
+
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
@@ -473,7 +480,7 @@ namespace PlantUMLEditor.Controls
                 return;
             }
             if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up)
-                /*  && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))*/)
+                  /*  && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))*/)
             {
                 _autoComplete.SendEvent(e);
                 e.Handled = true;
@@ -502,14 +509,6 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
-            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up)
-              /*  && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))*/)
-            {
-                _autoComplete.SendEvent(e);
-                e.Handled = true;
-                return;
-            }
-
             if (e.Key == Key.Tab)
             {
                 e.Handled = true;
@@ -528,7 +527,9 @@ namespace PlantUMLEditor.Controls
                     l = 0;
                 char c = this.Text[l];
                 BracesMatcher(l, c);
-                this._autoComplete.CloseAutoComplete();
+
+                if (e.Key == Key.Left || e.Key == Key.Right)
+                    this._autoComplete.CloseAutoComplete();
             }
             else if (e.Key != Key.Enter && e.SystemKey == Key.None)
             {

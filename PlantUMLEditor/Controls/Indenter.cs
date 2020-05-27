@@ -14,11 +14,13 @@ namespace PlantUMLEditor.Controls
 {
     internal class Indenter
     {
-        private Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
+        private Regex newLineAfter = new Regex("participant|actor|database|component|class|interface|entity", RegexOptions.Compiled);
+        private Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
-        private Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|enum|alt|opt|loop|try|group|catch|break|par)\\s+");
-        private Regex tabReset = new Regex("^else\\s?.*");
-        private Regex tabStop = new Regex("^(\\}|end(?! note))");
+        private Regex reg = new Regex("\n");
+        private Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|enum|alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
+        private Regex tabReset = new Regex("^else\\s?.*", RegexOptions.Compiled);
+        private Regex tabStop = new Regex("^(\\}|end(?! note))", RegexOptions.Compiled);
 
         private int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {
@@ -67,7 +69,6 @@ namespace PlantUMLEditor.Controls
 
         public string Process(string text)
         {
-            Regex reg = new Regex("\n");
             string[] lines = reg.Split(text);
 
             int indentLevel = 0;
@@ -76,14 +77,13 @@ namespace PlantUMLEditor.Controls
 
             StringBuilder sb = new StringBuilder();
 
-            Regex newLineAfter = new Regex("participant|actor|database|component|class|interface|entity");
-
             for (var x = 0; x < lines.Length; x++)
             {
                 if (string.IsNullOrWhiteSpace(lines[x]))
                     continue;
 
-                if (oldLine.StartsWith("title") || oldLine.StartsWith("@startuml") || (oldLine == "}" && lines[x].Trim() != "}"))
+                if (oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase) || oldLine.StartsWith("@startuml",
+                    StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))
                     sb.AppendLine();
 
                 if (!string.IsNullOrWhiteSpace(oldLine) && newLineAfter.IsMatch(oldLine) && !newLineAfter.IsMatch(lines[x]))

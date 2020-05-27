@@ -11,9 +11,10 @@ namespace PlantUML
 {
     public class UMLSequenceDiagramParser : IPlantUMLParser
     {
-        private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database|boundary|entity|collections)\\s+\\\"*(?<name>[\\w\\.]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*");
+        private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database|boundary|entity|collections)\\s+\\\"*(?<name>[\\w\\.]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*", RegexOptions.Compiled);
 
-        private static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+)\\s*([a-zA-Z0-9\\-><]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*(.*)$");
+        private static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+)\\s*([a-zA-Z0-9\\-><]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*(.*)$", RegexOptions.Compiled);
+        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static string Clean(string name)
         {
@@ -95,7 +96,6 @@ namespace PlantUML
 
             int lineNumber = 0;
             UMLSequenceConnection previous = null;
-            Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))");
 
             bool swallowingNotes = false;
 
@@ -121,16 +121,16 @@ namespace PlantUML
                     }
                 }
 
-                if (line.StartsWith("end note"))
+                if (line.StartsWith("end note", StringComparison.Ordinal))
                     swallowingNotes = false;
 
                 if (swallowingNotes)
                     continue;
 
-                if (line.StartsWith("class") || line.StartsWith("interface") || line.StartsWith("package"))
+                if (line.StartsWith("class", StringComparison.Ordinal) || line.StartsWith("interface", StringComparison.Ordinal) || line.StartsWith("package", StringComparison.Ordinal))
                     return null;
 
-                if (line.StartsWith("title"))
+                if (line.StartsWith("title", StringComparison.Ordinal))
                 {
                     d.Title = line.Substring(5).Trim();
                 }
