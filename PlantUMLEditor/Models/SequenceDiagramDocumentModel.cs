@@ -87,7 +87,7 @@ namespace PlantUMLEditor.Models
                 else
                 {
                     foreach (var item in types)
-                        if (string.IsNullOrEmpty(autoCompleteParameters.WordStart) || item.Key.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase))
+                        if (string.IsNullOrEmpty(autoCompleteParameters.WordStart) || item.Key.Contains(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase))
                             this.MatchingAutoCompletes.Add(item.Key);
 
                     if (this.MatchingAutoCompletes.Count > 0)

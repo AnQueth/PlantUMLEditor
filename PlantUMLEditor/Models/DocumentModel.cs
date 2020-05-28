@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -21,6 +22,8 @@ namespace PlantUMLEditor.Models
     public abstract class DocumentModel : BindingBase, IAutoCompleteCallback
     {
         private readonly string _jarLocation;
+        private readonly Dictionary<string, int> _mostUsedWords = new Dictionary<string, int>();
+        private readonly Regex words = new Regex("\\w+");
         private IAutoComplete _autoComplete;
         private AutoCompleteParameters _autoCompleteParameters;
 
@@ -37,7 +40,6 @@ namespace PlantUMLEditor.Models
         private string name;
 
         private Preview PreviewWindow;
-
         private Visibility visible;
 
         public DocumentModel(IConfiguration configuration)
@@ -155,6 +157,20 @@ namespace PlantUMLEditor.Models
         {
             IsDirty = true;
             _textValue = text;
+
+            //_mostUsedWords.Clear();
+            //foreach (Match m in words.Matches(text))
+            //{
+            //    var s = m.Value;
+
+            //    if (_mostUsedWords.ContainsKey(s))
+            //    {
+            //        _mostUsedWords[s]++;
+            //    }
+            //    else
+            //        _mostUsedWords.Add(s, 1);
+            //}
+
             if (PreviewWindow != null)
                 ShowPreviewImage(text);
         }
@@ -166,6 +182,16 @@ namespace PlantUMLEditor.Models
         protected void ShowAutoComplete(Rect rec, bool allowTyping = false)
         {
             SortedMatchingAutoCompletes.Clear();
+
+            //var s = (from o in MatchingAutoCompletes
+            //         join a in _mostUsedWords.Keys on o equals a
+            //         select new { o, c = _mostUsedWords[o] }).ToList();
+
+            //foreach (var f in s.OrderByDescending(p => p.c))
+            //    SortedMatchingAutoCompletes.Add(f.o);
+
+            //foreach (var item in MatchingAutoCompletes.Where(z => !s.Any(p => p.o == z)).OrderBy(p => p))
+            //    SortedMatchingAutoCompletes.Add(item);
 
             foreach (var item in MatchingAutoCompletes.OrderBy(p => p))
                 SortedMatchingAutoCompletes.Add(item);

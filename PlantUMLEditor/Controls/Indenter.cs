@@ -45,13 +45,15 @@ namespace PlantUMLEditor.Controls
             {
                 indentLevel--;
             }
-
-            for (int indent = 0; indent < indentLevel; indent++)
+            if (sb != null)
             {
-                sb.Append("    ");
-            }
+                for (int indent = 0; indent < indentLevel; indent++)
+                {
+                    sb.Append("    ");
+                }
 
-            sb.AppendLine(line);
+                sb.AppendLine(line);
+            }
             if (tabReset.IsMatch(line))
             {
                 indentLevel++;
@@ -63,6 +65,20 @@ namespace PlantUMLEditor.Controls
 
             if (indentLevel < 0)
                 indentLevel = 0;
+
+            return indentLevel;
+        }
+
+        public int GetIndentLevelForLine(string text, int line)
+        {
+            string[] lines = reg.Split(text);
+
+            int indentLevel = 0;
+
+            for (var x = 0; x < lines.Length && x <= line; x++)
+            {
+                ProcessLine(null, lines[x].Trim(), ref indentLevel);
+            }
 
             return indentLevel;
         }

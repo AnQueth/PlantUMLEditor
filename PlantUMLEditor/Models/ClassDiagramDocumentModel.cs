@@ -84,6 +84,8 @@ namespace PlantUMLEditor.Models
             }
             if (MatchingAutoCompletes.Count > 0)
                 base.ShowAutoComplete(autoCompleteParameters.Position);
+            else
+                base.CloseAutoComplete();
         }
 
         public override async Task<UMLDiagram> GetEditedDiagram()

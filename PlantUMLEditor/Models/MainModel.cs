@@ -671,11 +671,6 @@ namespace PlantUMLEditor.Models
             {
                 doc.UpdateDiagram(Documents.ClassDocuments);
             }
-
-            foreach (var item in Documents.ClassDocuments.SelectMany(p => p.DataTypes).OrderBy(p => p.Namespace))
-            {
-                _dataTypes.Add(item.Namespace + "." + item.Name);
-            }
         }
 
         private void ScanDirectory(string dir)

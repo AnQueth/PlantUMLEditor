@@ -503,6 +503,16 @@ namespace PlantUMLEditor.Controls
                 _autoComplete.CloseAutoComplete();
                 _found.Clear();
             }
+            if (e.Key == Key.Enter)
+            {
+                Indenter i = new Indenter();
+                int indent = i.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex));
+                string line = "\r\n" + new string(' ', indent * 4);
+                int index = CaretIndex + line.Length;
+                this.Text = this.Text.Insert(CaretIndex, line);
+                CaretIndex = index;
+                e.Handled = true;
+            }
 
             base.OnPreviewKeyDown(e);
         }
@@ -531,7 +541,7 @@ namespace PlantUMLEditor.Controls
                 if (e.Key == Key.Left || e.Key == Key.Right)
                     this._autoComplete.CloseAutoComplete();
             }
-            else if (e.Key != Key.Enter && e.SystemKey == Key.None)
+            else if (e.Key != Key.Enter && e.SystemKey == Key.None && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
                 if (_timer != null)
                     _timer.Dispose();
@@ -565,6 +575,17 @@ namespace PlantUMLEditor.Controls
                 _autoComplete.CloseAutoComplete();
             }
 
+            if (e.Text == "{")
+            {
+                Indenter i = new Indenter();
+                int indent = i.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex) - 1);
+                string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}\r\n";
+                int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
+                this.Text = this.Text.Insert(CaretIndex, line);
+                CaretIndex = newIndex;
+
+                e.Handled = true;
+            }
             base.OnPreviewTextInput(e);
         }
 
