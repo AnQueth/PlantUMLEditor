@@ -457,20 +457,26 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
+            if (e.KeyboardDevice.IsKeyDown(Key.S) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                _bindedDocument.Save();
+                e.Handled = true;
+                return;
+            }
+            if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 ShowFind();
                 e.Handled = true;
                 return;
             }
-            if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.IsKeyDown(Key.LeftCtrl))
+            if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 FindText = this.SelectedText.Trim();
                 ShowFind();
                 e.Handled = true;
                 return;
             }
-            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.LeftCtrl))
+            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 Indenter i = new Indenter();
                 this.Text = i.Process(this.TextRead());
@@ -541,7 +547,8 @@ namespace PlantUMLEditor.Controls
                 if (e.Key == Key.Left || e.Key == Key.Right)
                     this._autoComplete.CloseAutoComplete();
             }
-            else if (e.Key != Key.Enter && e.SystemKey == Key.None && e.KeyboardDevice.Modifiers == ModifierKeys.None)
+            else if (e.Key != Key.Enter && e.SystemKey == Key.None
+                && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
                 if (_timer != null)
                     _timer.Dispose();
@@ -693,13 +700,15 @@ namespace PlantUMLEditor.Controls
         {
             this.SelectionStart = index;
 
-            if (this.Text[index + typedLength] != char.MinValue)
-            {
-                while (char.IsLetterOrDigit(this.Text[index + typedLength]) && this.Text[index + typedLength] != '\r' && index + typedLength < Text.Length)
-                {
-                    typedLength++;
-                }
-            }
+            int i = index - 1;
+
+            //if (this.Text[i + typedLength] != char.MinValue)
+            //{
+            //    while (char.IsLetterOrDigit(this.Text[i + typedLength]) && this.Text[i + typedLength] != '\r' && i + typedLength < Text.Length)
+            //    {
+            //        typedLength++;
+            //    }
+            //}
 
             if (typedLength > this.SelectionLength)
                 this.SelectionLength = typedLength;

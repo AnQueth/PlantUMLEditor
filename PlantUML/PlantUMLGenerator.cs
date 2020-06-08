@@ -154,7 +154,28 @@ namespace PlantUML
 
                     foreach (var prop in item.Properties)
                     {
-                        writer.Write(prop.ObjectType.Name);
+                        writer.Write(prop.Visibility == UMLVisibility.Private ? "-" : prop.Visibility == UMLVisibility.Protected ? "#" : prop.Visibility == UMLVisibility.Public ? "+" : "");
+                        writer.Write(" ");
+
+                        if (prop.ListType == ListTypes.None)
+                            writer.Write(prop.ObjectType.Name);
+                        else if (prop.ListType == ListTypes.Array)
+                        {
+                            writer.Write(prop.ObjectType.Name);
+                            writer.Write("[]");
+                        }
+                        else if (prop.ListType == ListTypes.IReadOnlyCollection)
+                        {
+                            writer.Write("IReadOnlyCollection<");
+                            writer.Write(prop.ObjectType.Name);
+                            writer.Write(">");
+                        }
+                        else if (prop.ListType == ListTypes.List)
+                        {
+                            writer.Write("List<");
+                            writer.Write(prop.ObjectType.Name);
+                            writer.Write(">");
+                        }
                         writer.Write(" ");
                         writer.WriteLine(prop.Name);
                     }
@@ -230,6 +251,11 @@ namespace PlantUML
                     //}
                 }
             }
+        }
+
+        public static string Create(UMLComponentDiagram diagram)
+        {
+            throw new NotImplementedException();
         }
 
         public static string Create(UMLClassDiagram classDiagram)

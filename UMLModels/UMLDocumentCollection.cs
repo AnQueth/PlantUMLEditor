@@ -9,12 +9,12 @@ namespace UMLModels
         {
             ClassDocuments = new List<UMLClassDiagram>();
             SequenceDiagrams = new List<UMLSequenceDiagram>();
+            ComponentDiagrams = new List<UMLComponentDiagram>();
         }
 
         public List<UMLClassDiagram> ClassDocuments { get; set; }
 
+        public List<UMLComponentDiagram> ComponentDiagrams { get; set; }
         public List<UMLSequenceDiagram> SequenceDiagrams { get; set; }
-
-        
     }
 }

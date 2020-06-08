@@ -16,7 +16,8 @@ namespace PlantUMLEditor.Models
     {
         Class,
         Sequence,
-        Unknown
+        Unknown,
+        Component
     }
 
     public abstract class DocumentModel : BindingBase, IAutoCompleteCallback
@@ -216,6 +217,12 @@ namespace PlantUMLEditor.Models
         internal void ReportMessage(DocumentMessage d)
         {
             _textEditor.ReportError(d.LineNumber, 0);
+        }
+
+        internal async Task Save()
+        {
+            await File.WriteAllTextAsync(FileName, Content);
+            IsDirty = false;
         }
 
         public virtual void AutoComplete(AutoCompleteParameters p)

@@ -49,7 +49,7 @@ namespace PlantUML
                             innerToType = null;
                             break;
                         }
-                        innerToType = toType.Base;
+                        innerToType = innerToType.Base;
                     }
                     if (action != null)
                         break;

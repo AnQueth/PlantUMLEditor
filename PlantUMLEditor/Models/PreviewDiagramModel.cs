@@ -199,6 +199,10 @@ namespace PlantUMLEditor.Models
 
         public async Task ShowImage(string jar, string path, bool delete)
         {
+            if (!File.Exists(jar))
+            {
+                MessageBox.Show("plant uml is missing");
+            }
             _regenRequests.Clear();
             _regenRequests.Enqueue((jar, path, delete));
 

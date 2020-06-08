@@ -23,7 +23,7 @@ namespace PlantUML
 
         private static Regex _packageRegex = new Regex("package \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{", RegexOptions.Compiled);
 
-        private static Regex _propertyLine = new Regex("^(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\, ]+)\\s+(?<name>[\\w]+)", RegexOptions.Compiled);
+        private static Regex _propertyLine = new Regex("^\\s*(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\,\\[\\] ]+)\\s+(?<name>[\\w_]+)\\s*$", RegexOptions.Compiled);
 
         private static Regex baseClass = new Regex("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
@@ -40,9 +40,9 @@ namespace PlantUML
         private static Tuple<ListTypes, string> CreateFrom(string v)
         {
             if (v.StartsWith("ireadonlycollection<", StringComparison.OrdinalIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v.Substring(20).Trim('>'));
+                return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v.Substring(20).Trim('>', ' '));
             else if (v.StartsWith("list<", StringComparison.OrdinalIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(6).Trim('>'));
+                return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(6).Trim('>', ' '));
             else if (v.EndsWith("[]"))
                 return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim().Substring(0, v.Trim().Length - 2));
             else
@@ -108,14 +108,20 @@ namespace PlantUML
                         swallowingNotes = false;
 
                     currentPackage.Children.Add(new UMLNote(line));
+                    continue;
                 }
 
                 if (line.StartsWith("end note"))
+                {
+                    if (currentPackage.Children.Last() is UMLNote n)
+                    {
+                        n.Text += "\r\nend note";
+                    }
                     swallowingNotes = false;
-
+                }
                 if (swallowingNotes)
                 {
-                    if (d.DataTypes.Last() is UMLNote n)
+                    if (currentPackage.Children.Last() is UMLNote n)
                     {
                         n.Text += "\r\n" + line;
                     }
@@ -253,7 +259,6 @@ namespace PlantUML
 
         private static UMLVisibility ReadVisibility(string item)
         {
-            return UMLVisibility.None;
             if (item == "-")
                 return UMLVisibility.Private;
             else if (item == "#")

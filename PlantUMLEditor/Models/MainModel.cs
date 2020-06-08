@@ -45,6 +45,7 @@ namespace PlantUMLEditor.Models
             OpenDocuments = new ObservableCollection<DocumentModel>();
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler);
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler);
+            CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler);
             CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
             SaveCommand = new DelegateCommand<DocumentModel>(SaveCommandHandler);
@@ -90,6 +91,8 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand CreateNewClassDiagram { get; }
+
+        public DelegateCommand CreateNewComponentDiagram { get; }
 
         public DelegateCommand CreateNewSequenceDiagram { get; }
 
@@ -308,6 +311,8 @@ namespace PlantUMLEditor.Models
             doc.Close();
             lock (_docLock)
                 OpenDocuments.Remove(doc);
+
+            CurrentDocument = OpenDocuments.LastOrDefault();
         }
 
         private async void CloseDocumentAndSaveHandler(DocumentModel doc)
@@ -438,6 +443,38 @@ namespace PlantUMLEditor.Models
             this.ScanDirectory(this._folderBase);
         }
 
+        private void NewComponentDiagram(string fileName, string title)
+        {
+            var s = new UMLModels.UMLComponentDiagram(title, fileName);
+
+            var d = new ComponentDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ComponentDiagrams, old, @new), Configuration)
+            {
+                DocumentType = DocumentTypes.Component,
+                Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
+                Diagram = s,
+                FileName = fileName,
+                Name = title
+            };
+
+            Documents.ComponentDiagrams.Add(s);
+
+            lock (_docLock)
+                OpenDocuments.Add(d);
+            this.CurrentDocument = d;
+        }
+
+        private void NewComponentDiagramHandler()
+        {
+            string nf = GetNewFile(".component.puml");
+
+            if (!string.IsNullOrEmpty(nf))
+            {
+                this.NewComponentDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+            }
+
+            this.ScanDirectory(this._folderBase);
+        }
+
         private void NewSequenceDiagram(string fileName, string title)
         {
             var s = new UMLModels.UMLSequenceDiagram(title, fileName);
@@ -542,8 +579,7 @@ namespace PlantUMLEditor.Models
 
         private async Task Save(DocumentModel doc)
         {
-            await File.WriteAllTextAsync(doc.FileName, doc.Content);
-            doc.IsDirty = false;
+            await doc.Save();
         }
 
         private async Task SaveAll()

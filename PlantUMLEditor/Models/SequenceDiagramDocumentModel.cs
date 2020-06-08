@@ -132,8 +132,6 @@ namespace PlantUMLEditor.Models
             foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
                 this.MatchingAutoCompletes.Add(item);
 
-            this.MatchingAutoCompletes.Add("participant");
-
             if (this.MatchingAutoCompletes.Count > 0)
                 ShowAutoComplete(autoCompleteParameters.Position, false);
         }

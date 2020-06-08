@@ -204,7 +204,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 </DataTrigger>
             </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
-        <Thickness x:Key="TabHeaderMargin">5,2,10,2</Thickness>
+        <Thickness x:Key="TabHeaderMargin">2,2,2,2</Thickness>
         <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3" />
         <SolidColorBrush x:Key="TextBox.MouseOver.Border" Color="#FF7EB4EA" />
         <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5" />
@@ -490,9 +490,6 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-
-            <RowDefinition Height="100"></RowDefinition>
         </Grid.RowDefinitions>
         <Ribbon Grid.ColumnSpan="3">
             <RibbonTab Header="Home">
@@ -507,133 +504,150 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>
-        <TreeView Style="{DynamicResource TreeViewStyle1}"  Grid.Row="1" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
-        </TreeView>
-        <GridSplitter Grid.Row="2" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" ></GridSplitter>
-        <ListBox Grid.Row="3" Grid.RowSpan="2" ItemsSource="{Binding DataTypes}">
-        </ListBox>
-        <GridSplitter   Grid.RowSpan="4"  HorizontalAlignment="Center"
-              VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*">
+                </RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="200"></RowDefinition>
+            </Grid.RowDefinitions>
+            <TreeView Style="{DynamicResource TreeViewStyle1}"  Grid.Row="0" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
+            </TreeView>
+            <GridSplitter Grid.Row="1" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" ></GridSplitter>
+            <ListBox Grid.Row="2"  ItemsSource="{Binding DataTypes}">
+            </ListBox>
+        </Grid>
         <Grid Grid.Row="1" Grid.Column="2">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="*"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="50"></RowDefinition>
             </Grid.RowDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
 
-            <ItemsControl ItemsSource="{Binding OpenDocuments}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <WrapPanel />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
+                <ItemsControl ItemsSource="{Binding OpenDocuments}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
 
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="4">
-                            <Border.Style>
-                                <Style TargetType="Border">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsDirty}" Value="true">
-                                            <DataTrigger.Setters>
-                                                <Setter   Property="BorderBrush" Value="Red">
-                                                </Setter>
-                                            </DataTrigger.Setters>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding IsDirty}" Value="false">
-                                            <DataTrigger.Setters>
-                                                <Setter   Property="BorderBrush" Value="Green">
-                                                </Setter>
-                                            </DataTrigger.Setters>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Border.Style>
-                            <Grid IsHitTestVisible="True">
-                                <Grid.Style>
-                                    <Style TargetType="Grid">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="4" MinWidth="300">
+                                <Border.Style>
+                                    <Style TargetType="Border">
                                         <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Visible}" Value="0">
-                                                <Setter Property="Background"  Value="#FF800080"></Setter>
+                                            <DataTrigger Binding="{Binding IsDirty}" Value="true">
+                                                <DataTrigger.Setters>
+                                                    <Setter   Property="BorderBrush" Value="Red">
+                                                    </Setter>
+                                                </DataTrigger.Setters>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsDirty}" Value="false">
+                                                <DataTrigger.Setters>
+                                                    <Setter   Property="BorderBrush" Value="Green">
+                                                    </Setter>
+                                                </DataTrigger.Setters>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
-                                </Grid.Style>
+                                </Border.Style>
+                                <Grid IsHitTestVisible="True">
+                                    <Grid.Style>
+                                        <Style TargetType="Grid">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Visible}" Value="0">
+                                                    <Setter Property="Background"  Value="#FF800080"></Setter>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Grid.Style>
 
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                    <ColumnDefinition Width="Auto" ></ColumnDefinition>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                </Grid.ColumnDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto" ></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
 
-                                <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></Button>
-                                <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
-                                    <Button.Content>
-                                        <Grid>
-                                            <Image Source="/Images/Save_16x.png"></Image>
-                                        </Grid>
-                                    </Button.Content>
-                                </Button>
-                                <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
-                                    <Button.Content>
-                                        <Grid>
-                                            <Image Source="/Images/SaveClose_16x.png"></Image>
-                                        </Grid>
-                                    </Button.Content>
-                                </Button>
+                                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></Button>
+                                    <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                        <Button.Content>
+                                            <Grid>
+                                                <Image Source="/Images/Save_16x.png"></Image>
+                                            </Grid>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                        <Button.Content>
+                                            <Grid>
+                                                <Image Source="/Images/SaveClose_16x.png"></Image>
+                                            </Grid>
+                                        </Button.Content>
+                                    </Button>
 
-                                <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
-                                    <Button.Content>
-                                        <Grid>
-                                            <Image Source="/Images/Close_8x_16x.png" ></Image>
-                                        </Grid>
-                                    </Button.Content>
-                                </Button>
-                                <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="4"  Command="{Binding  ShowPreviewCommand}">
-                                    <Button.Content>
-                                        <Grid>
-                                            <Image Source="/Images/PreviewTransition_16x.png" ></Image>
-                                        </Grid>
-                                    </Button.Content>
-                                </Button>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                                    <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                        <Button.Content>
+                                            <Grid>
+                                                <Image Source="/Images/Close_8x_16x.png" ></Image>
+                                            </Grid>
+                                        </Button.Content>
+                                    </Button>
+                                    <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="4"  Command="{Binding  ShowPreviewCommand}">
+                                        <Button.Content>
+                                            <Grid>
+                                                <Image Source="/Images/PreviewTransition_16x.png" ></Image>
+                                            </Grid>
+                                        </Button.Content>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
 
-            <ItemsControl Grid.Row="1" x:Name="Tabs"
+                <ItemsControl Grid.Row="1" x:Name="Tabs"
                           ItemsSource="{Binding OpenDocuments}"
                           ItemTemplate="{StaticResource TabControlItemTemplate2}">
-            </ItemsControl>
-        </Grid>
-        <GridSplitter Grid.Row="2" ShowsPreview="True" Grid.Column="2" Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
-        <ListBox Grid.Row="4" Grid.Column="2"  ItemsSource="{Binding Messages}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding SelectedMessage}">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"></ColumnDefinition>
-                            <ColumnDefinition Width="50"></ColumnDefinition>
-                            <ColumnDefinition Width="200"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Text}" Grid.Column="0" Margin="10,5,10,5" ></TextBlock>
-                        <TextBlock Text="{Binding LineNumber}" Grid.Column="1" Margin="10,5,10,5"></TextBlock>
-                        <Button x:Name="createMissingMethod" Command="{Binding CreateMissingMethodCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
+                </ItemsControl>
+            </Grid>
+            <GridSplitter Grid.Row="1" ShowsPreview="True"  Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
+            <ListBox Grid.Row="2"   ItemsSource="{Binding Messages}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding SelectedMessage}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="50"></ColumnDefinition>
+                                <ColumnDefinition Width="200"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Text}" Grid.Column="0" Margin="10,5,10,5" ></TextBlock>
+                            <TextBlock Text="{Binding LineNumber}" Grid.Column="1" Margin="10,5,10,5"></TextBlock>
+                            <Button x:Name="createMissingMethod" Command="{Binding CreateMissingMethodCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
                                 Content="Add Method To Class" Grid.Column="2"></Button>
-                    </Grid>
+                        </Grid>
 
-                    <DataTemplate.Triggers>
-                        <DataTrigger Binding="{Binding MissingMethod}" Value="false">
-                            <DataTrigger.Setters>
-                                <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
-                            </DataTrigger.Setters>
-                        </DataTrigger>
-                    </DataTemplate.Triggers>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding MissingMethod}" Value="false">
+                                <DataTrigger.Setters>
+                                    <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
+                                </DataTrigger.Setters>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <GridSplitter     HorizontalAlignment="Center"
+              VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
+
         <Popup IsOpen="{Binding ConfirmOpen}">
 
             <Grid>
