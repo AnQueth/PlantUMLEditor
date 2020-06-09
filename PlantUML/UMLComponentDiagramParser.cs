@@ -165,36 +165,40 @@ namespace PlantUML
                 }
                 else if (composition.IsMatch(line))
                 {
-                    var m = composition.Match(line);
-
-                    string left = m.Groups["left"].Value.Trim();
-                    string right = m.Groups["right"].Value.Trim();
-
-                    var propType = d.Entities.Find(p => p.Name == left);
-                    if (propType == null)
-                        propType = aliases[left];
-
-                    var fromType = d.Entities.Find(p => p.Name == right);
-                    if (fromType == null)
-                        fromType = aliases[right];
-
-                    string arrow = m.Groups["arrow"].Value.Trim();
-
-                    if (propType is UMLComponent c)
+                    try
                     {
-                        if (arrow.EndsWith("o"))
+                        var m = composition.Match(line);
+
+                        string left = m.Groups["left"].Value.Trim();
+                        string right = m.Groups["right"].Value.Trim();
+
+                        var propType = d.Entities.Find(p => p.Name == left);
+                        if (propType == null)
+                            propType = aliases[left];
+
+                        var fromType = d.Entities.Find(p => p.Name == right);
+                        if (fromType == null)
+                            fromType = aliases[right];
+
+                        string arrow = m.Groups["arrow"].Value.Trim();
+
+                        if (propType is UMLComponent c)
                         {
-                            c.Exposes.Add(fromType);
-                        }
-                        else if (arrow.EndsWith("("))
-                        {
-                            c.Consumes.Add(fromType);
-                        }
-                        else if (arrow.EndsWith(">"))
-                        {
-                            c.Consumes.Add(fromType);
+                            if (arrow.EndsWith("o"))
+                            {
+                                c.Exposes.Add(fromType);
+                            }
+                            else if (arrow.EndsWith("("))
+                            {
+                                c.Consumes.Add(fromType);
+                            }
+                            else if (arrow.EndsWith(">"))
+                            {
+                                c.Consumes.Add(fromType);
+                            }
                         }
                     }
+                    catch { }
                 }
                 if (DataType != null)
                     currentPackage.Children.Add(DataType);

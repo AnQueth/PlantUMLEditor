@@ -239,7 +239,7 @@ namespace PlantUMLEditor.Models
 
             _fileSave.WaitOne();
             UMLDiagramTypeDiscovery discovery = new UMLDiagramTypeDiscovery();
-            var (cd, sd, ud) = await discovery.TryFindOrAddDocument(Documents, fullPath);
+            var (cd, sd, comd, ud) = await discovery.TryFindOrAddDocument(Documents, fullPath);
             _fileSave.Release();
 
             if (cd != null)
@@ -250,6 +250,8 @@ namespace PlantUMLEditor.Models
             {
                 OpenSequenceDiagram(fullPath, sd, lineNumber);
             }
+            else if (comd != null)
+                OpenComponentDiagram(fullPath, comd, lineNumber);
             else if (ud != null)
             {
                 OpenUnknownDiagram(fullPath, ud);
@@ -525,6 +527,24 @@ namespace PlantUMLEditor.Models
             this.CurrentDocument = d;
         }
 
+        private void OpenComponentDiagram(string fileName, UMLComponentDiagram diagram, int lineNumber)
+        {
+            var d = new ComponentDiagramDocumentModel((old, @new) => { }, Configuration)
+            {
+                DocumentType = DocumentTypes.Class,
+                Content = File.ReadAllText(fileName),
+                Diagram = diagram,
+                FileName = fileName,
+                Name = diagram.Title
+            };
+            lock (_docLock)
+                OpenDocuments.Add(d);
+
+            d.GotoLineNumber(lineNumber);
+
+            this.CurrentDocument = d;
+        }
+
         private async void OpenDirectoryHandler()
         {
             _folderBase = null;
@@ -605,10 +625,12 @@ namespace PlantUMLEditor.Models
 
                 List<DocumentModel> c = new List<DocumentModel>();
                 List<DocumentModel> s = new List<DocumentModel>();
+                List<DocumentModel> cs = new List<DocumentModel>();
                 lock (_docLock)
                 {
                     c = OpenDocuments.Where(p => p is ClassDiagramDocumentModel).ToList();
                     s = OpenDocuments.Where(p => p is SequenceDiagramDocumentModel).ToList();
+                    cs = OpenDocuments.Where(p => p is ComponentDiagramDocumentModel).ToList();
                 }
 
                 foreach (var file in c)
@@ -617,6 +639,10 @@ namespace PlantUMLEditor.Models
                 }
 
                 foreach (var file in s)
+                {
+                    await Save(file);
+                }
+                foreach (var file in cs)
                 {
                     await Save(file);
                 }

@@ -70,16 +70,21 @@ namespace PlantUMLEditor.Models
             return sd;
         }
 
-        public async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd, UMLUnknownDiagram ud)> TryFindOrAddDocument(UMLDocumentCollection documents, string fullPath)
+        public async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd, UMLComponentDiagram comd, UMLUnknownDiagram ud)> TryFindOrAddDocument(UMLDocumentCollection documents, string fullPath)
         {
             UMLUnknownDiagram ud = null;
             UMLClassDiagram cd = null;
+            UMLComponentDiagram comd = null;
             UMLSequenceDiagram sd = await TryCreateSequenceDiagram(documents, fullPath);
             if (sd == null)
                 cd = await TryCreateClassDiagram(documents, fullPath);
+            if (cd == null && fullPath.Contains("component"))
+            {
+                comd = await PlantUML.UMLComponentDiagramParser.ReadFile(fullPath);
+            }
             if (cd == null)
                 ud = new UMLUnknownDiagram("", fullPath);
-            return (cd, sd, ud);
+            return (cd, sd, comd, ud);
         }
     }
 }
