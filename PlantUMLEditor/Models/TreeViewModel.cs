@@ -27,6 +27,7 @@ namespace PlantUMLEditor.Models
             NewFolderCommand = new DelegateCommand(NewFolderHandler);
             StartRenameCommand = new DelegateCommand(StartRenameHandler);
             DoRenameCommand = new DelegateCommand(RenameCommandHandler);
+            DeleteCommand = new DelegateCommand(DeleteCommandHandler);
             _folderChangeNotifactions = folderChangeNotifactions;
         }
 
@@ -34,6 +35,8 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
+
+        public DelegateCommand DeleteCommand { get; }
 
         public DelegateCommand DoRenameCommand { get; }
 
@@ -90,6 +93,10 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand StartRenameCommand { get; }
+
+        private void DeleteCommandHandler()
+        {
+        }
 
         private void NewFolderHandler()
         {

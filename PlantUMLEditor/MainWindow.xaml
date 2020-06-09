@@ -16,13 +16,18 @@
         <ContextMenu x:Key="FolderMenu">
             <MenuItem Header="New Class Diagram" Command="{Binding DataContext.CreateNewClassDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New Sequence Diagram" Command="{Binding DataContext.CreateNewSequenceDiagram , RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
+            <MenuItem Header="New Component Diagram" Command="{Binding DataContext.CreateNewComponentDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <Separator></Separator>
 
             <MenuItem Header="New Folder" Command="{Binding NewFolderCommand}"></MenuItem>
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
+
+       
         </ContextMenu>
         <ContextMenu x:Key="FileMenu">
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
+            <Separator></Separator>
+            <MenuItem Header="Delete" Command="{Binding DeleteCommand}"></MenuItem>
         </ContextMenu>
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
@@ -501,6 +506,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 <RibbonGroup>
                     <RibbonButton Label="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />
                     <RibbonButton Label="New Sequence Diagram" Command="{Binding CreateNewSequenceDiagram}" />
+                    <RibbonButton Label="New Component Diagram" Command="{Binding CreateNewComponentDiagram}" />
                 </RibbonGroup>
             </RibbonTab>
         </Ribbon>

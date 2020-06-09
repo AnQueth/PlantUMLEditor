@@ -144,6 +144,8 @@ namespace PlantUML
 
                     DataType = new UMLComponent(package, Clean(g.Groups["name"].Value));
 
+                    aliases.TryAdd(g.Groups["alias"].Value, DataType);
+
                     if (line.EndsWith("{"))
                     {
                         brackets.Push("class");
@@ -155,7 +157,7 @@ namespace PlantUML
                     string package = GetPackage(packages);
                     if (line.Length > 8)
                         DataType = new UMLInterface(package, Clean(g.Groups["name"].Value));
-
+                    aliases.TryAdd(g.Groups["alias"].Value, DataType);
                     if (line.EndsWith("{"))
                     {
                         brackets.Push("interface");
@@ -165,9 +167,34 @@ namespace PlantUML
                 {
                     var m = composition.Match(line);
 
-                    var propType = d.Entities.Find(p => p.Name == m.Groups["left"].Value);
+                    string left = m.Groups["left"].Value.Trim();
+                    string right = m.Groups["right"].Value.Trim();
 
-                    var fromType = d.Entities.Find(p => p.Name == m.Groups["right"].Value);
+                    var propType = d.Entities.Find(p => p.Name == left);
+                    if (propType == null)
+                        propType = aliases[left];
+
+                    var fromType = d.Entities.Find(p => p.Name == right);
+                    if (fromType == null)
+                        fromType = aliases[right];
+
+                    string arrow = m.Groups["arrow"].Value.Trim();
+
+                    if (propType is UMLComponent c)
+                    {
+                        if (arrow.EndsWith("o"))
+                        {
+                            c.Exposes.Add(fromType);
+                        }
+                        else if (arrow.EndsWith("("))
+                        {
+                            c.Consumes.Add(fromType);
+                        }
+                        else if (arrow.EndsWith(">"))
+                        {
+                            c.Consumes.Add(fromType);
+                        }
+                    }
                 }
                 if (DataType != null)
                     currentPackage.Children.Add(DataType);

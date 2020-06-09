@@ -43,9 +43,9 @@ namespace PlantUMLEditor.Models
             Folder = new TreeViewModel(Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<DocumentModel>();
-            CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler);
-            CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler);
-            CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler);
+            CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
+            CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
+            CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
             SaveCommand = new DelegateCommand<DocumentModel>(SaveCommandHandler);
@@ -533,6 +533,10 @@ namespace PlantUMLEditor.Models
             string dir = GetWorkingFolder();
             if (string.IsNullOrEmpty(dir))
                 return;
+
+            CreateNewComponentDiagram.RaiseCanExecuteChanged();
+            CreateNewClassDiagram.RaiseCanExecuteChanged();
+            CreateNewSequenceDiagram.RaiseCanExecuteChanged();
 
             ScanDirectory(dir);
         }

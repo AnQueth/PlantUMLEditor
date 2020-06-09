@@ -8,11 +8,11 @@ namespace UMLModels
     {
         public UMLComponent(string @namespace, string name) : base(name, @namespace)
         {
-            Exposes = new List<UMLInterface>();
-            Consumes = new List<UMLInterface>();
+            Exposes = new List<UMLDataType>();
+            Consumes = new List<UMLDataType>();
         }
 
-        public List<UMLInterface> Consumes { get; set; }
-        public List<UMLInterface> Exposes { get; set; }
+        public List<UMLDataType> Consumes { get; set; }
+        public List<UMLDataType> Exposes { get; set; }
     }
 }
