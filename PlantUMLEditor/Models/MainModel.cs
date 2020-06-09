@@ -39,7 +39,7 @@ namespace PlantUMLEditor.Models
             _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
             _openDirectoryService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(OpenDirectoryHandler);
-            SaveAllCommand = new DelegateCommand(SaveAllHandler);
+            SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
             Folder = new TreeViewModel(Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<DocumentModel>();
@@ -52,7 +52,7 @@ namespace PlantUMLEditor.Models
             Messages = new ObservableCollection<DocumentMessage>();
             SelectDocumentCommand = new DelegateCommand<DocumentModel>(SelectDocumentHandler);
 
-            ScanAllFiles = new DelegateCommand(ScanAllFilesHandler);
+            ScanAllFiles = new DelegateCommand(ScanAllFilesHandler, () => !string.IsNullOrEmpty(_folderBase));
 
             Configuration = new AppConfiguration()
             {
@@ -147,7 +147,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public ICommand OpenDirectoryCommand
+        public DelegateCommand OpenDirectoryCommand
         {
             get;
         }
@@ -157,7 +157,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public ICommand SaveAllCommand
+        public DelegateCommand SaveAllCommand
         {
             get;
         }
@@ -166,7 +166,7 @@ namespace PlantUMLEditor.Models
 
         public DelegateCommand ScanAllFiles { get; }
 
-        public ICommand SelectDocumentCommand { get; }
+        public DelegateCommand<DocumentModel> SelectDocumentCommand { get; }
 
         public DocumentMessage SelectedMessage
         {
@@ -537,6 +537,8 @@ namespace PlantUMLEditor.Models
             CreateNewComponentDiagram.RaiseCanExecuteChanged();
             CreateNewClassDiagram.RaiseCanExecuteChanged();
             CreateNewSequenceDiagram.RaiseCanExecuteChanged();
+            SaveAllCommand.RaiseCanExecuteChanged();
+            ScanAllFiles.RaiseCanExecuteChanged();
 
             ScanDirectory(dir);
         }
