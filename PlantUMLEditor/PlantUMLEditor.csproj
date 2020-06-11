@@ -10,6 +10,7 @@
   <ItemGroup>
     <None Remove="Images\CLASS.png" />
     <None Remove="Images\Close_8x_16x.png" />
+    <None Remove="Images\com.png" />
     <None Remove="Images\FolderClosed_16x.png" />
     <None Remove="Images\OpenFolder_16x.png" />
     <None Remove="Images\PreviewTransition_16x.png" />
@@ -26,6 +27,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\Close_8x_16x.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\com.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\FolderClosed_16x.png">

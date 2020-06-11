@@ -10,7 +10,7 @@ namespace PlantUMLEditor.Models
     {
         public async Task<UMLClassDiagram> TryCreateClassDiagram(UMLDocumentCollection documents, string fullPath)
         {
-            if (!fullPath.Contains("class"))
+            if (!fullPath.Contains("class.puml"))
             {
                 return null;
             }
@@ -34,6 +34,32 @@ namespace PlantUMLEditor.Models
             return cd;
         }
 
+        public async Task<UMLComponentDiagram> TryCreateComponentDiagram(UMLDocumentCollection documents, string fullPath)
+        {
+            if (!fullPath.Contains("component.puml"))
+            {
+                return null;
+            }
+            var cd = documents.ComponentDiagrams.Find(p => p.FileName == fullPath);
+            if (cd == null)
+            {
+                try
+                {
+                    cd = await PlantUML.UMLComponentDiagramParser.ReadFile(fullPath);
+                }
+                catch
+                {
+                }
+                if (cd != null)
+                {
+                    documents.ComponentDiagrams.RemoveAll(p => p.FileName == fullPath);
+                    documents.ComponentDiagrams.Add(cd);
+                }
+            }
+
+            return cd;
+        }
+
         public async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd, UMLUnknownDiagram ud)> TryCreateDiagram(UMLDocumentCollection documents, string text)
         {
             UMLUnknownDiagram ud = null;
@@ -48,7 +74,7 @@ namespace PlantUMLEditor.Models
 
         public async Task<UMLSequenceDiagram> TryCreateSequenceDiagram(UMLDocumentCollection documents, string fullPath)
         {
-            if (!fullPath.Contains("seq"))
+            if (!fullPath.Contains("seq.puml"))
             {
                 return null;
             }
@@ -78,10 +104,8 @@ namespace PlantUMLEditor.Models
             UMLSequenceDiagram sd = await TryCreateSequenceDiagram(documents, fullPath);
             if (sd == null)
                 cd = await TryCreateClassDiagram(documents, fullPath);
-            if (cd == null && fullPath.Contains("component"))
-            {
-                comd = await PlantUML.UMLComponentDiagramParser.ReadFile(fullPath);
-            }
+            if (cd == null)
+                comd = await TryCreateComponentDiagram(documents, fullPath);
             if (cd == null)
                 ud = new UMLUnknownDiagram("", fullPath);
             return (cd, sd, comd, ud);

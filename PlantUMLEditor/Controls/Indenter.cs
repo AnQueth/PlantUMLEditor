@@ -18,7 +18,8 @@ namespace PlantUMLEditor.Controls
         private Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private Regex reg = new Regex("\n");
-        private Regex tab = new Regex("^(class|\\{\\w+\\}|interface|package|enum|alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
+        private Regex tab = new Regex("^(\\{\\w+\\}|alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
+        private Regex tab2 = new Regex("^\\s*(class|interface|package|enum)[ \\.\\w+]+\\{", RegexOptions.Compiled);
         private Regex tabReset = new Regex("^else\\s?.*", RegexOptions.Compiled);
         private Regex tabStop = new Regex("^(\\}|end(?! note))", RegexOptions.Compiled);
 
@@ -58,7 +59,7 @@ namespace PlantUMLEditor.Controls
             {
                 indentLevel++;
             }
-            if (tab.IsMatch(line))
+            if (tab.IsMatch(line) || tab2.IsMatch(line))
             {
                 indentLevel++;
             }

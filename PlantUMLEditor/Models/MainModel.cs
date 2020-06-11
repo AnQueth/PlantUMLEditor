@@ -184,7 +184,8 @@ namespace PlantUMLEditor.Models
         {
             foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
             {
-                model.Children.Add(new TreeViewModel(file, true, !file.Contains(".seq.puml") ? "images\\class.png" : "images\\sequence.png", this)
+                model.Children.Add(new TreeViewModel(file, true, !file.Contains(".component.puml") ?
+                    (!file.Contains(".seq.puml") ? "images\\class.png" : "images\\sequence.png") : "images\\com.png", this)
                 {
                 });
             }
@@ -529,7 +530,7 @@ namespace PlantUMLEditor.Models
 
         private void OpenComponentDiagram(string fileName, UMLComponentDiagram diagram, int lineNumber)
         {
-            var d = new ComponentDiagramDocumentModel((old, @new) => { }, Configuration)
+            var d = new ComponentDiagramDocumentModel((old, @new) => { DiagramModelChanged(Documents.ComponentDiagrams, old, @new); }, Configuration)
             {
                 DocumentType = DocumentTypes.Class,
                 Content = File.ReadAllText(fileName),
@@ -633,68 +634,16 @@ namespace PlantUMLEditor.Models
                     cs = OpenDocuments.Where(p => p is ComponentDiagramDocumentModel).ToList();
                 }
 
-                foreach (var file in c)
-                {
-                    await Save(file);
-                }
-
-                foreach (var file in s)
-                {
-                    await Save(file);
-                }
-                foreach (var file in cs)
+                foreach (var file in c.Union(s).Union(cs))
                 {
                     await Save(file);
                 }
 
                 List<(UMLDiagram, UMLDiagram)> list = new List<(UMLDiagram, UMLDiagram)>();
 
-                foreach (var document in OpenDocuments.OfType<ClassDiagramDocumentModel>())
-                {
-                    var e = await document.GetEditedDiagram();
-                    e.FileName = document.FileName;
-
-                    if (e is UMLClassDiagram cd)
-                    {
-                        foreach (var oldCd in Documents.ClassDocuments)
-                        {
-                            if (oldCd.FileName == cd.FileName)
-                            {
-                                list.Add((oldCd, cd));
-                            }
-                        }
-                    }
-                }
-                foreach (var document in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
-                {
-                    var e = await document.GetEditedDiagram();
-                    e.FileName = document.FileName;
-
-                    if (e is UMLSequenceDiagram sd)
-                    {
-                        foreach (var oldCd in Documents.SequenceDiagrams)
-                        {
-                            if (oldCd.FileName == sd.FileName)
-                            {
-                                list.Add((oldCd, sd));
-                            }
-                        }
-                    }
-                }
-
-                foreach (var item in list)
-                {
-                    if (item.Item1 is UMLClassDiagram cd)
-                    {
-                        documents.ClassDocuments.Remove(cd);
-                        documents.ClassDocuments.Add(item.Item2 as UMLClassDiagram);
-                    }
-                    else
-                    {
-                        documents.SequenceDiagrams.Remove(item.Item1 as UMLSequenceDiagram);
-                        documents.SequenceDiagrams.Add(item.Item2 as UMLSequenceDiagram);
-                    }
-                }
+                await UpdateDiagrams<ClassDiagramDocumentModel, UMLClassDiagram>(Documents.ClassDocuments);
+                await UpdateDiagrams<SequenceDiagramDocumentModel, UMLSequenceDiagram>(Documents.SequenceDiagrams);
+                await UpdateDiagrams<ComponentDiagramDocumentModel, UMLComponentDiagram>(Documents.ComponentDiagrams);
 
                 foreach (var document in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
                 {
@@ -775,6 +724,28 @@ namespace PlantUMLEditor.Models
         private void SelectDocumentHandler(DocumentModel model)
         {
             CurrentDocument = model;
+        }
+
+        private async Task UpdateDiagrams<T1, T2>(List<T2> classDocuments) where T1 : DocumentModel where T2 : UMLDiagram
+        {
+            foreach (var document in OpenDocuments.OfType<T1>())
+            {
+                var e = await document.GetEditedDiagram();
+                e.FileName = document.FileName;
+
+                if (e is T2 cd)
+                {
+                    foreach (var oldCd in classDocuments)
+                    {
+                        if (oldCd.FileName == cd.FileName)
+                        {
+                            classDocuments.Remove(oldCd);
+                            classDocuments.Add(cd);
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         public void Change(string fullPath)

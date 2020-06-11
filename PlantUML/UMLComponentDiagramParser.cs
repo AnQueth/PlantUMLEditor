@@ -13,7 +13,7 @@ namespace PlantUML
     {
         private const string PACKAGE = "name";
 
-        private static Regex _component = new Regex("^(component |\\[)((?<name>[\\w \\\\]+)\\]|(?<name>[\\w\\\\]+))(\\s+as*\\s+)*(?<alias>\\w+)*", RegexOptions.Compiled);
+        private static Regex _component = new Regex("^(component |database |queue |\\[)((?<name>[\\w \\\\]+)\\]|(?<name>[\\w\\\\]+))(\\s+as*\\s+)*(?<alias>\\w+)*", RegexOptions.Compiled);
         private static Regex _interface = new Regex("^(\\(\\)|interface)\\s+\\\"*((?<name>[\\w \\\\]+)\\\"*(\\s+as\\s+(?<alias>[\\w]+))|(?<name>[\\w \\\\]+)\\\"*)", RegexOptions.Compiled);
 
         private static Regex _packageRegex = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder) +\\\"*(?<name>[\\w ]+)*\\\"* *\\{", RegexOptions.Compiled);

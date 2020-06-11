@@ -133,13 +133,10 @@ namespace PlantUMLEditor.Models
             PreviewWindow.DataContext = imageModel;
 
             PreviewWindow.Show();
-            ShowPreviewImage();
+            ShowPreviewImage(this._textEditor.TextRead());
         }
 
-        private async Task ShowPreviewImage()
-        {
-            await imageModel.ShowImage(_jarLocation, FileName, false);
-        }
+   
 
         private async Task ShowPreviewImage(string text)
         {
