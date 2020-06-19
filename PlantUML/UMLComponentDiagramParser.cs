@@ -18,7 +18,7 @@ namespace PlantUML
 
         private static Regex _packageRegex = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder) +\\\"*(?<name>[\\w ]+)*\\\"* *\\{", RegexOptions.Compiled);
 
-        private static Regex composition = new Regex("^\\[*(?<left>[\\w ]+)\\]* *(?<arrow>[\\<\\-\\(\\)o]+(?<direction>[\\w]+)*[\\->\\(\\)o]+) *\\[*(?<right>[\\w ]+)\\]*", RegexOptions.Compiled);
+        private static Regex composition = new Regex("^\\[*(?<left>[\\w ]+)\\]* +(?<arrow>[\\<\\-\\(\\)o\\[\\]\\#]+(?<direction>[\\w]+)*[\\->\\(\\)o\\[\\]\\#]+) +\\[*(?<right>[\\w ]+)\\]*", RegexOptions.Compiled);
 
         private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 

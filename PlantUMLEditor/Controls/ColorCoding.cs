@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -18,7 +19,7 @@ namespace PlantUMLEditor.Controls
 
         private Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
         {
-            {new Regex("^\\s*(participant|actor|database|component|class|interface|enum)\\s+\\w+\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
+            {new Regex("^\\s*(participant|actor|database|component|class|interface|enum|boundary|entity)\\s+\\w+\\S+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
 
                {new Regex("(\\:.+)"), (Colors.Firebrick, true) }
         };
@@ -35,6 +36,8 @@ namespace PlantUMLEditor.Controls
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
+                    Debug.WriteLine(m.Value);
+
                     formattedText.SetForegroundBrush(new SolidColorBrush(item.Value.Item1), m.Index, m.Length);
                     if (item.Value.Item2)
                     {

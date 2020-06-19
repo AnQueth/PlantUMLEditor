@@ -517,6 +517,7 @@ namespace PlantUMLEditor.Controls
                 int index = CaretIndex + line.Length;
                 this.Text = this.Text.Insert(CaretIndex, line);
                 CaretIndex = index;
+                this.CloseAutoComplete();
                 e.Handled = true;
             }
 
@@ -590,7 +591,7 @@ namespace PlantUMLEditor.Controls
                 int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
                 this.Text = this.Text.Insert(CaretIndex, line);
                 CaretIndex = newIndex;
-
+                this.CloseAutoComplete();
                 e.Handled = true;
             }
             base.OnPreviewTextInput(e);

@@ -13,7 +13,7 @@ namespace PlantUML
     {
         private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database|boundary|entity|collections)\\s+\\\"*(?<name>[\\w\\.]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*", RegexOptions.Compiled);
 
-        private static Regex lineConnectionRegex = new Regex("([a-zA-Z0-9]+|[\\-<>]+)\\s*([a-zA-Z0-9\\-><]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*(.*)$", RegexOptions.Compiled);
+        private static Regex lineConnectionRegex = new Regex("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s+([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s+([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
         private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static string Clean(string name)
@@ -107,6 +107,7 @@ namespace PlantUML
                 if (line == "@startuml")
                 {
                     started = true;
+                    continue;
                 }
 
                 if (!started)
@@ -119,6 +120,8 @@ namespace PlantUML
                     {
                         swallowingNotes = true;
                     }
+                    else
+                        continue;
                 }
 
                 if (line.StartsWith("end note", StringComparison.Ordinal))
@@ -133,6 +136,7 @@ namespace PlantUML
                 if (line.StartsWith("title", StringComparison.Ordinal))
                 {
                     d.Title = line.Substring(5).Trim();
+                    continue;
                 }
 
                 if (TryParseLifeline(line, types, out var lifeline))
@@ -302,14 +306,14 @@ namespace PlantUML
         {
             connection = null;
 
-            var m = lineConnectionRegex.Match(line);
-            if (!m.Success)
-            {
-                return false;
-            }
-
             try
             {
+                var m = lineConnectionRegex.Match(line);
+                if (!m.Success)
+                {
+                    return false;
+                }
+
                 string fromAlias = m.Groups[1].Value[0] != '<' && m.Groups[1].Value[0] != '-' && m.Groups[1].Value[0] != '>' ? m.Groups[1].Value : null;
                 string arrow = fromAlias == null ? m.Groups[1].Value : m.Groups[2].Value;
                 string toAlias = fromAlias == null ? m.Groups[2].Value : m.Groups[3].Value;
