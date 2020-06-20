@@ -25,7 +25,7 @@ namespace PlantUMLEditor.Controls
         };
 
         private Regex brackets = new Regex("(\\{|\\})");
-        private Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)[.\\s\\S\\W\\r\\n]*end note| as (?<alias>\\w+)[.\\s\\S\\W\\r\\n]*end note)");
+        private Regex notes = new Regex("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\\\"(?<text>[\\w\\W]+)\\\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)[.\\s\\S\\W\\r\\n]*end note| as (?<alias>\\w+)[.\\s\\S\\W\\r\\n]*end note)");
         private Regex parenthesies = new Regex("(\\(|\\))");
 
         public void FormatText(string text, FormattedText formattedText)

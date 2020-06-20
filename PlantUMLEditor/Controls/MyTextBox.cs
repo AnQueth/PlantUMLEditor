@@ -437,6 +437,13 @@ namespace PlantUMLEditor.Controls
             this._autoComplete.CloseAutoComplete();
         }
 
+        protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+        {
+            base.OnLostKeyboardFocus(e);
+
+            this._autoComplete.CloseAutoComplete();
+        }
+
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
             base.OnMouseDown(e);
