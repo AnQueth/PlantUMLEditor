@@ -398,6 +398,7 @@ namespace PlantUMLEditor.Controls
 
         private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+            //  this._autoComplete.CloseAutoComplete();
             this.RenderLineNumbers();
             this.InvalidateVisual();
         }
@@ -619,14 +620,14 @@ namespace PlantUMLEditor.Controls
 
             if (!string.IsNullOrWhiteSpace(this.SelectedText))
             {
-                //if (_selectionHandler != null)
-                //{
-                //    _selectionHandler.Dispose();
-                //}
-                //_selectionHandler = new Timer((o) =>
-                //{
-                //    Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText, true); }));
-                //}, null, 250, Timeout.Infinite);
+                if (_selectionHandler != null)
+                {
+                    _selectionHandler.Dispose();
+                }
+                _selectionHandler = new Timer((o) =>
+                {
+                    Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText, true); }));
+                }, null, 250, Timeout.Infinite);
 
                 this.FindText = this.SelectedText;
             }
@@ -768,7 +769,7 @@ namespace PlantUMLEditor.Controls
                 index = 0;
             if (index > _cb.Items.Count - 1)
                 index = _cb.Items.Count - 1;
-            Debug.WriteLine(index);
+
             _cb.SelectedIndex = index;
 
             _cb.ScrollIntoView(_cb.SelectedItem);
@@ -790,8 +791,12 @@ namespace PlantUMLEditor.Controls
 
             try
             {
-                int start = int.MinValue;
-                int end = int.MaxValue;
+                int end = 0;
+                int start = this.GetCharacterIndexFromLineIndex(this.GetFirstVisibleLineIndex());
+                if (this.GetLastVisibleLineIndex() == -1)
+                    end = int.MaxValue;
+                else
+                    end = this.GetCharacterIndexFromLineIndex(this.GetLastVisibleLineIndex());
 
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);

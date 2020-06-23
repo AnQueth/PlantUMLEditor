@@ -10,23 +10,23 @@ namespace PlantUMLEditor.Controls
 {
     public class ColorCoding
     {
-        private Dictionary<Regex, Color> _colorCodes = new Dictionary<Regex, Color>()
+        private static Dictionary<Regex, Color> _colorCodes = new Dictionary<Regex, Color>()
         {
-             {new Regex("(@startuml|@enduml)") , Colors.Gray},
-            {new Regex("^\\s*(class|interface)\\s+.+?{([\\s.\\w\\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline), Colors.Firebrick },
-                {new Regex("^\\s*(title|class|\\{\\w+\\}|interface|package|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|entity|collections)\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase), Colors.Blue}
+             {new Regex("(@startuml|@enduml)", RegexOptions.Compiled) , Colors.Gray},
+            {new Regex("^\\s*(class|interface)\\s+.+?{([\\s.\\w\\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline| RegexOptions.Compiled), Colors.Firebrick },
+                {new Regex("^\\s*(title|class|\\{\\w+\\}|interface|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|entity|collections)\\s+", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue}
         };
 
-        private Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
+        private static Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
         {
-            {new Regex("^\\s*(participant|actor|database|component|class|interface|enum|boundary|entity)\\s+\\w+\\S+", RegexOptions.Multiline | RegexOptions.IgnoreCase), (Colors.Green, false ) },
+            {new Regex("^\\s*(participant|actor|database|component|class|interface|enum|boundary|entity)\\s+\\w+\\S+", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), (Colors.Green, false ) },
 
-               {new Regex("(\\:.+)"), (Colors.Firebrick, true) }
+               {new Regex("(\\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, true) }
         };
 
-        private Regex brackets = new Regex("(\\{|\\})");
-        private Regex notes = new Regex("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\\\"(?<text>[\\w\\W]+)\\\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)[.\\s\\S\\W\\r\\n]*end note| as (?<alias>\\w+)[.\\s\\S\\W\\r\\n]*end note)");
-        private Regex parenthesies = new Regex("(\\(|\\))");
+        private static Regex brackets = new Regex("(\\{|\\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex notes = new Regex("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" +as +(?<alias>\\w+))|(?<placement>\\w+) +of +(?<target>\\w+)[.\\s\\S\\W\\r\\n]*end note| +as +(?<alias>\\\\w+)[.\\s\\S\\W\\r\\n]*end note)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex parenthesies = new Regex("(\\(|\\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public void FormatText(string text, FormattedText formattedText)
         {
@@ -36,8 +36,6 @@ namespace PlantUMLEditor.Controls
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
-                    Debug.WriteLine(m.Value);
-
                     formattedText.SetForegroundBrush(new SolidColorBrush(item.Value.Item1), m.Index, m.Length);
                     if (item.Value.Item2)
                     {

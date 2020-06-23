@@ -15,7 +15,7 @@ namespace PlantUML
 
         private static Regex _component = new Regex("^(?:(?:(?:component |database |queue ) *(?<name>[\\w]+))|(?:\\[(?<name>[\\w ]+)\\])) *(?:\\[(?<description>[\\s\\w]+)\\])*(?: *as +(?<alias>[\\w]+))* *(?<color>#[\\w]+)*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex _interface = new Regex("^(\\(\\)|interface)\\s+\\\"*((?<name>[\\w \\\\]+)\\\"*(\\s+as\\s+(?<alias>[\\w]+))|(?<name>[\\w \\\\]+)\\\"*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static Regex _packageRegex = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder) +\\\"*(?<name>[\\w ]+)*\\\"* *\\{", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex _packageRegex = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder|together) +\\\"*(?<name>[\\w ]+)*\\\"* *\\{", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex _title = new Regex("^title (?<title>.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex composition = new Regex("^\\[*(?<left>[\\w ]+)\\]* +(?<arrow>[\\<\\-\\(\\)o\\[\\]\\#]+(?<direction>[\\w]+)*[\\->\\(\\)o\\[\\]\\#]+) +\\[*(?<right>[\\w ]+)\\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 

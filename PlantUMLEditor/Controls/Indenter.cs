@@ -14,14 +14,14 @@ namespace PlantUMLEditor.Controls
 {
     internal class Indenter
     {
-        private Regex newLineAfter = new Regex("participant|actor|database|component|class|interface|entity", RegexOptions.Compiled);
-        private Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        private static Regex newLineAfter = new Regex("note.+|end +note|\\}", RegexOptions.Compiled);
+        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
-        private Regex reg = new Regex("\n");
-        private Regex tab = new Regex("^(\\{\\w+\\}|alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
-        private Regex tab2 = new Regex("^\\s*(class|interface|package|enum)[ \\.\\w+]+\\{", RegexOptions.Compiled);
-        private Regex tabReset = new Regex("^else\\s?.*", RegexOptions.Compiled);
-        private Regex tabStop = new Regex("^(\\}|end(?! note))", RegexOptions.Compiled);
+        private static Regex reg = new Regex("\n");
+        private static Regex tab = new Regex("^(\\{\\w+\\}|alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
+        private static Regex tab2 = new Regex("^\\s*(class|interface|package|enum|together)[ \\.\\w+]+\\{", RegexOptions.Compiled);
+        private static Regex tabReset = new Regex("^else\\s?.*", RegexOptions.Compiled);
+        private static Regex tabStop = new Regex("^(\\}|end(?! note))", RegexOptions.Compiled);
 
         private int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {
@@ -103,7 +103,7 @@ namespace PlantUMLEditor.Controls
                     StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))
                     sb.AppendLine();
 
-                if (!string.IsNullOrWhiteSpace(oldLine) && newLineAfter.IsMatch(oldLine) && !newLineAfter.IsMatch(lines[x]))
+                if (!string.IsNullOrWhiteSpace(oldLine) && newLineAfter.IsMatch(oldLine))
                 {
                     sb.AppendLine();
                 }
