@@ -21,8 +21,6 @@
 
             <MenuItem Header="New Folder" Command="{Binding NewFolderCommand}"></MenuItem>
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
-
-       
         </ContextMenu>
         <ContextMenu x:Key="FileMenu">
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
@@ -70,6 +68,7 @@
                                               UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                             DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
+                                                 CaretBrush="Green"
                             AcceptsReturn="True"  AcceptsTab="True"
                                FontFamily="Calibri" FontSize="14">
                             <localControls:MyTextBox.PopupControl>

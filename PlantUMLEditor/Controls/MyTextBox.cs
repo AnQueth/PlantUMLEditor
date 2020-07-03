@@ -791,13 +791,22 @@ namespace PlantUMLEditor.Controls
 
             try
             {
-                int end = 0;
-                int start = this.GetCharacterIndexFromLineIndex(this.GetFirstVisibleLineIndex());
-                if (this.GetLastVisibleLineIndex() == -1)
-                    end = int.MaxValue;
-                else
-                    end = this.GetCharacterIndexFromLineIndex(this.GetLastVisibleLineIndex());
+                int end = int.MaxValue;
+                int sl = this.GetFirstVisibleLineIndex();
 
+                int start = 0;
+                try
+                {
+                    start = this.GetCharacterIndexFromLineIndex(sl);
+                }
+                catch { }
+                try
+                {
+                    if (this.GetLastVisibleLineIndex() != -1)
+
+                        end = this.GetCharacterIndexFromLineIndex(this.GetLastVisibleLineIndex());
+                }
+                catch { }
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
                 lock (_found)
