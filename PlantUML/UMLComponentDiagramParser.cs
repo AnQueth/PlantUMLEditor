@@ -99,7 +99,7 @@ namespace PlantUML
                     }
                     continue;
                 }
-                if (line.StartsWith("participant") || line.StartsWith("actor"))
+                if (line.StartsWith("participant"))
                     return null;
 
                 UMLDataType DataType = null;
