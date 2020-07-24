@@ -38,7 +38,7 @@ namespace PlantUMLEditor.Models
             Documents = new UMLModels.UMLDocumentCollection();
             _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
             _openDirectoryService = openDirectoryService;
-            OpenDirectoryCommand = new DelegateCommand(OpenDirectoryHandler);
+            OpenDirectoryCommand = new DelegateCommand<bool?>(OpenDirectoryHandler);
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
             Folder = new TreeViewModel(Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
@@ -147,7 +147,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public DelegateCommand OpenDirectoryCommand
+        public ICommand OpenDirectoryCommand
         {
             get;
         }
@@ -392,8 +392,13 @@ namespace PlantUMLEditor.Models
             return null;
         }
 
-        private string GetWorkingFolder()
+        private string GetWorkingFolder(bool useAppSettingIfFound = false)
         {
+            if (useAppSettingIfFound)
+            {
+                _folderBase = AppSettings.Default.WorkingDir;
+            }
+
             if (string.IsNullOrEmpty(_folderBase))
             {
                 string dir = _openDirectoryService.GetDirectory();
@@ -546,14 +551,17 @@ namespace PlantUMLEditor.Models
             this.CurrentDocument = d;
         }
 
-        private async void OpenDirectoryHandler()
+        private async void OpenDirectoryHandler(bool? useAppSettings = false)
         {
             _folderBase = null;
             await SaveAll();
 
-            string dir = GetWorkingFolder();
+            string dir = GetWorkingFolder(useAppSettings.GetValueOrDefault());
             if (string.IsNullOrEmpty(dir))
                 return;
+
+            AppSettings.Default.WorkingDir = dir;
+            AppSettings.Default.Save();
 
             CreateNewComponentDiagram.RaiseCanExecuteChanged();
             CreateNewClassDiagram.RaiseCanExecuteChanged();
@@ -614,11 +622,6 @@ namespace PlantUMLEditor.Models
             _fileSave.WaitOne();
             try
             {
-                if (string.IsNullOrEmpty(_metaDataFile))
-                {
-                    GetWorkingFolder();
-                }
-
                 if (string.IsNullOrEmpty(_metaDataFile))
                 {
                     return;
@@ -755,6 +758,11 @@ namespace PlantUMLEditor.Models
                 return;
 
             ScanDirectory(dir);
+        }
+
+        public void LoadedUI()
+        {
+            OpenDirectoryHandler(true);
         }
 
         public async void TreeItemClicked(object sender, MouseButtonEventArgs e)

@@ -49,6 +49,7 @@ namespace PlantUMLEditor.Controls
         private string findText;
         private string replaceText;
 
+        private bool useRegex;
         public static DependencyProperty PopupControlProperty = DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
 
         public MyTextBox()
@@ -139,6 +140,19 @@ namespace PlantUMLEditor.Controls
                 _selectedFindResult = value;
                 if (value != null)
                     GotoLine(value.LineNumber);
+            }
+        }
+
+        public bool UseRegex
+        {
+            get
+            {
+                return useRegex;
+            }
+            set
+            {
+                useRegex = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseRegex)));
             }
         }
 
@@ -261,9 +275,6 @@ namespace PlantUMLEditor.Controls
         {
             int k = (int)(Key)state;
 
-            if (k != 18 && (k < 34 || k > 69))
-                return;
-
             Dispatcher.Invoke(() =>
             {
                 var rec = GetRectFromCharacterIndex(CaretIndex);
@@ -273,6 +284,7 @@ namespace PlantUMLEditor.Controls
                 string text = GetLineText(line);
 
                 int c = GetCharacterIndexFromLineIndex(line);
+
                 int where = CaretIndex;
                 string word = "";
                 int typedLength = 0;
@@ -295,7 +307,7 @@ namespace PlantUMLEditor.Controls
                         word += chars.Pop();
                 }
 
-                _bindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word, where, typedLength, (Key)state));
+                _bindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word, where, typedLength, (Key)state, CaretIndex - c));
             });
         }
 
@@ -353,34 +365,60 @@ namespace PlantUMLEditor.Controls
             if (_autoComplete.IsPopupVisible)
                 return;
 
+            if (text.Length < 3)
+                return;
+
             string t = this.Text;
 
             try
             {
                 FindResults.Clear();
-
-                if (!text.StartsWith("("))
-                    text = "(" + text;
-                if (!text.EndsWith(")"))
-                    text = text + ")";
-
-                Regex r = new Regex(text);
-                var m = r.Matches(t);
-
-                foreach (Group item in m)
+                if (useRegex)
                 {
-                    lock (_found)
-                        _found.Add((item.Index, item.Length));
-                    int l = GetLineIndexFromCharacterIndex(item.Index);
+                    if (!text.StartsWith("("))
+                        text = "(" + text;
+                    if (!text.EndsWith(")"))
+                        text = text + ")";
 
-                    string line = GetLineText(l);
-                    string reps = "";
-                    if (!string.IsNullOrEmpty(ReplaceText))
+                    Regex r = new Regex(text, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+                    var m = r.Matches(t);
+
+                    foreach (Group item in m)
                     {
-                        reps = r.Replace(line, ReplaceText).Trim();
-                    }
+                        lock (_found)
+                            _found.Add((item.Index, item.Length));
+                        int l = GetLineIndexFromCharacterIndex(item.Index);
 
-                    FindResults.Add(new FindResult(item.Index, line.Trim(), l + 1, reps));
+                        string line = GetLineText(l);
+                        string reps = "";
+                        if (!string.IsNullOrEmpty(ReplaceText))
+                        {
+                            reps = r.Replace(line, ReplaceText).Trim();
+                        }
+
+                        FindResults.Add(new FindResult(item.Index, line.Trim(), l + 1, reps));
+                    }
+                }
+                else
+                {
+                    var p = t.IndexOf(text);
+                    while (p != -1)
+                    {
+                        _found.Add((p, text.Length));
+                        int l = GetLineIndexFromCharacterIndex(p);
+
+                        string line = GetLineText(l);
+
+                        string reps = "";
+                        if (!string.IsNullOrEmpty(ReplaceText))
+                        {
+                            reps = line.Replace(text, ReplaceText);
+                        }
+
+                        FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
+
+                        p = t.IndexOf(text, p + 1);
+                    }
                 }
             }
             catch
@@ -457,7 +495,7 @@ namespace PlantUMLEditor.Controls
             lock (_found)
             { _found.Clear(); }
 
-            if (e.Key == Key.Tab)
+            if (!this._autoComplete.IsPopupVisible && e.Key == Key.Tab)
             {
                 e.Handled = true;
                 this.InsertText("    ");
@@ -500,16 +538,16 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            if (_autoComplete.IsPopupVisible && (e.Key == Key.Space || e.Key == Key.Enter))
+            if (_autoComplete.IsPopupVisible && (e.Key == Key.Tab || e.Key == Key.Enter))
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
-                if (e.Key == Key.Space)
+                if (e.Key == Key.Tab)
                 {
-                    //this.InsertText(" ");
+                    this.InsertText(" ");
 
-                    //e.Handled = true;
-                    //return;
+                    e.Handled = true;
+                    return;
                 }
             }
             if (e.Key == Key.Escape)
@@ -626,7 +664,7 @@ namespace PlantUMLEditor.Controls
                 }
                 _selectionHandler = new Timer((o) =>
                 {
-                    Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText, true); }));
+                    Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText.Trim(), true); }));
                 }, null, 250, Timeout.Infinite);
 
                 this.FindText = this.SelectedText;

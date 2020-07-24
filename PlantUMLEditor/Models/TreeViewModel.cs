@@ -2,7 +2,9 @@
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Windows;
 using System.Windows.Forms;
+using MessageBox = System.Windows.MessageBox;
 
 namespace PlantUMLEditor.Models
 {
@@ -10,6 +12,7 @@ namespace PlantUMLEditor.Models
     {
         private readonly IFolderChangeNotifactions _folderChangeNotifactions;
         private bool _isRenaming = false;
+        private Visibility _isVisible;
         private string _name;
         private string _rename;
 
@@ -66,6 +69,18 @@ namespace PlantUMLEditor.Models
 
         public bool IsSelected { get; set; }
 
+        public Visibility IsVisible
+        {
+            get
+            {
+                return _isVisible;
+            }
+            set
+            {
+                SetValue(ref _isVisible, value);
+            }
+        }
+
         public string Name
         {
             get
@@ -96,6 +111,14 @@ namespace PlantUMLEditor.Models
 
         private void DeleteCommandHandler()
         {
+            if (MessageBoxResult.No == MessageBox.Show(string.Format("Delete {0}", this.FullPath), "Delete?", MessageBoxButton.YesNo))
+                return;
+
+            if (File.Exists(this.FullPath))
+            {
+                File.Delete(this.FullPath);
+            }
+            this.IsVisible = Visibility.Collapsed;
         }
 
         private void NewFolderHandler()

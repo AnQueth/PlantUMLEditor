@@ -11,12 +11,13 @@ namespace PlantUMLEditor.Models
         public int CaretPosition;
         public int LineNumber;
         public Rect Position;
+        public int PositionInLine;
         public string Text;
         public int WordLength;
 
         public string WordStart;
 
-        public AutoCompleteParameters(Rect rec, string text, int line, string word, int where, int typedLength, System.Windows.Input.Key k)
+        public AutoCompleteParameters(Rect rec, string text, int line, string word, int where, int typedLength, System.Windows.Input.Key k, int positionInLine)
         {
             this.Position = rec;
             this.Text = text;
@@ -25,6 +26,7 @@ namespace PlantUMLEditor.Models
             this.CaretPosition = where;
             this.WordLength = typedLength;
             this.Key = k;
+            this.PositionInLine = positionInLine;
         }
 
         public Key Key { get; }

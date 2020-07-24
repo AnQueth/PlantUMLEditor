@@ -104,6 +104,9 @@ namespace PlantUMLEditor.Models
 
             if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out connection))
             {
+                if (text.Length - 2 > autoCompleteParameters.PositionInLine && autoCompleteParameters.PositionInLine > text.IndexOf(":"))
+                    return;
+
                 if (connection.To != null && connection.To.DataTypeId != null)
                 {
                     foreach (var t in types[connection.To.DataTypeId])

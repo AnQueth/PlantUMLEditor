@@ -18,6 +18,7 @@ namespace PlantUMLEditor.Controls
         private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static Regex reg = new Regex("\n");
+        private static Regex removeSpaces = new Regex(" {2,}", RegexOptions.Compiled);
         private static Regex tab = new Regex("^(\\{\\w+\\}|alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
         private static Regex tab2 = new Regex("^\\s*(class|interface|package|enum|together)[ \\.\\w+]+\\{", RegexOptions.Compiled);
         private static Regex tabReset = new Regex("^else\\s?.*", RegexOptions.Compiled);
@@ -36,6 +37,31 @@ namespace PlantUMLEditor.Controls
 
             //    return indentLevel;
             //}
+
+            line = removeSpaces.Replace(line, " ");
+
+            ReadOnlySpan<char> r = line.AsSpan();
+
+            StringBuilder sbNewLine = new StringBuilder(line.Length);
+            int starts = 0;
+            foreach (var d in r)
+            {
+                if (d == '<')
+                {
+                    starts++;
+                }
+                else if (d == '>')
+                    starts--;
+
+                if (starts > 0 && d == ' ')
+                {
+                }
+                else
+                {
+                    sbNewLine.Append(d);
+                }
+            }
+            line = sbNewLine.ToString();
 
             StringBuilder sbWordsSoFar = new StringBuilder();
             if (tabStop.IsMatch(line))

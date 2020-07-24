@@ -12,7 +12,15 @@
         Title="Aaron's Plant UML Editor" Height="850" Width="1000"
 
     xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/Images/uml.png">
+
+    <b:Interaction.Triggers>
+        <b:EventTrigger EventName="Loaded">
+            <b:CallMethodAction MethodName="LoadedUI" TargetObject="{Binding}"></b:CallMethodAction>
+        </b:EventTrigger>
+    </b:Interaction.Triggers>
+
     <Window.Resources>
+
         <ContextMenu x:Key="FolderMenu">
             <MenuItem Header="New Class Diagram" Command="{Binding DataContext.CreateNewClassDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New Sequence Diagram" Command="{Binding DataContext.CreateNewSequenceDiagram , RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
@@ -107,6 +115,7 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="200" ></ColumnDefinition>
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
                                     <ColumnDefinition Width="200" ></ColumnDefinition>
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                                     <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -132,12 +141,13 @@
                                         </b:KeyTrigger>
                                     </b:Interaction.Triggers>
                                 </TextBox>
-                                <TextBox Grid.Row="0"  Margin="{DynamicResource TabHeaderMargin}"   Grid.Column="2" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
                                 <Button Grid.Column="1" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding FindCommand, ElementName=Editor}" Content="Find" ></Button>
-                                <Button Grid.Column="3"  Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ReplaceCommand, ElementName=Editor}" Content="Replace"  ></Button>
-                                <Button Grid.Column="4" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ClearCommand, ElementName=Editor}" Content="Clear"  ></Button>
+                                <CheckBox Grid.Column="2" Margin="{DynamicResource TabHeaderMargin}" IsChecked="{Binding UseRegex, ElementName=Editor}">Use Regex</CheckBox>
+                                <TextBox Grid.Row="0"  Margin="{DynamicResource TabHeaderMargin}"   Grid.Column="3" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                                <Button Grid.Column="4"  Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ReplaceCommand, ElementName=Editor}" Content="Replace"  ></Button>
+                                <Button Grid.Column="5" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ClearCommand, ElementName=Editor}" Content="Clear"  ></Button>
 
-                                <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="6" MaxHeight="300"
+                                <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="7" MaxHeight="300"
                                  AutoGenerateColumns="False"     SelectedItem="{Binding SelectedFindResult, Mode=TwoWay, ElementName=Editor}">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn  Header="Line"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
@@ -154,7 +164,7 @@
 
         <HierarchicalDataTemplate  DataType="{x:Type  models:TreeViewModel}" ItemsSource="{Binding Children}">
 
-            <Grid>
+            <Grid Visibility="{Binding IsVisible}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto">
                     </ColumnDefinition>
