@@ -13,7 +13,7 @@ namespace PlantUML
     {
         private const string PACKAGE = "name";
 
-        private static Regex _component = new Regex("^(?:(?:(?:component |database |queue ) *(?<name>[\\w]+))|(?:\\[(?<name>[\\w ]+)\\])) *(?:\\[(?<description>[\\s\\w]+)\\])*(?: *as +(?<alias>[\\w]+))* *(?<color>#[\\w]+)*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex _component = new Regex("^(?:(?:(?:component |database |queue |actor ) *(?<name>[\\w]+))|(?:\\[(?<name>[\\w ]+)\\])) *(?:\\[(?<description>[\\s\\w]+)\\])*(?: *as +(?<alias>[\\w]+))* *(?<color>#[\\w]+)*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex _interface = new Regex("^(\\(\\)|interface)\\s+\\\"*((?<name>[\\w \\\\]+)\\\"*(\\s+as\\s+(?<alias>[\\w]+))|(?<name>[\\w \\\\]+)\\\"*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex _packageRegex = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder|together) +\\\"*(?<name>[\\w ]+)*\\\"* *\\{", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex _title = new Regex("^title (?<title>.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -64,8 +64,11 @@ namespace PlantUML
             packagesStack.Push(defaultPackage);
             var currentPackage = defaultPackage;
 
+            int linenumber = 0;
+
             while ((line = await sr.ReadLineAsync()) != null)
             {
+                linenumber++;
                 line = line.Trim();
 
                 if (line == "@startuml")
@@ -126,10 +129,11 @@ namespace PlantUML
                     packages.Push(Clean(s.Groups[PACKAGE].Value));
                     brackets.Push(PACKAGE);
 
+          
                     var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
                     currentPackage.Children.Add(c);
                     currentPackage = c;
-
+                    aliases.Add(Clean(s.Groups[PACKAGE].Value), c);
                     packagesStack.Push(c);
 
                     continue;
@@ -142,7 +146,7 @@ namespace PlantUML
 
                     string package = GetPackage(packages);
 
-                    DataType = new UMLComponent(package, Clean(g.Groups["name"].Value));
+                    DataType = new UMLComponent(package, Clean(g.Groups["name"].Value), g.Groups["alias"].Value);
 
                     aliases.TryAdd(g.Groups["alias"].Value, DataType);
 
@@ -172,17 +176,28 @@ namespace PlantUML
                         string left = m.Groups["left"].Value.Trim();
                         string right = m.Groups["right"].Value.Trim();
 
-                        var propType = d.Entities.Find(p => p.Name == left);
-                        if (propType == null)
-                            propType = aliases[left];
-
+                        var leftComponent = d.Entities.Find(p => p.Name == left);
+                        if (leftComponent == null)
+                        {
+                            if (aliases.ContainsKey(left))
+                                leftComponent = aliases[left];
+                            else
+                                leftComponent = null;
+                        }
                         var fromType = d.Entities.Find(p => p.Name == right);
                         if (fromType == null)
-                            fromType = aliases[right];
-
+                        {
+                            if (aliases.ContainsKey(right))
+                                fromType = aliases[right];
+                            else
+                                fromType = null;
+                        }
                         string arrow = m.Groups["arrow"].Value.Trim();
-
-                        if (propType is UMLComponent c)
+                        if (leftComponent == null || fromType == null)
+                        {
+                            d.Errors.Add((line, linenumber));
+                        }
+                        else if (leftComponent is UMLComponent c)
                         {
                             if (arrow.EndsWith("o"))
                             {

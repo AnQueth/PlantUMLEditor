@@ -12,6 +12,7 @@ namespace UMLModels
             Title = title;
 
             FileName = fileName;
+            Errors = new List<(string Line, int LineNumber)>();
         }
 
         public List<UMLDataType> Entities
@@ -27,6 +28,7 @@ namespace UMLModels
         }
 
         public UMLPackage Package { get; set; }
+        public List<(string Line, int LineNumber)> Errors { get; set; }
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {

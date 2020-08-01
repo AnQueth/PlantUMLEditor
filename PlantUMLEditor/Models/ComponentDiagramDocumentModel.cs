@@ -41,7 +41,8 @@ namespace PlantUMLEditor.Models
                         var z = await PlantUML.UMLComponentDiagramParser.ReadString(text);
                         if (z != null)
                             lock (_locker)
-                                _autoCompleteItems = z.Entities.Select(p => p.Name);
+                                _autoCompleteItems = z.Entities.Cast<UMLComponent>()
+                                .Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias);
                     }
                 }
             });

@@ -147,6 +147,12 @@ namespace PlantUMLEditor.Models
                     string l = p.StandardOutput.ReadToEnd();
                     string e = p.StandardError.ReadToEnd();
 
+                    if(!string.IsNullOrEmpty(e))
+                    {
+                        MessageBox.Show(e);
+                        return;
+                    }
+
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         Image = new BitmapImage(new Uri(fn));

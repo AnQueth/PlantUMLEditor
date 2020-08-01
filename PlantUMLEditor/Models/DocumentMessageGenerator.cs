@@ -24,6 +24,19 @@ namespace PlantUMLEditor.Models
 
             foreach (var doc in this.documents)
             {
+                if(doc is UMLComponentDiagram f)
+                {
+                    foreach (var e in f.Errors) {
+                        newMessages.Add(new DocumentMessage()
+                        {
+                            FileName = f.FileName,
+                            Text = e.Line,
+                            LineNumber = e.LineNumber,
+
+                            Warning = false
+                        });
+                    }
+                }
                 if (doc is UMLSequenceDiagram o)
                 {
                     var items = from z in o.LifeLines

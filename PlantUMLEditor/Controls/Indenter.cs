@@ -14,7 +14,9 @@ namespace PlantUMLEditor.Controls
 {
     internal class Indenter
     {
-        private static Regex newLineAfter = new Regex("note.+|end +note|\\}", RegexOptions.Compiled);
+        private static Regex newLineBefore = new Regex("note.+", RegexOptions.Compiled);
+
+        private static Regex newLineAfter = new Regex("note.+|end +note", RegexOptions.Compiled);
         private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static Regex reg = new Regex("\n");
@@ -129,8 +131,10 @@ namespace PlantUMLEditor.Controls
                     StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))
                     sb.AppendLine();
 
-                if (!string.IsNullOrWhiteSpace(oldLine) && newLineAfter.IsMatch(oldLine))
+                if (!string.IsNullOrWhiteSpace(oldLine) && 
+                    (newLineAfter.IsMatch(oldLine) || newLineBefore.IsMatch(lines[x].Trim())))
                 {
+                    
                     sb.AppendLine();
                 }
                 oldLine = lines[x].Trim();

@@ -365,6 +365,9 @@ namespace PlantUMLEditor.Controls
             if (_autoComplete.IsPopupVisible)
                 return;
 
+            if (string.IsNullOrEmpty(text))
+                return;
+
             if (text.Length < 3)
                 return;
 
@@ -492,6 +495,8 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
         {
+   
+
             lock (_found)
             { _found.Clear(); }
 
@@ -503,59 +508,62 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            if (e.KeyboardDevice.IsKeyDown(Key.S) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            else if (e.KeyboardDevice.IsKeyDown(Key.S) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 _bindedDocument.Save();
                 e.Handled = true;
                 return;
             }
-            if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            else if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 ShowFind();
                 e.Handled = true;
                 return;
             }
-            if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            else if(e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 FindText = this.SelectedText.Trim();
                 ShowFind();
                 e.Handled = true;
                 return;
             }
-            if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            else if(e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 Indenter i = new Indenter();
+                int pos = this.CaretIndex;
+
                 this.Text = i.Process(this.TextRead());
+                this.CaretIndex = pos;
                 this._autoComplete.CloseAutoComplete();
 
                 e.Handled = true;
                 return;
             }
-            if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up)
+            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up)
                   /*  && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))*/)
             {
                 _autoComplete.SendEvent(e);
                 e.Handled = true;
                 return;
             }
-            if (_autoComplete.IsPopupVisible && (e.Key == Key.Tab || e.Key == Key.Enter))
+            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Tab || e.Key == Key.Enter || e.Key == Key.Space))
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
-                if (e.Key == Key.Tab)
-                {
-                    this.InsertText(" ");
+                //if (e.Key == Key.Tab || e.Key == Key.Space)
+                //{
+                //    this.InsertText(" ");
 
-                    e.Handled = true;
-                    return;
-                }
+                //    e.Handled = true;
+                //    return;
+                //}
             }
-            if (e.Key == Key.Escape)
+            else if (e.Key == Key.Escape)
             {
                 _autoComplete.CloseAutoComplete();
                 _found.Clear();
             }
-            if (e.Key == Key.Enter)
+            else if (e.Key == Key.Enter)
             {
                 Indenter i = new Indenter();
                 int indent = i.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex));
@@ -594,9 +602,12 @@ namespace PlantUMLEditor.Controls
                 if (e.Key == Key.Left || e.Key == Key.Right)
                     this._autoComplete.CloseAutoComplete();
             }
-            else if (e.Key != Key.Enter && e.SystemKey == Key.None
+            else if ((e.Key != Key.Enter && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl ) 
+                && e.SystemKey == Key.None
                 && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
+             
+
                 if (_timer != null)
                     _timer.Dispose();
 
@@ -833,18 +844,8 @@ namespace PlantUMLEditor.Controls
                 int sl = this.GetFirstVisibleLineIndex();
 
                 int start = 0;
-                try
-                {
-                    start = this.GetCharacterIndexFromLineIndex(sl);
-                }
-                catch { }
-                try
-                {
-                    if (this.GetLastVisibleLineIndex() != -1)
-
-                        end = this.GetCharacterIndexFromLineIndex(this.GetLastVisibleLineIndex());
-                }
-                catch { }
+               
+           
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
                 lock (_found)
@@ -861,9 +862,9 @@ namespace PlantUMLEditor.Controls
                 if (_braces.selectionStart != 0 && _braces.match != 0)
                 {
                     var g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.selectionStart, 1);
-                    col.DrawGeometry(Brushes.DarkRed, null, g);
+                    col.DrawGeometry(Brushes.LightBlue, null, g);
                     g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.match, 1);
-                    col.DrawGeometry(Brushes.DarkRed, null, g);
+                    col.DrawGeometry(Brushes.LightBlue, null, g);
                 }
 
                 foreach (var item in _errors)
