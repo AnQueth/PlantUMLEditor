@@ -13,7 +13,7 @@ namespace PlantUML
     {
         private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database|boundary|entity|collections)\\s+\\\"*(?<name>[\\w\\.]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*", RegexOptions.Compiled);
 
-        private static Regex lineConnectionRegex = new Regex("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s+([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s+([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
+        private static Regex lineConnectionRegex = new Regex("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
         private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static string Clean(string name)
