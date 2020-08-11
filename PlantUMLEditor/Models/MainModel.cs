@@ -628,16 +628,16 @@ namespace PlantUMLEditor.Models
                 }
 
                 List<DocumentModel> c = new List<DocumentModel>();
-                List<DocumentModel> s = new List<DocumentModel>();
-                List<DocumentModel> cs = new List<DocumentModel>();
+               
                 lock (_docLock)
                 {
-                    c = OpenDocuments.Where(p => p is ClassDiagramDocumentModel).ToList();
-                    s = OpenDocuments.Where(p => p is SequenceDiagramDocumentModel).ToList();
-                    cs = OpenDocuments.Where(p => p is ComponentDiagramDocumentModel).ToList();
+                    c = OpenDocuments.Where(p => p is ClassDiagramDocumentModel ||
+                    p is SequenceDiagramDocumentModel || 
+                    p is ComponentDiagramDocumentModel).ToList();
+ 
                 }
 
-                foreach (var file in c.Union(s).Union(cs))
+                foreach (var file in c )
                 {
                     await Save(file);
                 }

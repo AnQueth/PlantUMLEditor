@@ -19,7 +19,7 @@ namespace PlantUML
 
         private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{", RegexOptions.Compiled);
 
-        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\(\\s*(?<params>((?<pt>[\\w\\[\\]]+?|[\\w+\\<.*\\>]+?)\\s+(?<pn>\\w+))\\s*,*\\s*)*\\)", RegexOptions.Compiled);
+        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
         private static Regex _packageRegex = new Regex("(package|together) \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{", RegexOptions.Compiled);
 
@@ -299,7 +299,17 @@ namespace PlantUML
             {
                 UMLVisibility visibility = ReadVisibility(methodMatch.Groups["visibility"].Value);
                 string name = methodMatch.Groups["name"].Value;
-                string returntype = methodMatch.Groups["type"].Value;
+
+                string returntype = string.Empty;
+                for(var x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
+                {
+                    if (x != 0)
+                        returntype += " ";
+                    returntype += methodMatch.Groups["type"].Captures[x].Value;
+                }
+                returntype = returntype.Trim();
+
+              
                 string modifier = methodMatch.Groups["modifier"].Value;
 
                 UMLDataType returnType;
@@ -316,27 +326,69 @@ namespace PlantUML
 
                 List<UMLParameter> pars = new List<UMLParameter>();
 
-                for (int x = 0; x < methodMatch.Groups["params"].Captures.Count; x++)
+                Stack<char> p = new Stack<char>();
+                StringBuilder pname = new StringBuilder();
+                StringBuilder sbtype = new StringBuilder();
+                bool inName = false;
+                string v = methodMatch.Groups["params"].Value;
+                for(var x =0; x < v.Length; x++)
                 {
-                    string pt = methodMatch.Groups["pt"].Captures[x].Value;
-                    string pn = methodMatch.Groups["pn"].Captures[x].Value;
+                    char c = v[x];
+                    if (c == '<')
+                        p.Push(c);
+                    else if (c == '>')
+                        p.Pop();
 
-                    Tuple<ListTypes, string> p = CreateFrom(pt);
+                 
 
-                    UMLDataType paramType;
-
-                    if (aliases.ContainsKey(p.Item2))
+                    if(c == ' ' && p.Count == 0)
                     {
-                        paramType = aliases[p.Item2];
+                        if (!inName)
+                        {
+                            inName = true;
+                        }
+                    }
+
+                    else if((c == ',' || x == v.Length - 1) && p.Count == 0)
+                    {
+                        if (c != ',')
+                            pname.Append(c);
+
+                        Tuple<ListTypes, string> d = CreateFrom(sbtype.ToString().Trim());
+
+                        UMLDataType paramType;
+
+                        if (aliases.ContainsKey(d.Item2))
+                        {
+                            paramType = aliases[d.Item2];
+                        }
+                        else
+                        {
+                            paramType = new UMLDataType(d.Item2, string.Empty);
+                            aliases.Add(d.Item2, paramType);
+                        }
+
+                        pars.Add(new UMLParameter(pname.ToString().Trim(), paramType,d.Item1));
+
+                        sbtype.Clear();
+                        pname.Clear();
+                        inName = false;
+                        x++;
+                    }
+
+                   else if (inName)
+                    {
+                        pname.Append(c);
                     }
                     else
                     {
-                        paramType = new UMLDataType(p.Item2, string.Empty);
-                        aliases.Add(p.Item2, paramType);
+                        sbtype.Append(c);
                     }
 
-                    pars.Add(new UMLParameter(pn, paramType, p.Item1));
+
                 }
+
+               
 
                 DataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
                 {

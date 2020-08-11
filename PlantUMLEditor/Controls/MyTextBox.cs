@@ -869,9 +869,9 @@ namespace PlantUMLEditor.Controls
 
                 foreach (var item in _errors)
                 {
-                    try
+                    try 
                     {
-                        var l = GetCharacterIndexFromLineIndex(item.line - 1);
+                         var l = GetCharacterIndexFromLineIndex(item.line - 1);
                         var len = GetLineLength(item.line - 1);
                         if (l >= start && l <= end)
                         {

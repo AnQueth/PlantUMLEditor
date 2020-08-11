@@ -109,7 +109,10 @@
                         </localControls:MyTextBox>
 
                         <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
-                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black" Width="{Binding Width, ElementName=Editor}">
+                      
+                            
+                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black" 
+                                Width="{Binding Width, ElementName=Editor}">
 
                             <Grid Width="{Binding ActualWidth, ElementName=Editor}">
                                 <Grid.ColumnDefinitions>
