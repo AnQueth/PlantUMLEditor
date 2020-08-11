@@ -146,6 +146,8 @@ namespace PlantUML
                 {
                     if (item is UMLInterface)
                         writer.Write("interface ");
+                    else if (item is UMLEnum)
+                        writer.Write("enum ");
                     else
                         writer.Write("class ");
 

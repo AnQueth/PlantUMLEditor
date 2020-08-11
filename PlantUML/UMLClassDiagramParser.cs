@@ -417,6 +417,11 @@ namespace PlantUML
 
                 DataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.Item1));
             }
+            else
+            {
+                DataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty), 
+                    UMLVisibility.None,  ListTypes.None));
+            }
         }
     }
 }
