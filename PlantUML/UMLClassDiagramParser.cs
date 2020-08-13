@@ -84,9 +84,11 @@ namespace PlantUML
             d.Package = defaultPackage;
             packagesStack.Push(defaultPackage);
             var currentPackage = defaultPackage;
-
+            int lineNumber = 0;
             while ((line = await sr.ReadLineAsync()) != null)
             {
+                lineNumber++;
+
                 line = line.Trim();
 
                 if (line == "@startuml")
@@ -237,9 +239,11 @@ namespace PlantUML
 
                 if (DataType != null && line.EndsWith("{"))
                 {
+                    DataType.LineNumber = lineNumber;
                     currentPackage.Children.Add(DataType);
                     while ((line = await sr.ReadLineAsync()) != null)
                     {
+                        lineNumber++;
                         line = line.Trim();
 
                         if (line == "}")

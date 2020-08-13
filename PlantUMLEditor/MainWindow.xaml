@@ -532,8 +532,25 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <TreeView Style="{DynamicResource TreeViewStyle1}"  Grid.Row="0" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
             </TreeView>
             <GridSplitter Grid.Row="1" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" ></GridSplitter>
-            <ListBox Grid.Row="2"  ItemsSource="{Binding DataTypes}">
-            </ListBox>
+            <ListView Grid.Row="2"  ItemsSource="{Binding DataTypes}" >
+                <b:Interaction.Triggers>
+                    <b:EventTrigger EventName="SelectionChanged">
+                        <b:CallMethodAction MethodName="GotoDataType" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
+AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
+                    </b:EventTrigger>
+                </b:Interaction.Triggers>
+                <ListView.View>
+                        <GridView  >
+                    <GridView.Columns>
+                        <GridViewColumn  Header="Namespace" DisplayMemberBinding="{Binding Item2.Namespace}"></GridViewColumn>
+                        <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Item2.Name}"></GridViewColumn>
+                    </GridView.Columns>
+              
+             
+                </GridView>
+                </ListView.View>
+            
+            </ListView>
         </Grid>
         <Grid Grid.Row="1" Grid.Column="2">
             <Grid.RowDefinitions>

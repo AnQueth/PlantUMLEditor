@@ -38,6 +38,7 @@ namespace UMLModels
         public List<UMLMethod> Methods { get; set; }
 
         public List<UMLInterface> Interfaces { get; set; }
+        public int LineNumber { get; set; }
     }
 
     public class StringDataType : UMLDataType

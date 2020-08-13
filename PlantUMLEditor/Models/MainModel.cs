@@ -3,12 +3,14 @@ using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-
+using System.Windows.Controls;
+using System.Windows.Forms.Design;
 using System.Windows.Input;
 
 using UMLModels;
@@ -17,7 +19,7 @@ namespace PlantUMLEditor.Models
 {
     public class MainModel : BindingBase, IFolderChangeNotifactions
     {
-        private readonly ObservableCollection<string> _dataTypes = new ObservableCollection<string>();
+        private readonly ObservableCollection<Tuple<string, UMLDataType>> _dataTypes = new ObservableCollection<Tuple<string, UMLDataType>>();
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly Timer _messageChecker;
         private readonly IOpenDirectoryService _openDirectoryService;
@@ -110,7 +112,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public ObservableCollection<string> DataTypes
+        public ObservableCollection<Tuple<string, UMLDataType>> DataTypes
         {
             get
             {
@@ -343,6 +345,8 @@ namespace PlantUMLEditor.Models
 
             list.RemoveAll(z => z.FileName == @new.FileName || z.Title == @new.Title);
             list.Add(@new);
+
+
         }
 
         private string GetNewFile(string fileExtension)
@@ -530,6 +534,8 @@ namespace PlantUMLEditor.Models
 
             d.GotoLineNumber(lineNumber);
 
+
+
             this.CurrentDocument = d;
         }
 
@@ -647,7 +653,7 @@ namespace PlantUMLEditor.Models
                 await UpdateDiagrams<ClassDiagramDocumentModel, UMLClassDiagram>(Documents.ClassDocuments);
                 await UpdateDiagrams<SequenceDiagramDocumentModel, UMLSequenceDiagram>(Documents.SequenceDiagrams);
                 await UpdateDiagrams<ComponentDiagramDocumentModel, UMLComponentDiagram>(Documents.ComponentDiagrams);
-
+                ProcessDataTypes();
                 foreach (var document in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
                 {
                     document.UpdateDiagram(documents.ClassDocuments);
@@ -687,10 +693,43 @@ namespace PlantUMLEditor.Models
             foreach (var seq in potentialSequenceDiagrams)
                 await discovery.TryCreateSequenceDiagram(Documents, seq);
 
+            ProcessDataTypes();
+
             foreach (var doc in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
             {
                 doc.UpdateDiagram(Documents.ClassDocuments);
+
+
             }
+        }
+
+        private void ProcessDataTypes()
+        {
+            DataTypes.Clear();
+
+            var r = (from o in Documents.ClassDocuments
+                     from z in o.DataTypes
+
+                     orderby z.Namespace descending, z.Name descending
+                     select Tuple.Create(o.FileName, z));
+
+            foreach (var item in r)
+                DataTypes.Add(item);
+
+
+
+            //var e = DataTypes.ToHashSet();
+
+
+            //var same = e.Intersect(r, new DataTypesComparer());
+            //var newstuff = r.Except(e, new DataTypesComparer());
+            //var noexist = e.Except(r, new DataTypesComparer());
+
+            //foreach (var item in noexist)
+            //    DataTypes.Remove(item);
+
+            //foreach (var item in newstuff)
+            //    DataTypes.Add(item);
         }
 
         private void ScanDirectory(string dir)
@@ -765,6 +804,15 @@ namespace PlantUMLEditor.Models
             OpenDirectoryHandler(true);
         }
 
+        public async void GotoDataType(object sender, SelectionChangedEventArgs e)
+        {
+
+            if (e.AddedItems.Count > 0)
+            {
+                var lb = (Tuple<string, UMLDataType>)e.AddedItems[0];
+                await AttemptOpeningFile(lb.Item1, lb.Item2.LineNumber);
+            }
+        }
         public async void TreeItemClicked(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 1)
