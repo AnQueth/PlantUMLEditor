@@ -149,10 +149,10 @@ namespace PlantUMLEditor.Models
 
                     if(!string.IsNullOrEmpty(e))
                     {
-                        MessageBox.Show(e);
-                        return;
+                        Debug.WriteLine(e);
+                       
                     }
-
+                    else
                     Application.Current.Dispatcher.Invoke(() =>
                     {
                         Image = new BitmapImage(new Uri(fn));

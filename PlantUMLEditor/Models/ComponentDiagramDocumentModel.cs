@@ -70,17 +70,20 @@ namespace PlantUMLEditor.Models
             base.MatchingAutoCompletes.Clear();
 
             lock (_locker)
-            {
-                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart) && !autoCompleteParameters.WordStart.EndsWith("<"))
+            {try
                 {
-                    foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
-                        base.MatchingAutoCompletes.Add(item);
+                    if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart) && !autoCompleteParameters.WordStart.EndsWith("<"))
+                    {
+                        foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
+                            base.MatchingAutoCompletes.Add(item);
+                    }
+                    else
+                    {
+                        foreach (var item in _autoCompleteItems)
+                            base.MatchingAutoCompletes.Add(item);
+                    }
                 }
-                else
-                {
-                    foreach (var item in _autoCompleteItems)
-                        base.MatchingAutoCompletes.Add(item);
-                }
+                catch { }
             }
             if (MatchingAutoCompletes.Count > 0)
                 base.ShowAutoComplete(autoCompleteParameters.Position);
