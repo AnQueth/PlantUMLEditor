@@ -1,4 +1,5 @@
-﻿using PlantUML;
+﻿using Newtonsoft.Json;
+using PlantUML;
 using Prism.Commands;
 using System;
 using System.Collections.Generic;
@@ -40,7 +41,8 @@ namespace PlantUMLEditor.Models
             Documents = new UMLModels.UMLDocumentCollection();
             _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
             _openDirectoryService = openDirectoryService;
-            OpenDirectoryCommand = new DelegateCommand<bool?>(OpenDirectoryHandler);
+            OpenDirectoryCommand = new DelegateCommand(()=> OpenDirectoryHandler());
+
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
             Folder = new TreeViewModel(Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
@@ -60,6 +62,32 @@ namespace PlantUMLEditor.Models
             {
                 JarLocation = "plantuml.jar"
             };
+
+            OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
+        }
+
+        private void OpenDocuments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            var files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
+            if (files == null)
+                files = new List<string>();
+
+            if (e.NewItems != null)
+            {
+                if (!files.Any(p => e.NewItems.Contains(p)))
+                {
+                 
+                    files.Add(((DocumentModel)e.NewItems[0]).FileName);
+                }
+            }
+            if(e.OldItems != null)
+            {
+                files.RemoveAll(p => p == ((DocumentModel)e.OldItems[0]).FileName);
+
+                
+            }
+            AppSettings.Default.Files = JsonConvert.SerializeObject(files);
+            AppSettings.Default.Save();
         }
 
         private AppConfiguration Configuration { get; }
@@ -280,6 +308,12 @@ namespace PlantUMLEditor.Models
                     var d = await doc.GetEditedDiagram();
                     d.FileName = doc.FileName;
                     diagrams.Add(d);
+                }
+
+                foreach (var doc in Documents.SequenceDiagrams)
+                {
+                    if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
+                        diagrams.Add(doc);
                 }
             }
             catch
@@ -557,7 +591,7 @@ namespace PlantUMLEditor.Models
             this.CurrentDocument = d;
         }
 
-        private async void OpenDirectoryHandler(bool? useAppSettings = false)
+        private async Task OpenDirectoryHandler(bool? useAppSettings = false)
         {
             _folderBase = null;
             await SaveAll();
@@ -634,16 +668,16 @@ namespace PlantUMLEditor.Models
                 }
 
                 List<DocumentModel> c = new List<DocumentModel>();
-               
+
                 lock (_docLock)
                 {
                     c = OpenDocuments.Where(p => p is ClassDiagramDocumentModel ||
-                    p is SequenceDiagramDocumentModel || 
+                    p is SequenceDiagramDocumentModel ||
                     p is ComponentDiagramDocumentModel).ToList();
- 
+
                 }
 
-                foreach (var file in c )
+                foreach (var file in c)
                 {
                     await Save(file);
                 }
@@ -799,9 +833,19 @@ namespace PlantUMLEditor.Models
             ScanDirectory(dir);
         }
 
-        public void LoadedUI()
+        public async void LoadedUI()
         {
-            OpenDirectoryHandler(true);
+            await OpenDirectoryHandler(true);
+
+            var files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
+            if (files == null)
+                files = new List<string>();
+
+            foreach(var file in files)
+            {
+                await AttemptOpeningFile(file);
+            }
+            
         }
 
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)

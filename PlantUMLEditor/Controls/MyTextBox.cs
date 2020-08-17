@@ -739,8 +739,12 @@ namespace PlantUMLEditor.Controls
 
             Dispatcher.BeginInvoke((Action)(() =>
             {
-                CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
-                this.ScrollToLine(lineNumber - 1);
+                try
+                {
+                    CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
+                    this.ScrollToLine(lineNumber - 1);
+                }
+                catch { }
                 Keyboard.Focus(this);
             }));
         }

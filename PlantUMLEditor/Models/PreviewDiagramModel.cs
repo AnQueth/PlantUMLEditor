@@ -15,6 +15,8 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
+
 
 namespace PlantUMLEditor.Models
 {
@@ -31,13 +33,35 @@ namespace PlantUMLEditor.Models
         {
             PrintImageCommand = new DelegateCommand(PrintImageHandler);
             CopyImage = new DelegateCommand(CopyImageHandler);
+            SaveImageCommand = new DelegateCommand(SaveImageHandler);
             Width = 1024;
             Height = 1024;
             _running = true;
             Task.Run(Runner);
         }
 
+        private void SaveImageHandler()
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = "Png files | *.png";
+            sfd.DefaultExt = ".png";
+            if( sfd.ShowDialog().GetValueOrDefault())
+            {
+                 
+                PngBitmapEncoder encoder = new PngBitmapEncoder();
+               
+             
+
+                encoder.Frames.Add(BitmapFrame.Create((BitmapImage)Image));
+
+                using (var filestream = new FileStream(sfd.FileName, FileMode.Create))
+                    encoder.Save(filestream);
+            }
+        }
+
         public DelegateCommand CopyImage { get; }
+        public DelegateCommand SaveImageCommand { get; }
+   
 
         public FixedDocument doc
         {

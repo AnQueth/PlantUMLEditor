@@ -15,7 +15,8 @@ namespace PlantUML
 
         private static Regex _component = new Regex("^(?:(?:(?:component |database |queue |actor ) *(?<name>[\\w]+))|(?:\\[(?<name>[\\w ]+)\\])) *(?:\\[(?<description>[\\s\\w]+)\\])*(?: *as +(?<alias>[\\w]+))* *(?<color>#[\\w]+)*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex _interface = new Regex("^(\\(\\)|interface)\\s+\\\"*((?<name>[\\w \\\\]+)\\\"*(\\s+as\\s+(?<alias>[\\w]+))|(?<name>[\\w \\\\]+)\\\"*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static Regex _packageRegex = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder|together) +\\\"*(?<name>[\\w ]+)*\\\"* *\\{", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex _packageRegex = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder|together) +\\\"*(?<name>[\\w ]+)*\\\"*\\s+as (?<alias>[\\w\\s]+)*\\s+\\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(3000));
+        private static Regex _packageRegex2 = new Regex("^\\s*(?<type>package|frame|node|cloud|database|node|folder|together) +\\\"*(?<name>[\\w ]+)*\\\"*\\s+\\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(3000));
         private static Regex _title = new Regex("^title (?<title>.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex composition = new Regex("^\\[*(?<left>[\\w ]+)\\]* +(?<arrow>[\\<\\-\\(\\)o\\[\\]\\#]+(?<direction>[\\w]+)*[\\->\\(\\)o\\[\\]\\#]+) +\\[*(?<right>[\\w ]+)\\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -122,7 +123,7 @@ namespace PlantUML
                         d.Title = line.Substring(6);
                     continue;
                 }
-                else if (_packageRegex.IsMatch(line))
+                else if (line.Trim().EndsWith("{") && _packageRegex.IsMatch(line)  )
                 {
                     var s = _packageRegex.Match(line);
 
@@ -138,7 +139,23 @@ namespace PlantUML
 
                     continue;
                 }
-                else if (_component.IsMatch(line))
+                else if (line.Trim().EndsWith("{") && _packageRegex2.IsMatch(line))
+                {
+                    var s = _packageRegex2.Match(line);
+
+                    packages.Push(Clean(s.Groups[PACKAGE].Value));
+                    brackets.Push(PACKAGE);
+
+
+                    var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
+                    currentPackage.Children.Add(c);
+                    currentPackage = c;
+                    aliases.Add(Clean(s.Groups[PACKAGE].Value), c);
+                    packagesStack.Push(c);
+
+                    continue;
+                }
+                else if ( _component.IsMatch(line))
                 {
                     var g = _component.Match(line);
                     if (string.IsNullOrEmpty(g.Groups["name"].Value))
