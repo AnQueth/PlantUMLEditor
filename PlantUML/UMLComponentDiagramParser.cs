@@ -134,7 +134,7 @@ namespace PlantUML
                     var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
                     currentPackage.Children.Add(c);
                     currentPackage = c;
-                    aliases.Add(Clean(s.Groups[PACKAGE].Value), c);
+                    aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
                     packagesStack.Push(c);
 
                     continue;
@@ -150,7 +150,7 @@ namespace PlantUML
                     var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
                     currentPackage.Children.Add(c);
                     currentPackage = c;
-                    aliases.Add(Clean(s.Groups[PACKAGE].Value), c);
+                    aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
                     packagesStack.Push(c);
 
                     continue;
@@ -177,7 +177,7 @@ namespace PlantUML
                     var g = _interface.Match(line);
                     string package = GetPackage(packages);
                     if (line.Length > 8)
-                        DataType = new UMLInterface(package, Clean(g.Groups["name"].Value));
+                        DataType = new UMLInterface(package, Clean(g.Groups["name"].Value), new List<UMLDataType>());
                     aliases.TryAdd(g.Groups["alias"].Value, DataType);
                     if (line.EndsWith("{"))
                     {

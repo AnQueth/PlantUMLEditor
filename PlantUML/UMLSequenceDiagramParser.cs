@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -37,22 +38,14 @@ namespace PlantUML
             {
                 foreach (var toType in types[to.DataTypeId])
                 {
-                    var innerToType = toType;
-                    while (innerToType != null)
-                    {
-                        action = innerToType.Methods.Find(p => p.Signature == actionSignature);
-                        if (action == null)
-                            action = innerToType.Properties.Find(p => p.Signature == actionSignature);
+                    action = CheckActionOnType(toType, actionSignature);
+             
 
-                        if (action != null)
-                        {
-                            innerToType = null;
-                            break;
-                        }
-                        innerToType = innerToType.Base;
-                    }
-                    if (action != null)
+                    if (action != null) {
                         break;
+                    }
+
+                  
                 }
             }
 
@@ -81,6 +74,26 @@ namespace PlantUML
                     action = new UMLUnknownAction(actionSignature);
             }
 
+            return action;
+        }
+
+        private static UMLSignature CheckActionOnType(UMLDataType toType, string actionSignature)
+        {
+            UMLSignature action = toType.Methods.Find(p => p.Signature == actionSignature);
+            if (action == null)
+                action = toType.Properties.Find(p => p.Signature == actionSignature);
+            if (action != null)
+                return action;
+
+
+            foreach (var item in toType.Bases)
+            {
+         
+
+                action = CheckActionOnType(item, actionSignature);
+                if (action != null)
+                    break;
+            }
             return action;
         }
 

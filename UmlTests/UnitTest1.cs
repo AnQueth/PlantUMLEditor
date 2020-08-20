@@ -27,7 +27,7 @@ namespace UmlTests
         [Test]
         public void ClassDiagram1()
         {
-            UMLInterface i1 = new UMLInterface("", "i1");
+            UMLInterface i1 = new UMLInterface("", "i1", new List<UMLDataType>());
             UMLClass class2 = new UMLClass("ns", true, "c1", null, i1);
 
             class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List));
@@ -47,7 +47,7 @@ namespace UmlTests
         [Test]
         public async Task ClassDiagramRead1()
         {
-            UMLInterface i1 = new UMLInterface("", "i1");
+            UMLInterface i1 = new UMLInterface("", "i1", new List<UMLDataType>());
             UMLClass class2 = new UMLClass("ns", true, "c1", null, i1);
 
             class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List));
@@ -71,7 +71,7 @@ namespace UmlTests
         [Test]
         public void SequenceDiagram1()
         {
-            UMLInterface i1 = new UMLInterface("ns1", "i1");
+            UMLInterface i1 = new UMLInterface("ns1", "i1", new List<UMLDataType>());
             UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
@@ -98,7 +98,7 @@ namespace UmlTests
         [Test]
         public void SequenceDiagram2()
         {
-            UMLInterface i1 = new UMLInterface("ns1", "i1");
+            UMLInterface i1 = new UMLInterface("ns1", "i1", new List<UMLDataType>());
             UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
@@ -154,7 +154,7 @@ namespace UmlTests
             var dgg = Enum.ToObject(typeof(WindowSize), bidMask);
             var ggg = Enum.ToObject(typeof(W2), bidMask);
 
-            UMLInterface i1 = new UMLInterface("ns1", "i1");
+            UMLInterface i1 = new UMLInterface("ns1", "i1", new List<UMLDataType>());
             UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));

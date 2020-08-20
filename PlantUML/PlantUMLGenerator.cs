@@ -15,9 +15,9 @@ namespace PlantUML
 
             writer.Write("title ");
             writer.WriteLine(classDiagram.Title);
-
-            Write(classDiagram.Package.Children, writer);
-
+            StringBuilder postWriter = new StringBuilder();
+            Write(classDiagram.Package.Children, writer, postWriter);
+            writer.Write(postWriter.ToString());
             writer.WriteLine("@enduml");
         }
 
@@ -124,8 +124,9 @@ namespace PlantUML
             }
         }
 
-        private static void Write(List<UMLDataType> children, TextWriter writer)
+        private static void Write(List<UMLDataType> children, TextWriter writer, StringBuilder postWrites)
         {
+           
             foreach (var item in children)
             {
                 if (item is UMLPackage pa)
@@ -134,7 +135,7 @@ namespace PlantUML
                     writer.Write(pa.Text);
                     writer.WriteLine("{");
 
-                    Write(pa.Children, writer);
+                    Write(pa.Children, writer, postWrites);
 
                     writer.WriteLine("}");
                 }
@@ -223,19 +224,19 @@ namespace PlantUML
                     writer.WriteLine(" } ");
                     if (item is UMLClass c)
                     {
-                        if (c.Base != null)
+                        foreach(var b in item.Bases)
                         {
-                            writer.Write(item.Name);
-                            writer.Write(" -- ");
-                            writer.WriteLine(c.Base.Name);
+                            postWrites.Append(item.Name);
+                            postWrites.Append(" -- ");
+                            postWrites.AppendLine(b.Name);
                         }
                     }
 
                     foreach (var i in item.Interfaces)
                     {
-                        writer.Write(item.Name);
-                        writer.Write(" -- ");
-                        writer.WriteLine(i.Name);
+                        postWrites.Append(item.Name);
+                        postWrites.Append(" -- ");
+                        postWrites.AppendLine(i.Name);
                     }
                     //foreach (var prop in item.Properties.Where(z => classDiagram.DataTypes.Any(p => p == z.ObjectType)))
                     //{

@@ -16,6 +16,7 @@ namespace UMLModels
             Name = name;
             Properties = new List<UMLProperty>();
             Methods = new List<UMLMethod>();
+            Bases = new List<UMLDataType>();
 
             this.Interfaces = new List<UMLInterface>();
             if (interfaces != null && interfaces.Length == 0)
@@ -32,7 +33,7 @@ namespace UMLModels
 
      
 
-        public UMLDataType Base { get; set; }
+        public List<UMLDataType> Bases { get; set; }
         public string Name { get; set; }
         public List<UMLProperty> Properties { get; set; }
         public List<UMLMethod> Methods { get; set; }

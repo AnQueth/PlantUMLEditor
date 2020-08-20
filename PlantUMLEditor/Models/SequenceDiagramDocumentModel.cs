@@ -47,8 +47,9 @@ namespace PlantUMLEditor.Models
                     this.MatchingAutoCompletes.Add(z.Signature);
             });
 
-            if (uMLDataType.Base != null)
-                AddAll(uMLDataType.Base, matchingAutoCompletes, word);
+            foreach (var item in uMLDataType.Bases)
+
+                AddAll(item, matchingAutoCompletes, word);
         }
 
         protected override string AppendAutoComplete(string selection)

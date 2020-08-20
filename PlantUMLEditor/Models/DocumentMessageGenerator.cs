@@ -37,6 +37,20 @@ namespace PlantUMLEditor.Models
                         });
                     }
                 }
+                if (doc is UMLClassDiagram f2)
+                {
+                    foreach (var e in f2.Errors)
+                    {
+                        newMessages.Add(new DocumentMessage()
+                        {
+                            FileName = f2.FileName,
+                            Text = e.Value,
+                            LineNumber = e.LineNumber,
+
+                            Warning = false
+                        });
+                    }
+                }
                 if (doc is UMLSequenceDiagram o)
                 {
                     var items = from z in o.LifeLines

@@ -56,7 +56,7 @@ namespace PlantUMLEditor.Models
             Messages = new ObservableCollection<DocumentMessage>();
             SelectDocumentCommand = new DelegateCommand<DocumentModel>(SelectDocumentHandler);
 
-            ScanAllFiles = new DelegateCommand(ScanAllFilesHandler, () => !string.IsNullOrEmpty(_folderBase));
+            ScanAllFiles = new DelegateCommand(()=> ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
 
             Configuration = new AppConfiguration()
             {
@@ -310,10 +310,21 @@ namespace PlantUMLEditor.Models
                     diagrams.Add(d);
                 }
 
-                foreach (var doc in Documents.SequenceDiagrams)
+
+                foreach (var doc in Documents.ClassDocuments)
                 {
                     if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
                         diagrams.Add(doc);
+                }
+                foreach (var doc in Documents.ComponentDiagrams)
+                {
+                   if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
+                        diagrams.Add(doc);
+                }
+                foreach (var doc in Documents.SequenceDiagrams)
+                {
+                    if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
+                    diagrams.Add(doc);
                 }
             }
             catch
@@ -609,7 +620,7 @@ namespace PlantUMLEditor.Models
             SaveAllCommand.RaiseCanExecuteChanged();
             ScanAllFiles.RaiseCanExecuteChanged();
 
-            ScanDirectory(dir);
+            await ScanDirectory(dir);
         }
 
         private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram, int lineNumber)
@@ -714,10 +725,11 @@ namespace PlantUMLEditor.Models
             _fileSave.Release();
         }
 
-        private async void ScanAllFilesHandler()
+        private async Task ScanAllFilesHandler()
         {
             Documents.ClassDocuments.Clear();
             Documents.SequenceDiagrams.Clear();
+            Documents.ComponentDiagrams.Clear();
 
             var folder = GetWorkingFolder();
             List<string> potentialSequenceDiagrams = new List<string>();
@@ -766,7 +778,7 @@ namespace PlantUMLEditor.Models
             //    DataTypes.Add(item);
         }
 
-        private void ScanDirectory(string dir)
+        private async Task ScanDirectory(string dir)
         {
             Folder = new TreeViewModel("", false, "", this);
 
@@ -778,7 +790,7 @@ namespace PlantUMLEditor.Models
 
             AddFolderItems(dir, start);
 
-            ScanAllFilesHandler();
+            await ScanAllFilesHandler();
         }
 
         private async Task ScanForFiles(string folder, List<string> potentialSequenceDiagrams)

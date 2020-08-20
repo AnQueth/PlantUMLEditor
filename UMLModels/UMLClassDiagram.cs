@@ -7,11 +7,13 @@ namespace UMLModels
 {
     public class UMLClassDiagram : UMLDiagram
     {
+        
         public UMLClassDiagram()
         {
+            Errors = new List<UMLError>();
         }
 
-        public UMLClassDiagram(string title, string fileName)
+        public UMLClassDiagram(string title, string fileName) : this()
         {
             Title = title;
 
@@ -31,6 +33,7 @@ namespace UMLModels
         }
 
         public UMLPackage Package { get; set; }
+        public List<UMLError> Errors { get; }
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {

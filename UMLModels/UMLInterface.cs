@@ -1,4 +1,6 @@
-﻿namespace UMLModels
+﻿using System.Collections.Generic;
+
+namespace UMLModels
 {
     public class UMLInterface : UMLDataType
     {
@@ -6,9 +8,9 @@
         {
         }
 
-        public UMLInterface(string @namespace, string name, UMLInterface @base = null) : base(name, @namespace)
+        public UMLInterface(string @namespace, string name, List<UMLDataType> @bases ) : base(name, @namespace)
         {
-            Base = @base;
+            Bases = @bases;
         }
     }
 }

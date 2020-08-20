@@ -42,7 +42,9 @@ namespace PlantUMLEditor.Models
                         if (z != null)
                             lock (_locker)
                                 _autoCompleteItems = z.Entities.Cast<UMLComponent>()
-                                .Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias);
+                                .Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias).Union(
+                                    z.Entities.Cast<UMLInterface>().Select(p => p.Name)
+                                    ).ToList();
                     }
                 }
             });

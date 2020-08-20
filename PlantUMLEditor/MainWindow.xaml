@@ -508,20 +508,25 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Ribbon Grid.ColumnSpan="3">
-            <RibbonTab Header="Home">
-                <RibbonGroup>
-                    <RibbonButton Label="Load Folder" Command="{Binding OpenDirectoryCommand}" SmallImageSource="/Images/OpenFolder_16x.png" />
-                    <RibbonButton Label="Save All"  Command="{Binding SaveAllCommand}" SmallImageSource="/Images/SaveAll_16x.png" />
-                    <RibbonButton Label="Scan" Command="{Binding ScanAllFiles}"></RibbonButton>
-                </RibbonGroup>
-                <RibbonGroup>
-                    <RibbonButton Label="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />
-                    <RibbonButton Label="New Sequence Diagram" Command="{Binding CreateNewSequenceDiagram}" />
-                    <RibbonButton Label="New Component Diagram" Command="{Binding CreateNewComponentDiagram}" />
-                </RibbonGroup>
-            </RibbonTab>
-        </Ribbon>
+        <ToolBar    Grid.ColumnSpan="3">
+
+            <Button   Command="{Binding OpenDirectoryCommand}"  ToolTip="Open Directory">
+                <Image Source="/Images/OpenFolder_16x.png"></Image>
+            </Button>
+            <Separator/>
+            <Button    Command="{Binding SaveAllCommand}"  ToolTip="Save All" >
+                <Image Source="/Images/SaveAll_16x.png"></Image>
+            </Button>
+            <Separator/>
+            <Button Content="Scan Directory" Command="{Binding ScanAllFiles}"></Button>
+            <!--<Separator/>
+            <Button Content="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />
+            <Separator/>
+            <Button Content="New Sequence Diagram" Command="{Binding CreateNewSequenceDiagram}" />
+            <Separator/>
+            <Button Content="New Component Diagram" Command="{Binding CreateNewComponentDiagram}" />-->
+            
+        </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*">
@@ -604,7 +609,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                     </Grid.Style>
 
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
                                         <ColumnDefinition Width="Auto" ></ColumnDefinition>
                                         <ColumnDefinition Width="Auto"></ColumnDefinition>
                                         <ColumnDefinition Width="Auto"></ColumnDefinition>

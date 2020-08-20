@@ -1,11 +1,13 @@
-﻿namespace UMLModels
+﻿using System.Collections.Generic;
+
+namespace UMLModels
 {
     public class UMLClass : UMLDataType
     {
         public UMLClass(string @namespace, bool isAbstract, 
-            string name, UMLClass baseClass = null, params UMLInterface[] interfaces) : base(name, @namespace, interfaces)
+            string name, List<UMLDataType> baseClasses, params UMLInterface[] interfaces) : base(name, @namespace, interfaces)
         {
-            this.Base = baseClass;
+            this.Bases = baseClasses;
             this.IsAbstract = isAbstract;
         }
 

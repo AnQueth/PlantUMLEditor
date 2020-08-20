@@ -172,7 +172,7 @@ namespace PlantUML
                     string package = GetPackage(packages);
 
                     DataType = new UMLClass(package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
-                        , Clean(g.Groups["name"].Value));
+                        , Clean(g.Groups["name"].Value), new List<UMLDataType>());
 
                     if (line.EndsWith("{"))
                     {
@@ -194,7 +194,7 @@ namespace PlantUML
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 8)
-                        DataType = new UMLInterface(package, Clean(line.Substring(9)));
+                        DataType = new UMLInterface(package, Clean(line.Substring(9)), new List<UMLDataType>());
 
                     if (line.EndsWith("{"))
                     {
@@ -204,9 +204,21 @@ namespace PlantUML
                 else if (baseClass.IsMatch(line))
                 {
                     var m = baseClass.Match(line);
+                    var cl = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["first"].Value);
+                    if (cl == null)
+                    {
+                        d.Errors.Add(new UMLError("Could not find parent type", m.Groups["first"].Value, lineNumber));
 
-                    d.DataTypes.Find(p => p.Name == m.Groups["first"].Value).Base = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value
+                    }
+                    var i = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["second"].Value
                 || removeGenerics.Match(p.Name).Value == m.Groups["second"].Value);
+                    if (i == null)
+                    {
+                        d.Errors.Add(new UMLError("Could not find base type", m.Groups["second"].Value, lineNumber));
+
+                    }
+                    if (cl != null && i != null)
+                        cl.Bases.Add(i);
                 }
                 else if (composition.IsMatch(line))
                 {
@@ -305,7 +317,7 @@ namespace PlantUML
                 string name = methodMatch.Groups["name"].Value;
 
                 string returntype = string.Empty;
-                for(var x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
+                for (var x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
                 {
                     if (x != 0)
                         returntype += " ";
@@ -313,7 +325,7 @@ namespace PlantUML
                 }
                 returntype = returntype.Trim();
 
-              
+
                 string modifier = methodMatch.Groups["modifier"].Value;
 
                 UMLDataType returnType;
@@ -335,7 +347,7 @@ namespace PlantUML
                 StringBuilder sbtype = new StringBuilder();
                 bool inName = false;
                 string v = methodMatch.Groups["params"].Value;
-                for(var x =0; x < v.Length; x++)
+                for (var x = 0; x < v.Length; x++)
                 {
                     char c = v[x];
                     if (c == '<')
@@ -343,9 +355,9 @@ namespace PlantUML
                     else if (c == '>')
                         p.Pop();
 
-                 
 
-                    if(c == ' ' && p.Count == 0)
+
+                    if (c == ' ' && p.Count == 0)
                     {
                         if (!inName)
                         {
@@ -353,7 +365,7 @@ namespace PlantUML
                         }
                     }
 
-                    else if((c == ',' || x == v.Length - 1) && p.Count == 0)
+                    else if ((c == ',' || x == v.Length - 1) && p.Count == 0)
                     {
                         if (c != ',')
                             pname.Append(c);
@@ -372,7 +384,7 @@ namespace PlantUML
                             aliases.Add(d.Item2, paramType);
                         }
 
-                        pars.Add(new UMLParameter(pname.ToString().Trim(), paramType,d.Item1));
+                        pars.Add(new UMLParameter(pname.ToString().Trim(), paramType, d.Item1));
 
                         sbtype.Clear();
                         pname.Clear();
@@ -380,7 +392,7 @@ namespace PlantUML
                         x++;
                     }
 
-                   else if (inName)
+                    else if (inName)
                     {
                         pname.Append(c);
                     }
@@ -392,7 +404,7 @@ namespace PlantUML
 
                 }
 
-               
+
 
                 DataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
                 {
@@ -423,8 +435,8 @@ namespace PlantUML
             }
             else
             {
-                DataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty), 
-                    UMLVisibility.None,  ListTypes.None));
+                DataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty),
+                    UMLVisibility.None, ListTypes.None));
             }
         }
     }
