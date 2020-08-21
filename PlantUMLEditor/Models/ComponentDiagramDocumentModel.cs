@@ -41,9 +41,9 @@ namespace PlantUMLEditor.Models
                         var z = await PlantUML.UMLComponentDiagramParser.ReadString(text);
                         if (z != null)
                             lock (_locker)
-                                _autoCompleteItems = z.Entities.Cast<UMLComponent>()
+                                _autoCompleteItems = z.Entities.OfType<UMLComponent>()
                                 .Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias).Union(
-                                    z.Entities.Cast<UMLInterface>().Select(p => p.Name)
+                                    z.Entities.OfType<UMLInterface>().Select(p => p.Name)
                                     ).ToList();
                     }
                 }
@@ -79,11 +79,7 @@ namespace PlantUMLEditor.Models
                         foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                             base.MatchingAutoCompletes.Add(item);
                     }
-                    else
-                    {
-                        foreach (var item in _autoCompleteItems)
-                            base.MatchingAutoCompletes.Add(item);
-                    }
+                    
                 }
                 catch { }
             }

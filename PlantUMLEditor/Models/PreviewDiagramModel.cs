@@ -161,7 +161,7 @@ namespace PlantUMLEditor.Models
 
                     p.StartInfo.CreateNoWindow = true;
                     p.StartInfo.FileName = "java.exe";
-                    p.StartInfo.Arguments = $"-jar {res.Item1} \"{res.Item2}\"";
+                    p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {res.Item1} \"{res.Item2}\"";
                     p.StartInfo.RedirectStandardOutput = true;
                     p.StartInfo.RedirectStandardError = true;
 

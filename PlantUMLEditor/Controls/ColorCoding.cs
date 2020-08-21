@@ -19,7 +19,7 @@ namespace PlantUMLEditor.Controls
 
         private static Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
         {
-            {new Regex("^\\s*(participant|actor|database|queue|component|class|interface|enum|boundary|entity)\\s+\\w+\\S+", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), (Colors.Green, false ) },
+            {new Regex("^\\s*(participant|actor|database|queue|component|class|interface|enum|boundary|entity)\\s+[\\w\\S\\s]+[^\\{]", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), (Colors.Green, false ) },
 
                {new Regex("(\\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) }
         };

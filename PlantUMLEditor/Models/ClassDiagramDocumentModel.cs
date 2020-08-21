@@ -76,11 +76,7 @@ namespace PlantUMLEditor.Models
                     foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                         base.MatchingAutoCompletes.Add(item);
                 }
-                else
-                {
-                    foreach (var item in _autoCompleteItems)
-                        base.MatchingAutoCompletes.Add(item);
-                }
+                
             }
             if (MatchingAutoCompletes.Count > 0)
                 base.ShowAutoComplete(autoCompleteParameters.Position);

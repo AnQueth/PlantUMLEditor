@@ -213,6 +213,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <Binding  Path="IsRenaming"></Binding>
                     </DataTrigger.Binding>
                     <DataTrigger.Setters>
+                        
                         <Setter Property="Visibility"  TargetName="rename" Value="Collapsed">
                         </Setter>
                         <Setter Property="Visibility"  TargetName="txt" Value="Visible">
