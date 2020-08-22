@@ -39,13 +39,14 @@ namespace PlantUML
                 foreach (var toType in types[to.DataTypeId])
                 {
                     action = CheckActionOnType(toType, actionSignature);
-             
 
-                    if (action != null) {
+
+                    if (action != null)
+                    {
                         break;
                     }
 
-                  
+
                 }
             }
 
@@ -88,7 +89,7 @@ namespace PlantUML
 
             foreach (var item in toType.Bases)
             {
-         
+
 
                 action = CheckActionOnType(item, actionSignature);
                 if (action != null)
@@ -179,10 +180,7 @@ namespace PlantUML
                     {
                         sectionBlock.LineNumber = lineNumber;
 
-                        if (sectionBlock.TakeOverOwnership)
-                        {
-                            activeBlocks.Pop();
-                        }
+
 
                         if (activeBlocks.Count == 0)
                         {
@@ -196,7 +194,17 @@ namespace PlantUML
                     }
                     else if (activeBlocks.Count != 0 && activeBlocks.Peek().IsEnding(line))
                     {
+
                         activeBlocks.Pop();
+                        if (activeBlocks.Count > 0)
+                        {
+                            var p = activeBlocks.Peek().SectionType;
+                            if (p == UMLSequenceBlockSection.SectionTypes.If
+                                || p == UMLSequenceBlockSection.SectionTypes.Parrallel
+                                || p == UMLSequenceBlockSection.SectionTypes.Try
+                                )
+                                activeBlocks.Pop();
+                        }
                     }
                 }
             }
