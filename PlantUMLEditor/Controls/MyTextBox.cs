@@ -687,13 +687,7 @@ namespace PlantUMLEditor.Controls
             _bindedDocument.TextChanged(this.Text);
             lock (_found)
                 _found.Clear();
-            if (!_autoComplete.IsPopupVisible)
-            {
-                //if (!string.IsNullOrWhiteSpace(this.SelectedText))
-                //    this.RunFind(this.SelectedText, false);
-                //if (!string.IsNullOrEmpty(FindText))
-                //    this.RunFind(FindText, false);
-            }
+       
             _braces = default;
 
             _errors.Clear();

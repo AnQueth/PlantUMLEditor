@@ -46,6 +46,7 @@ namespace PlantUMLEditor.Controls
 
             StringBuilder sbNewLine = new StringBuilder(line.Length);
             int starts = 0;
+            char oldd = '\0';
             foreach (var d in r)
             {
                 if (d == '<')
@@ -55,13 +56,15 @@ namespace PlantUMLEditor.Controls
                 else if (d == '>')
                     starts--;
 
-                if (starts > 0 && d == ' ')
+                if (starts > 0 && d == ' ' && oldd != ',')
                 {
                 }
                 else
                 {
                     sbNewLine.Append(d);
                 }
+                if(d != ' ')
+                    oldd = d;
             }
             line = sbNewLine.ToString();
 

@@ -77,7 +77,7 @@ namespace PlantUMLEditor.Models
             foreach (var item in messages)
             {
                 DocumentMessage m;
-                if ((m = newMessages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text)) == null)
+                if ((m = newMessages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text && z.LineNumber == item.LineNumber)) == null)
                 {
                     removals.Add(item);
                 }
@@ -88,7 +88,7 @@ namespace PlantUMLEditor.Models
             foreach (var item in newMessages)
             {
                 DocumentMessage m;
-                if ((m = messages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text)) == null)
+                if ((m = messages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text && z.LineNumber == item.LineNumber)) == null)
                 {
                     messages.Add(item);
                 }
