@@ -78,7 +78,7 @@
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                                                  CaretBrush="Green"
                             AcceptsReturn="True"  AcceptsTab="True"
-                               FontFamily="Calibri" FontSize="14">
+                               FontFamily="Cascadia Code" FontSize="14">
                             <localControls:MyTextBox.PopupControl>
                                 <Popup>
 

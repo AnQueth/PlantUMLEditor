@@ -855,7 +855,8 @@ namespace PlantUMLEditor.Models
 
             foreach(var file in files)
             {
-                await AttemptOpeningFile(file);
+                if(File.Exists(file))
+                    await AttemptOpeningFile(file);
             }
             
         }
