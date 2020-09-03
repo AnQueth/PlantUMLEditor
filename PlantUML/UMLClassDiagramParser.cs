@@ -347,6 +347,7 @@ namespace PlantUML
                 StringBuilder sbtype = new StringBuilder();
                 bool inName = false;
                 string v = methodMatch.Groups["params"].Value;
+                v = Regex.Replace(v, "\\s{2,}", " ");
                 for (var x = 0; x < v.Length; x++)
                 {
                     char c = v[x];
@@ -359,9 +360,16 @@ namespace PlantUML
 
                     if (c == ' ' && p.Count == 0)
                     {
-                        if (!inName)
+                        if (sbtype.ToString() != "out" && sbtype.ToString() != "ref")
                         {
-                            inName = true;
+                            if (!inName)
+                            {
+                                inName = true;
+                            }
+                        }
+                        else
+                        {
+                            sbtype.Append(c);
                         }
                     }
 
