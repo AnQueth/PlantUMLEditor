@@ -532,7 +532,19 @@ namespace PlantUMLEditor.Controls
                 Indenter i = new Indenter();
                 int pos = this.CaretIndex;
 
-                this.Text = i.Process(this.TextRead());
+                this.Text = i.Process(this.TextRead(), false);
+                this.CaretIndex = pos;
+                this._autoComplete.CloseAutoComplete();
+
+                e.Handled = true;
+                return;
+            }
+            else if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.L) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            {
+                Indenter i = new Indenter();
+                int pos = this.CaretIndex;
+
+                this.Text = i.Process(this.TextRead(), true);
                 this.CaretIndex = pos;
                 this._autoComplete.CloseAutoComplete();
 
@@ -644,7 +656,7 @@ namespace PlantUMLEditor.Controls
             {
                 Indenter i = new Indenter();
                 int indent = i.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex) - 1);
-                string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}\r\n";
+                string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}";
                 int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
                 this.Text = this.Text.Insert(CaretIndex, line);
                 CaretIndex = newIndex;
@@ -916,7 +928,7 @@ namespace PlantUMLEditor.Controls
             if (format)
             {
                 Indenter indenter = new Indenter();
-                this.Text = indenter.Process(text);
+                this.Text = indenter.Process(text, false);
             }
             this.InvalidateVisual();
         }

@@ -63,7 +63,7 @@ namespace PlantUMLEditor.Controls
                 {
                     sbNewLine.Append(d);
                 }
-                if(d != ' ')
+                if (d != ' ')
                     oldd = d;
             }
             line = sbNewLine.ToString();
@@ -115,7 +115,7 @@ namespace PlantUMLEditor.Controls
             return indentLevel;
         }
 
-        public string Process(string text)
+        public string Process(string text, bool removeLines)
         {
             string[] lines = reg.Split(text);
 
@@ -127,18 +127,24 @@ namespace PlantUMLEditor.Controls
 
             for (var x = 0; x < lines.Length; x++)
             {
-                if (string.IsNullOrWhiteSpace(lines[x]))
+                if (string.IsNullOrWhiteSpace(lines[x]) && removeLines)
+
                     continue;
+                else if(string.IsNullOrWhiteSpace(lines[x]))
+                    sb.AppendLine();
+
 
                 if (oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase) || oldLine.StartsWith("@startuml",
                     StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))
-                    sb.AppendLine();
-
-                if (!string.IsNullOrWhiteSpace(oldLine) && 
+                {
+                    if (removeLines)
+                        sb.AppendLine();
+                }
+                if (!string.IsNullOrWhiteSpace(oldLine) &&
                     (newLineAfter.IsMatch(oldLine) || newLineBefore.IsMatch(lines[x].Trim())))
                 {
-                    
-                    sb.AppendLine();
+                    if (removeLines)
+                        sb.AppendLine();
                 }
                 oldLine = lines[x].Trim();
 
