@@ -17,13 +17,13 @@ namespace PlantUML
     {
         private const string PACKAGE = "package";
 
-        private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+(?<name>[\\w\\<\\>]+)\\s+{", RegexOptions.Compiled);
+        private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
 
         private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
         private static Regex _packageRegex = new Regex("(package|together) \\\"*(?<package>[\\w\\s\\.]+)\\\"* *\\{", RegexOptions.Compiled);
 
-        private static Regex _propertyLine = new Regex("^\\s*(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\,\\[\\] ]+)\\s+(?<name>[\\w_]+)\\s*$", RegexOptions.Compiled);
+        private static Regex _propertyLine = new Regex("^\\s*(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\,\\[\\] \\?]+)\\s+(?<name>[\\w_]+)\\s*$", RegexOptions.Compiled);
 
         private static Regex baseClass = new Regex("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
@@ -42,7 +42,7 @@ namespace PlantUML
             if (v.StartsWith("ireadonlycollection<", StringComparison.OrdinalIgnoreCase))
                 return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v.Substring(20).Trim('>', ' '));
             else if (v.StartsWith("list<", StringComparison.OrdinalIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(6).Trim('>', ' '));
+                return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(5).Trim('>', ' '));
             else if (v.EndsWith("[]"))
                 return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim().Substring(0, v.Trim().Length - 2));
             else
@@ -194,7 +194,7 @@ namespace PlantUML
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 8)
-                        DataType = new UMLInterface(package, Clean(line.Substring(9)), new List<UMLDataType>());
+                        DataType = new UMLInterface(package, Clean(line.Substring(9)).Replace("\"", string.Empty), new List<UMLDataType>());
 
                     if (line.EndsWith("{"))
                     {
@@ -257,6 +257,8 @@ namespace PlantUML
                     {
                         lineNumber++;
                         line = line.Trim();
+                        if (string.IsNullOrWhiteSpace(line))
+                            continue;
 
                         if (line == "}")
                         {

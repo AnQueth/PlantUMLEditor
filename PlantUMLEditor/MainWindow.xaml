@@ -670,12 +670,12 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding Text}" Grid.Column="0" Margin="10,5,10,5" ></TextBlock>
                             <TextBlock Text="{Binding LineNumber}" Grid.Column="1" Margin="10,5,10,5"></TextBlock>
-                            <Button x:Name="createMissingMethod" Command="{Binding CreateMissingMethodCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
-                                Content="Add Method To Class" Grid.Column="2"></Button>
+                            <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
+                                Content="Fix" Grid.Column="2"></Button>
                         </Grid>
 
                         <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding MissingMethod}" Value="false">
+                            <DataTrigger Binding="{Binding IsFixable}" Value="false">
                                 <DataTrigger.Setters>
                                     <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
                                 </DataTrigger.Setters>

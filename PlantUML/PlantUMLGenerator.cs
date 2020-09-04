@@ -152,7 +152,12 @@ namespace PlantUML
                     else
                         writer.Write("class ");
 
+                    if (item.Name.Contains("<") || item.Name.Contains(" ") || item.Name.Contains("?"))
+
+                        writer.Write("\"");
                     writer.Write(item.Name);
+                    if (item.Name.Contains("<") || item.Name.Contains(" ") || item.Name.Contains("?"))
+                        writer.Write("\"");
                     writer.WriteLine(" { ");
 
                     foreach (var prop in item.Properties)

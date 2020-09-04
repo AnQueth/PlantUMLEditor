@@ -234,25 +234,55 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void AddMethodToClassDigramHandler(DocumentMessage sender)
+        private void FixingCommandHandler(DocumentMessage sender)
         {
-            foreach (var doc in Documents.ClassDocuments)
+            if (sender.IsMissingMethod)
             {
-                var d = doc.DataTypes.FirstOrDefault(p => p.Id == sender.DataTypeId);
-                if (d == null)
-                    continue;
-
-                UMLClassDiagramParser.TryParseLineForDataType(sender.OffendingText.Trim(), new Dictionary<string, UMLDataType>(), d);
-
-                var od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == doc.FileName);
-                if (od != null)
+                foreach (var doc in Documents.ClassDocuments)
                 {
-                    CurrentDocument = od;
-                    od.UpdateDiagram(doc);
+                    var d = doc.DataTypes.FirstOrDefault(p => p.Id == sender.MissingMethodDataTypeId);
+                    if (d == null)
+                        continue;
+
+                    UMLClassDiagramParser.TryParseLineForDataType(sender.MissingMethodText.Trim(), new Dictionary<string, UMLDataType>(), d);
+
+                    var od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == doc.FileName);
+                    if (od != null)
+                    {
+                        CurrentDocument = od;
+                        od.UpdateDiagram(doc);
+                    }
+                    else
+                    {
+                        OpenClassDiagram(doc.FileName, doc, 0);
+                    }
+                }
+            }
+            else if(sender.IsMissingDataType)
+            {
+                var f = Documents.ClassDocuments.FirstOrDefault(p => p.Title == "defaults.class");
+                if (f != null)
+                {
+                    if (f.Package == null)
+                        f.Package = new UMLPackage("defaults");
+
+                    f.Package.Children.Add(new UMLClass("default", false, sender.Text, new List<UMLDataType>()));
+                    string d = Path.Combine(GetWorkingFolder(true), "defaults.class.puml");
+
+                    var od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == d);
+                    if (od != null)
+                    {
+                        CurrentDocument = od;
+                        od.UpdateDiagram(f);
+                    }
+                    else
+                    {
+                        OpenClassDiagram(d, f, 0);
+                    }
                 }
                 else
                 {
-                    OpenClassDiagram(doc.FileName, doc, 0);
+                    MessageBox.Show("Create a defaults.class document in the root of the work folder first.");
                 }
             }
         }
@@ -342,7 +372,9 @@ namespace PlantUMLEditor.Models
 
               foreach (var d in Messages)
               {
-                  d.CreateMissingMethodCommand = new DelegateCommand<DocumentMessage>(AddMethodToClassDigramHandler);
+                  if(d.IsMissingMethod || d.IsMissingDataType )
+                      d.FixingCommand = new DelegateCommand<DocumentMessage>(FixingCommandHandler);
+                
 
                   var docs = OpenDocuments.Where(p => p.FileName == d.FileName);
                   foreach (var doc in docs)

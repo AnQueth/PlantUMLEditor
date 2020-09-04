@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -21,12 +23,14 @@ namespace PlantUMLEditor.Models
         public void Generate()
         {
             List<DocumentMessage> newMessages = new List<DocumentMessage>();
+            List<(UMLDataType, string)> dataTypes = new List<(UMLDataType, string)>();
 
             foreach (var doc in this.documents)
             {
-                if(doc is UMLComponentDiagram f)
+                if (doc is UMLComponentDiagram f)
                 {
-                    foreach (var e in f.Errors) {
+                    foreach (var e in f.Errors)
+                    {
                         newMessages.Add(new DocumentMessage()
                         {
                             FileName = f.FileName,
@@ -39,6 +43,11 @@ namespace PlantUMLEditor.Models
                 }
                 if (doc is UMLClassDiagram f2)
                 {
+                    foreach (var fdt in f2.DataTypes)
+                    {
+                        dataTypes.Add((fdt, f2.FileName));
+                    }
+
                     foreach (var e in f2.Errors)
                     {
                         newMessages.Add(new DocumentMessage()
@@ -73,6 +82,75 @@ namespace PlantUMLEditor.Models
                 }
             }
 
+
+            foreach (var dt in dataTypes)
+            {
+                if (dt.Item1 is UMLEnum)
+                    continue;
+                foreach (var m in dt.Item1.Properties)
+                {
+                    string r = GetCleanName(m.ObjectType.Name);
+                    var pdt = dataTypes.Any(z => z.Item1.Name == r);
+                    if (!pdt)
+                    {
+                        newMessages.Add(new DocumentMessage()
+                        {
+                            FileName = dt.Item2,
+                            LineNumber = dt.Item1.LineNumber,
+                            Text = r,
+                            IsMissingDataType = true
+                        });
+                    }
+
+
+
+
+                }
+                foreach (var m in dt.Item1.Methods)
+                {
+                    foreach (var p in m.Parameters)
+                    {
+                        string r = GetCleanName(p.ObjectType.Name);
+                        var pdt2 = dataTypes.Any(z => z.Item1.Name == r);
+                        if (!pdt2)
+                        {
+                            newMessages.Add(new DocumentMessage()
+                            {
+                                FileName = dt.Item2,
+                                LineNumber = dt.Item1.LineNumber,
+                                Text = r,
+                                IsMissingDataType = true
+                            });
+                        }
+
+
+
+                    }
+                    if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
+                    {
+                        string r = GetCleanName(m.ReturnType.Name);
+
+
+                        var pdt = dataTypes.Any(z => z.Item1.Name == r);
+                        if (!pdt)
+                        {
+                            newMessages.Add(new DocumentMessage()
+                            {
+                                FileName = dt.Item2,
+                                LineNumber = dt.Item1.LineNumber,
+                                Text = r,
+                                IsMissingDataType = true
+
+                            });
+                        }
+                    }
+
+
+
+                }
+            }
+
+
             List<DocumentMessage> removals = new List<DocumentMessage>();
             foreach (var item in messages)
             {
@@ -105,10 +183,10 @@ namespace PlantUMLEditor.Models
                             FileName = fileName,
                             LineNumber = g.LineNumber,
                             Text = g.Warning,
-                            OffendingText = c.Action?.Signature,
-                            DataTypeId = c.To?.DataTypeId,
+                            MissingMethodText = c.Action?.Signature,
+                            MissingMethodDataTypeId = c.To?.DataTypeId,
                             Diagram = o,
-                            MissingMethod = true,
+                            IsMissingMethod = true,
                             Warning = true
                         });
                     }
@@ -119,6 +197,21 @@ namespace PlantUMLEditor.Models
                     }
                 }
             }
+        }
+
+        private string GetCleanName(string name)
+        {
+            string r = name;
+            Match m2;
+            while ((m2 = Regex.Match(r, "(?:IEnumerable|Task|IReadOnlyCollection)\\<(?<f>.+)\\>|(?<f>.+)\\[\\]")).Success)
+            {
+                if (m2.Success)
+                {
+                    r = m2.Groups["f"].Value;
+                }
+            }
+            return r;
+
         }
     }
 }

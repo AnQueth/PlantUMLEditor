@@ -14,13 +14,13 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        public ICommand CreateMissingMethodCommand
+        public ICommand FixingCommand
         {
             get;
             set;
         }
 
-        public string DataTypeId { get; set; }
+        public string MissingMethodDataTypeId { get; set; }
 
         public UMLSequenceDiagram Diagram { get; set; }
 
@@ -28,15 +28,19 @@ namespace PlantUMLEditor.Models
 
         public int LineNumber { get; set; }
 
-        public bool MissingMethod
+        public bool IsMissingMethod
         {
             get; set;
         }
 
-        public string OffendingText { get; set; }
+        public string MissingMethodText { get; set; }
 
         public string Text { get; set; }
 
         public bool Warning { get; set; }
+        public bool IsMissingDataType { get;   set; }
+
+
+        public bool IsFixable => IsMissingDataType || IsMissingMethod;
     }
 }
