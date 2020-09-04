@@ -681,6 +681,9 @@ namespace PlantUMLEditor.Controls
 
             while(this.SelectedText.EndsWith(" "))
             {
+                if (this.SelectionLength == 0)
+                    break;
+
                 this.SelectionLength--;
             }
 
