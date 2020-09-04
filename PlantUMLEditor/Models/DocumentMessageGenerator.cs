@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -20,9 +21,12 @@ namespace PlantUMLEditor.Models
             this.messages = messages;
         }
 
-        public void Generate()
+        public async Task Generate()
         {
             List<DocumentMessage> newMessages = new List<DocumentMessage>();
+
+
+
             List<(UMLDataType, string)> dataTypes = new List<(UMLDataType, string)>();
 
             foreach (var doc in this.documents)

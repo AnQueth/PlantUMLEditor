@@ -679,6 +679,11 @@ namespace PlantUMLEditor.Controls
         {
             base.OnSelectionChanged(e);
 
+            while(this.SelectedText.EndsWith(" "))
+            {
+                this.SelectionLength--;
+            }
+
             if (!string.IsNullOrWhiteSpace(this.SelectedText))
             {
                 if (_selectionHandler != null)
