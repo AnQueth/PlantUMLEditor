@@ -22,7 +22,7 @@ namespace PlantUMLEditor.Controls
         private static Regex reg = new Regex("\n");
         private static Regex removeSpaces = new Regex(" {2,}", RegexOptions.Compiled);
         private static Regex tab = new Regex("^(alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
-        private static Regex tab2 = new Regex("^\\s*(class|interface|package|enum|together|component|database).+\\{", RegexOptions.Compiled);
+        private static Regex tab2 = new Regex("^\\s*(class|interface|package|enum|together|component|database|rectangle).+\\{", RegexOptions.Compiled);
         private static Regex tabReset = new Regex("^else\\s?.*", RegexOptions.Compiled);
         private static Regex tabStop = new Regex("^(\\}|end(?! note))", RegexOptions.Compiled);
 
