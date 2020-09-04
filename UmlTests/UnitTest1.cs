@@ -225,5 +225,28 @@ com1 ----> l
 ";
             var f = await UMLComponentDiagramParser.ReadString(s);
         }
+
+        [Test]
+        public async Task UMLComponentDiagramWithRectangleParserTest()
+        {
+            string s = @"
+@startuml
+rectangle r1 {
+    component com1
+    component com2 as 2
+
+    interface Ilalala as l
+    interface Iread
+
+    com1 --o Iread
+    com2 --( Iread
+
+    com1 ----> l
+}
+
+@enduml";
+
+            var f = await UMLComponentDiagramParser.ReadString(s);
+        }
     }
 }
