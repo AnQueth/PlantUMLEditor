@@ -13,6 +13,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal">
@@ -20,7 +21,8 @@
             <Button Content="Copy" Command="{Binding CopyImage}" Margin="{DynamicResource Margin}" ToolTip="Copy the image for pasting"></Button>
             <Button Content="Save" Command="{Binding SaveImageCommand}" Margin="{DynamicResource Margin}" ToolTip="Save image"/>
         </StackPanel>
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" PanningMode="Both">
+        <TextBlock Text="{Binding Messages}" Grid.Row="1"></TextBlock>
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" PanningMode="Both">
             <Behaviors:Interaction.Behaviors>
                 <Behaviors:TranslateZoomRotateBehavior />
             </Behaviors:Interaction.Behaviors>

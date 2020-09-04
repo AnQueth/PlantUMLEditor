@@ -6,8 +6,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq.Expressions;
 using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,6 +30,7 @@ namespace PlantUMLEditor.Models
         private bool _running = false;
         private BitmapSource image;
         private string title;
+        private string _messages;
 
         public PreviewDiagramModel()
         {
@@ -45,12 +48,12 @@ namespace PlantUMLEditor.Models
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.Filter = "Png files | *.png";
             sfd.DefaultExt = ".png";
-            if( sfd.ShowDialog().GetValueOrDefault())
+            if (sfd.ShowDialog().GetValueOrDefault())
             {
-                 
+
                 PngBitmapEncoder encoder = new PngBitmapEncoder();
-               
-             
+
+
 
                 encoder.Frames.Add(BitmapFrame.Create((BitmapImage)Image));
 
@@ -61,7 +64,7 @@ namespace PlantUMLEditor.Models
 
         public DelegateCommand CopyImage { get; }
         public DelegateCommand SaveImageCommand { get; }
-   
+
 
         public FixedDocument doc
         {
@@ -75,6 +78,17 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        public string Messages
+        {
+            get
+            {
+                return _messages;
+            }
+            set
+            {
+                SetValue(ref _messages, value);
+            }
+        }
         public float Height
         {
             get; set;
@@ -151,41 +165,73 @@ namespace PlantUMLEditor.Models
             {
                 _are.WaitOne();
 
-                while (_regenRequests.Count > 0)
+                try
                 {
-                    _regenRequests.TryDequeue(out (string, string, bool) res);
-
-                    string fn = Path.Combine(Path.GetDirectoryName(res.Item2), Path.GetFileNameWithoutExtension(res.Item2) + ".png");
-
-                    Process p = new Process();
-
-                    p.StartInfo.CreateNoWindow = true;
-                    p.StartInfo.FileName = "java.exe";
-                    p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {res.Item1} \"{res.Item2}\"";
-                    p.StartInfo.RedirectStandardOutput = true;
-                    p.StartInfo.RedirectStandardError = true;
-
-                    p.Start();
-                    p.WaitForExit();
-
-                    string l = p.StandardOutput.ReadToEnd();
-                    string e = p.StandardError.ReadToEnd();
-
-                    if(!string.IsNullOrEmpty(e))
+                    while (_regenRequests.Count > 0)
                     {
-                        Debug.WriteLine(e);
-                       
+                        Messages = string.Empty;
+                        _regenRequests.TryDequeue(out (string, string, bool) res);
+
+                        string fn = Path.Combine(Path.GetDirectoryName(res.Item2), Path.GetFileNameWithoutExtension(res.Item2) + ".png");
+
+                        Process p = new Process();
+
+                        p.StartInfo.CreateNoWindow = true;
+                        p.StartInfo.FileName = "java.exe";
+                        p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {res.Item1} \"{res.Item2}\"";
+                        p.StartInfo.RedirectStandardOutput = true;
+                        p.StartInfo.RedirectStandardError = true;
+
+                        p.Start();
+                        p.WaitForExit();
+
+                        string l = p.StandardOutput.ReadToEnd();
+                        string e = p.StandardError.ReadToEnd();
+
+                        if (!string.IsNullOrEmpty(e))
+                        {
+                            Debug.WriteLine(e);
+
+                            var m = Regex.Match(e, "Error line (\\d+)");
+                            if (m.Success)
+                            {
+                                int d = int.Parse(m.Groups[1].Value);
+                                d++;
+                                using (var g = File.OpenText(res.Item2))
+                                {
+                                    int x = 0;
+                                    while (x <= d + 1)
+                                    {
+                                        x++;
+                                        string ll = g.ReadLine();
+                                        if (ll != null)
+                                        {
+                                           
+                                            if (x > d - 3)
+                                                e += "\r\n" + ll;
+                                        }
+                                    }
+                                }
+                            }
+                            Messages = e;
+                        }
+                        else
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                Image = new BitmapImage(new Uri(fn));
+
+                                if (res.Item3 && File.Exists(res.Item2))
+                                    File.Delete(res.Item2);
+                            });
                     }
-                    else
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        Image = new BitmapImage(new Uri(fn));
-
-                        if (res.Item3 && File.Exists(res.Item2))
-                            File.Delete(res.Item2);
-                    });
                 }
+                catch(Exception ex)
+                {
+                    Messages = ex.ToString();
+                }
+
             }
+
         }
 
         private void SaveFrameworkElement(BitmapSource bitmapImage, int widthSteps, int heightSteps, int width, int height, List<DrawingVisual> images)
