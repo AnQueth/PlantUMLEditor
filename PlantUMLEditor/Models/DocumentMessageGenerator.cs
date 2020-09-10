@@ -207,7 +207,7 @@ namespace PlantUMLEditor.Models
         {
             string r = name;
             Match m2;
-            while ((m2 = Regex.Match(r, "(?:IEnumerable|Task|IReadOnlyCollection)\\<(?<f>.+)\\>|(?<f>.+)\\[\\]")).Success)
+            while ((m2 = Regex.Match(r, "\\<(?<f>.+)\\>|(?<f>.+)\\[\\]")).Success)
             {
                 if (m2.Success)
                 {
