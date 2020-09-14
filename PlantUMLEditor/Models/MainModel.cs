@@ -20,10 +20,10 @@ namespace PlantUMLEditor.Models
 {
     public class MainModel : BindingBase, IFolderChangeNotifactions
     {
-        private readonly ObservableCollection<Tuple<string, UMLDataType>> _dataTypes = new ObservableCollection<Tuple<string, UMLDataType>>();
-        private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
+           private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly Timer _messageChecker;
         private readonly IOpenDirectoryService _openDirectoryService;
+        private readonly ObservableCollection<Tuple<string, UMLDataType>> _dataTypes = new ObservableCollection<Tuple<string, UMLDataType>>();
         private bool _AllowContinue;
         private bool _confirmOpen;
         private object _docLock = new object();
@@ -36,8 +36,30 @@ namespace PlantUMLEditor.Models
         private TreeViewModel folder;
         private DocumentMessage selectedMessage;
 
+        private DelegateCommand<string> _gotoDefinitionCommand;
+
+        public DelegateCommand<string> GotoDefinitionCommand
+        {
+            get => _gotoDefinitionCommand;
+        }
+
+        private   void GotoDefinitionInvoked(string text)
+        {
+            foreach(var item in documents.ClassDocuments.Where(z=>z.DataTypes.Any(v=>v.Name == text)).Select(p=>new
+            {
+                FN = p.FileName,
+                D = p,
+                DT = p.DataTypes.First(z=>z.Name == text)
+            }))
+            {
+                OpenClassDiagram(item.FN, item.D, item.DT.LineNumber);
+            }
+             
+        }
+
         public MainModel(IOpenDirectoryService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization)
         {
+            _gotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
             Documents = new UMLModels.UMLDocumentCollection();
             _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
             _openDirectoryService = openDirectoryService;

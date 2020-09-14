@@ -27,7 +27,7 @@ namespace PlantUMLEditor.Controls
         };
 
         private static Regex brackets = new Regex("(\\{|\\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static Regex notes = new Regex("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" +as +(?<alias>\\w+))|(?<placement>\\w+) +of +(?<target>\\w+)[.\\s\\S\\W\\r\\n]*end note| +as +(?<alias>\\\\w+)[.\\s\\S\\W\\r\\n]*end note)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static Regex notes = new Regex("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" +as +(?<alias>\\w+))|(?<placement>\\w+) +of +(?<target>\\w+)[.\\s\\S\\W\\r\\n]*?end note| +as +(?<alias>\\\\w+)[.\\s\\S\\W\\r\\n]*?end note)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static Regex parenthesies = new Regex("(\\(|\\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public void FormatText(string text, FormattedText formattedText)

@@ -50,7 +50,11 @@ namespace PlantUMLEditor.Controls
         private string replaceText;
 
         private bool useRegex;
-        public static DependencyProperty PopupControlProperty = DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
+        public static DependencyProperty PopupControlProperty =
+            DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
+        public static DependencyProperty GotoDefinitionCommandProperty =
+            DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
+
 
         public MyTextBox()
         {
@@ -114,6 +118,20 @@ namespace PlantUMLEditor.Controls
             get { return (Popup)GetValue(PopupControlProperty); }
 
             set { SetValue(PopupControlProperty, value); }
+        }
+
+
+        public DelegateCommand<string> GotoDefinitionCommand
+        {
+            get
+            {
+                return (DelegateCommand<string>)GetValue(GotoDefinitionCommandProperty);
+            }
+
+            set
+            {
+                SetValue(GotoDefinitionCommandProperty, value);
+            }
         }
 
         public DelegateCommand ReplaceCommand { get; }
@@ -495,7 +513,7 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
         {
-   
+
 
             lock (_found)
             { _found.Clear(); }
@@ -520,14 +538,14 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            else if(e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            else if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 FindText = this.SelectedText.Trim();
                 ShowFind();
                 e.Handled = true;
                 return;
             }
-            else if(e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
+            else if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
                 Indenter i = new Indenter();
                 int pos = this.CaretIndex;
@@ -590,8 +608,15 @@ namespace PlantUMLEditor.Controls
             base.OnPreviewKeyDown(e);
         }
 
+
+
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
+            if (e.Key == Key.F12 && !string.IsNullOrEmpty(this.SelectedText))
+            {
+                GotoDefinitionCommand?.Execute(this.SelectedText.Trim());
+
+            }
             if (e.Key == Key.Tab)
             {
                 e.Handled = true;
@@ -614,11 +639,11 @@ namespace PlantUMLEditor.Controls
                 if (e.Key == Key.Left || e.Key == Key.Right)
                     this._autoComplete.CloseAutoComplete();
             }
-            else if ((e.Key != Key.Enter && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl ) 
+            else if ((e.Key != Key.Enter && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl)
                 && e.SystemKey == Key.None
                 && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-             
+
 
                 if (_timer != null)
                     _timer.Dispose();
@@ -679,7 +704,7 @@ namespace PlantUMLEditor.Controls
         {
             base.OnSelectionChanged(e);
 
-            while(this.SelectedText.EndsWith(" "))
+            while (this.SelectedText.EndsWith(" "))
             {
                 if (this.SelectionLength == 0)
                     break;
@@ -707,7 +732,7 @@ namespace PlantUMLEditor.Controls
             _bindedDocument.TextChanged(this.Text);
             lock (_found)
                 _found.Clear();
-       
+
             _braces = default;
 
             _errors.Clear();
@@ -862,8 +887,8 @@ namespace PlantUMLEditor.Controls
                 int sl = this.GetFirstVisibleLineIndex();
 
                 int start = 0;
-               
-           
+
+
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
                 lock (_found)
@@ -887,9 +912,9 @@ namespace PlantUMLEditor.Controls
 
                 foreach (var item in _errors)
                 {
-                    try 
+                    try
                     {
-                         var l = GetCharacterIndexFromLineIndex(item.line - 1);
+                        var l = GetCharacterIndexFromLineIndex(item.line - 1);
                         var len = GetLineLength(item.line - 1);
                         if (l >= start && l <= end)
                         {

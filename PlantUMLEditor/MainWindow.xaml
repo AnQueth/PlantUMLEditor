@@ -10,7 +10,7 @@
 
         mc:Ignorable="d"
         Title="Aaron's Plant UML Editor" Height="850" Width="1000"
-
+FontFamily="Consolas Code"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/Images/uml.png">
 
     <b:Interaction.Triggers>
@@ -78,6 +78,7 @@
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                                                  CaretBrush="Green"
                             AcceptsReturn="True"  AcceptsTab="True"
+                                                 GotoDefinitionCommand="{Binding DataContext.GotoDefinitionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                FontFamily="Cascadia Code" FontSize="14">
                             <localControls:MyTextBox.PopupControl>
                                 <Popup>
