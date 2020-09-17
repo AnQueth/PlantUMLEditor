@@ -21,7 +21,7 @@ namespace PlantUMLEditor.Controls
         {
             {new Regex("^\\s*(participant|actor|database|queue|component|class|interface|enum|boundary|entity)\\s+[a-zA-Z0-9\\<\\>\\, ]+[^\\{]", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), (Colors.Green, false ) },
 
-               {new Regex("(\\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
+               {new Regex("(\\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, true) },
                 {new Regex("^\\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), (Colors.Firebrick, false)}
 
         };

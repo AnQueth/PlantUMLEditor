@@ -337,7 +337,7 @@ namespace PlantUML
 
                 string fromAlias = m.Groups[1].Value[0] != '<' && m.Groups[1].Value[0] != '-' && m.Groups[1].Value[0] != '>' ? m.Groups[1].Value : null;
                 string arrow = fromAlias == null ? m.Groups[1].Value : m.Groups[2].Value;
-                string toAlias = fromAlias == null ? m.Groups[2].Value : m.Groups[3].Value;
+                string toAlias = fromAlias == null ? (m.Groups[2].Value == "-" ? m.Groups[3].Value : m.Groups[2].Value) : m.Groups[3].Value;
 
                 int l = line.IndexOf(':');
 
