@@ -139,6 +139,14 @@ namespace PlantUML
 
                     writer.WriteLine("}");
                 }
+                else if (item is UMLOther o)
+                {
+                    writer.WriteLine(o.Text);
+                }
+                else if (item is UMLComment com)
+                {
+                    writer.WriteLine(com.Text);
+                }
                 else if (item is UMLNote note)
                 {
                     writer.WriteLine(note.Text);

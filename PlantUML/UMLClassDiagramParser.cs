@@ -75,6 +75,7 @@ namespace PlantUML
             Dictionary<string, UMLDataType> aliases = new Dictionary<string, UMLDataType>();
 
             bool swallowingNotes = false;
+            bool swallowingComments = false;
 
             Stack<string> brackets = new Stack<string>();
             Regex removeGenerics = new Regex("\\w+");
@@ -99,6 +100,44 @@ namespace PlantUML
                 if (!started)
                     continue;
 
+                if(line == "left to right direction")
+                {
+                    currentPackage.Children.Add(new UMLOther(line));
+                    continue;
+                }
+
+                if (line.StartsWith("'"))
+                {
+                    currentPackage.Children.Add(new UMLComment(line));
+                    continue;
+                }
+
+                if (line.StartsWith("/'"))
+                {
+                    string comment = line;
+                    swallowingComments = true;
+
+                }
+
+         
+
+                if(line.Contains("'/") && swallowingComments)
+                {
+                    if (currentPackage.Children.Last() is UMLComment n)
+                    {
+                        n.Text += "\r\n" + line;
+                    }
+                    swallowingComments = false;
+                    continue;
+                }
+                if (swallowingComments)
+                {
+                    if (currentPackage.Children.Last() is UMLComment n)
+                    {
+                        n.Text += "\r\n" + line;
+                    }
+                    continue;
+                }
                 if (notes.IsMatch(line))
                 {
                     var m = notes.Match(line);

@@ -14,9 +14,9 @@ namespace PlantUMLEditor.Controls
 {
     internal class Indenter
     {
-        private static Regex newLineBefore = new Regex("note.+", RegexOptions.Compiled);
+        private static Regex newLineBefore = new Regex("^(note.+|\\'.+|\\/\\'.+|left to right direction)", RegexOptions.Compiled);
 
-        private static Regex newLineAfter = new Regex("note.+:|end +note", RegexOptions.Compiled);
+        private static Regex newLineAfter = new Regex("^(note.+:|end +note|\\'.+|.+\\'\\/|left to right direction)", RegexOptions.Compiled);
         private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static Regex reg = new Regex("\n");
