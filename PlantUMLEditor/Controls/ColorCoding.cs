@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
@@ -27,7 +25,7 @@ namespace PlantUMLEditor.Controls
 
         private static Dictionary<Regex, Color[]> _groupedCodes = new Dictionary<Regex, Color[]>()
         {
-            {new Regex(@"^\s*(?<keyword>(participant|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
+            {new Regex(@"^\s*(?<keyword>(?:participant|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(?:\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
         };
 
         private static Regex brackets = new Regex("(\\{|\\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -53,7 +51,9 @@ namespace PlantUMLEditor.Controls
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
-                    var groupNames = GetDefinedGroupNames(item.Key.GetGroupNames());
+                    // Group "0" cannot be stripped out of the regex via non-capturing groups -- it
+                    // is automatically added and represents the entire match.  So we'll filter it out here. 
+                    var groupNames = item.Key.GetGroupNames().Where(n => n != "0");
                     foreach (var n in groupNames)
                     {
                         if (n.StartsWith("keyword"))
@@ -90,24 +90,6 @@ namespace PlantUMLEditor.Controls
                 formattedText.SetForegroundBrush(Brushes.Green, m.Index, m.Length);
                 formattedText.SetFontWeight(FontWeights.Bold, m.Index, m.Length);
             }
-        }
-
-        private List<string> GetDefinedGroupNames(string[] allNames)
-        {
-            // Strip out any anonymous groups.
-            // According to the MSDN docs, non-explicitly-named groups are assigned a number.
-            // So, we can strip out any that fail an int.TryParse().
-            int parseResult;
-            var resultList = new List<string>();
-            foreach (var n in allNames)
-            {
-                if (!int.TryParse(n, out parseResult))
-                {
-                    resultList.Add(n);
-                }
-            }
-
-            return resultList;
         }
     }
 }
