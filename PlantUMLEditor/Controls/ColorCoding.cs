@@ -13,7 +13,7 @@ namespace PlantUMLEditor.Controls
         private static Dictionary<Regex, Color> _colorCodes = new Dictionary<Regex, Color>()
         {
             {new Regex("(@startuml|@enduml)", RegexOptions.Compiled) , Colors.Coral},
-            {new Regex("^'.+", RegexOptions.Multiline), Colors.Gray },
+            {new Regex("^'.+", RegexOptions.Multiline), Colors.Gray},
             {new Regex("^\\s*(class|interface)\\s+.+?{([\\s.\\w\\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline| RegexOptions.Compiled), Colors.Firebrick },
             {new Regex("^\\s*(title|class|\\{\\w+\\}|interface|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle)\\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue}
         };
