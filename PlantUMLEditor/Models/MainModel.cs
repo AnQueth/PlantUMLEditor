@@ -20,7 +20,7 @@ namespace PlantUMLEditor.Models
 {
     public class MainModel : BindingBase, IFolderChangeNotifactions
     {
-           private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
+        private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly Timer _messageChecker;
         private readonly IOpenDirectoryService _openDirectoryService;
         private readonly ObservableCollection<Tuple<string, UMLDataType>> _dataTypes = new ObservableCollection<Tuple<string, UMLDataType>>();
@@ -43,18 +43,18 @@ namespace PlantUMLEditor.Models
             get => _gotoDefinitionCommand;
         }
 
-        private   void GotoDefinitionInvoked(string text)
+        private void GotoDefinitionInvoked(string text)
         {
-            foreach(var item in documents.ClassDocuments.Where(z=>z.DataTypes.Any(v=>v.Name == text)).Select(p=>new
+            foreach (var item in documents.ClassDocuments.Where(z => z.DataTypes.Any(v => v.Name == text)).Select(p => new
             {
                 FN = p.FileName,
                 D = p,
-                DT = p.DataTypes.First(z=>z.Name == text)
+                DT = p.DataTypes.First(z => z.Name == text)
             }))
             {
                 OpenClassDiagram(item.FN, item.D, item.DT.LineNumber);
             }
-             
+
         }
 
         public MainModel(IOpenDirectoryService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization)
@@ -63,7 +63,7 @@ namespace PlantUMLEditor.Models
             Documents = new UMLModels.UMLDocumentCollection();
             _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
             _openDirectoryService = openDirectoryService;
-            OpenDirectoryCommand = new DelegateCommand(()=> OpenDirectoryHandler());
+            OpenDirectoryCommand = new DelegateCommand(() => OpenDirectoryHandler());
 
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
             Folder = new TreeViewModel(Path.GetTempPath(), false, "", this);
@@ -78,7 +78,7 @@ namespace PlantUMLEditor.Models
             Messages = new ObservableCollection<DocumentMessage>();
             SelectDocumentCommand = new DelegateCommand<DocumentModel>(SelectDocumentHandler);
 
-            ScanAllFiles = new DelegateCommand(()=> ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
+            ScanAllFiles = new DelegateCommand(() => ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
 
             Configuration = new AppConfiguration()
             {
@@ -98,15 +98,15 @@ namespace PlantUMLEditor.Models
             {
                 if (!files.Any(p => e.NewItems.Contains(p)))
                 {
-                 
+
                     files.Add(((DocumentModel)e.NewItems[0]).FileName);
                 }
             }
-            if(e.OldItems != null)
+            if (e.OldItems != null)
             {
                 files.RemoveAll(p => p == ((DocumentModel)e.OldItems[0]).FileName);
 
-                
+
             }
             AppSettings.Default.Files = JsonConvert.SerializeObject(files);
             AppSettings.Default.Save();
@@ -280,7 +280,7 @@ namespace PlantUMLEditor.Models
                     }
                 }
             }
-            else if(sender.IsMissingDataType)
+            else if (sender.IsMissingDataType)
             {
                 var f = Documents.ClassDocuments.FirstOrDefault(p => p.Title == "defaults.class");
                 if (f != null)
@@ -370,13 +370,13 @@ namespace PlantUMLEditor.Models
                 }
                 foreach (var doc in Documents.ComponentDiagrams)
                 {
-                   if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
+                    if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
                         diagrams.Add(doc);
                 }
                 foreach (var doc in Documents.SequenceDiagrams)
                 {
                     if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
-                    diagrams.Add(doc);
+                        diagrams.Add(doc);
                 }
             }
             catch
@@ -394,9 +394,9 @@ namespace PlantUMLEditor.Models
 
               foreach (var d in Messages)
               {
-                  if(d.IsMissingMethod || d.IsMissingDataType )
+                  if (d.IsMissingMethod || d.IsMissingDataType)
                       d.FixingCommand = new DelegateCommand<DocumentMessage>(FixingCommandHandler);
-                
+
 
                   var docs = OpenDocuments.Where(p => p.FileName == d.FileName);
                   foreach (var doc in docs)
@@ -658,15 +658,27 @@ namespace PlantUMLEditor.Models
 
         private async Task OpenDirectoryHandler(bool? useAppSettings = false)
         {
+ 
+
             _folderBase = null;
+
             await SaveAll();
 
             string dir = GetWorkingFolder(useAppSettings.GetValueOrDefault());
             if (string.IsNullOrEmpty(dir))
                 return;
+            foreach (var d in OpenDocuments)
+            {
+                d.Close();
 
+
+            }
+            OpenDocuments.Clear();
             AppSettings.Default.WorkingDir = dir;
             AppSettings.Default.Save();
+
+
+
 
             CreateNewComponentDiagram.RaiseCanExecuteChanged();
             CreateNewClassDiagram.RaiseCanExecuteChanged();
@@ -907,12 +919,12 @@ namespace PlantUMLEditor.Models
             if (files == null)
                 files = new List<string>();
 
-            foreach(var file in files)
+            foreach (var file in files)
             {
-                if(File.Exists(file))
+                if (File.Exists(file))
                     await AttemptOpeningFile(file);
             }
-            
+
         }
 
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)
