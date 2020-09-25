@@ -611,22 +611,22 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                     </Grid.Style>
 
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                     
                                         <ColumnDefinition Width="Auto" ></ColumnDefinition>
                                         <ColumnDefinition Width="Auto"></ColumnDefinition>
                                         <ColumnDefinition Width="Auto"></ColumnDefinition>
                                         <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
                                     </Grid.ColumnDefinitions>
 
-                                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></Button>
-                                    <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                       <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                                         <Button.Content>
                                             <Grid>
                                                 <Image Source="/Images/Save_16x.png"></Image>
                                             </Grid>
                                         </Button.Content>
                                     </Button>
-                                    <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                    <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                                         <Button.Content>
                                             <Grid>
                                                 <Image Source="/Images/SaveClose_16x.png"></Image>
@@ -634,20 +634,22 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                         </Button.Content>
                                     </Button>
 
-                                    <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                    <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                                         <Button.Content>
                                             <Grid>
                                                 <Image Source="/Images/Close_8x_16x.png" ></Image>
                                             </Grid>
                                         </Button.Content>
                                     </Button>
-                                    <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="4"  Command="{Binding  ShowPreviewCommand}">
+                                    <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3"  Command="{Binding  ShowPreviewCommand}">
                                         <Button.Content>
                                             <Grid>
                                                 <Image Source="/Images/PreviewTransition_16x.png" ></Image>
                                             </Grid>
                                         </Button.Content>
                                     </Button>
+                                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}"  Grid.Column="4"  CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></Button>
+
                                 </Grid>
                             </Border>
                         </DataTemplate>
