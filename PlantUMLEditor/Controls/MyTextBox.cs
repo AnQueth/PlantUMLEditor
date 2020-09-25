@@ -54,7 +54,7 @@ namespace PlantUMLEditor.Controls
             DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
         public static DependencyProperty GotoDefinitionCommandProperty =
             DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
-
+        private bool _renderText;
 
         public MyTextBox()
         {
@@ -220,6 +220,7 @@ namespace PlantUMLEditor.Controls
             lock (_found)
                 _found.Clear();
 
+            this._renderText = true;
             this.InvalidateVisual();
         }
 
@@ -228,6 +229,7 @@ namespace PlantUMLEditor.Controls
             FindReplaceVisible = false;
             lock (_found)
                 _found.Clear();
+            this._renderText = true;
             this.InvalidateVisual();
         }
 
@@ -256,6 +258,7 @@ namespace PlantUMLEditor.Controls
 
             _braces = (selectionStart, match);
 
+            this._renderText = true;
             this.InvalidateVisual();
         }
 
@@ -279,6 +282,7 @@ namespace PlantUMLEditor.Controls
 
             _braces = (selectionStart, match);
 
+            this._renderText = true;
             this.InvalidateVisual();
         }
 
@@ -372,7 +376,7 @@ namespace PlantUMLEditor.Controls
             this.Text = r.Replace(this.Text, ReplaceText);
             lock (_found)
                 _found.Clear();
-
+            this._renderText = true;
             this.InvalidateVisual();
         }
 
@@ -401,7 +405,7 @@ namespace PlantUMLEditor.Controls
                     if (!text.EndsWith(")"))
                         text = text + ")";
 
-                    Regex r = new Regex(text, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+                    Regex r = new Regex(text, RegexOptions.IgnoreCase , TimeSpan.FromMilliseconds(100));
                     var m = r.Matches(t);
 
                     foreach (Group item in m)
@@ -446,7 +450,10 @@ namespace PlantUMLEditor.Controls
             {
             }
             if (invalidate)
+            {
+                this._renderText = true;
                 Dispatcher.Invoke(this.InvalidateVisual);
+            }
         }
 
         private void ShowFind()
@@ -657,8 +664,12 @@ namespace PlantUMLEditor.Controls
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
-            //lock (_found)
-            //    _found.Clear();
+
+         
+
+            lock (_found)
+                _found.Clear();
+
             int item = this.GetCharacterIndexFromPoint(e.GetPosition(this), true);
             if (item < this.Text.Length)
             {
@@ -691,13 +702,29 @@ namespace PlantUMLEditor.Controls
             base.OnPreviewTextInput(e);
         }
 
+        private DrawingVisual _cachedDrawing;
+
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
             drawingContext.PushTransform(new TranslateTransform(-this.HorizontalOffset, -this.VerticalOffset));
             drawingContext.PushClip(new RectangleGeometry(new Rect(this.HorizontalOffset, this.VerticalOffset,
                 this.ViewportWidth, this.ViewportHeight)));
-            SetText(this.TextRead(), false, drawingContext);
+
+            if (this._renderText)
+            {
+
+                _cachedDrawing = new DrawingVisual();
+              
+                var d = _cachedDrawing.RenderOpen();
+
+                SetText(this.TextRead(), false, d);
+                d.Close();
+
+                this._renderText = false;
+
+            }
+            drawingContext.DrawDrawing(_cachedDrawing.Drawing);
         }
 
         protected override void OnSelectionChanged(RoutedEventArgs e)
@@ -738,6 +765,7 @@ namespace PlantUMLEditor.Controls
             _errors.Clear();
 
             base.OnTextChanged(e);
+            this._renderText = true;
             this.InvalidateVisual();
         }
 
@@ -836,6 +864,7 @@ namespace PlantUMLEditor.Controls
         {
             if (!_errors.Contains((line, character)))
             {
+                this._renderText = true;
                 _errors.Add((line, character));
                 this.InvalidateVisual();
             }
@@ -872,71 +901,82 @@ namespace PlantUMLEditor.Controls
             _autoComplete = autoComplete;
         }
 
+        private FormattedText formattedText = null;
+
         public void SetText(string text, bool format, DrawingContext col)
         {
-            FormattedText formattedText = new FormattedText(
-   this.Text,
-   CultureInfo.GetCultureInfo("en-us"),
-   FlowDirection.LeftToRight,
-   new Typeface(this.FontFamily.Source),
-   this.FontSize, Brushes.DarkBlue, VisualTreeHelper.GetDpi(this).PixelsPerDip);
-
-            try
-            {
-                int end = int.MaxValue;
-                int sl = this.GetFirstVisibleLineIndex();
-
-                int start = 0;
+        
+                  formattedText = new FormattedText(
+       this.Text,
+       CultureInfo.GetCultureInfo("en-us"),
+       FlowDirection.LeftToRight,
+       new Typeface(this.FontFamily.Source),
+       this.FontSize, Brushes.DarkBlue, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
 
-                ColorCoding coding = new ColorCoding();
-                coding.FormatText(this.TextRead(), formattedText);
-                lock (_found)
+
+                try
                 {
-                    foreach (var item in _found)
+                    int end = int.MaxValue;
+                    int start = 0;
+
+                    
+
+
+
+                    ColorCoding coding = new ColorCoding();
+                    coding.FormatText(this.TextRead(), formattedText);
+                    lock (_found)
                     {
-                        if (item.start >= start && item.start <= end)
+                        foreach (var item in _found)
                         {
-                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
-                            col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                            if (item.start >= start && item.start <= end)
+                            {
+                                var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+
+                                col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                            }
+                        }
+                    }
+                    if (_braces.selectionStart != 0 && _braces.match != 0)
+                    {
+                        var g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.selectionStart, 1);
+                        col.DrawGeometry(Brushes.LightBlue, null, g);
+                        g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.match, 1);
+                        col.DrawGeometry(Brushes.LightBlue, null, g);
+                    }
+
+                    foreach (var item in _errors)
+                    {
+                        try
+                        {
+                            var l = GetCharacterIndexFromLineIndex(item.line - 1);
+                            var len = GetLineLength(item.line - 1);
+                            if (l >= start && l <= end)
+                            {
+                                TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
+                                    new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
+                                     TextDecorationUnit.FontRecommended);
+
+                                TextDecorationCollection textDecorations = new TextDecorationCollection();
+                                textDecorations.Add(td);
+
+                                formattedText.SetTextDecorations(textDecorations, l, len);
+                            }
+                        }
+                        catch
+                        {
                         }
                     }
                 }
-                if (_braces.selectionStart != 0 && _braces.match != 0)
+                catch (Exception ex)
                 {
-                    var g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.selectionStart, 1);
-                    col.DrawGeometry(Brushes.LightBlue, null, g);
-                    g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.match, 1);
-                    col.DrawGeometry(Brushes.LightBlue, null, g);
                 }
 
-                foreach (var item in _errors)
-                {
-                    try
-                    {
-                        var l = GetCharacterIndexFromLineIndex(item.line - 1);
-                        var len = GetLineLength(item.line - 1);
-                        if (l >= start && l <= end)
-                        {
-                            TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
-                                new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
-                                 TextDecorationUnit.FontRecommended);
-                            TextDecorationCollection textDecorations = new TextDecorationCollection();
-                            textDecorations.Add(td);
-
-                            formattedText.SetTextDecorations(textDecorations, l, len);
-                        }
-                    }
-                    catch
-                    {
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-            }
-
+         
             col.DrawText(formattedText, new Point(4, 0));
+            
+
         }
 
         public void TextClear()
@@ -961,8 +1001,10 @@ namespace PlantUMLEditor.Controls
             if (format)
             {
                 Indenter indenter = new Indenter();
+
                 this.Text = indenter.Process(text, false);
             }
+            this._renderText = true;
             this.InvalidateVisual();
         }
     }

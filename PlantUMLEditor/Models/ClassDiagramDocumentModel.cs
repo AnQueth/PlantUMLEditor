@@ -20,6 +20,12 @@ namespace PlantUMLEditor.Models
         {
         }
 
+        public override void Close()
+        {
+            _running = false;
+            base.Close();
+        }
+
         public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback, IConfiguration configuration)
             : base(configuration)
         {

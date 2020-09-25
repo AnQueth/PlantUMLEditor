@@ -229,7 +229,7 @@ namespace PlantUMLEditor.Models
             //  this._autoComplete.CloseAutoComplete();
         }
 
-        public void Close()
+        public virtual void Close()
         {
             Visible = Visibility.Collapsed;
             imageModel?.Stop();
