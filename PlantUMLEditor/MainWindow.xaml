@@ -697,7 +697,15 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             <RowDefinition Height="Auto"></RowDefinition>
                             <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
-                        <TextBox Margin="2,2,5,2"  x:Name="txtGF"></TextBox>
+                        <TextBox Margin="2,2,5,2"  x:Name="txtGF">
+                            <b:Interaction.Triggers>
+                                <b:KeyTrigger Key="Return" ActiveOnFocus="True">
+
+                                <b:InvokeCommandAction   CommandParameter="{Binding Text, ElementName=txtGF}"  Command="{Binding  GlobalSearchCommand}"></b:InvokeCommandAction>
+                            </b:KeyTrigger>
+                                </b:Interaction.Triggers>
+                        </TextBox>
+                        
                         <Button Margin="2,2,2,2"  Grid.Column="1" Command="{Binding GlobalSearchCommand}"
                                 CommandParameter="{Binding Text, ElementName=txtGF}" >Find</Button>
                         <DataGrid SelectionMode="Single"  AutoGenerateColumns="False"  ItemsSource="{Binding GlobalFindResults}" Margin="{DynamicResource TabHeaderMargin}"  Grid.Row="1" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch"
