@@ -77,7 +77,7 @@ namespace PlantUMLEditor.Models
             SaveCommand = new DelegateCommand<DocumentModel>(SaveCommandHandler);
             Messages = new ObservableCollection<DocumentMessage>();
             SelectDocumentCommand = new DelegateCommand<DocumentModel>(SelectDocumentHandler);
-
+            GlobalSearchCommand = new DelegateCommand<string>(GlobalSearchHandler);
             ScanAllFiles = new DelegateCommand(() => ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
 
             Configuration = new AppConfiguration()
@@ -86,6 +86,34 @@ namespace PlantUMLEditor.Models
             };
 
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
+        }
+
+        private GlobalFindResult _selectedFindResult;
+        public GlobalFindResult SelectedGlobalFindResult
+        {
+            get
+            {
+                return _selectedFindResult;
+            }
+            set
+            {
+                _selectedFindResult = value;
+
+                this.AttemptOpeningFile(value.FileName, value.LineNumber);
+            }
+        }
+        public ObservableCollection<GlobalFindResult> GlobalFindResults { get; } = new ObservableCollection<GlobalFindResult>();
+
+        private async void GlobalSearchHandler(string obj)
+        {
+            GlobalSearch gs = new GlobalSearch();
+            var findresults = await gs.Find(_folderBase, obj, new string[]
+            {"*.puml"
+
+            });
+            GlobalFindResults.Clear();
+            foreach (var f in findresults)
+                GlobalFindResults.Add(f);
         }
 
         private void OpenDocuments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -219,6 +247,7 @@ namespace PlantUMLEditor.Models
         public DelegateCommand ScanAllFiles { get; }
 
         public DelegateCommand<DocumentModel> SelectDocumentCommand { get; }
+        public DelegateCommand<string> GlobalSearchCommand { get; }
 
         public DocumentMessage SelectedMessage
         {
@@ -658,7 +687,7 @@ namespace PlantUMLEditor.Models
 
         private async Task OpenDirectoryHandler(bool? useAppSettings = false)
         {
- 
+
 
             _folderBase = null;
 

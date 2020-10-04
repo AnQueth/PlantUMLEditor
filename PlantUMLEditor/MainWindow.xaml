@@ -662,32 +662,65 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                 </ItemsControl>
             </Grid>
             <GridSplitter Grid.Row="1" ShowsPreview="True"  Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
-            <ListBox Grid.Row="2"   ItemsSource="{Binding Messages}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding SelectedMessage}">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="50"></ColumnDefinition>
-                                <ColumnDefinition Width="200"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding Text}" Grid.Column="0" Margin="10,5,10,5" ></TextBlock>
-                            <TextBlock Text="{Binding LineNumber}" Grid.Column="1" Margin="10,5,10,5"></TextBlock>
-                            <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
+            <TabControl Grid.Row="2">
+                <TabItem>
+                    <TabItem.Header>Errors</TabItem.Header>
+                    <ListBox Grid.Row="2"   ItemsSource="{Binding Messages}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding SelectedMessage}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"></ColumnDefinition>
+                                        <ColumnDefinition Width="50"></ColumnDefinition>
+                                        <ColumnDefinition Width="200"></ColumnDefinition>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding Text}" Grid.Column="0" Margin="10,5,10,5" ></TextBlock>
+                                    <TextBlock Text="{Binding LineNumber}" Grid.Column="1" Margin="10,5,10,5"></TextBlock>
+                                    <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
                                 Content="Fix" Grid.Column="2"></Button>
-                        </Grid>
+                                </Grid>
 
-                        <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding IsFixable}" Value="false">
-                                <DataTrigger.Setters>
-                                    <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
-                                </DataTrigger.Setters>
-                            </DataTrigger>
-                        </DataTemplate.Triggers>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </Grid>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsFixable}" Value="false">
+                                        <DataTrigger.Setters>
+                                            <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
+                                        </DataTrigger.Setters>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>Find</TabItem.Header>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                            <RowDefinition Height="*"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <TextBox Margin="2,2,5,2"  x:Name="txtGF"></TextBox>
+                        <Button Margin="2,2,2,2"  Grid.Column="1" Command="{Binding GlobalSearchCommand}"  
+                                CommandParameter="{Binding Text, ElementName=txtGF}" >Find</Button>
+                        <DataGrid  AutoGenerateColumns="False"  ItemsSource="{Binding GlobalFindResults}" Margin="{DynamicResource TabHeaderMargin}"  Grid.Row="1" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" 
+                                 SelectedItem="{Binding SelectedGlobalFindResult}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
+                                <DataGridTextColumn Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
+                                <DataGridTextColumn Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
+
+                            </DataGrid.Columns>
+                                                       
+                        </DataGrid>
+                    </Grid>
+                    
+                </TabItem>
+            </TabControl>
+             </Grid>
 
         <GridSplitter     HorizontalAlignment="Center"
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
