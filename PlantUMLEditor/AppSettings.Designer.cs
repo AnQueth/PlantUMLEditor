@@ -46,5 +46,17 @@ namespace PlantUMLEditor {
                 this["Files"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string GridSettings {
+            get {
+                return ((string)(this["GridSettings"]));
+            }
+            set {
+                this["GridSettings"] = value;
+            }
+        }
     }
 }

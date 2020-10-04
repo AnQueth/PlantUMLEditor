@@ -29,7 +29,8 @@ namespace PlantUMLEditor.Models
                                     {
                                         FileName = file,
                                         LineNumber = line,
-                                        Text = lineText
+                                        Text = lineText,
+                                        SearchText = text
                                     });
                                 }
                                 line++;

@@ -150,7 +150,7 @@ namespace PlantUMLEditor.Controls
             {
                 _selectedFindResult = value;
                 if (value != null)
-                    GotoLine(value.LineNumber);
+                    GotoLine(value.LineNumber, string.Empty);
             }
         }
 
@@ -419,7 +419,10 @@ namespace PlantUMLEditor.Controls
                 }
                 else
                 {
-                    var p = t.IndexOf(text);
+                    t = t.ToLowerInvariant();
+                    string search = text.ToLowerInvariant();
+
+                    var p = t.IndexOf(search);
                     while (p != -1)
                     {
                         _found.Add((p, text.Length));
@@ -430,12 +433,12 @@ namespace PlantUMLEditor.Controls
                         string reps = "";
                         if (!string.IsNullOrEmpty(ReplaceText))
                         {
-                            reps = line.Replace(text, ReplaceText);
+                            reps = line.Replace(text, ReplaceText, StringComparison.InvariantCultureIgnoreCase);
                         }
 
                         FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
 
-                        p = t.IndexOf(text, p + 1);
+                        p = t.IndexOf(search, p + 1);
                     }
                 }
             }
@@ -806,10 +809,12 @@ namespace PlantUMLEditor.Controls
             throw new ArgumentOutOfRangeException();
         }
 
-        public void GotoLine(int lineNumber)
+        public void GotoLine(int lineNumber, string findText)
         {
             if (lineNumber == 0)
                 lineNumber = 1;
+            
+       
 
             Dispatcher.BeginInvoke((Action)(() =>
             {
@@ -819,7 +824,8 @@ namespace PlantUMLEditor.Controls
 
                     this._renderText = true;
 
-                    this.InvalidateVisual();
+                    this.FindText = findText;
+                    this.FindHandler();
 
                     this.ScrollToLine(lineNumber - 1);
                 }
@@ -928,7 +934,7 @@ namespace PlantUMLEditor.Controls
 
                 var geo = formattedText.BuildHighlightGeometry(new Point(4, 0),
                     line.start, line.len);
-                col.DrawGeometry(Brushes.WhiteSmoke, new Pen(Brushes.Silver, 1), geo);
+                col.DrawGeometry(Brushes.WhiteSmoke, new Pen(Brushes.Silver, 2), geo);
             }
             catch
             {
@@ -947,9 +953,20 @@ namespace PlantUMLEditor.Controls
                     {
                         if (item.start >= start && item.start <= end)
                         {
-                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
 
-                            col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                            TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
+                          new System.Windows.Media.Pen(Brushes.DarkBlue, 5), 0, TextDecorationUnit.FontRecommended,
+                           TextDecorationUnit.FontRecommended);
+
+                            TextDecorationCollection textDecorations = new TextDecorationCollection();
+                            textDecorations.Add(td);
+
+                            formattedText.SetTextDecorations(textDecorations, item.start, item.length);
+
+
+                            //var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+
+                            //col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
                         }
                     }
                 }

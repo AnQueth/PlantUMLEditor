@@ -2,7 +2,7 @@
 {
     public interface ITextEditor
     {
-        void GotoLine(int lineNumber);
+        void GotoLine(int lineNumber, string findText);
 
         void InsertText(string text);
 

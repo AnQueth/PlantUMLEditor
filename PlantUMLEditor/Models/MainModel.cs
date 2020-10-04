@@ -65,6 +65,9 @@ namespace PlantUMLEditor.Models
             };
 
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
+            GridSettings  = !string.IsNullOrEmpty( AppSettings.Default.GridSettings) ? 
+                JsonConvert.DeserializeObject<GridSettings>(AppSettings.Default.GridSettings) : new GridSettings(GridSettingsChanged);
+            GridSettings.ChangedCB = GridSettingsChanged; 
         }
 
         private AppConfiguration Configuration { get; }
@@ -158,6 +161,13 @@ namespace PlantUMLEditor.Models
             }
         }
 
+
+        public GridSettings GridSettings
+        {
+            get;
+            private set;
+        } 
+
         public ObservableCollection<DocumentMessage> Messages
         {
             get;
@@ -194,7 +204,8 @@ namespace PlantUMLEditor.Models
             {
                 _selectedFindResult = value;
                 if (value != null)
-                    this.AttemptOpeningFile(value.FileName, value.LineNumber);
+                    this.AttemptOpeningFile(value.FileName, 
+                        value.LineNumber, value.SearchText);
             }
         }
 
@@ -244,14 +255,15 @@ namespace PlantUMLEditor.Models
             this.CurrentDocument = d;
         }
 
-        private async Task AttemptOpeningFile(string fullPath, int lineNumber = 0)
+        private async Task AttemptOpeningFile(string fullPath, 
+            int lineNumber = 0, string searchText = null)
         {
             var doc = OpenDocuments.FirstOrDefault(p => p.FileName == fullPath);
 
             if (doc != null)
             {
                 CurrentDocument = doc;
-                doc.GotoLineNumber(lineNumber);
+                doc.GotoLineNumber(lineNumber, searchText);
                 return;
             }
 
@@ -262,14 +274,14 @@ namespace PlantUMLEditor.Models
 
             if (cd != null)
             {
-                OpenClassDiagram(fullPath, cd, lineNumber);
+                OpenClassDiagram(fullPath, cd, lineNumber, searchText);
             }
             else if (sd != null)
             {
-                OpenSequenceDiagram(fullPath, sd, lineNumber);
+                OpenSequenceDiagram(fullPath, sd, lineNumber, searchText);
             }
             else if (comd != null)
-                OpenComponentDiagram(fullPath, comd, lineNumber);
+                OpenComponentDiagram(fullPath, comd, lineNumber, searchText);
             else if (ud != null)
             {
                 OpenUnknownDiagram(fullPath, ud);
@@ -399,7 +411,7 @@ namespace PlantUMLEditor.Models
                     }
                     else
                     {
-                        OpenClassDiagram(doc.FileName, doc, 0);
+                        OpenClassDiagram(doc.FileName, doc, 0, null);
                     }
                 }
             }
@@ -422,7 +434,7 @@ namespace PlantUMLEditor.Models
                     }
                     else
                     {
-                        OpenClassDiagram(d, f, 0);
+                        OpenClassDiagram(d, f, 0, null);
                     }
                 }
                 else
@@ -526,7 +538,7 @@ namespace PlantUMLEditor.Models
                 DT = p.DataTypes.First(z => z.Name == text)
             }))
             {
-                OpenClassDiagram(item.FN, item.D, item.DT.LineNumber);
+                OpenClassDiagram(item.FN, item.D, item.DT.LineNumber, null);
             }
         }
 
@@ -620,7 +632,8 @@ namespace PlantUMLEditor.Models
             this.ScanDirectory(this._folderBase);
         }
 
-        private void OpenClassDiagram(string fileName, UMLClassDiagram diagram, int lineNumber)
+        private void OpenClassDiagram(string fileName, 
+            UMLClassDiagram diagram, int lineNumber, string searchText)
         {
             var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), Configuration,
                 _ioService)
@@ -634,12 +647,13 @@ namespace PlantUMLEditor.Models
             lock (_docLock)
                 OpenDocuments.Add(d);
 
-            d.GotoLineNumber(lineNumber);
+            d.GotoLineNumber(lineNumber, searchText);
 
             this.CurrentDocument = d;
         }
 
-        private void OpenComponentDiagram(string fileName, UMLComponentDiagram diagram, int lineNumber)
+        private void OpenComponentDiagram(string fileName, UMLComponentDiagram diagram,
+            int lineNumber, string searchText)
         {
             var d = new ComponentDiagramDocumentModel((old, @new) => { DiagramModelChanged(Documents.ComponentDiagrams, old, @new); }, Configuration, _ioService)
             {
@@ -652,7 +666,7 @@ namespace PlantUMLEditor.Models
             lock (_docLock)
                 OpenDocuments.Add(d);
 
-            d.GotoLineNumber(lineNumber);
+            d.GotoLineNumber(lineNumber, searchText);
 
             this.CurrentDocument = d;
         }
@@ -683,6 +697,12 @@ namespace PlantUMLEditor.Models
             await ScanDirectory(dir);
         }
 
+        private void GridSettingsChanged()
+        {
+            AppSettings.Default.GridSettings = JsonConvert.SerializeObject(this.GridSettings);
+            AppSettings.Default.Save();
+        }
+
         private void OpenDocuments_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             var files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
@@ -704,7 +724,8 @@ namespace PlantUMLEditor.Models
             AppSettings.Default.Save();
         }
 
-        private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram, int lineNumber)
+        private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram, 
+            int lineNumber, string searchText)
         {
             var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new), Configuration, _ioService)
             {
@@ -720,7 +741,7 @@ namespace PlantUMLEditor.Models
             lock (_docLock)
                 OpenDocuments.Add(d);
 
-            d.GotoLineNumber(lineNumber);
+            d.GotoLineNumber(lineNumber, searchText);
 
             this.CurrentDocument = d;
         }
