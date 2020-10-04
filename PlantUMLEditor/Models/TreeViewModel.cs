@@ -16,8 +16,10 @@ namespace PlantUMLEditor.Models
         private string _name;
         private string _rename;
 
-        public TreeViewModel(string path, bool isFile, string icon, IFolderChangeNotifactions folderChangeNotifactions)
+        public TreeViewModel(TreeViewModel parent, string path, bool isFile, string icon, 
+            IFolderChangeNotifactions folderChangeNotifactions)
         {
+            Parent = parent;
             FullPath = path;
             Icon = icon;
             Name = Path.GetFileName(path);
@@ -42,7 +44,7 @@ namespace PlantUMLEditor.Models
         public DelegateCommand DeleteCommand { get; }
 
         public DelegateCommand DoRenameCommand { get; }
-
+        public TreeViewModel Parent { get; }
         public string FullPath
         {
             get; set;
@@ -119,6 +121,7 @@ namespace PlantUMLEditor.Models
                 File.Delete(this.FullPath);
             }
             this.IsVisible = Visibility.Collapsed;
+            this.Parent?.Children.Remove(this);
         }
 
         private void NewFolderHandler()
@@ -127,7 +130,7 @@ namespace PlantUMLEditor.Models
             if (!Directory.Exists(nf))
                 Directory.CreateDirectory(nf);
 
-            Children.Add(new TreeViewModel(nf, false, "", _folderChangeNotifactions)
+            Children.Add(new TreeViewModel(this, nf, false, "", _folderChangeNotifactions)
             {
                 IsRenaming = true,
                 Rename = "New Folder"

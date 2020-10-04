@@ -66,7 +66,7 @@ namespace PlantUMLEditor.Models
             OpenDirectoryCommand = new DelegateCommand(() => OpenDirectoryHandler());
 
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
-            Folder = new TreeViewModel(Path.GetTempPath(), false, "", this);
+            Folder = new TreeViewModel(null, Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<DocumentModel>();
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
@@ -98,8 +98,8 @@ namespace PlantUMLEditor.Models
             set
             {
                 _selectedFindResult = value;
-
-                this.AttemptOpeningFile(value.FileName, value.LineNumber);
+                if(value != null)
+                    this.AttemptOpeningFile(value.FileName, value.LineNumber);
             }
         }
         public ObservableCollection<GlobalFindResult> GlobalFindResults { get; } = new ObservableCollection<GlobalFindResult>();
@@ -265,7 +265,7 @@ namespace PlantUMLEditor.Models
         {
             foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
             {
-                model.Children.Add(new TreeViewModel(file, true, !file.Contains(".component.puml") ?
+                model.Children.Add(new TreeViewModel(model, file, true, !file.Contains(".component.puml") ?
                     (!file.Contains(".seq.puml") ? "images\\class.png" : "images\\sequence.png") : "images\\com.png", this)
                 {
                 });
@@ -276,7 +276,7 @@ namespace PlantUMLEditor.Models
                 if (Path.GetFileName(item).StartsWith("."))
                     continue;
 
-                var fm = new TreeViewModel(item, false, "", this)
+                var fm = new TreeViewModel(model, item, false, "", this)
                 {
                 };
                 model.Children.Add(fm);
@@ -553,21 +553,30 @@ namespace PlantUMLEditor.Models
 
         private void NewClassDiagram(string fileName, string title)
         {
-            var s = new UMLModels.UMLClassDiagram(title, fileName);
+            var model = new UMLModels.UMLClassDiagram(title, fileName);
 
             var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), Configuration)
             {
                 DocumentType = DocumentTypes.Class,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
-                Diagram = s,
+                Diagram = model,
                 FileName = fileName,
                 Name = title
             };
 
-            Documents.ClassDocuments.Add(s);
 
+            Documents.ClassDocuments.Add(model);
+
+            AfterCreate(d);
+        }
+
+        private void AfterCreate(DocumentModel d)
+        {
             lock (_docLock)
                 OpenDocuments.Add(d);
+
+            d.Save();
+
             this.CurrentDocument = d;
         }
 
@@ -585,22 +594,19 @@ namespace PlantUMLEditor.Models
 
         private void NewComponentDiagram(string fileName, string title)
         {
-            var s = new UMLModels.UMLComponentDiagram(title, fileName);
+            var model = new UMLModels.UMLComponentDiagram(title, fileName);
 
             var d = new ComponentDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ComponentDiagrams, old, @new), Configuration)
             {
                 DocumentType = DocumentTypes.Component,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
-                Diagram = s,
+                Diagram = model,
                 FileName = fileName,
                 Name = title
             };
 
-            Documents.ComponentDiagrams.Add(s);
-
-            lock (_docLock)
-                OpenDocuments.Add(d);
-            this.CurrentDocument = d;
+            Documents.ComponentDiagrams.Add(model);
+            AfterCreate(d);
         }
 
         private void NewComponentDiagramHandler()
@@ -617,22 +623,20 @@ namespace PlantUMLEditor.Models
 
         private void NewSequenceDiagram(string fileName, string title)
         {
-            var s = new UMLModels.UMLSequenceDiagram(title, fileName);
+            var model = new UMLModels.UMLSequenceDiagram(title, fileName);
 
             var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new), Configuration)
             {
                 DocumentType = DocumentTypes.Sequence,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
-                Diagram = s,
+                Diagram = model,
                 DataTypes = Documents.ClassDocuments,
                 FileName = fileName,
                 Name = title
             };
 
-            Documents.SequenceDiagrams.Add(s);
-            lock (_docLock)
-                OpenDocuments.Add(d);
-            this.CurrentDocument = d;
+            Documents.SequenceDiagrams.Add(model);
+            AfterCreate(d);
         }
 
         private void NewSequenceDiagramHandler()
@@ -875,11 +879,11 @@ namespace PlantUMLEditor.Models
 
         private async Task ScanDirectory(string dir)
         {
-            Folder = new TreeViewModel("", false, "", this);
+            Folder = new TreeViewModel(null, "", false, "", this);
 
             Folder.Children.Clear();
 
-            var start = new TreeViewModel(dir, false, "", this);
+            var start = new TreeViewModel(Folder,dir, false, "", this);
 
             Folder.Children.Add(start);
 

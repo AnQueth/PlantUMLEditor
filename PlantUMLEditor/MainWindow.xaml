@@ -21,6 +21,9 @@ FontFamily="Consolas Code"
 
     <Window.Resources>
 
+        <Style TargetType="GridSplitter">
+            <Setter Property="Background" Value="DarkGray"></Setter>
+        </Style>
         <ContextMenu x:Key="FolderMenu">
             <MenuItem Header="New Class Diagram" Command="{Binding DataContext.CreateNewClassDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New Sequence Diagram" Command="{Binding DataContext.CreateNewSequenceDiagram , RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
@@ -154,9 +157,9 @@ FontFamily="Consolas Code"
                                 <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="7" MaxHeight="300"
                                  AutoGenerateColumns="False"     SelectedItem="{Binding SelectedFindResult, Mode=TwoWay, ElementName=Editor}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn  Header="Line"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
-                                        <DataGridTextColumn Header="Match" Binding="{Binding Line}" ></DataGridTextColumn>
-                                        <DataGridTextColumn Header="Replace" Binding="{Binding ReplacePreview}" ></DataGridTextColumn>
+                                        <DataGridTextColumn  Header="Line" IsReadOnly="true"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
+                                        <DataGridTextColumn Header="Match" IsReadOnly="true"  Binding="{Binding Line}" ></DataGridTextColumn>
+                                        <DataGridTextColumn Header="Replace" IsReadOnly="true" Binding="{Binding ReplacePreview}" ></DataGridTextColumn>
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Grid>
@@ -709,9 +712,9 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                         <DataGrid  AutoGenerateColumns="False"  ItemsSource="{Binding GlobalFindResults}" Margin="{DynamicResource TabHeaderMargin}"  Grid.Row="1" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" 
                                  SelectedItem="{Binding SelectedGlobalFindResult}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
-                                <DataGridTextColumn Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
-                                <DataGridTextColumn Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
+                                <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
+                                <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
+                                <DataGridTextColumn IsReadOnly="true" Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
 
                             </DataGrid.Columns>
                                                        

@@ -8,6 +8,7 @@ using System.Diagnostics;
 
 using System.Globalization;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -405,7 +406,7 @@ namespace PlantUMLEditor.Controls
                     if (!text.EndsWith(")"))
                         text = text + ")";
 
-                    Regex r = new Regex(text, RegexOptions.IgnoreCase , TimeSpan.FromMilliseconds(100));
+                    Regex r = new Regex(text, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
                     var m = r.Matches(t);
 
                     foreach (Group item in m)
@@ -665,7 +666,7 @@ namespace PlantUMLEditor.Controls
         {
             base.OnPreviewMouseDown(e);
 
-         
+
 
             lock (_found)
                 _found.Clear();
@@ -715,10 +716,10 @@ namespace PlantUMLEditor.Controls
             {
 
                 _cachedDrawing = new DrawingVisual();
-              
+
                 var d = _cachedDrawing.RenderOpen();
 
-                SetText(this.TextRead(), false, d);
+                SetText(  d);
                 d.Close();
 
                 this._renderText = false;
@@ -808,8 +809,17 @@ namespace PlantUMLEditor.Controls
             {
                 try
                 {
+               
+
                     CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
+
+                    this._renderText = true;
+
+                    this.InvalidateVisual();
+                   
                     this.ScrollToLine(lineNumber - 1);
+               
+
                 }
                 catch { }
                 Keyboard.Focus(this);
@@ -903,79 +913,120 @@ namespace PlantUMLEditor.Controls
 
         private FormattedText formattedText = null;
 
-        public void SetText(string text, bool format, DrawingContext col)
+        public (int lineNumber, int start, int len) GetLineInformation(int ch)
         {
-        
-                  formattedText = new FormattedText(
-       this.Text,
-       CultureInfo.GetCultureInfo("en-us"),
-       FlowDirection.LeftToRight,
-       new Typeface(this.FontFamily.Source),
-       this.FontSize, Brushes.DarkBlue, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+            var text = this.Text;
+            var thisLine = 0;
+            var linestart = 0;
+            var linelen = 0;
 
-
-
-                try
+            var myline = 0;
+            for (var i = 0; i < text.Length; i++)
+            {
+                if (i == ch)
                 {
-                    int end = int.MaxValue;
-                    int start = 0;
-
-                    
+                    myline = thisLine;
+                }
 
 
+                if (text[i] == '\n')
+                {
+                    if (myline != 0)
+                        return (myline, linestart, i - linestart);
+                    linestart = i + 1;
+                    ++thisLine;
+                }
+            }
 
-                    ColorCoding coding = new ColorCoding();
-                    coding.FormatText(this.TextRead(), formattedText);
-                    lock (_found)
+            throw new ArgumentOutOfRangeException();
+        }
+
+        public void SetText(  DrawingContext col)
+        {
+
+            formattedText = new FormattedText(
+ this.Text,
+ CultureInfo.GetCultureInfo("en-us"),
+ FlowDirection.LeftToRight,
+ new Typeface(this.FontFamily.Source),
+ this.FontSize, Brushes.DarkBlue, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+
+
+            try
+            {
+                var line = this.GetLineInformation(CaretIndex);
+       
+
+                var geo = formattedText.BuildHighlightGeometry(new Point(4, 0),
+                    line.start, line.len);
+                col.DrawGeometry(Brushes.LightSkyBlue, new Pen(Brushes.Silver, 1), geo);
+            }
+            catch
+            {
+
+            }
+
+            try
+            {
+                int end = int.MaxValue;
+                int start = 0;
+
+
+
+
+
+                ColorCoding coding = new ColorCoding();
+                coding.FormatText(this.TextRead(), formattedText);
+                lock (_found)
+                {
+                    foreach (var item in _found)
                     {
-                        foreach (var item in _found)
+                        if (item.start >= start && item.start <= end)
                         {
-                            if (item.start >= start && item.start <= end)
-                            {
-                                var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
 
-                                col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
-                            }
-                        }
-                    }
-                    if (_braces.selectionStart != 0 && _braces.match != 0)
-                    {
-                        var g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.selectionStart, 1);
-                        col.DrawGeometry(Brushes.LightBlue, null, g);
-                        g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.match, 1);
-                        col.DrawGeometry(Brushes.LightBlue, null, g);
-                    }
-
-                    foreach (var item in _errors)
-                    {
-                        try
-                        {
-                            var l = GetCharacterIndexFromLineIndex(item.line - 1);
-                            var len = GetLineLength(item.line - 1);
-                            if (l >= start && l <= end)
-                            {
-                                TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
-                                    new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
-                                     TextDecorationUnit.FontRecommended);
-
-                                TextDecorationCollection textDecorations = new TextDecorationCollection();
-                                textDecorations.Add(td);
-
-                                formattedText.SetTextDecorations(textDecorations, l, len);
-                            }
-                        }
-                        catch
-                        {
+                            col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
                         }
                     }
                 }
-                catch (Exception ex)
+                if (_braces.selectionStart != 0 && _braces.match != 0)
                 {
+                    var g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.selectionStart, 1);
+                    col.DrawGeometry(Brushes.LightBlue, null, g);
+                    g = formattedText.BuildHighlightGeometry(new Point(4, 0), _braces.match, 1);
+                    col.DrawGeometry(Brushes.LightBlue, null, g);
                 }
 
-         
+                foreach (var item in _errors)
+                {
+                    try
+                    {
+                        var l = GetCharacterIndexFromLineIndex(item.line - 1);
+                        var len = GetLineLength(item.line - 1);
+                        if (l >= start && l <= end)
+                        {
+                            TextDecoration td = new TextDecoration(TextDecorationLocation.Underline,
+                                new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
+                                 TextDecorationUnit.FontRecommended);
+
+                            TextDecorationCollection textDecorations = new TextDecorationCollection();
+                            textDecorations.Add(td);
+
+                            formattedText.SetTextDecorations(textDecorations, l, len);
+                        }
+                    }
+                    catch
+                    {
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+
+
             col.DrawText(formattedText, new Point(4, 0));
-            
+
 
         }
 
