@@ -1,14 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
-using Prism.Commands;
+﻿using Prism.Commands;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Linq.Expressions;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,23 +12,23 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
-
 
 namespace PlantUMLEditor.Models
 {
     public class PreviewDiagramModel : BindingBase
     {
+        private readonly IIOService _ioService;
         private readonly ConcurrentQueue<(string, string, bool)> _regenRequests = new ConcurrentQueue<(string, string, bool)>();
         private AutoResetEvent _are = new AutoResetEvent(false);
         private FixedDocument _doc;
+        private string _messages;
         private bool _running = false;
         private BitmapSource image;
         private string title;
-        private string _messages;
 
-        public PreviewDiagramModel()
+        public PreviewDiagramModel(IIOService ioService)
         {
+            _ioService = ioService;
             PrintImageCommand = new DelegateCommand(PrintImageHandler);
             CopyImage = new DelegateCommand(CopyImageHandler);
             SaveImageCommand = new DelegateCommand(SaveImageHandler);
@@ -43,28 +38,7 @@ namespace PlantUMLEditor.Models
             Task.Run(Runner);
         }
 
-        private void SaveImageHandler()
-        {
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = "Png files | *.png";
-            sfd.DefaultExt = ".png";
-            if (sfd.ShowDialog().GetValueOrDefault())
-            {
-
-                PngBitmapEncoder encoder = new PngBitmapEncoder();
-
-
-
-                encoder.Frames.Add(BitmapFrame.Create((BitmapImage)Image));
-
-                using (var filestream = new FileStream(sfd.FileName, FileMode.Create))
-                    encoder.Save(filestream);
-            }
-        }
-
         public DelegateCommand CopyImage { get; }
-        public DelegateCommand SaveImageCommand { get; }
-
 
         public FixedDocument doc
         {
@@ -78,17 +52,6 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public string Messages
-        {
-            get
-            {
-                return _messages;
-            }
-            set
-            {
-                SetValue(ref _messages, value);
-            }
-        }
         public float Height
         {
             get; set;
@@ -100,7 +63,21 @@ namespace PlantUMLEditor.Models
             set { SetValue(ref image, value); }
         }
 
+        public string Messages
+        {
+            get
+            {
+                return _messages;
+            }
+            set
+            {
+                SetValue(ref _messages, value);
+            }
+        }
+
         public DelegateCommand PrintImageCommand { get; }
+
+        public DelegateCommand SaveImageCommand { get; }
 
         public string Title
         {
@@ -206,7 +183,6 @@ namespace PlantUMLEditor.Models
                                         string ll = g.ReadLine();
                                         if (ll != null)
                                         {
-                                           
                                             if (x > d - 3)
                                                 e += "\r\n" + ll;
                                         }
@@ -225,13 +201,11 @@ namespace PlantUMLEditor.Models
                             });
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Messages = ex.ToString();
                 }
-
             }
-
         }
 
         private void SaveFrameworkElement(BitmapSource bitmapImage, int widthSteps, int heightSteps, int width, int height, List<DrawingVisual> images)
@@ -243,6 +217,19 @@ namespace PlantUMLEditor.Models
                     SaveImage(bitmapImage, startX * width, startY * height, width, height, images);
                 }
             }
+        }
+
+        private void SaveImageHandler()
+        {
+            string fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
+            if (fileName == null)
+                return;
+            PngBitmapEncoder encoder = new PngBitmapEncoder();
+
+            encoder.Frames.Add(BitmapFrame.Create((BitmapImage)Image));
+
+            using (var filestream = new FileStream(fileName, FileMode.Create))
+                encoder.Save(filestream);
         }
 
         internal void Stop()

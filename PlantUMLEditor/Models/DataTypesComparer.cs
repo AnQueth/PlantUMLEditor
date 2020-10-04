@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Windows.Forms.Design;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class DataTypesComparer : IEqualityComparer<Tuple<string, UMLDataType> >
+    internal class DataTypesComparer : IEqualityComparer<Tuple<string, UMLDataType>>
     {
         public bool Equals([AllowNull] Tuple<string, UMLDataType> x, [AllowNull] Tuple<string, UMLDataType> y)
         {
-
             return x.Item1 == y.Item1 && x.Item2.Name == y.Item2.Name && x.Item2.Namespace == y.Item2.Namespace
                 && x.Item2.LineNumber == y.Item2.LineNumber;
         }

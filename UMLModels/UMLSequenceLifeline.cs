@@ -1,19 +1,25 @@
-﻿using System;
-
-namespace UMLModels
+﻿namespace UMLModels
 {
     public class UMLSequenceLifeline : UMLOrderedEntity
     {
+        public UMLSequenceLifeline(string type, string name, string alias, string dataTypeId)
+        {
+            LifeLineType = type;
+            Text = name;
+            DataTypeId = dataTypeId;
+            Alias = alias;
+        }
+
+        public string Alias { get; set; }
+
         public string DataTypeId
         {
             get; set;
         }
 
-        public string Alias { get; set; }
+        public bool FreeFormed { get => LifeLineType != "participant" && LifeLineType != "component"; }
         public string LifeLineType { get; }
         public string Text { get; set; }
-
-        public bool FreeFormed { get => LifeLineType != "participant" && LifeLineType != "component"; }
 
         public override string Warning
         {
@@ -24,15 +30,6 @@ namespace UMLModels
 
                 return null;
             }
-        }
-
-
-        public UMLSequenceLifeline(string type, string name, string alias, string dataTypeId)
-        {
-            LifeLineType = type;
-            Text = name;
-            DataTypeId = dataTypeId;
-            Alias = alias;
         }
     }
 }

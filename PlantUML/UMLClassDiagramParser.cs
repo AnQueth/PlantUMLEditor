@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows.Markup;
 using UMLModels;
 
 namespace PlantUML
@@ -100,7 +96,7 @@ namespace PlantUML
                 if (!started)
                     continue;
 
-                if(line == "left to right direction")
+                if (line == "left to right direction")
                 {
                     currentPackage.Children.Add(new UMLOther(line));
                     continue;
@@ -116,12 +112,9 @@ namespace PlantUML
                 {
                     string comment = line;
                     swallowingComments = true;
-
                 }
 
-         
-
-                if(line.Contains("'/") && swallowingComments)
+                if (line.Contains("'/") && swallowingComments)
                 {
                     if (currentPackage.Children.Last() is UMLComment n)
                     {
@@ -247,14 +240,12 @@ namespace PlantUML
                     if (cl == null)
                     {
                         d.Errors.Add(new UMLError("Could not find parent type", m.Groups["first"].Value, lineNumber));
-
                     }
                     var i = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["second"].Value
                 || removeGenerics.Match(p.Name).Value == m.Groups["second"].Value);
                     if (i == null)
                     {
                         d.Errors.Add(new UMLError("Could not find base type", m.Groups["second"].Value, lineNumber));
-
                     }
                     if (cl != null && i != null)
                         cl.Bases.Add(i);
@@ -366,7 +357,6 @@ namespace PlantUML
                 }
                 returntype = returntype.Trim();
 
-
                 string modifier = methodMatch.Groups["modifier"].Value;
 
                 UMLDataType returnType;
@@ -397,8 +387,6 @@ namespace PlantUML
                     else if (c == '>')
                         p.Pop();
 
-
-
                     if (c == ' ' && p.Count == 0)
                     {
                         if (sbtype.ToString() != "out" && sbtype.ToString() != "ref")
@@ -413,7 +401,6 @@ namespace PlantUML
                             sbtype.Append(c);
                         }
                     }
-
                     else if ((c == ',' || x == v.Length - 1) && p.Count == 0)
                     {
                         if (c != ',')
@@ -440,7 +427,6 @@ namespace PlantUML
                         inName = false;
                         x++;
                     }
-
                     else if (inName)
                     {
                         pname.Append(c);
@@ -449,11 +435,7 @@ namespace PlantUML
                     {
                         sbtype.Append(c);
                     }
-
-
                 }
-
-
 
                 DataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
                 {

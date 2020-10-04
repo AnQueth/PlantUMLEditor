@@ -15,12 +15,13 @@ namespace PlantUMLEditor.Models
         private object _locker = new object();
         private bool _running = true;
 
-        public ComponentDiagramDocumentModel(IConfiguration configuration) : base(configuration)
+        public ComponentDiagramDocumentModel(IConfiguration configuration,
+                 IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
         }
 
-        public ComponentDiagramDocumentModel(Action<UMLComponentDiagram, UMLComponentDiagram> changedCallback, IConfiguration configuration)
-            : base(configuration)
+        public ComponentDiagramDocumentModel(Action<UMLComponentDiagram, UMLComponentDiagram> changedCallback, IConfiguration configuration,
+            IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
             this.ChangedCallback = changedCallback;
 
@@ -72,14 +73,14 @@ namespace PlantUMLEditor.Models
             base.MatchingAutoCompletes.Clear();
 
             lock (_locker)
-            {try
+            {
+                try
                 {
                     if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart) && !autoCompleteParameters.WordStart.EndsWith("<"))
                     {
                         foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                             base.MatchingAutoCompletes.Add(item);
                     }
-                    
                 }
                 catch { }
             }

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UMLModels;
@@ -21,11 +18,23 @@ namespace PlantUMLEditor.Models
             this.messages = messages;
         }
 
+        private string GetCleanName(string name)
+        {
+            string r = name;
+            Match m2;
+            while ((m2 = Regex.Match(r, "(?:Task|List|IReadOnlyCollection|IList|IEnumerable)\\<(?<f>.+)\\>|(?<f>.+)\\[\\]")).Success)
+            {
+                if (m2.Success)
+                {
+                    r = m2.Groups["f"].Value;
+                }
+            }
+            return r;
+        }
+
         public async Task Generate()
         {
             List<DocumentMessage> newMessages = new List<DocumentMessage>();
-
-
 
             List<(UMLDataType, string)> dataTypes = new List<(UMLDataType, string)>();
 
@@ -86,7 +95,6 @@ namespace PlantUMLEditor.Models
                 }
             }
 
-
             foreach (var dt in dataTypes)
             {
                 if (dt.Item1 is UMLEnum)
@@ -105,10 +113,6 @@ namespace PlantUMLEditor.Models
                             IsMissingDataType = true
                         });
                     }
-
-
-
-
                 }
                 foreach (var m in dt.Item1.Methods)
                 {
@@ -126,14 +130,10 @@ namespace PlantUMLEditor.Models
                                 IsMissingDataType = true
                             });
                         }
-
-
-
                     }
                     if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
                     {
                         string r = GetCleanName(m.ReturnType.Name);
-
 
                         var pdt = dataTypes.Any(z => z.Item1.Name == r);
                         if (!pdt)
@@ -144,16 +144,11 @@ namespace PlantUMLEditor.Models
                                 LineNumber = dt.Item1.LineNumber,
                                 Text = r,
                                 IsMissingDataType = true
-
                             });
                         }
                     }
-
-
-
                 }
             }
-
 
             List<DocumentMessage> removals = new List<DocumentMessage>();
             foreach (var item in messages)
@@ -201,21 +196,6 @@ namespace PlantUMLEditor.Models
                     }
                 }
             }
-        }
-
-        private string GetCleanName(string name)
-        {
-            string r = name;
-            Match m2;
-            while ((m2 = Regex.Match(r, "(?:Task|List|IReadOnlyCollection|IList|IEnumerable)\\<(?<f>.+)\\>|(?<f>.+)\\[\\]")).Success)
-            {
-                if (m2.Success)
-                {
-                    r = m2.Groups["f"].Value;
-                }
-            }
-            return r;
-
         }
     }
 }

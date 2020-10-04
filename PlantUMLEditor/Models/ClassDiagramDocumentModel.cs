@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Documents;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -16,18 +15,14 @@ namespace PlantUMLEditor.Models
         private object _locker = new object();
         private bool _running = true;
 
-        public ClassDiagramDocumentModel(IConfiguration configuration) : base(configuration)
+        public ClassDiagramDocumentModel(IConfiguration configuration,
+            IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
         }
 
-        public override void Close()
-        {
-            _running = false;
-            base.Close();
-        }
+        public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback, IConfiguration configuration,
+                        IIOService openDirectoryService) : base(configuration, openDirectoryService)
 
-        public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback, IConfiguration configuration)
-            : base(configuration)
         {
             this.ChangedCallback = changedCallback;
 
@@ -82,12 +77,17 @@ namespace PlantUMLEditor.Models
                     foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                         base.MatchingAutoCompletes.Add(item);
                 }
-                
             }
             if (MatchingAutoCompletes.Count > 0)
                 base.ShowAutoComplete(autoCompleteParameters.Position);
             else
                 base.CloseAutoComplete();
+        }
+
+        public override void Close()
+        {
+            _running = false;
+            base.Close();
         }
 
         public override async Task<UMLDiagram> GetEditedDiagram()

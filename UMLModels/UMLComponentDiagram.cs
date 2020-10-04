@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace UMLModels
 {
@@ -27,8 +24,8 @@ namespace UMLModels
             }
         }
 
-        public UMLPackage Package { get; set; }
         public List<(string Line, int LineNumber)> Errors { get; set; }
+        public UMLPackage Package { get; set; }
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {

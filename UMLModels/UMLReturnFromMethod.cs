@@ -2,13 +2,13 @@
 {
     public class UMLReturnFromMethod : UMLSignature
     {
-        private   UMLSignature _returningFrom;
+        private UMLSignature _returningFrom;
 
         public UMLReturnFromMethod()
         {
         }
 
-        public UMLReturnFromMethod(UMLSignature returningFrom)  
+        public UMLReturnFromMethod(UMLSignature returningFrom)
         {
             _returningFrom = returningFrom;
         }
@@ -24,6 +24,7 @@
                 _returningFrom = value;
             }
         }
+
         public override string ToString()
         {
             return ReturningFrom.Signature;

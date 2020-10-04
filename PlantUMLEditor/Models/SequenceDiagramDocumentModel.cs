@@ -1,15 +1,7 @@
-﻿using PlantUML;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Configuration.Internal;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Markup;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -21,12 +13,14 @@ namespace PlantUMLEditor.Models
         private object _locker = new object();
         private Action<UMLSequenceDiagram, UMLSequenceDiagram> ChangedCallback;
 
-        public SequenceDiagramDocumentModel(IConfiguration configuration) : base(configuration)
+        public SequenceDiagramDocumentModel(IConfiguration configuration,
+                        IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
         }
 
-        public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p, IConfiguration configuration)
-            : this(configuration)
+        public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p,
+            IConfiguration configuration, IIOService openDirectoryService)
+            : this(configuration, openDirectoryService)
         {
             this.ChangedCallback = p;
         }

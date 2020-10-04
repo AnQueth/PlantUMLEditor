@@ -17,15 +17,15 @@ namespace PlantUMLEditor.Controls
             {new Regex("\\s+as\\s+"), Colors.Blue }
         };
 
+        private static Dictionary<Regex, Color[]> _groupedCodes = new Dictionary<Regex, Color[]>()
+        {
+            {new Regex(@"^\s*(?<keyword>(?:participant|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(?:\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
+        };
+
         private static Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
         {
             {new Regex("(\\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
             {new Regex("^\\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), (Colors.Firebrick, false)}
-        };
-
-        private static Dictionary<Regex, Color[]> _groupedCodes = new Dictionary<Regex, Color[]>()
-        {
-            {new Regex(@"^\s*(?<keyword>(?:participant|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(?:\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
         };
 
         private static Regex brackets = new Regex("(\\{|\\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -52,7 +52,7 @@ namespace PlantUMLEditor.Controls
                 foreach (Match m in item.Key.Matches(text))
                 {
                     // Group "0" cannot be stripped out of the regex via non-capturing groups -- it
-                    // is automatically added and represents the entire match.  So we'll filter it out here. 
+                    // is automatically added and represents the entire match.  So we'll filter it out here.
                     var groupNames = item.Key.GetGroupNames().Where(n => n != "0");
                     foreach (var n in groupNames)
                     {

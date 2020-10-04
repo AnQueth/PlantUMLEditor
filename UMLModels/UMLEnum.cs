@@ -6,9 +6,8 @@
         {
         }
 
-        public UMLEnum(string @namespace, string name ) : base(name, @namespace)
+        public UMLEnum(string @namespace, string name) : base(name, @namespace)
         {
-            
         }
     }
 }

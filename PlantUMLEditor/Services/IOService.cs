@@ -5,7 +5,7 @@ using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
 namespace PlantUMLEditor.Services
 {
-    internal class OpenDirectoryService : IOpenDirectoryService
+    internal class IOService : IIOService
     {
         public string GetDirectory()
         {
@@ -14,6 +14,18 @@ namespace PlantUMLEditor.Services
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 return ofd.SelectedPath;
+            }
+            return null;
+        }
+
+        public string GetSaveFile(string filter, string defaultExt)
+        {
+            SaveFileDialog sfd = new SaveFileDialog();
+            sfd.Filter = filter;
+            sfd.DefaultExt = defaultExt;
+            if (sfd.ShowDialog().GetValueOrDefault())
+            {
+                return sfd.FileName;
             }
             return null;
         }

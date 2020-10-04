@@ -1,11 +1,8 @@
-﻿using PlantUML;
-using Prism.Commands;
-using System;
+﻿using Prism.Commands;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -22,9 +19,9 @@ namespace PlantUMLEditor.Models
 
     public abstract class DocumentModel : BindingBase, IAutoCompleteCallback
     {
+        private readonly IIOService _ioService;
         private readonly string _jarLocation;
-        private readonly Dictionary<string, int> _mostUsedWords = new Dictionary<string, int>();
-        private readonly Regex words = new Regex("\\w+");
+
         private IAutoComplete _autoComplete;
         private AutoCompleteParameters _autoCompleteParameters;
 
@@ -43,8 +40,9 @@ namespace PlantUMLEditor.Models
         private Preview PreviewWindow;
         private Visibility visible;
 
-        public DocumentModel(IConfiguration configuration)
+        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService)
         {
+            _ioService = openDirectoryService;
             _jarLocation = configuration.JarLocation;
 
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
@@ -125,7 +123,7 @@ namespace PlantUMLEditor.Models
 
         private void ShowPreviewCommandHandler()
         {
-            imageModel = new PreviewDiagramModel();
+            imageModel = new PreviewDiagramModel(_ioService);
 
             PreviewWindow = new Preview();
             imageModel.Title = Name;
@@ -135,8 +133,6 @@ namespace PlantUMLEditor.Models
             PreviewWindow.Show();
             ShowPreviewImage(this._textEditor.TextRead());
         }
-
-   
 
         private async Task ShowPreviewImage(string text)
         {

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace UMLModels
+﻿namespace UMLModels
 {
-   public   class UMLCustomAction : UMLMethod
+    public class UMLCustomAction : UMLMethod
     {
         public UMLCustomAction()
         {

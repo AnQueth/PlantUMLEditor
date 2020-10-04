@@ -1,12 +1,11 @@
 ﻿<Application x:Class="PlantUMLEditor.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-         
-                xmlns:b="http://schemas.microsoft.com/xaml/behaviors" 
+
+                xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
                      xmlns:local="clr-namespace:PlantUMLEditor"
     xmlns:localControls="clr-namespace:PlantUMLEditor.Controls" xmlns:System="clr-namespace:System;assembly=System.Runtime"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-     
     </Application.Resources>
 </Application>

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using UMLModels;
 
@@ -126,7 +125,6 @@ namespace PlantUML
 
         private static void Write(List<UMLDataType> children, TextWriter writer, StringBuilder postWrites)
         {
-           
             foreach (var item in children)
             {
                 if (item is UMLPackage pa)
@@ -237,7 +235,7 @@ namespace PlantUML
                     writer.WriteLine(" } ");
                     if (item is UMLClass c)
                     {
-                        foreach(var b in item.Bases)
+                        foreach (var b in item.Bases)
                         {
                             postWrites.Append(item.Name);
                             postWrites.Append(" -- ");

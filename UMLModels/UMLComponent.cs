@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace UMLModels
 {
@@ -13,8 +11,8 @@ namespace UMLModels
             Alias = alias;
         }
 
-        public List<UMLDataType> Consumes { get; set; }
         public string Alias { get; }
+        public List<UMLDataType> Consumes { get; set; }
         public List<UMLDataType> Exposes { get; set; }
     }
 }

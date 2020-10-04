@@ -113,9 +113,8 @@ FontFamily="Consolas Code"
                         </localControls:MyTextBox>
 
                         <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
-                      
-                            
-                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black" 
+
+                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black"
                                 Width="{Binding Width, ElementName=Editor}">
 
                             <Grid Width="{Binding ActualWidth, ElementName=Editor}">
@@ -206,6 +205,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <Binding  Path="IsRenaming"></Binding>
                     </DataTrigger.Binding>
                     <DataTrigger.Setters>
+                     
                         <Setter Property="Visibility"  TargetName="rename" Value="Visible">
                         </Setter>
                         <Setter Property="Visibility"  TargetName="txt" Value="Collapsed">
@@ -217,7 +217,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <Binding  Path="IsRenaming"></Binding>
                     </DataTrigger.Binding>
                     <DataTrigger.Setters>
-                        
+
                         <Setter Property="Visibility"  TargetName="rename" Value="Collapsed">
                         </Setter>
                         <Setter Property="Visibility"  TargetName="txt" Value="Visible">
@@ -518,19 +518,18 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <Button   Command="{Binding OpenDirectoryCommand}"  ToolTip="Open Directory">
                 <Image Source="/Images/OpenFolder_16x.png"></Image>
             </Button>
-            <Separator/>
-            <Button    Command="{Binding SaveAllCommand}"  ToolTip="Save All" >
+            <Separator />
+            <Button    Command="{Binding SaveAllCommand}"  ToolTip="Save All">
                 <Image Source="/Images/SaveAll_16x.png"></Image>
             </Button>
-            <Separator/>
+            <Separator />
             <Button Content="Scan Directory" Command="{Binding ScanAllFiles}"></Button>
-            <!--<Separator/>
+            <!--<Separator />
             <Button Content="New Class Diagram" Command="{Binding CreateNewClassDiagram}" />
-            <Separator/>
+            <Separator />
             <Button Content="New Sequence Diagram" Command="{Binding CreateNewSequenceDiagram}" />
-            <Separator/>
+            <Separator />
             <Button Content="New Component Diagram" Command="{Binding CreateNewComponentDiagram}" />-->
-            
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
@@ -542,7 +541,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <TreeView Style="{DynamicResource TreeViewStyle1}"  Grid.Row="0" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
             </TreeView>
             <GridSplitter Grid.Row="1" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" ></GridSplitter>
-            <ListView Grid.Row="2"  ItemsSource="{Binding DataTypes}" >
+            <ListView Grid.Row="2"  ItemsSource="{Binding DataTypes}">
                 <b:Interaction.Triggers>
                     <b:EventTrigger EventName="SelectionChanged">
                         <b:CallMethodAction MethodName="GotoDataType" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
@@ -550,16 +549,13 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                     </b:EventTrigger>
                 </b:Interaction.Triggers>
                 <ListView.View>
-                        <GridView  >
-                    <GridView.Columns>
-                        <GridViewColumn  Header="Namespace" DisplayMemberBinding="{Binding Item2.Namespace}"></GridViewColumn>
-                        <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Item2.Name}"></GridViewColumn>
-                    </GridView.Columns>
-              
-             
-                </GridView>
+                    <GridView>
+                        <GridView.Columns>
+                            <GridViewColumn  Header="Namespace" DisplayMemberBinding="{Binding Item2.Namespace}"></GridViewColumn>
+                            <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Item2.Name}"></GridViewColumn>
+                        </GridView.Columns>
+                    </GridView>
                 </ListView.View>
-            
             </ListView>
         </Grid>
         <Grid Grid.Row="1" Grid.Column="2">
@@ -614,7 +610,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                     </Grid.Style>
 
                                     <Grid.ColumnDefinitions>
-                                     
+
                                         <ColumnDefinition Width="Auto" ></ColumnDefinition>
                                         <ColumnDefinition Width="Auto"></ColumnDefinition>
                                         <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -622,7 +618,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                         <ColumnDefinition Width="*"></ColumnDefinition>
                                     </Grid.ColumnDefinitions>
 
-                                       <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                    <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                                         <Button.Content>
                                             <Grid>
                                                 <Image Source="/Images/Save_16x.png"></Image>
@@ -652,7 +648,6 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                         </Button.Content>
                                     </Button>
                                     <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}"  Grid.Column="4"  CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></Button>
-
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -693,7 +688,6 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
-
                 </TabItem>
                 <TabItem>
                     <TabItem.Header>Find</TabItem.Header>
@@ -707,23 +701,20 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             <RowDefinition Height="*"></RowDefinition>
                         </Grid.RowDefinitions>
                         <TextBox Margin="2,2,5,2"  x:Name="txtGF"></TextBox>
-                        <Button Margin="2,2,2,2"  Grid.Column="1" Command="{Binding GlobalSearchCommand}"  
+                        <Button Margin="2,2,2,2"  Grid.Column="1" Command="{Binding GlobalSearchCommand}"
                                 CommandParameter="{Binding Text, ElementName=txtGF}" >Find</Button>
-                        <DataGrid  AutoGenerateColumns="False"  ItemsSource="{Binding GlobalFindResults}" Margin="{DynamicResource TabHeaderMargin}"  Grid.Row="1" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch" 
+                        <DataGrid  AutoGenerateColumns="False"  ItemsSource="{Binding GlobalFindResults}" Margin="{DynamicResource TabHeaderMargin}"  Grid.Row="1" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch"
                                  SelectedItem="{Binding SelectedGlobalFindResult}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
                                 <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
                                 <DataGridTextColumn IsReadOnly="true" Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
-
                             </DataGrid.Columns>
-                                                       
                         </DataGrid>
                     </Grid>
-                    
                 </TabItem>
             </TabControl>
-             </Grid>
+        </Grid>
 
         <GridSplitter     HorizontalAlignment="Center"
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />

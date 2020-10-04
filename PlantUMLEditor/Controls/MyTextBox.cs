@@ -4,27 +4,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 
 using System.Globalization;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Security.Policy;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Transactions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
-using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
-using System.Xml.Serialization;
 
 namespace PlantUMLEditor.Controls
 {
@@ -36,11 +25,13 @@ namespace PlantUMLEditor.Controls
 
         private DocumentModel _bindedDocument;
         private (int selectionStart, int match) _braces;
+        private DrawingVisual _cachedDrawing;
         private ListBox _cb;
         private IAutoCompleteCallback _currentCallback = null;
         private List<(int start, int length)> _found = new List<(int start, int length)>();
         private ImageSource _lineNumbers;
 
+        private bool _renderText;
         private FindResult _selectedFindResult = null;
         private Timer _selectionHandler;
         private Timer _timer = null;
@@ -48,14 +39,16 @@ namespace PlantUMLEditor.Controls
         private bool findReplaceVisible;
         private ObservableCollection<FindResult> findResults = new ObservableCollection<FindResult>();
         private string findText;
+        private FormattedText formattedText = null;
         private string replaceText;
 
         private bool useRegex;
-        public static DependencyProperty PopupControlProperty =
-            DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
+
         public static DependencyProperty GotoDefinitionCommandProperty =
             DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
-        private bool _renderText;
+
+        public static DependencyProperty PopupControlProperty =
+                    DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
 
         public MyTextBox()
         {
@@ -99,6 +92,19 @@ namespace PlantUMLEditor.Controls
             }
         }
 
+        public DelegateCommand<string> GotoDefinitionCommand
+        {
+            get
+            {
+                return (DelegateCommand<string>)GetValue(GotoDefinitionCommandProperty);
+            }
+
+            set
+            {
+                SetValue(GotoDefinitionCommandProperty, value);
+            }
+        }
+
         public bool IsPopupVisible => PopupControl != null ? PopupControl.IsOpen : false;
 
         public ImageSource LineNumbers
@@ -119,20 +125,6 @@ namespace PlantUMLEditor.Controls
             get { return (Popup)GetValue(PopupControlProperty); }
 
             set { SetValue(PopupControlProperty, value); }
-        }
-
-
-        public DelegateCommand<string> GotoDefinitionCommand
-        {
-            get
-            {
-                return (DelegateCommand<string>)GetValue(GotoDefinitionCommandProperty);
-            }
-
-            set
-            {
-                SetValue(GotoDefinitionCommandProperty, value);
-            }
         }
 
         public DelegateCommand ReplaceCommand { get; }
@@ -521,8 +513,6 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
         {
-
-
             lock (_found)
             { _found.Clear(); }
 
@@ -616,14 +606,11 @@ namespace PlantUMLEditor.Controls
             base.OnPreviewKeyDown(e);
         }
 
-
-
         protected override void OnPreviewKeyUp(System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.F12 && !string.IsNullOrEmpty(this.SelectedText))
             {
                 GotoDefinitionCommand?.Execute(this.SelectedText.Trim());
-
             }
             if (e.Key == Key.Tab)
             {
@@ -651,8 +638,6 @@ namespace PlantUMLEditor.Controls
                 && e.SystemKey == Key.None
                 && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-
-
                 if (_timer != null)
                     _timer.Dispose();
 
@@ -665,8 +650,6 @@ namespace PlantUMLEditor.Controls
         protected override void OnPreviewMouseDown(MouseButtonEventArgs e)
         {
             base.OnPreviewMouseDown(e);
-
-
 
             lock (_found)
                 _found.Clear();
@@ -703,8 +686,6 @@ namespace PlantUMLEditor.Controls
             base.OnPreviewTextInput(e);
         }
 
-        private DrawingVisual _cachedDrawing;
-
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
@@ -714,16 +695,14 @@ namespace PlantUMLEditor.Controls
 
             if (this._renderText)
             {
-
                 _cachedDrawing = new DrawingVisual();
 
                 var d = _cachedDrawing.RenderOpen();
 
-                SetText(  d);
+                SetText(d);
                 d.Close();
 
                 this._renderText = false;
-
             }
             drawingContext.DrawDrawing(_cachedDrawing.Drawing);
         }
@@ -800,6 +779,33 @@ namespace PlantUMLEditor.Controls
             _cb.SelectionChanged += AutoCompleteItemSelected;
         }
 
+        public (int lineNumber, int start, int len) GetLineInformation(int ch)
+        {
+            var text = this.Text;
+            var thisLine = 0;
+            var linestart = 0;
+          
+
+            var myline = 0;
+            for (var i = 0; i < text.Length; i++)
+            {
+                if (i == ch)
+                {
+                    myline = thisLine;
+                }
+
+                if (text[i] == '\n')
+                {
+                    if (myline != 0)
+                        return (myline, linestart, i - linestart);
+                    linestart = i + 1;
+                    ++thisLine;
+                }
+            }
+
+            throw new ArgumentOutOfRangeException();
+        }
+
         public void GotoLine(int lineNumber)
         {
             if (lineNumber == 0)
@@ -809,17 +815,13 @@ namespace PlantUMLEditor.Controls
             {
                 try
                 {
-               
-
                     CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
 
                     this._renderText = true;
 
                     this.InvalidateVisual();
-                   
-                    this.ScrollToLine(lineNumber - 1);
-               
 
+                    this.ScrollToLine(lineNumber - 1);
                 }
                 catch { }
                 Keyboard.Focus(this);
@@ -911,39 +913,8 @@ namespace PlantUMLEditor.Controls
             _autoComplete = autoComplete;
         }
 
-        private FormattedText formattedText = null;
-
-        public (int lineNumber, int start, int len) GetLineInformation(int ch)
+        public void SetText(DrawingContext col)
         {
-            var text = this.Text;
-            var thisLine = 0;
-            var linestart = 0;
-            var linelen = 0;
-
-            var myline = 0;
-            for (var i = 0; i < text.Length; i++)
-            {
-                if (i == ch)
-                {
-                    myline = thisLine;
-                }
-
-
-                if (text[i] == '\n')
-                {
-                    if (myline != 0)
-                        return (myline, linestart, i - linestart);
-                    linestart = i + 1;
-                    ++thisLine;
-                }
-            }
-
-            throw new ArgumentOutOfRangeException();
-        }
-
-        public void SetText(  DrawingContext col)
-        {
-
             formattedText = new FormattedText(
  this.Text,
  CultureInfo.GetCultureInfo("en-us"),
@@ -951,29 +922,22 @@ namespace PlantUMLEditor.Controls
  new Typeface(this.FontFamily.Source),
  this.FontSize, Brushes.DarkBlue, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-
             try
             {
                 var line = this.GetLineInformation(CaretIndex);
-       
 
                 var geo = formattedText.BuildHighlightGeometry(new Point(4, 0),
                     line.start, line.len);
-                col.DrawGeometry(Brushes.LightSkyBlue, new Pen(Brushes.Silver, 1), geo);
+                col.DrawGeometry(Brushes.WhiteSmoke, new Pen(Brushes.Silver, 1), geo);
             }
             catch
             {
-
             }
 
             try
             {
                 int end = int.MaxValue;
                 int start = 0;
-
-
-
-
 
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
@@ -1024,10 +988,7 @@ namespace PlantUMLEditor.Controls
             {
             }
 
-
             col.DrawText(formattedText, new Point(4, 0));
-
-
         }
 
         public void TextClear()

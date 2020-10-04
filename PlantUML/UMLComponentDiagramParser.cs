@@ -123,14 +123,13 @@ namespace PlantUML
                         d.Title = line.Substring(6);
                     continue;
                 }
-                else if (line.Trim().EndsWith("{") && _packageRegex.IsMatch(line)  )
+                else if (line.Trim().EndsWith("{") && _packageRegex.IsMatch(line))
                 {
                     var s = _packageRegex.Match(line);
 
                     packages.Push(Clean(s.Groups[PACKAGE].Value));
                     brackets.Push(PACKAGE);
 
-          
                     var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
                     currentPackage.Children.Add(c);
                     currentPackage = c;
@@ -146,7 +145,6 @@ namespace PlantUML
                     packages.Push(Clean(s.Groups[PACKAGE].Value));
                     brackets.Push(PACKAGE);
 
-
                     var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
                     currentPackage.Children.Add(c);
                     currentPackage = c;
@@ -155,7 +153,7 @@ namespace PlantUML
 
                     continue;
                 }
-                else if ( _component.IsMatch(line))
+                else if (_component.IsMatch(line))
                 {
                     var g = _component.Match(line);
                     if (string.IsNullOrEmpty(g.Groups["name"].Value))

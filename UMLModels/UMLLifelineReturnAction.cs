@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace UMLModels
+﻿namespace UMLModels
 {
     public class UMLLifelineReturnAction : UMLMethod
     {
@@ -14,8 +10,5 @@ namespace UMLModels
         {
             return Name;
         }
-
-
-
     }
 }

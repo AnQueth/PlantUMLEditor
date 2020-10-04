@@ -16,10 +16,8 @@ namespace UMLModels
             FileName = fileName;
         }
 
-        public List<UMLSequenceLifeline> LifeLines { get; set; }
-
         public List<UMLOrderedEntity> Entities { get; set; }
-  
+        public List<UMLSequenceLifeline> LifeLines { get; set; }
 
         public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to)
         {

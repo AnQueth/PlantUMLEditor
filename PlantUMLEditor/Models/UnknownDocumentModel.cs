@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using UMLModels;
 
@@ -11,12 +10,13 @@ namespace PlantUMLEditor.Models
         private readonly Action<UMLDiagram, UMLDiagram> ChangedCallback = null;
         private IEnumerable<string> _autoCompleteItems;
 
-        public UnknownDocumentModel(IConfiguration configuration) : base(configuration)
+        public UnknownDocumentModel(IConfiguration configuration,
+            IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
         }
 
-        public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration)
-            : base(configuration)
+        public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration,
+                        IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
             this.ChangedCallback = changedCallback;
         }

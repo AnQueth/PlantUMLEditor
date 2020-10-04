@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO.Compression;
+﻿using System.Collections.Generic;
 
 namespace UMLModels
 {
     public class UMLClassDiagram : UMLDiagram
     {
-        
         public UMLClassDiagram()
         {
             Errors = new List<UMLError>();
@@ -32,8 +28,8 @@ namespace UMLModels
             }
         }
 
-        public UMLPackage Package { get; set; }
         public List<UMLError> Errors { get; }
+        public UMLPackage Package { get; set; }
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {

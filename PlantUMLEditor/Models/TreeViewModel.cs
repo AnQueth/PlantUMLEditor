@@ -1,9 +1,8 @@
 ﻿using Prism.Commands;
-using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
-using System.Windows.Forms;
 using MessageBox = System.Windows.MessageBox;
 
 namespace PlantUMLEditor.Models
@@ -16,7 +15,7 @@ namespace PlantUMLEditor.Models
         private string _name;
         private string _rename;
 
-        public TreeViewModel(TreeViewModel parent, string path, bool isFile, string icon, 
+        public TreeViewModel(TreeViewModel parent, string path, bool isFile, string icon,
             IFolderChangeNotifactions folderChangeNotifactions)
         {
             Parent = parent;
@@ -44,7 +43,7 @@ namespace PlantUMLEditor.Models
         public DelegateCommand DeleteCommand { get; }
 
         public DelegateCommand DoRenameCommand { get; }
-        public TreeViewModel Parent { get; }
+
         public string FullPath
         {
             get; set;
@@ -96,6 +95,7 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand NewFolderCommand { get; }
+        public TreeViewModel Parent { get; }
 
         public string Rename
         {
@@ -150,7 +150,6 @@ namespace PlantUMLEditor.Models
                 {
                     Directory.Move(this.FullPath, nf);
                     this.FullPath = nf;
-                    this.Name = Rename;
 
                     IsRenaming = false;
                     Name = Rename;
@@ -161,12 +160,15 @@ namespace PlantUMLEditor.Models
             }
             else
             {
+                var words = Name.Split('.');
+                words[0] = Rename;
+                Rename = string.Join('.', words);
+
                 string nf = Path.Combine(Path.GetDirectoryName(this.FullPath), Rename);
                 if (File.Exists(nf))
                     return;
                 File.Move(this.FullPath, nf);
                 this.FullPath = nf;
-                this.Name = Rename;
 
                 IsRenaming = false;
                 Name = Rename;
@@ -177,7 +179,10 @@ namespace PlantUMLEditor.Models
         private void StartRenameHandler()
         {
             IsRenaming = true;
-            Rename = Name;
+            if (this.IsFile)
+                Rename = Name.Split('.').FirstOrDefault();
+            else
+                Rename = Name;
         }
     }
 }

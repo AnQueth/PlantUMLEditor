@@ -1,22 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.DirectoryServices.ActiveDirectory;
-using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Media;
 
 namespace PlantUMLEditor.Controls
 {
     internal class Indenter
     {
-        private static Regex newLineBefore = new Regex("^(note.+|\\'.+|\\/\\'.+|left to right direction)", RegexOptions.Compiled);
-
         private static Regex newLineAfter = new Regex("^(note.+:|end +note|\\'.+|.+\\'\\/|left to right direction)", RegexOptions.Compiled);
+        private static Regex newLineBefore = new Regex("^(note.+|\\'.+|\\/\\'.+|left to right direction)", RegexOptions.Compiled);
         private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static Regex reg = new Regex("\n");
@@ -130,9 +121,8 @@ namespace PlantUMLEditor.Controls
                 if (string.IsNullOrWhiteSpace(lines[x]) && removeLines)
 
                     continue;
-                else if(string.IsNullOrWhiteSpace(lines[x]))
+                else if (string.IsNullOrWhiteSpace(lines[x]))
                     sb.AppendLine();
-
 
                 if (oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase) || oldLine.StartsWith("@startuml",
                     StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))

@@ -8,7 +8,7 @@ namespace UMLModels
         {
         }
 
-        public UMLInterface(string @namespace, string name, List<UMLDataType> @bases ) : base(name, @namespace)
+        public UMLInterface(string @namespace, string name, List<UMLDataType> @bases) : base(name, @namespace)
         {
             Bases = @bases;
         }

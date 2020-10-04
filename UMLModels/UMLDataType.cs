@@ -2,10 +2,36 @@
 
 namespace UMLModels
 {
+    public class BoolDataType : UMLDataType
+    {
+        public BoolDataType() : base("bool")
+        {
+        }
+    }
+
+    public class DecimalDataType : UMLDataType
+    {
+        public DecimalDataType() : base("decimal")
+        {
+        }
+    }
+
+    public class IntDataType : UMLDataType
+    {
+        public IntDataType() : base("int")
+        {
+        }
+    }
+
+    public class StringDataType : UMLDataType
+    {
+        public StringDataType() : base("string")
+        {
+        }
+    }
+
     public class UMLDataType
     {
-        public string Namespace { get; set; }
-
         public UMLDataType()
         {
         }
@@ -23,6 +49,8 @@ namespace UMLModels
                 this.Interfaces.AddRange(interfaces);
         }
 
+        public List<UMLDataType> Bases { get; set; }
+
         public string Id
         {
             get
@@ -31,43 +59,12 @@ namespace UMLModels
             }
         }
 
-     
-
-        public List<UMLDataType> Bases { get; set; }
-        public string Name { get; set; }
-        public List<UMLProperty> Properties { get; set; }
-        public List<UMLMethod> Methods { get; set; }
-
         public List<UMLInterface> Interfaces { get; set; }
         public int LineNumber { get; set; }
-    }
-
-    public class StringDataType : UMLDataType
-    {
-        public StringDataType() : base("string")
-        {
-        }
-    }
-
-    public class IntDataType : UMLDataType
-    {
-        public IntDataType() : base("int")
-        {
-        }
-    }
-
-    public class DecimalDataType : UMLDataType
-    {
-        public DecimalDataType() : base("decimal")
-        {
-        }
-    }
-
-    public class BoolDataType : UMLDataType
-    {
-        public BoolDataType() : base("bool")
-        {
-        }
+        public List<UMLMethod> Methods { get; set; }
+        public string Name { get; set; }
+        public string Namespace { get; set; }
+        public List<UMLProperty> Properties { get; set; }
     }
 
     public class VoidDataType : UMLDataType

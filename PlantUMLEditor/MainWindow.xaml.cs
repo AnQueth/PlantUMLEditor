@@ -2,10 +2,6 @@
 using PlantUMLEditor.Services;
 using System;
 using System.Windows;
-using System.Windows.Controls;
-
-using System.Windows.Input;
-using System.Windows.Media;
 
 namespace PlantUMLEditor
 {
@@ -22,7 +18,7 @@ namespace PlantUMLEditor
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             InitializeComponent();
-            _model = new MainModel(new OpenDirectoryService(), new UMLDocumentCollectionSerialization());
+            _model = new MainModel(new IOService(), new UMLDocumentCollectionSerialization());
             DataContext = _model;
         }
 

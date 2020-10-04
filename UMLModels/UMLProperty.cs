@@ -10,11 +10,12 @@
         {
             Visibility = visibility;
         }
+
+        public bool IsReadOnly { get; set; }
+
         public UMLVisibility Visibility
         {
             get; set;
         }
-
-        public bool IsReadOnly { get; set; }
     }
 }
