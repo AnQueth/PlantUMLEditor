@@ -465,32 +465,40 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
-        protected void BracesMatcher(int start, char c)
+        protected bool BracesMatcher(int start, char c)
         {
             if (c == '{')
             {
                 FindMatchingForward(this.Text, start, c, '}');
+                return false;
             }
             else if (c == '}')
             {
                 FindMatchingBackwards(this.Text, start, c, '{');
+                return false;
             }
             else if (c == '(')
             {
                 FindMatchingForward(this.Text, start, c, ')');
+                return false;
             }
             else if (c == ')')
             {
                 FindMatchingBackwards(this.Text, start, c, '(');
+                return false;
             }
             else if (c == '<')
             {
                 FindMatchingForward(this.Text, start, c, '>');
+                return false;
             }
             else if (c == '>')
             {
                 FindMatchingBackwards(this.Text, start, c, '<');
+                return false;
             }
+
+            return true;
         }
 
         protected override void OnLostFocus(RoutedEventArgs e)
@@ -657,11 +665,18 @@ namespace PlantUMLEditor.Controls
             lock (_found)
                 _found.Clear();
 
+            bool needsRender = true;
             int item = this.GetCharacterIndexFromPoint(e.GetPosition(this), true);
             if (item < this.Text.Length)
             {
                 char c = this.Text[item];
-                BracesMatcher(item, c);
+                needsRender = BracesMatcher(item, c);
+            }
+
+            if (needsRender)
+            {
+                this._renderText = true;
+                this.InvalidateVisual();
             }
         }
 
@@ -722,7 +737,7 @@ namespace PlantUMLEditor.Controls
                 this.SelectionLength--;
             }
 
-            if (!string.IsNullOrWhiteSpace(this.SelectedText))
+            if (!string.IsNullOrWhiteSpace(this.SelectedText) && !this.SelectedText.Contains("\r\n"))
             {
                 if (_selectionHandler != null)
                 {
@@ -787,7 +802,7 @@ namespace PlantUMLEditor.Controls
             var text = this.Text;
             var thisLine = 0;
             var linestart = 0;
-          
+
 
             var myline = 0;
             for (var i = 0; i < text.Length; i++)
@@ -813,8 +828,8 @@ namespace PlantUMLEditor.Controls
         {
             if (lineNumber == 0)
                 lineNumber = 1;
-            
-       
+
+
 
             Dispatcher.BeginInvoke((Action)(() =>
             {
