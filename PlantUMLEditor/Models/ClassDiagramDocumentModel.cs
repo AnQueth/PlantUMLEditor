@@ -15,6 +15,7 @@ namespace PlantUMLEditor.Models
         private object _locker = new object();
         private bool _running = true;
 
+
         public ClassDiagramDocumentModel(IConfiguration configuration,
             IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
@@ -62,7 +63,15 @@ namespace PlantUMLEditor.Models
 
         internal void UpdateDiagram(UMLClassDiagram doc)
         {
-            this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
+            if (this.TextEditor == null)
+            {
+                _bindedAction = () =>
+                {
+                    this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
+                };
+            }
+            else
+                this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
         }
 
         public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)

@@ -1,4 +1,5 @@
 ﻿using Prism.Commands;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -39,7 +40,7 @@ namespace PlantUMLEditor.Models
 
         private Preview PreviewWindow;
         private Visibility visible;
-
+        protected Action _bindedAction;
         public DocumentModel(IConfiguration configuration, IIOService openDirectoryService)
         {
             _ioService = openDirectoryService;
@@ -197,8 +198,13 @@ namespace PlantUMLEditor.Models
         {
             _textEditor = textEditor;
             _autoComplete = textEditor as IAutoComplete;
+
+
             _textEditor.SetAutoComplete(_autoComplete);
             _textEditor.TextWrite(_textValue, false);
+
+            _bindedAction?.Invoke();
+
             this.TextEditor.GotoLine(_lineNumber, _findText);
         }
 

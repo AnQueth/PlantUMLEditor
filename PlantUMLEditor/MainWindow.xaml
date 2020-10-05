@@ -9,14 +9,19 @@
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
 
         mc:Ignorable="d"
-        Title="Aaron's Plant UML Editor" Height="850" Width="1000"
-FontFamily="Consolas Code"
+        Title="Aaron's Plant UML Editor" Height="{Binding WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding WindowWidth, Mode=TwoWay, FallbackValue=1000}"
+FontFamily="Consolas Code"  Loaded="Window_Loaded"
+    Left="{Binding WindowLeft, Mode=TwoWay}"
+    Top="{Binding WindowTop, Mode=TwoWay}"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/Images/uml.png">
 
     <b:Interaction.Triggers>
-        <b:EventTrigger EventName="Loaded">
-            <b:CallMethodAction MethodName="LoadedUI" TargetObject="{Binding}"></b:CallMethodAction>
+       
+        <b:EventTrigger EventName="SizeChanged">
+            <b:CallMethodAction MethodName="UISizeChanged" TargetObject="{Binding}"></b:CallMethodAction>
+
         </b:EventTrigger>
+     
     </b:Interaction.Triggers>
 
     <Window.Resources>
@@ -660,31 +665,40 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
             <TabControl Grid.Row="2">
                 <TabItem>
                     <TabItem.Header>Errors</TabItem.Header>
-                    <ListBox Grid.Row="2"   ItemsSource="{Binding Messages}" HorizontalContentAlignment="Stretch" SelectedItem="{Binding SelectedMessage}">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"></ColumnDefinition>
-                                        <ColumnDefinition Width="50"></ColumnDefinition>
-                                        <ColumnDefinition Width="200"></ColumnDefinition>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{Binding Text}" Grid.Column="0" Margin="10,5,10,5" ></TextBlock>
-                                    <TextBlock Text="{Binding LineNumber}" Grid.Column="1" Margin="10,5,10,5"></TextBlock>
-                                    <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
-                                Content="Fix" Grid.Column="2"></Button>
-                                </Grid>
+                    <DataGrid SelectionMode="Single" IsReadOnly="True"
+                              Grid.Row="2"
+                              AutoGenerateColumns="False"  ItemsSource="{Binding Messages}" Margin="{DynamicResource TabHeaderMargin}"  
+                           HorizontalContentAlignment="Stretch"
+                              
+                                 SelectedItem="{Binding SelectedMessage}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding Text}"></DataGridTextColumn>
+                            <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
+                            <DataGridTemplateColumn>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                       
 
-                                <DataTemplate.Triggers>
-                                    <DataTrigger Binding="{Binding IsFixable}" Value="false">
-                                        <DataTrigger.Setters>
-                                            <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
-                                        </DataTrigger.Setters>
-                                    </DataTrigger>
-                                </DataTemplate.Triggers>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                                        <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
+                                Content="Fix" Grid.Column="2"></Button>
+
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsFixable}" Value="false">
+                                                <DataTrigger.Setters>
+                                                    <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
+                                                </DataTrigger.Setters>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            
+                            
+                          
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    
+            
                 </TabItem>
                 <TabItem>
                     <TabItem.Header>Find</TabItem.Header>

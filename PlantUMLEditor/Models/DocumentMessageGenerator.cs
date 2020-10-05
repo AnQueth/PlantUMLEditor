@@ -18,18 +18,27 @@ namespace PlantUMLEditor.Models
             this.messages = messages;
         }
 
-        private string GetCleanName(string name)
+        private string[] GetCleanName(string name)
         {
-            string r = name;
-            Match m2;
-            while ((m2 = Regex.Match(r, "(?:Task|List|IReadOnlyCollection|IList|IEnumerable)\\<(?<f>.+)\\>|(?<f>.+)\\[\\]")).Success)
+            string[] knownwords = {"Task", "List", "IReadOnlyCollection",
+                "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler"};
+
+            string[] parts = name.Split(' ', '.', ',', '<', '>', '[', ']');
+
+            List<string> types = new List<string>();
+            foreach(var p in parts)
             {
-                if (m2.Success)
-                {
-                    r = m2.Groups["f"].Value;
-                }
+                if (string.IsNullOrEmpty(p) || knownwords.Contains(p))
+                    continue;
+
+                types.Add(p);
+
             }
-            return r;
+
+            return types.ToArray();
+
+
+         
         }
 
         public async Task Generate()
@@ -101,40 +110,9 @@ namespace PlantUMLEditor.Models
                     continue;
                 foreach (var m in dt.Item1.Properties)
                 {
-                    string r = GetCleanName(m.ObjectType.Name);
-                    var pdt = dataTypes.Any(z => z.Item1.Name == r);
-                    if (!pdt)
+                    var parsedTypes = GetCleanName(m.ObjectType.Name);
+                    foreach (var r in parsedTypes)
                     {
-                        newMessages.Add(new DocumentMessage()
-                        {
-                            FileName = dt.Item2,
-                            LineNumber = dt.Item1.LineNumber,
-                            Text = r,
-                            IsMissingDataType = true
-                        });
-                    }
-                }
-                foreach (var m in dt.Item1.Methods)
-                {
-                    foreach (var p in m.Parameters)
-                    {
-                        string r = GetCleanName(p.ObjectType.Name);
-                        var pdt2 = dataTypes.Any(z => z.Item1.Name == r);
-                        if (!pdt2)
-                        {
-                            newMessages.Add(new DocumentMessage()
-                            {
-                                FileName = dt.Item2,
-                                LineNumber = dt.Item1.LineNumber,
-                                Text = r,
-                                IsMissingDataType = true
-                            });
-                        }
-                    }
-                    if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
-                    {
-                        string r = GetCleanName(m.ReturnType.Name);
-
                         var pdt = dataTypes.Any(z => z.Item1.Name == r);
                         if (!pdt)
                         {
@@ -145,6 +123,45 @@ namespace PlantUMLEditor.Models
                                 Text = r,
                                 IsMissingDataType = true
                             });
+                        }
+                    }
+                }
+                foreach (var m in dt.Item1.Methods)
+                {
+                    foreach (var p in m.Parameters)
+                    {
+                        var parsedTypes = GetCleanName(p.ObjectType.Name);
+                        foreach (var r in parsedTypes)
+                        {
+                            var pdt2 = dataTypes.Any(z => z.Item1.Name == r);
+                            if (!pdt2)
+                            {
+                                newMessages.Add(new DocumentMessage()
+                                {
+                                    FileName = dt.Item2,
+                                    LineNumber = dt.Item1.LineNumber,
+                                    Text = r,
+                                    IsMissingDataType = true
+                                });
+                            }
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
+                    {
+                        var parsedTypes = GetCleanName(m.ReturnType.Name);
+                        foreach (var r in parsedTypes)
+                        {
+                            var pdt = dataTypes.Any(z => z.Item1.Name == r);
+                            if (!pdt)
+                            {
+                                newMessages.Add(new DocumentMessage()
+                                {
+                                    FileName = dt.Item2,
+                                    LineNumber = dt.Item1.LineNumber,
+                                    Text = r,
+                                    IsMissingDataType = true
+                                });
+                            }
                         }
                     }
                 }

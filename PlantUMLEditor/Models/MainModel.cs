@@ -65,11 +65,29 @@ namespace PlantUMLEditor.Models
             };
 
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
-            GridSettings  = !string.IsNullOrEmpty( AppSettings.Default.GridSettings) ? 
+            GridSettings = !string.IsNullOrEmpty(AppSettings.Default.GridSettings) ?
                 JsonConvert.DeserializeObject<GridSettings>(AppSettings.Default.GridSettings) : new GridSettings(GridSettingsChanged);
-            GridSettings.ChangedCB = GridSettingsChanged; 
+            GridSettings.ChangedCB = GridSettingsChanged;
+            WindowWidth = AppSettings.Default.WindowWidth;
+            WindowHeight = AppSettings.Default.WindowHeight;
+            WindowTop = AppSettings.Default.WindowTop;
+            WindowLeft = AppSettings.Default.WindowLeft;
         }
 
+        public int WindowLeft { get; set; }
+        public int WindowTop { get; set; }
+        public int WindowWidth { get; set; }
+        public int WindowHeight { get; set; }
+
+        public void UISizeChanged()
+        {
+            AppSettings.Default.WindowWidth = WindowWidth;
+            AppSettings.Default.WindowHeight = WindowHeight;
+            AppSettings.Default.WindowTop = WindowTop;
+            AppSettings.Default.WindowLeft = WindowLeft;
+            AppSettings.Default.Save();
+
+        }
         private AppConfiguration Configuration { get; }
 
         public bool AllowContinue
@@ -166,7 +184,7 @@ namespace PlantUMLEditor.Models
         {
             get;
             private set;
-        } 
+        }
 
         public ObservableCollection<DocumentMessage> Messages
         {
@@ -204,7 +222,7 @@ namespace PlantUMLEditor.Models
             {
                 _selectedFindResult = value;
                 if (value != null)
-                    this.AttemptOpeningFile(value.FileName, 
+                    this.AttemptOpeningFile(value.FileName,
                         value.LineNumber, value.SearchText);
             }
         }
@@ -255,7 +273,7 @@ namespace PlantUMLEditor.Models
             this.CurrentDocument = d;
         }
 
-        private async Task AttemptOpeningFile(string fullPath, 
+        private async Task AttemptOpeningFile(string fullPath,
             int lineNumber = 0, string searchText = null)
         {
             var doc = OpenDocuments.FirstOrDefault(p => p.FileName == fullPath);
@@ -435,6 +453,13 @@ namespace PlantUMLEditor.Models
                     else
                     {
                         OpenClassDiagram(d, f, 0, null);
+
+                        od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == d);
+                        if (od != null)
+                        {
+                            od.UpdateDiagram(f);
+                        }
+
                     }
                 }
                 else
@@ -632,7 +657,7 @@ namespace PlantUMLEditor.Models
             this.ScanDirectory(this._folderBase);
         }
 
-        private void OpenClassDiagram(string fileName, 
+        private DocumentModel OpenClassDiagram(string fileName,
             UMLClassDiagram diagram, int lineNumber, string searchText)
         {
             var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), Configuration,
@@ -650,6 +675,8 @@ namespace PlantUMLEditor.Models
             d.GotoLineNumber(lineNumber, searchText);
 
             this.CurrentDocument = d;
+
+            return d;
         }
 
         private void OpenComponentDiagram(string fileName, UMLComponentDiagram diagram,
@@ -724,7 +751,7 @@ namespace PlantUMLEditor.Models
             AppSettings.Default.Save();
         }
 
-        private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram, 
+        private void OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram,
             int lineNumber, string searchText)
         {
             var d = new SequenceDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.SequenceDiagrams, old, @new), Configuration, _ioService)

@@ -25,5 +25,10 @@ namespace PlantUMLEditor
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
         }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            ((MainModel)DataContext).LoadedUI();
+        }
     }
 }
