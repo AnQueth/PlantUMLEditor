@@ -529,6 +529,10 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             </Button>
             <Separator />
             <Button Content="Scan Directory" Command="{Binding ScanAllFiles}"></Button>
+            <Separator></Separator>
+            <ComboBox ItemsSource="{Binding MRUFolders}" SelectedItem="{Binding SelectedMRUFolder}">
+                
+            </ComboBox>
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>

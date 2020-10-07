@@ -131,7 +131,7 @@ namespace PlantUMLEditor.Controls
 
         public string ReplaceText
         {
-            get => replaceText;
+            get => replaceText ?? string.Empty;
 
             set
             {
@@ -839,7 +839,8 @@ namespace PlantUMLEditor.Controls
 
                     this._renderText = true;
 
-                    this.FindText = findText;
+                    if (!string.IsNullOrEmpty(findText))
+                        this.FindText = findText;
                     this.FindHandler();
 
                     this.ScrollToLine(lineNumber - 1);

@@ -72,7 +72,17 @@ namespace PlantUMLEditor.Models
             WindowHeight = AppSettings.Default.WindowHeight;
             WindowTop = AppSettings.Default.WindowTop;
             WindowLeft = AppSettings.Default.WindowLeft;
+
+            var mrus = JsonConvert.DeserializeObject<string[]>(AppSettings.Default.MRU ?? "[]");
+            if (mrus != null)
+                foreach (var s in mrus)
+                {
+                    MRUFolders.Add(s);
+                }
+
         }
+
+
 
         public int WindowLeft { get; set; }
         public int WindowTop { get; set; }
@@ -158,6 +168,7 @@ namespace PlantUMLEditor.Models
             private set { SetValue(ref folder, value); }
         }
 
+        public ObservableCollection<string> MRUFolders { get; } = new ObservableCollection<string>();
         public ObservableCollection<GlobalFindResult> GlobalFindResults { get; } = new ObservableCollection<GlobalFindResult>();
 
         public DelegateCommand<string> GlobalSearchCommand { get; }
@@ -516,7 +527,7 @@ namespace PlantUMLEditor.Models
             return null;
         }
 
-        private string GetWorkingFolder(bool useAppSettingIfFound = false)
+        private string GetWorkingFolder(bool useAppSettingIfFound = false, string folder = null)
         {
             if (useAppSettingIfFound)
             {
@@ -525,9 +536,13 @@ namespace PlantUMLEditor.Models
 
             if (string.IsNullOrEmpty(_folderBase))
             {
-                string dir = _ioService.GetDirectory();
-                if (string.IsNullOrEmpty(dir))
-                    return null;
+                string dir = folder;
+                if (folder == null)
+                {
+                      dir = _ioService.GetDirectory();
+                    if (string.IsNullOrEmpty(dir))
+                        return null;
+                }
 
                 _folderBase = dir;
             }
@@ -698,20 +713,30 @@ namespace PlantUMLEditor.Models
             this.CurrentDocument = d;
         }
 
-        private async Task OpenDirectoryHandler(bool? useAppSettings = false)
+        private async Task OpenDirectoryHandler(bool? useAppSettings = false, string folder = null)
         {
             _folderBase = null;
 
             await SaveAll();
-
-            string dir = GetWorkingFolder(useAppSettings.GetValueOrDefault());
+            string dir = null;
+            if (folder == null)
+            {
+                dir = GetWorkingFolder(useAppSettings.GetValueOrDefault());
+            }
+            else
+            {
+                dir = GetWorkingFolder(useAppSettings.GetValueOrDefault(), folder);
+            }
             if (string.IsNullOrEmpty(dir))
                 return;
+
+            SelectedMRUFolder = dir;
             foreach (var d in OpenDocuments)
             {
                 d.Close();
             }
             OpenDocuments.Clear();
+
             AppSettings.Default.WorkingDir = dir;
             AppSettings.Default.Save();
 
@@ -722,6 +747,29 @@ namespace PlantUMLEditor.Models
             ScanAllFiles.RaiseCanExecuteChanged();
 
             await ScanDirectory(dir);
+
+            if (!MRUFolders.Contains(dir))
+                MRUFolders.Add(dir);
+            AppSettings.Default.MRU = JsonConvert.SerializeObject(MRUFolders);
+
+            AppSettings.Default.Save();
+        }
+
+        private string _selectedMRUFolder;
+        public string SelectedMRUFolder
+        {
+            get
+            {
+                return _selectedMRUFolder;
+            }
+            set
+            {
+                SetValue(ref _selectedMRUFolder , value);
+                if (!string.IsNullOrEmpty(_selectedMRUFolder) && value != _folderBase)
+                    OpenDirectoryHandler(false, _selectedMRUFolder);
+
+                
+            }
         }
 
         private void GridSettingsChanged()
@@ -746,6 +794,10 @@ namespace PlantUMLEditor.Models
             if (e.OldItems != null)
             {
                 files.RemoveAll(p => p == ((DocumentModel)e.OldItems[0]).FileName);
+            }
+            if(e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset)
+            {
+                files.Clear();
             }
             AppSettings.Default.Files = JsonConvert.SerializeObject(files);
             AppSettings.Default.Save();
