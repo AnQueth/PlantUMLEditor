@@ -14,10 +14,13 @@ namespace UMLModels
             LifeLines = new List<UMLSequenceLifeline>();
             Entities = new List<UMLOrderedEntity>();
             FileName = fileName;
+            ValidateAgainstClasses = true;
         }
 
         public List<UMLOrderedEntity> Entities { get; set; }
         public List<UMLSequenceLifeline> LifeLines { get; set; }
+
+        public bool ValidateAgainstClasses { get; set; }
 
         public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to)
         {

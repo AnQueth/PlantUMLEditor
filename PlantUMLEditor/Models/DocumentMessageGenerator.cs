@@ -84,23 +84,26 @@ namespace PlantUMLEditor.Models
                 }
                 if (doc is UMLSequenceDiagram o)
                 {
-                    var items = from z in o.LifeLines
-                                where z.Warning != null
-                                select new { o = doc, f = z };
-
-                    foreach (var i in items)
+                    if (o.ValidateAgainstClasses)
                     {
-                        newMessages.Add(new DocumentMessage()
+                        var items = from z in o.LifeLines
+                                    where z.Warning != null
+                                    select new { o = doc, f = z };
+
+                        foreach (var i in items)
                         {
-                            FileName = i.o.FileName,
-                            Text = i.f.Warning,
-                            LineNumber = i.f.LineNumber,
+                            newMessages.Add(new DocumentMessage()
+                            {
+                                FileName = i.o.FileName,
+                                Text = i.f.Warning,
+                                LineNumber = i.f.LineNumber,
 
-                            Warning = true
-                        });
+                                Warning = true
+                            });
+                        }
+
+                        CheckEntities(o.FileName, o.Entities, o);
                     }
-
-                    CheckEntities(o.FileName, o.Entities, o);
                 }
             }
 

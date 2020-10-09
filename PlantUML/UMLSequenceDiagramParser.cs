@@ -117,6 +117,11 @@ namespace PlantUML
                     continue;
                 }
 
+                if (line == "'@@novalidate")
+                {
+                    d.ValidateAgainstClasses = false;
+                }
+
                 if (!started)
                     continue;
 
