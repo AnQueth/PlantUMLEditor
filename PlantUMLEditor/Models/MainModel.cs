@@ -365,7 +365,7 @@ namespace PlantUMLEditor.Models
               Messages.Clear();
 
               DocumentMessageGenerator documentMessageGenerator = new DocumentMessageGenerator(diagrams, Messages);
-              documentMessageGenerator.Generate();
+              documentMessageGenerator.Generate(_folderBase);
 
               foreach (var d in Messages)
               {

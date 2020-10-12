@@ -13,6 +13,8 @@ namespace PlantUMLEditor.Models
 
         public string FileName { get; set; }
 
+        public string RelativeFileName { get; set; }
+
         public ICommand FixingCommand
         {
             get;
