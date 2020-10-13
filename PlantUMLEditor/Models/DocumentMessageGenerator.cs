@@ -96,16 +96,17 @@ namespace PlantUMLEditor.Models
                             newMessages.Add(new DocumentMessage()
                             {
 
-                            FileName = i.o.FileName,
-                            Text = i.f.Warning,
-                            LineNumber = i.f.LineNumber,
-                            RelativeFileName = i.o.FileName.Substring(folderBase.Length + 1),
-                            Warning = true
-                        });
+                                FileName = i.o.FileName,
+                                Text = i.f.Warning,
+                                LineNumber = i.f.LineNumber,
+                                RelativeFileName = i.o.FileName.Substring(folderBase.Length + 1),
+                                Warning = true
+                            });
+                        }
+
+                        CheckEntities(o.FileName, folderBase, o.Entities, o);
+
                     }
-
-                    CheckEntities(o.FileName, folderBase, o.Entities, o);
-
                 }
             }
 
