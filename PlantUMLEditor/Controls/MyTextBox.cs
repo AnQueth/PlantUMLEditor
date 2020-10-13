@@ -365,8 +365,16 @@ namespace PlantUMLEditor.Controls
             if (string.IsNullOrEmpty(FindText))
                 return;
 
-            Regex r = new Regex(FindText);
-            this.Text = r.Replace(this.Text, ReplaceText);
+            if (useRegex)
+            {
+                Regex r = new Regex(FindText);
+                this.Text = r.Replace(this.Text, ReplaceText);
+            }
+            else
+            {
+                this.Text = this.Text.Replace(FindText, ReplaceText);
+            }
+
             lock (_found)
                 _found.Clear();
             this._renderText = true;

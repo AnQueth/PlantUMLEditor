@@ -41,7 +41,7 @@ namespace PlantUMLEditor.Models
          
         }
 
-        public async Task Generate()
+        public async Task Generate(string folderBase)
         {
             List<DocumentMessage> newMessages = new List<DocumentMessage>();
 
@@ -58,7 +58,7 @@ namespace PlantUMLEditor.Models
                             FileName = f.FileName,
                             Text = e.Line,
                             LineNumber = e.LineNumber,
-
+                            RelativeFileName = f.FileName.Substring(folderBase.Length + 1),
                             Warning = false
                         });
                     }
@@ -77,7 +77,7 @@ namespace PlantUMLEditor.Models
                             FileName = f2.FileName,
                             Text = e.Value,
                             LineNumber = e.LineNumber,
-
+                            RelativeFileName = f2.FileName.Substring(folderBase.Length + 1),
                             Warning = false
                         });
                     }
@@ -92,18 +92,20 @@ namespace PlantUMLEditor.Models
 
                         foreach (var i in items)
                         {
+
                             newMessages.Add(new DocumentMessage()
                             {
-                                FileName = i.o.FileName,
-                                Text = i.f.Warning,
-                                LineNumber = i.f.LineNumber,
 
-                                Warning = true
-                            });
-                        }
-
-                        CheckEntities(o.FileName, o.Entities, o);
+                            FileName = i.o.FileName,
+                            Text = i.f.Warning,
+                            LineNumber = i.f.LineNumber,
+                            RelativeFileName = i.o.FileName.Substring(folderBase.Length + 1),
+                            Warning = true
+                        });
                     }
+
+                    CheckEntities(o.FileName, folderBase, o.Entities, o);
+
                 }
             }
 
@@ -122,6 +124,7 @@ namespace PlantUMLEditor.Models
                             newMessages.Add(new DocumentMessage()
                             {
                                 FileName = dt.Item2,
+                                RelativeFileName = dt.Item2.Substring(folderBase.Length + 1),
                                 LineNumber = dt.Item1.LineNumber,
                                 Text = r,
                                 IsMissingDataType = true
@@ -142,6 +145,7 @@ namespace PlantUMLEditor.Models
                                 newMessages.Add(new DocumentMessage()
                                 {
                                     FileName = dt.Item2,
+                                    RelativeFileName = dt.Item2.Substring(folderBase.Length + 1),
                                     LineNumber = dt.Item1.LineNumber,
                                     Text = r,
                                     IsMissingDataType = true
@@ -160,6 +164,7 @@ namespace PlantUMLEditor.Models
                                 newMessages.Add(new DocumentMessage()
                                 {
                                     FileName = dt.Item2,
+                                    RelativeFileName = dt.Item2.Substring(folderBase.Length + 1),
                                     LineNumber = dt.Item1.LineNumber,
                                     Text = r,
                                     IsMissingDataType = true
@@ -191,7 +196,7 @@ namespace PlantUMLEditor.Models
                 }
             }
 
-            void CheckEntities(string fileName, List<UMLOrderedEntity> entities, UMLSequenceDiagram o)
+            void CheckEntities(string fileName, string folderBase, List<UMLOrderedEntity> entities, UMLSequenceDiagram o)
             {
                 foreach (var g in entities)
                 {
@@ -200,6 +205,7 @@ namespace PlantUMLEditor.Models
                         newMessages.Add(new DocumentMessage()
                         {
                             FileName = fileName,
+                            RelativeFileName = fileName.Substring(folderBase.Length + 1),
                             LineNumber = g.LineNumber,
                             Text = g.Warning,
                             MissingMethodText = c.Action?.Signature,
@@ -212,7 +218,7 @@ namespace PlantUMLEditor.Models
 
                     if (g is UMLSequenceBlockSection s)
                     {
-                        CheckEntities(fileName, s.Entities, o);
+                        CheckEntities(fileName, folderBase, s.Entities, o);
                     }
                 }
             }

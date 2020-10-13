@@ -669,41 +669,34 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
             <TabControl Grid.Row="2">
                 <TabItem>
                     <TabItem.Header>Errors</TabItem.Header>
-                    <DataGrid SelectionMode="Single" IsReadOnly="True"
+					<DataGrid SelectionMode="Single" IsReadOnly="True"
                               Grid.Row="2"
                               AutoGenerateColumns="False"  ItemsSource="{Binding Messages}" Margin="{DynamicResource TabHeaderMargin}"  
                            HorizontalContentAlignment="Stretch"
                               
                                  SelectedItem="{Binding SelectedMessage}">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding Text}"></DataGridTextColumn>
-                            <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
-                            <DataGridTemplateColumn>
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                       
-
-                                        <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
+						<DataGrid.Columns>
+							<DataGridTemplateColumn>
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
                                 Content="Fix" Grid.Column="2"></Button>
-
-                                        <DataTemplate.Triggers>
-                                            <DataTrigger Binding="{Binding IsFixable}" Value="false">
-                                                <DataTrigger.Setters>
-                                                    <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
-                                                </DataTrigger.Setters>
-                                            </DataTrigger>
-                                        </DataTemplate.Triggers>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                            
-                            
-                          
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    
-            
-                </TabItem>
+										<DataTemplate.Triggers>
+											<DataTrigger Binding="{Binding IsFixable}" Value="false">
+												<DataTrigger.Setters>
+													<Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
+												</DataTrigger.Setters>
+											</DataTrigger>
+										</DataTemplate.Triggers>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTextColumn IsReadOnly="true" Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
+							<DataGridTextColumn IsReadOnly="true" Header="Line" Binding="{Binding LineNumber}"></DataGridTextColumn>
+							<DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding RelativeFileName}"></DataGridTextColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+				</TabItem>
                 <TabItem>
                     <TabItem.Header>Find</TabItem.Header>
                     <Grid>
