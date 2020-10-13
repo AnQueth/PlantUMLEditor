@@ -84,14 +84,18 @@ namespace PlantUMLEditor.Models
                 }
                 if (doc is UMLSequenceDiagram o)
                 {
-                    var items = from z in o.LifeLines
-                                where z.Warning != null
-                                select new { o = doc, f = z };
-
-                    foreach (var i in items)
+                    if (o.ValidateAgainstClasses)
                     {
-                        newMessages.Add(new DocumentMessage()
+                        var items = from z in o.LifeLines
+                                    where z.Warning != null
+                                    select new { o = doc, f = z };
+
+                        foreach (var i in items)
                         {
+
+                            newMessages.Add(new DocumentMessage()
+                            {
+
                             FileName = i.o.FileName,
                             Text = i.f.Warning,
                             LineNumber = i.f.LineNumber,
@@ -101,6 +105,7 @@ namespace PlantUMLEditor.Models
                     }
 
                     CheckEntities(o.FileName, folderBase, o.Entities, o);
+
                 }
             }
 
