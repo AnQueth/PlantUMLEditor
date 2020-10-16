@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xaml;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -110,6 +111,9 @@ namespace PlantUMLEditor.Models
                 }
             }
 
+            List<((string fileName, int lineNumber, string ns1, string dt), string ns2)> namespaceReferences 
+                = new List<((string fileName, int lineNumber, string ns1, string dt), string ns2)>();
+
             foreach (var dt in dataTypes)
             {
                 if (dt.Item1 is UMLEnum)
@@ -119,8 +123,8 @@ namespace PlantUMLEditor.Models
                     var parsedTypes = GetCleanName(m.ObjectType.Name);
                     foreach (var r in parsedTypes)
                     {
-                        var pdt = dataTypes.Any(z => z.Item1.Name == r);
-                        if (!pdt)
+                        var pdt = dataTypes.FirstOrDefault(z => z.Item1.Name == r);
+                        if (pdt == default)
                         {
                             newMessages.Add(new DocumentMessage()
                             {
@@ -131,6 +135,10 @@ namespace PlantUMLEditor.Models
                                 IsMissingDataType = true
                             });
                         }
+                        else
+                        {
+                            namespaceReferences.Add(((dt.Item2 , dt.Item1.LineNumber, dt.Item1.Namespace, r), pdt.Item1.Namespace));
+                        }
                     }
                 }
                 foreach (var m in dt.Item1.Methods)
@@ -140,8 +148,8 @@ namespace PlantUMLEditor.Models
                         var parsedTypes = GetCleanName(p.ObjectType.Name);
                         foreach (var r in parsedTypes)
                         {
-                            var pdt2 = dataTypes.Any(z => z.Item1.Name == r);
-                            if (!pdt2)
+                            var pdt2 = dataTypes.FirstOrDefault(z => z.Item1.Name == r);
+                            if (pdt2 == default)
                             {
                                 newMessages.Add(new DocumentMessage()
                                 {
@@ -151,6 +159,11 @@ namespace PlantUMLEditor.Models
                                     Text = r,
                                     IsMissingDataType = true
                                 });
+                            }
+                            else
+                            {
+                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace,r), pdt2.Item1.Namespace));
+
                             }
                         }
                     }
@@ -159,8 +172,8 @@ namespace PlantUMLEditor.Models
                         var parsedTypes = GetCleanName(m.ReturnType.Name);
                         foreach (var r in parsedTypes)
                         {
-                            var pdt = dataTypes.Any(z => z.Item1.Name == r);
-                            if (!pdt)
+                            var pdt = dataTypes.FirstOrDefault(z => z.Item1.Name == r);
+                            if (pdt == default)
                             {
                                 newMessages.Add(new DocumentMessage()
                                 {
@@ -171,8 +184,30 @@ namespace PlantUMLEditor.Models
                                     IsMissingDataType = true
                                 });
                             }
+                            else
+                            {
+                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace,r), pdt.Item1.Namespace));
+
+                            }
                         }
                     }
+                }
+            }
+
+            foreach(var n in namespaceReferences)
+            {
+                if(namespaceReferences.Any(p => p.Item1.ns1 == n.ns2 &&
+                p.ns2 == n.Item1.ns1 && 
+                p.Item1.ns1 != p.ns2 && !string.IsNullOrEmpty(p.Item1.ns1) 
+                && !string.IsNullOrEmpty(p.ns2)))
+                {
+                    newMessages.Add(new DocumentMessage()
+                    {
+                        FileName = n.Item1.fileName,
+                        RelativeFileName = n.Item1.fileName.Substring(folderBase.Length + 1),
+                        LineNumber = n.Item1.lineNumber,
+                        Text = "Circular reference " + n.Item1.ns1 + " and " + n.ns2 + " type = " + n.Item1.dt
+                    }) ;
                 }
             }
 

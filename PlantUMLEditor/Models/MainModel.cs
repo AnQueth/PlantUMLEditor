@@ -245,7 +245,7 @@ namespace PlantUMLEditor.Models
             {
                 SetValue(ref selectedMessage, value);
 
-                if (value != null)
+                if (value != null && !string.IsNullOrEmpty(selectedMessage.FileName))
                     AttemptOpeningFile(selectedMessage.FileName, selectedMessage.LineNumber);
             }
         }
@@ -735,7 +735,8 @@ namespace PlantUMLEditor.Models
             {
                 d.Close();
             }
-            OpenDocuments.Clear();
+            if(OpenDocuments.Count > 0)
+                OpenDocuments.Clear();
 
             AppSettings.Default.WorkingDir = dir;
             AppSettings.Default.Save();

@@ -281,6 +281,16 @@ namespace PlantUML
 
                 if (DataType != null && line.EndsWith("{"))
                 {
+                    if (aliases.TryGetValue(DataType.Name, out var newType))
+                    {
+                        newType.Namespace = DataType.Namespace;
+                    }
+                    else
+                    {
+                        aliases.Add(DataType.Name, DataType);
+                    }
+
+
                     DataType.LineNumber = lineNumber;
                     currentPackage.Children.Add(DataType);
                     while ((line = await sr.ReadLineAsync()) != null)
@@ -301,6 +311,9 @@ namespace PlantUML
                     }
                 }
             }
+
+
+
 
             return d;
         }
