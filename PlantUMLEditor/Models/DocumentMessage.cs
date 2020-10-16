@@ -9,6 +9,7 @@ namespace PlantUMLEditor.Models
         {
         }
 
+        public string MissingDataTypeName { get; set; }
         public UMLSequenceDiagram Diagram { get; set; }
 
         public string FileName { get; set; }

@@ -452,7 +452,7 @@ namespace PlantUMLEditor.Models
                     if (f.Package == null)
                         f.Package = new UMLPackage("defaults");
 
-                    f.Package.Children.Add(new UMLClass("default", false, sender.Text, new List<UMLDataType>()));
+                    f.Package.Children.Add(new UMLClass("default", false, sender.MissingDataTypeName, new List<UMLDataType>()));
                     string d = Path.Combine(GetWorkingFolder(true), "defaults.class.puml");
 
                     var od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == d);
