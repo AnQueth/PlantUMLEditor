@@ -111,8 +111,8 @@ namespace PlantUMLEditor.Models
                 }
             }
 
-            List<((string fileName, int lineNumber, string ns1, string dt), string ns2)> namespaceReferences 
-                = new List<((string fileName, int lineNumber, string ns1, string dt), string ns2)>();
+            List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> namespaceReferences 
+                = new List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)>();
 
             foreach (var dt in dataTypes)
             {
@@ -137,7 +137,7 @@ namespace PlantUMLEditor.Models
                         }
                         else
                         {
-                            namespaceReferences.Add(((dt.Item2 , dt.Item1.LineNumber, dt.Item1.Namespace, r), pdt.Item1.Namespace));
+                            namespaceReferences.Add(((dt.Item2 , dt.Item1.LineNumber, dt.Item1.Namespace, r, m.Name), pdt.Item1.Namespace));
                         }
                     }
                 }
@@ -162,7 +162,7 @@ namespace PlantUMLEditor.Models
                             }
                             else
                             {
-                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace,r), pdt2.Item1.Namespace));
+                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace,r, m.Name), pdt2.Item1.Namespace));
 
                             }
                         }
@@ -186,7 +186,7 @@ namespace PlantUMLEditor.Models
                             }
                             else
                             {
-                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace,r), pdt.Item1.Namespace));
+                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace,r, m.Name), pdt.Item1.Namespace));
 
                             }
                         }
@@ -206,7 +206,7 @@ namespace PlantUMLEditor.Models
                         FileName = n.Item1.fileName,
                         RelativeFileName = n.Item1.fileName.Substring(folderBase.Length + 1),
                         LineNumber = n.Item1.lineNumber,
-                        Text = "Circular reference " + n.Item1.ns1 + " and " + n.ns2 + " type = " + n.Item1.dt
+                        Text = "Circular reference " + n.Item1.ns1 + " and " + n.ns2 + " type = " + n.Item1.dt + " offender " + n.Item1.name
                     }) ;
                 }
             }
