@@ -18,7 +18,8 @@ namespace PlantUMLEditor.Models
     public class PreviewDiagramModel : BindingBase
     {
         private readonly IIOService _ioService;
-        private readonly ConcurrentQueue<(string, string, bool)> _regenRequests = new ConcurrentQueue<(string, string, bool)>();
+        private readonly ConcurrentQueue<(string, string, bool, string)> _regenRequests
+            = new ConcurrentQueue<(string, string, bool, string)>();
         private AutoResetEvent _are = new AutoResetEvent(false);
         private FixedDocument _doc;
         private string _messages;
@@ -147,7 +148,7 @@ namespace PlantUMLEditor.Models
                     while (_regenRequests.Count > 0)
                     {
                         Messages = string.Empty;
-                        _regenRequests.TryDequeue(out (string, string, bool) res);
+                        _regenRequests.TryDequeue(out (string, string, bool, string) res);
 
                         string fn = Path.Combine(Path.GetDirectoryName(res.Item2), Path.GetFileNameWithoutExtension(res.Item2) + ".png");
 
@@ -194,6 +195,15 @@ namespace PlantUMLEditor.Models
                         else
                             Application.Current.Dispatcher.Invoke(() =>
                             {
+                                if (!File.Exists(fn))
+                                {
+                                    string fn2 = Path.Combine(Path.GetDirectoryName(res.Item2), Path.GetFileNameWithoutExtension(res.Item4) + ".png");
+
+                                    if (File.Exists(fn2))
+                                    {
+                                        fn = fn2;
+                                    }
+                                }
                                 Image = new BitmapImage(new Uri(fn));
 
                                 if (res.Item3 && File.Exists(res.Item2))
@@ -260,14 +270,14 @@ namespace PlantUMLEditor.Models
             images.Add(vis);
         }
 
-        public async Task ShowImage(string jar, string path, bool delete)
+        public async Task ShowImage(string jar, string path, string name, bool delete)
         {
             if (!File.Exists(jar))
             {
                 MessageBox.Show("plant uml is missing");
             }
             _regenRequests.Clear();
-            _regenRequests.Enqueue((jar, path, delete));
+            _regenRequests.Enqueue((jar, path, delete, name));
 
             _are.Set();
         }
