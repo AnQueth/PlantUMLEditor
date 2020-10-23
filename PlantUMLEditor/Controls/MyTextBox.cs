@@ -1,10 +1,7 @@
-﻿using PlantUMLEditor.Models;
-using Prism.Commands;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -14,6 +11,9 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using PlantUMLEditor.Controls.Coloring;
+using PlantUMLEditor.Models;
+using Prism.Commands;
 
 namespace PlantUMLEditor.Controls
 {
@@ -950,7 +950,7 @@ namespace PlantUMLEditor.Controls
  CultureInfo.GetCultureInfo("en-us"),
  FlowDirection.LeftToRight,
  new Typeface(this.FontFamily.Source),
- this.FontSize, Brushes.DarkBlue, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+ this.FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
             try
             {
@@ -968,9 +968,13 @@ namespace PlantUMLEditor.Controls
             {
                 int end = int.MaxValue;
                 int start = 0;
-
+#if USE_OLD_COLORING
                 ColorCoding coding = new ColorCoding();
                 coding.FormatText(this.TextRead(), formattedText);
+#else
+                Colorizer colorizer = new Colorizer();
+                colorizer.FormatText(this.TextRead(), formattedText);
+#endif
                 lock (_found)
                 {
                     foreach (var item in _found)
