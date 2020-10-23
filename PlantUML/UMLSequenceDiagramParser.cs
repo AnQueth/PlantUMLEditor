@@ -111,8 +111,12 @@ namespace PlantUML
                 lineNumber++;
                 line = line.Trim();
 
-                if (line == "@startuml")
+                if (line.StartsWith( "@startuml"))
                 {
+                    if(line.Length > 9)
+                    {
+                        d.Title = line.Substring(9).Trim();
+                    }
                     started = true;
                     continue;
                 }

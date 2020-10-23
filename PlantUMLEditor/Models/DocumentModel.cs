@@ -140,7 +140,7 @@ namespace PlantUMLEditor.Models
             string tmp = Path.GetTempFileName();
             await File.WriteAllTextAsync(tmp, text);
 
-            await imageModel.ShowImage(_jarLocation, tmp, true);
+            await imageModel.ShowImage(_jarLocation, tmp, this.Name.Trim('\"'), true);
         }
 
         protected virtual string AppendAutoComplete(string selection)
