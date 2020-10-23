@@ -9,26 +9,35 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlantUML", "PlantUML\PlantU
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmlTests", "UmlTests\UmlTests.csproj", "{19716CBD-0C34-4D92-A86C-9B580F3ED7AA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UMLModels", "UMLModels\UMLModels.csproj", "{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UMLModels", "UMLModels\UMLModels.csproj", "{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug (Old Coloring)|Any CPU = Debug (Old Coloring)|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6969D927-26C4-4DF2-A612-5FC4B16CEAF2}.Debug (Old Coloring)|Any CPU.ActiveCfg = Debug (Old Coloring)|Any CPU
+		{6969D927-26C4-4DF2-A612-5FC4B16CEAF2}.Debug (Old Coloring)|Any CPU.Build.0 = Debug (Old Coloring)|Any CPU
 		{6969D927-26C4-4DF2-A612-5FC4B16CEAF2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6969D927-26C4-4DF2-A612-5FC4B16CEAF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6969D927-26C4-4DF2-A612-5FC4B16CEAF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6969D927-26C4-4DF2-A612-5FC4B16CEAF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D609106-5D45-4E4A-8A63-62C649681039}.Debug (Old Coloring)|Any CPU.ActiveCfg = Debug (Old Coloring)|Any CPU
+		{0D609106-5D45-4E4A-8A63-62C649681039}.Debug (Old Coloring)|Any CPU.Build.0 = Debug (Old Coloring)|Any CPU
 		{0D609106-5D45-4E4A-8A63-62C649681039}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0D609106-5D45-4E4A-8A63-62C649681039}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0D609106-5D45-4E4A-8A63-62C649681039}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0D609106-5D45-4E4A-8A63-62C649681039}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19716CBD-0C34-4D92-A86C-9B580F3ED7AA}.Debug (Old Coloring)|Any CPU.ActiveCfg = Debug (Old Coloring)|Any CPU
+		{19716CBD-0C34-4D92-A86C-9B580F3ED7AA}.Debug (Old Coloring)|Any CPU.Build.0 = Debug (Old Coloring)|Any CPU
 		{19716CBD-0C34-4D92-A86C-9B580F3ED7AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{19716CBD-0C34-4D92-A86C-9B580F3ED7AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19716CBD-0C34-4D92-A86C-9B580F3ED7AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19716CBD-0C34-4D92-A86C-9B580F3ED7AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Debug (Old Coloring)|Any CPU.ActiveCfg = Debug (Old Coloring)|Any CPU
+		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Debug (Old Coloring)|Any CPU.Build.0 = Debug (Old Coloring)|Any CPU
 		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Release|Any CPU.ActiveCfg = Release|Any CPU

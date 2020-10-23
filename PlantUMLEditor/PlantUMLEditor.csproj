@@ -5,6 +5,11 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
+    <Configurations>Debug;Release;Debug (Old Coloring)</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (Old Coloring)|AnyCPU'">
+    <DefineConstants>TRACE;USE_OLD_COLORING</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
