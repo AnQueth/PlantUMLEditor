@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows.Media;
 
@@ -10,12 +12,21 @@ namespace PlantUMLEditor.Controls.Coloring
 
 		public void FormatText(string text, FormattedText formattedText)
 		{
+			Stopwatch sw = new Stopwatch();
+			sw.Start();
+
 			int documentOffset = 0;
 			var lines = text.Split("\r\n");
 			for (int i = 0; i < lines.Length; i++)
 			{
 				var line = lines[i];
-				var lineType = DetermineLineType(SplitLine(line));
+				var lineParts = SplitLine(line);
+				var lineType = DetermineLineType(lineParts);
+
+				// Note that we only care about offsetting by the line indent if we're going to parse the line itself.
+				// In cases where we simply color the entire line blindly (e.g., notes and comments) the indent doesn't matter
+				// and we can save ourselves from parsing for it.
+				var lineIndent = 0;
 				switch (lineType)
 				{
 					case LineType.Comment:
@@ -23,7 +34,9 @@ namespace PlantUMLEditor.Controls.Coloring
 						break;
 
 					case LineType.Declaration:
-						documentOffset = ProcessDeclaration(formattedText, line, documentOffset);
+						lineIndent = GetIndentLevel(line);
+						documentOffset += lineIndent;
+						documentOffset = ProcessDeclaration(formattedText, new Queue<string>(lineParts), documentOffset);
 						break;
 
 					case LineType.DiagramDirection:
@@ -31,11 +44,15 @@ namespace PlantUMLEditor.Controls.Coloring
 						break;
 
 					case LineType.Link:
-						documentOffset = ProcessLink(formattedText, line, documentOffset);
+						lineIndent = GetIndentLevel(line);
+						documentOffset += lineIndent;
+						documentOffset = ProcessLink(formattedText, new Queue<string>(lineParts), documentOffset);
 						break;
 
 					case LineType.Normal:
-						documentOffset = ProcessNormal(formattedText, line, documentOffset);
+						lineIndent = GetIndentLevel(line);
+						documentOffset += lineIndent;
+						documentOffset = ProcessNormal(formattedText, new Queue<string>(lineParts), documentOffset);
 						break;
 
 					case LineType.Note:
@@ -46,18 +63,24 @@ namespace PlantUMLEditor.Controls.Coloring
 						i = result.LastLineUsedIndex;
 						break;
 
-
 					case LineType.System:
 						documentOffset = ProcessSystem(formattedText, line, documentOffset);
 						break;
 
 					case LineType.Empty:
+						// Add the line separator only
+						documentOffset += LINE_SEPARATOR_LENGTH;
+						break;
+
 					default:
 						documentOffset += line.Length + LINE_SEPARATOR_LENGTH;
 						break;
 
 				}
 			}
+
+			sw.Stop();
+			Debug.WriteLine($"Colorizer complete in { sw.ElapsedTicks / 100d } ns.");
 		}
 
 		private LineType DetermineLineType(string[] tokens)
@@ -103,7 +126,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			return LineType.Normal;
 		}
 
-		private int ProcessNormal(FormattedText text, string line, int documentOffset)
+		private int ProcessNormal(FormattedText text, Queue<string> lineParts, int documentOffset)
 		{
 			// Format: any line that isn't one of the other types.  Can contain a mixture of keywords
 			// and non-keyword text.  Probably doesn't contain entities.
@@ -113,11 +136,9 @@ namespace PlantUMLEditor.Controls.Coloring
 			// Only need to get this if a keyword is actually found.
 			TextStyle keywordStyle = null;
 
-			documentOffset += GetIndentLevel(line);
-			var parts = new Queue<string>(SplitLine(line));
-			while (parts.Count > 0)
+			while (lineParts.Count > 0)
 			{
-				var item = parts.Dequeue();
+				var item = lineParts.Dequeue();
 				if (Keywords.IsKeyword(item))
 				{
 					if (keywordStyle == null)
@@ -128,7 +149,7 @@ namespace PlantUMLEditor.Controls.Coloring
 					keywordStyle.Apply(text, documentOffset, item.Length);
 				}
 
-				documentOffset += item.Length + (parts.Count == 0 ? LINE_SEPARATOR_LENGTH : 1);
+				documentOffset += item.Length + (lineParts.Count == 0 ? LINE_SEPARATOR_LENGTH : 1);
 			}
 
 			return documentOffset;
@@ -169,7 +190,7 @@ namespace PlantUMLEditor.Controls.Coloring
 					lineIndex++;
 					documentOffset = ApplyStyleToEntireLine(TokenType.Note, text, allLines[lineIndex], documentOffset);
 
-					if (allLines[lineIndex] == "end note")
+					if (allLines[lineIndex].Trim() == "end note")
 					{
 						break;
 					}
@@ -179,15 +200,13 @@ namespace PlantUMLEditor.Controls.Coloring
 			return (documentOffset, lineIndex);
 		}
 
-		private int ProcessDeclaration(FormattedText text, string line, int documentOffset)
+		private int ProcessDeclaration(FormattedText text, Queue<string> lineParts, int documentOffset)
 		{
 			// TODO: Potential IndexOutOfRange exceptions; needs validation
 
 			// Format: entity_type entity_name as entity_alias {
 			// Everything after entity_name is optional
 
-			documentOffset += GetIndentLevel(line);
-			var lineParts = new Queue<string>(SplitLine(line.Trim()));
 			var entityTypeStyle = TextStyles.GetStyleForTokenType(TokenType.Keyword);
 			var entityNameStyle = TextStyles.GetStyleForTokenType(TokenType.Entity);
 
@@ -203,7 +222,6 @@ namespace PlantUMLEditor.Controls.Coloring
 				return documentOffset;
 			}
 
-			
 			if (lineParts.Peek() == "as")
 			{
 				// If they exist, parts 2 and 3 are always "as" and the alias
@@ -224,7 +242,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			return documentOffset;
 		}
 
-		private int ProcessLink(FormattedText text, string line, int documentOffset)
+		private int ProcessLink(FormattedText text, Queue<string> lineParts, int documentOffset)
 		{
 			// Format: entity_name arrow entity_name : message
 			// The message is optional.
@@ -232,24 +250,21 @@ namespace PlantUMLEditor.Controls.Coloring
 			// TODO: Potential IndexOutOfRange errors
 			var entityStyle = TextStyles.GetStyleForTokenType(TokenType.Entity);
 
-			documentOffset += GetIndentLevel(line);
-			var parts = new Queue<string>(SplitLine(line));
-
 			// Part 0 is always an entity
-			documentOffset = ApplyStyleToNextItem(entityStyle, parts, text, documentOffset);
+			documentOffset = ApplyStyleToNextItem(entityStyle, lineParts, text, documentOffset);
 
 			// Part 1 is always an arrow and no format is necessary
-			var currentItem = parts.Dequeue();
-			documentOffset += currentItem.Length + (parts.Count == 0 ? LINE_SEPARATOR_LENGTH : 1);
+			var currentItem = lineParts.Dequeue();
+			documentOffset += currentItem.Length + (lineParts.Count == 0 ? LINE_SEPARATOR_LENGTH : 1);
 
 			// Part 2 is always an entity
-			documentOffset = ApplyStyleToNextItem(entityStyle, parts, text, documentOffset);
+			documentOffset = ApplyStyleToNextItem(entityStyle, lineParts, text, documentOffset);
 
-			if (parts.Count > 0)
+			if (lineParts.Count != 0)
 			{
 				// If part 3 is not a colon, just format the rest of the line as normal text
 				TextStyle remainingStyle;
-				if (parts.Peek() == ":")
+				if (lineParts.Peek() == ":")
 				{
 					remainingStyle = TextStyles.GetStyleForTokenType(TokenType.Message);
 				}
@@ -258,9 +273,9 @@ namespace PlantUMLEditor.Controls.Coloring
 					remainingStyle = TextStyles.GetStyleForTokenType(TokenType.Normal);
 				}
 
-				while (parts.Count > 0)
+				while (lineParts.Count > 0)
 				{
-					documentOffset = ApplyStyleToNextItem(remainingStyle, parts, text, documentOffset);
+					documentOffset = ApplyStyleToNextItem(remainingStyle, lineParts, text, documentOffset);
 				}
 			}
 
@@ -293,8 +308,13 @@ namespace PlantUMLEditor.Controls.Coloring
 
 		private int GetIndentLevel(string line)
 		{
+			if (string.IsNullOrEmpty(line))
+			{
+				return 0;
+			}
+
 			int indent = 0;
-			while (line[indent] == ' ')
+			while (indent < line.Length && line[indent] == ' ')
 			{
 				indent++;
 			}
@@ -311,7 +331,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			// Always trim the line before splitting.  If there are leading spaces the colorizer cares about, line processors
 			// should handle those.
 
-			line = line.Trim();
+			var lineSpan = line.Trim().AsSpan();
 
 			if (string.IsNullOrEmpty(line)) return new string[0];
 
@@ -319,9 +339,9 @@ namespace PlantUMLEditor.Controls.Coloring
 			var strPos = 0;
 			var isInBracketsOrQuotes = false;
 			var currentWordStart = 0;
-			while (strPos < line.Length)
+			while (strPos < lineSpan.Length)
 			{
-				var c = line[strPos];
+				var c = lineSpan[strPos];
 				if (c == '"' && isInBracketsOrQuotes)
 				{
 					isInBracketsOrQuotes = false;
@@ -354,8 +374,8 @@ namespace PlantUMLEditor.Controls.Coloring
 						}
 						else
 						{
-							var word = line.Substring(currentWordStart, strPos - currentWordStart);
-							retList.Add(word);
+							var word = lineSpan.Slice(currentWordStart, strPos - currentWordStart);
+							retList.Add(word.ToString());
 
 							currentWordStart = strPos + 1;
 						}
@@ -366,8 +386,8 @@ namespace PlantUMLEditor.Controls.Coloring
 			}
 
 			// Add the last word in
-			var finalWord = line.Substring(currentWordStart, line.Length - currentWordStart);
-			retList.Add(finalWord);
+			var finalWord = lineSpan.Slice(currentWordStart, lineSpan.Length - currentWordStart);
+			retList.Add(finalWord.ToString());
 
 			return retList.ToArray();
 		}
