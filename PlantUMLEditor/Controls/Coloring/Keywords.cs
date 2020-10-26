@@ -21,6 +21,9 @@ namespace PlantUMLEditor.Controls.Coloring
 		// Anything that indicates a line of some sort:  arrow types and line types.
 		private static char[] _lineIndicators = new char[] { '>', '<', '/', '\\', '^', '#', '*', '+', '{', '}', '(', ')', '.', '-' };
 
+		// Anything that indicates a line type
+		private static char[] _lineTypes = new char[] { '.', '-' };
+
 		// Keywords that indicate entity declarations
 		private static string[] _entityKeywords = new string[]
 		{
@@ -67,7 +70,8 @@ namespace PlantUMLEditor.Controls.Coloring
 		public static bool IsArrowIndicator(string candidate)
 		{
 			if (candidate.Length == 0) return false;
-			if (_lineIndicators.Any(at => at == candidate[0] || at == candidate.Last()))
+			if (_lineIndicators.Any(at => at == candidate[0] || at == candidate.Last()) 
+				&& _lineTypes.Any(lt => candidate.Contains(lt)))
 			{
 				return true;
 			}

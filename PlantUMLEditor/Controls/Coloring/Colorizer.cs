@@ -20,10 +20,13 @@ namespace PlantUMLEditor.Controls.Coloring
 			for (int i = 0; i < lines.Length; i++)
 			{
 				var line = lines[i];
-				var lineIndent = GetIndentLevel(line);
-				documentOffset += lineIndent;
 				var lineParts = SplitLine(line);
 				var lineType = DetermineLineType(lineParts);
+
+				// Note that we only care about offsetting by the line indent if we're going to parse the line itself.
+				// In cases where we simply color the entire line blindly (e.g., notes and comments) the indent doesn't matter
+				// and we can save ourselves from parsing for it.
+				var lineIndent = 0;
 				switch (lineType)
 				{
 					case LineType.Comment:
@@ -31,6 +34,8 @@ namespace PlantUMLEditor.Controls.Coloring
 						break;
 
 					case LineType.Declaration:
+						lineIndent = GetIndentLevel(line);
+						documentOffset += lineIndent;
 						documentOffset = ProcessDeclaration(formattedText, new Queue<string>(lineParts), documentOffset);
 						break;
 
@@ -39,10 +44,14 @@ namespace PlantUMLEditor.Controls.Coloring
 						break;
 
 					case LineType.Link:
+						lineIndent = GetIndentLevel(line);
+						documentOffset += lineIndent;
 						documentOffset = ProcessLink(formattedText, new Queue<string>(lineParts), documentOffset);
 						break;
 
 					case LineType.Normal:
+						lineIndent = GetIndentLevel(line);
+						documentOffset += lineIndent;
 						documentOffset = ProcessNormal(formattedText, new Queue<string>(lineParts), documentOffset);
 						break;
 
@@ -53,7 +62,6 @@ namespace PlantUMLEditor.Controls.Coloring
 						// Notes can span multiple lines, so make sure we skip already-processed lines
 						i = result.LastLineUsedIndex;
 						break;
-
 
 					case LineType.System:
 						documentOffset = ProcessSystem(formattedText, line, documentOffset);
@@ -182,7 +190,7 @@ namespace PlantUMLEditor.Controls.Coloring
 					lineIndex++;
 					documentOffset = ApplyStyleToEntireLine(TokenType.Note, text, allLines[lineIndex], documentOffset);
 
-					if (allLines[lineIndex] == "end note")
+					if (allLines[lineIndex].Trim() == "end note")
 					{
 						break;
 					}
@@ -214,7 +222,6 @@ namespace PlantUMLEditor.Controls.Coloring
 				return documentOffset;
 			}
 
-			
 			if (lineParts.Peek() == "as")
 			{
 				// If they exist, parts 2 and 3 are always "as" and the alias
@@ -332,7 +339,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			var strPos = 0;
 			var isInBracketsOrQuotes = false;
 			var currentWordStart = 0;
-			while (strPos < line.Length)
+			while (strPos < lineSpan.Length)
 			{
 				var c = lineSpan[strPos];
 				if (c == '"' && isInBracketsOrQuotes)
@@ -379,8 +386,8 @@ namespace PlantUMLEditor.Controls.Coloring
 			}
 
 			// Add the last word in
-			var finalWord = line.Substring(currentWordStart, line.Length - currentWordStart);
-			retList.Add(finalWord);
+			var finalWord = lineSpan.Slice(currentWordStart, lineSpan.Length - currentWordStart);
+			retList.Add(finalWord.ToString());
 
 			return retList.ToArray();
 		}
