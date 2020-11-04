@@ -6,6 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <Configurations>Debug;Release;Debug (Old Coloring)</Configurations>
+    <ApplicationIcon>uml.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (Old Coloring)|AnyCPU'">
