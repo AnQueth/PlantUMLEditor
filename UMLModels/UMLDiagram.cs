@@ -1,6 +1,6 @@
 ﻿namespace UMLModels
 {
-    public abstract class UMLDiagram
+    public  abstract class UMLDiagram
     {
         public string FileName { get; set; }
 

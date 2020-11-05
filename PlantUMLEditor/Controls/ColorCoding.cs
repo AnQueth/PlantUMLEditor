@@ -13,7 +13,9 @@ namespace PlantUMLEditor.Controls
             {new Regex("(@startuml|@enduml)", RegexOptions.Compiled) , Colors.Coral},
             {new Regex("^\\s*'.+", RegexOptions.Multiline), Colors.Gray},
             {new Regex("^\\s*(class|interface)\\s+.+?{([\\s.\\w\\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline| RegexOptions.Compiled), Colors.Firebrick },
-            {new Regex("^\\s*(title|class|\\{\\w+\\}|interface|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle)\\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue}           
+            {new Regex("^\\s*(title|class|\\{\\w+\\}|interface|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle)\\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue},
+            {new Regex("^\\s*(start|endif|if\\s+\\(.*|else\\s+\\(.*|repeat\\s+while\\s+\\(.*|repeat|end\\s+fork|fork\\s+again|fork)\\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue}
+
         };
 
         private static Dictionary<Regex, Color[]> _groupedCodes = new Dictionary<Regex, Color[]>()

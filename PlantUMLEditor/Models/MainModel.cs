@@ -48,6 +48,8 @@ namespace PlantUMLEditor.Models
             Folder = new TreeViewModel(null, Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<DocumentModel>();
+            CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
+
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
@@ -211,7 +213,7 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
+        public DelegateCommand CreateNewUnknownDiagram { get; }
         public DelegateCommand SaveAllCommand
         {
             get;
@@ -658,6 +660,38 @@ namespace PlantUMLEditor.Models
 
             Documents.SequenceDiagrams.Add(model);
             AfterCreate(d);
+        }
+        private void NewUnknownDiagramHandler()
+        {
+            string nf = GetNewFile(".puml");
+
+            if (!string.IsNullOrEmpty(nf))
+            {
+                this.NewUnknownUMLDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+            }
+
+            this.ScanDirectory(this._folderBase);
+        }
+
+        private void NewUnknownUMLDiagram(string fileName, string title)
+        {
+            var model = new UMLModels.UMLUnknownDiagram(title, fileName);
+
+            var d = new UnknownDocumentModel((old, @new) =>
+            { },
+            Configuration, _ioService)
+            {
+                DocumentType = DocumentTypes.Unknown,
+                Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
+                Diagram = model,
+                
+                FileName = fileName,
+                Name = title
+            };
+
+      
+            AfterCreate(d);
+
         }
 
         private void NewSequenceDiagramHandler()

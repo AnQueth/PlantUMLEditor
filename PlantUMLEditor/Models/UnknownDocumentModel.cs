@@ -42,7 +42,7 @@ namespace PlantUMLEditor.Models
 
         public override Task<UMLDiagram> GetEditedDiagram()
         {
-            return Task.FromResult<UMLDiagram>(null);
+            return Task.FromResult<UMLDiagram>(Diagram);
         }
     }
 }

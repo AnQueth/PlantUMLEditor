@@ -14,8 +14,9 @@ namespace PlantUMLEditor.Controls
         private static Regex removeSpaces = new Regex(" {2,}", RegexOptions.Compiled);
         private static Regex tab = new Regex("^(alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
         private static Regex tab2 = new Regex("^\\s*(class|interface|package|enum|together|component|database|rectangle).+\\{", RegexOptions.Compiled);
-        private static Regex tabReset = new Regex("^else\\s?.*", RegexOptions.Compiled);
-        private static Regex tabStop = new Regex("^(\\}|end(?! note))", RegexOptions.Compiled);
+        private static Regex tab3 = new Regex("^\\s*(if\\s+\\(.*|repeat(?!\\s*while).*|fork(?!\\s*again))$", RegexOptions.Compiled);
+        private static Regex tabReset = new Regex("^(else\\s?.*|fork\\s+again)", RegexOptions.Compiled);
+        private static Regex tabStop = new Regex("^(\\}|end(?! note)|endif|repeat\\s+while.*)", RegexOptions.Compiled);
 
         private int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {
@@ -81,7 +82,7 @@ namespace PlantUMLEditor.Controls
             {
                 indentLevel++;
             }
-            if (tab.IsMatch(line) || tab2.IsMatch(line))
+            if (tab.IsMatch(line) || tab2.IsMatch(line) || tab3.IsMatch(line))
             {
                 indentLevel++;
             }

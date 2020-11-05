@@ -104,7 +104,8 @@ namespace PlantUMLEditor.Models
             if (cd == null)
                 comd = await TryCreateComponentDiagram(documents, fullPath);
             if (cd == null)
-                ud = new UMLUnknownDiagram("", fullPath);
+                ud = await     PlantUML.UnknownDiagramParser.ReadFile(fullPath);
+
             return (cd, sd, comd, ud);
         }
     }
