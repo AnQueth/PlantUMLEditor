@@ -364,7 +364,7 @@ namespace PlantUMLEditor.Models
 
             Application.Current.Dispatcher.Invoke(() =>
           {
-              Messages.Clear();
+              //Messages.Clear();
 
               DocumentMessageGenerator documentMessageGenerator = new DocumentMessageGenerator(diagrams, Messages);
               documentMessageGenerator.Generate(_folderBase);
@@ -684,7 +684,7 @@ namespace PlantUMLEditor.Models
                 DocumentType = DocumentTypes.Unknown,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
                 Diagram = model,
-                
+               Diagrams = documents,
                 FileName = fileName,
                 Name = title
             };

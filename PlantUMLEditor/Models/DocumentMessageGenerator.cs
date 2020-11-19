@@ -27,7 +27,7 @@ namespace PlantUMLEditor.Models
             string[] parts = name.Split(' ', '.', ',', '<', '>', '[', ']');
 
             List<string> types = new List<string>();
-            foreach(var p in parts)
+            foreach (var p in parts)
             {
                 if (string.IsNullOrEmpty(p) || knownwords.Contains(p))
                     continue;
@@ -39,7 +39,7 @@ namespace PlantUMLEditor.Models
             return types.ToArray();
 
 
-         
+
         }
 
         public async Task Generate(string folderBase)
@@ -114,7 +114,7 @@ namespace PlantUMLEditor.Models
                 }
             }
 
-              }
+        }
 
         private void ValidateSequenceDiagram(string folderBase, List<DocumentMessage> newMessages, UMLDiagram doc, UMLSequenceDiagram o)
         {
