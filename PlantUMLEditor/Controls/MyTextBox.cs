@@ -702,14 +702,30 @@ namespace PlantUMLEditor.Controls
 
             if (e.Text == "{")
             {
-                Indenter i = new Indenter();
-                int indent = i.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex) - 1);
-                string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}";
-                int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
-                this.Text = this.Text.Insert(CaretIndex, line);
-                CaretIndex = newIndex;
-                this.CloseAutoComplete();
-                e.Handled = true;
+                bool process = false;
+                for(var x = CaretIndex; x >= 0; x--)
+                {
+                    if(this.Text[x] == '{')
+                    {
+                        break;
+                    }
+                    if(char.IsLetterOrDigit(this.Text[x]) && x != '{')
+                    {
+                        process = true;
+                        break;
+                    }
+                }
+                if (process)
+                {
+                    Indenter i = new Indenter();
+                    int indent = i.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex) - 1);
+                    string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}";
+                    int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
+                    this.Text = this.Text.Insert(CaretIndex, line);
+                    CaretIndex = newIndex;
+                    this.CloseAutoComplete();
+                    e.Handled = true;
+                }
             }
             base.OnPreviewTextInput(e);
         }
