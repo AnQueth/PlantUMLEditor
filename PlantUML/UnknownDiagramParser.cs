@@ -32,7 +32,7 @@ namespace PlantUML
                 linenumber++;
                 line = line.Trim();
 
-                if (line == "@startuml")
+                if (line == "@startuml" || line == "@startmindmap")
                 {
                     started = true;
                 }
