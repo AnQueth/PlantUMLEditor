@@ -257,7 +257,8 @@ namespace PlantUMLEditor.Models
                         var parsedTypes = GetCleanName(m.ReturnType.Name);
                         foreach (var r in parsedTypes)
                         {
-                            var pdt = dataTypes.FirstOrDefault(z => z.Item1.Name == r);
+                            var pdt = dataTypes
+                                .FirstOrDefault(z => GetCleanName( z.Item1.Name).Contains( r));
                             if (pdt == default)
                             {
                                 newMessages.Add(new DocumentMessage()

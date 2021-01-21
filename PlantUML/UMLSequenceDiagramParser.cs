@@ -374,7 +374,7 @@ namespace PlantUML
             if (m.Success)
             {
                 string type = m.Groups["type"].Value;
-                string name = m.Groups["name"].Value;
+                string name = m.Groups["name"].Value.Trim('\"' );
                 string alias = m.Groups["alias"].Value;
                 if (string.IsNullOrEmpty(alias))
                     alias = name;

@@ -15,7 +15,7 @@ namespace PlantUML
 
         private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
 
-        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
+        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
         private static Regex _packageRegex = new Regex("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"* *\\{", RegexOptions.Compiled);
 
@@ -226,8 +226,30 @@ namespace PlantUML
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 8)
-                        DataType = new UMLInterface(package, Clean(line.Substring(9)).Replace("\"", string.Empty), new List<UMLDataType>());
+                    {
+                        string alias = null;
+                        string name = null;
 
+                        if (line.Contains(" as "))
+                        {
+                            line = line.Replace("\"", string.Empty);
+                            alias = line.Substring(line.IndexOf(" as ") + 4).TrimEnd(' ', '{');
+                            name = Clean(line.Substring(9, line.IndexOf(" as ") - 9));
+                        }
+                        else
+                        {
+                            name = Clean(line.Substring(9)).Replace("\"", string.Empty);
+                        }
+
+                        DataType = new UMLInterface(package, name
+                          ,
+                            new List<UMLDataType>());
+
+                        if (alias != null)
+                            aliases.Add(alias, DataType);
+
+
+                    }
                     if (line.EndsWith("{"))
                     {
                         brackets.Push("interface");
@@ -245,7 +267,8 @@ namespace PlantUML
                 || removeGenerics.Match(p.Name).Value == m.Groups["second"].Value);
                     if (i == null)
                     {
-                        d.Errors.Add(new UMLError("Could not find base type", m.Groups["second"].Value, lineNumber));
+                        if (!aliases.TryGetValue(m.Groups["second"].Value, out i))
+                            d.Errors.Add(new UMLError("Could not find base type", m.Groups["second"].Value, lineNumber));
                     }
                     if (cl != null && i != null)
                         cl.Bases.Add(i);
