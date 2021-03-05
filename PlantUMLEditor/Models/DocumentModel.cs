@@ -22,7 +22,7 @@ namespace PlantUMLEditor.Models
     {
         private readonly IIOService _ioService;
         private readonly string _jarLocation;
-
+       
         private IAutoComplete _autoComplete;
         private AutoCompleteParameters _autoCompleteParameters;
 
@@ -40,11 +40,22 @@ namespace PlantUMLEditor.Models
 
         private Preview PreviewWindow;
         private Visibility visible;
+
+        internal void TryClosePreview()
+        {
+            if (PreviewWindow != null)
+            {
+                imageModel.Stop();
+                PreviewWindow.Close();
+            }
+        }
+
         protected Action _bindedAction;
         public DocumentModel(IConfiguration configuration, IIOService openDirectoryService)
         {
             _ioService = openDirectoryService;
             _jarLocation = configuration.JarLocation;
+ 
 
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
             MatchingAutoCompletes = new List<string>();
@@ -127,6 +138,8 @@ namespace PlantUMLEditor.Models
             imageModel = new PreviewDiagramModel(_ioService);
 
             PreviewWindow = new Preview();
+   
+
             imageModel.Title = Name;
 
             PreviewWindow.DataContext = imageModel;

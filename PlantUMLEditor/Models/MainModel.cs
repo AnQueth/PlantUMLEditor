@@ -22,6 +22,20 @@ namespace PlantUMLEditor.Models
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly IIOService _ioService;
         private readonly Timer _messageChecker;
+
+        internal bool CloseAll()
+        {
+            foreach(var item in OpenDocuments)
+            {
+                if (item.IsDirty)
+                    return true;
+
+               item.TryClosePreview();
+            }
+
+            return false;
+        }
+
         private bool _AllowContinue;
         private bool _confirmOpen;
         private object _docLock = new object();

@@ -1,6 +1,7 @@
 ﻿using PlantUMLEditor.Models;
 using PlantUMLEditor.Services;
 using System;
+using System.ComponentModel;
 using System.Windows;
 
 namespace PlantUMLEditor
@@ -22,6 +23,13 @@ namespace PlantUMLEditor
             DataContext = _model;
         }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (_model.CloseAll())
+                e.Cancel = true;
+
+            base.OnClosing(e);
+        }
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
         }
