@@ -27,6 +27,8 @@ namespace UMLModels
         public List<(string Line, int LineNumber)> Errors { get; set; }
         public UMLPackage Package { get; set; }
 
+        public List<UMLPackage> ContainedPackages { get; set; } = new List<UMLPackage>();
+
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {
             foreach (var c in p.Children)

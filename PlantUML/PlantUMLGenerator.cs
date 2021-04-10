@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UMLModels;
 
@@ -238,7 +239,7 @@ namespace PlantUML
                         foreach (var b in item.Bases)
                         {
                             postWrites.Append(item.Name);
-                            postWrites.Append(" -- ");
+                            postWrites.Append(" --|> ");
                             postWrites.AppendLine(b.Name);
                         }
                     }
@@ -246,23 +247,23 @@ namespace PlantUML
                     foreach (var i in item.Interfaces)
                     {
                         postWrites.Append(item.Name);
-                        postWrites.Append(" -- ");
+                        postWrites.Append(" --* ");
                         postWrites.AppendLine(i.Name);
                     }
-                    //foreach (var prop in item.Properties.Where(z => classDiagram.DataTypes.Any(p => p == z.ObjectType)))
-                    //{
-                    //    writer.Write(item.Name);
-                    //    if (prop.ListType != ListTypes.None)
-                    //    {
-                    //        writer.Write(" \"1\" --o \"*\" ");
-                    //    }
-                    //    else
-                    //        writer.Write(" --o ");
+                    foreach (var prop in item.Properties.Where(z => children.Any(p => p == z.ObjectType)))
+                    {
+                        writer.Write(item.Name);
+                        if (prop.ListType != ListTypes.None)
+                        {
+                            writer.Write(" \"1\" --* \"*\" ");
+                        }
+                        else
+                            writer.Write(" --* ");
 
-                    //    writer.Write(prop.ObjectType.Name);
-                    //    writer.Write(" : ");
-                    //    writer.WriteLine(prop.Name);
-                    //}
+                        writer.Write(prop.ObjectType.Name);
+                        writer.Write(" : ");
+                        writer.WriteLine(prop.Name);
+                    }
                 }
             }
         }

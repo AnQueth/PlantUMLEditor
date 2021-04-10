@@ -889,7 +889,7 @@ namespace PlantUMLEditor.Controls
         {
             this.SelectionStart = index;
 
-            int i = index - 1;
+           // int i = index - 1;
 
             //if (this.Text[i + typedLength] != char.MinValue)
             //{
@@ -907,6 +907,7 @@ namespace PlantUMLEditor.Controls
             this.SelectionStart = index;
 
             this.SelectedText = text;
+           // this.CaretIndex = index + this.SelectionLength;
         }
 
         public override void OnApplyTemplate()

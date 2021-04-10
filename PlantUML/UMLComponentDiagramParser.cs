@@ -132,6 +132,9 @@ namespace PlantUML
 
                     var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
                     currentPackage.Children.Add(c);
+
+                    d.ContainedPackages.Add(c);
+
                     currentPackage = c;
                     aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
                     packagesStack.Push(c);
@@ -146,6 +149,7 @@ namespace PlantUML
                     brackets.Push(PACKAGE);
 
                     var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value), s.Groups["type"].Value);
+                    d.ContainedPackages.Add(c);
                     currentPackage.Children.Add(c);
                     currentPackage = c;
                     aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
@@ -191,7 +195,8 @@ namespace PlantUML
                         string left = m.Groups["left"].Value.Trim();
                         string right = m.Groups["right"].Value.Trim();
 
-                        var leftComponent = d.Entities.Find(p => p.Name == left);
+                        var leftComponent = d.Entities.Find(p => p.Name == left) 
+                            ?? d.ContainedPackages.Find(p=>p.Name == left);
                         if (leftComponent == null)
                         {
                             if (aliases.ContainsKey(left))
@@ -199,7 +204,8 @@ namespace PlantUML
                             else
                                 leftComponent = null;
                         }
-                        var fromType = d.Entities.Find(p => p.Name == right);
+                        var fromType = d.Entities.Find(p => p.Name == right)
+                             ?? d.ContainedPackages.Find(p => p.Name == right);
                         if (fromType == null)
                         {
                             if (aliases.ContainsKey(right))

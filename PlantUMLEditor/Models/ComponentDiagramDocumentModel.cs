@@ -45,7 +45,9 @@ namespace PlantUMLEditor.Models
                                 _autoCompleteItems = z.Entities.OfType<UMLComponent>()
                                 .Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias).Union(
                                     z.Entities.OfType<UMLInterface>().Select(p => p.Name)
-                                    ).Union(
+                                    )
+                               .Union(z.ContainedPackages.Select(z=>z.Text))
+                                .Union(
                                     z.Entities.OfType<UMLComponent>().Select(p => p.Namespace)
                                     ).ToList();
                     }
