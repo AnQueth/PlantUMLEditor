@@ -1,7 +1,9 @@
-﻿namespace PlantUMLEditor.Models
+﻿using System.Threading.Tasks;
+
+namespace PlantUMLEditor.Models
 {
     public interface IFolderChangeNotifactions
     {
-        void Change(string fullPath);
+        Task Change(string fullPath);
     }
 }

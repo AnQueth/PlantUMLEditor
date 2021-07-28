@@ -11,10 +11,10 @@ namespace PlantUML
 {
     public class UMLSequenceDiagramParser : IPlantUMLParser
     {
-        private static Regex _lifeLineRegex = new Regex("(?<type>participant|actor|control|component|database|boundary|entity|collections)\\s+\\\"*(?<name>[\\w\\.]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*", RegexOptions.Compiled);
+        private static readonly Regex _lifeLineRegex = new("(?<type>participant|actor|control|component|database|boundary|entity|collections)\\s+\\\"*(?<name>[\\w\\.]+(\\s*\\<((?<generics>[\\s\\w]+)\\,*)*\\>)*)\\\"*(\\s+as (?<alias>[\\w]+))*", RegexOptions.Compiled);
 
-        private static Regex lineConnectionRegex = new Regex("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
-        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        private static readonly Regex lineConnectionRegex = new("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
+        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static UMLSignature CheckActionOnType(UMLDataType toType, string actionSignature)
         {
@@ -75,7 +75,7 @@ namespace PlantUML
                         action = new UMLReturnFromMethod(previous.Action);
                     else
                     {
-                        string rest = actionSignature.Substring(6).Trim();
+                        string rest = actionSignature[6..].Trim();
 
                         if (d.LifeLines.Find(p => p.Text == rest) != null)
                         {
@@ -95,11 +95,11 @@ namespace PlantUML
         {
             var types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
 
-            UMLSequenceDiagram d = new UMLSequenceDiagram(string.Empty, fileName);
+            UMLSequenceDiagram d = new(string.Empty, fileName);
             bool started = false;
             string line = null;
 
-            Stack<UMLSequenceBlockSection> activeBlocks = new Stack<UMLSequenceBlockSection>();
+            Stack<UMLSequenceBlockSection> activeBlocks = new();
 
             int lineNumber = 0;
             UMLSequenceConnection previous = null;
@@ -115,7 +115,7 @@ namespace PlantUML
                 {
                     if(line.Length > 9)
                     {
-                        d.Title = line.Substring(9).Trim();
+                        d.Title = line[9..].Trim();
                     }
                     started = true;
                     continue;
@@ -151,7 +151,7 @@ namespace PlantUML
 
                 if (line.StartsWith("title", StringComparison.Ordinal))
                 {
-                    d.Title = line.Substring(5).Trim();
+                    d.Title = line[5..].Trim();
                     continue;
                 }
 
@@ -192,7 +192,7 @@ namespace PlantUML
                         }
                         activeBlocks.Push(sectionBlock);
                     }
-                    else if (activeBlocks.Count != 0 && activeBlocks.Peek().IsEnding(line))
+                    else if (activeBlocks.Count != 0 && line.StartsWith("end"))
                     {
                         activeBlocks.Pop();
                         if (activeBlocks.Count > 0)
@@ -300,25 +300,19 @@ namespace PlantUML
 
         public static async Task<UMLSequenceDiagram> ReadFile(string file, List<UMLClassDiagram> types, bool justLifeLines)
         {
-            using (StreamReader sr = new StreamReader(file))
-            {
-                UMLSequenceDiagram c = await ReadDiagram(sr, types, file, justLifeLines);
+            using StreamReader sr = new(file);
+            UMLSequenceDiagram c = await ReadDiagram(sr, types, file, justLifeLines);
 
-                return c;
-            }
+            return c;
         }
 
         public static async Task<UMLSequenceDiagram> ReadString(string s, List<UMLClassDiagram> types, bool justLifeLines)
         {
-            using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(s)))
-            {
-                using (StreamReader sr = new StreamReader(ms))
-                {
-                    UMLSequenceDiagram c = await ReadDiagram(sr, types, "", justLifeLines);
+            using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
+            using StreamReader sr = new(ms);
+            UMLSequenceDiagram c = await ReadDiagram(sr, types, "", justLifeLines);
 
-                    return c;
-                }
-            }
+            return c;
         }
 
         public static bool TryParseAllConnections(string line, UMLSequenceDiagram diagram,
@@ -340,7 +334,7 @@ namespace PlantUML
 
                 int l = line.IndexOf(':');
 
-                string actionSignature = l != -1 ? line.Substring(l).Trim(':').Trim() : string.Empty;
+                string actionSignature = l != -1 ? line[l..].Trim(':').Trim() : string.Empty;
 
                 if (fromAlias == null)
                 {

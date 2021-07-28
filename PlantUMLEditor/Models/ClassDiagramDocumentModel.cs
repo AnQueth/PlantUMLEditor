@@ -10,22 +10,17 @@ namespace PlantUMLEditor.Models
 {
     internal class ClassDiagramDocumentModel : DocumentModel
     {
-        private readonly Action<UMLClassDiagram, UMLClassDiagram> ChangedCallback = null;
+       
         private IEnumerable<string> _autoCompleteItems = Array.Empty<string>();
-        private object _locker = new object();
+        private readonly object _locker = new();
         private bool _running = true;
 
 
         public ClassDiagramDocumentModel(IConfiguration configuration,
             IIOService openDirectoryService) : base(configuration, openDirectoryService)
         {
-        }
-
-        public ClassDiagramDocumentModel(Action<UMLClassDiagram, UMLClassDiagram> changedCallback, IConfiguration configuration,
-                        IIOService openDirectoryService) : base(configuration, openDirectoryService)
-
-        {
-            this.ChangedCallback = changedCallback;
+       
+            
 
             Task.Run(async () =>
             {
@@ -74,7 +69,7 @@ namespace PlantUMLEditor.Models
                 this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
         }
 
-        public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
+        public override   void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
             base.AutoComplete(autoCompleteParameters);
             base.MatchingAutoCompletes.Clear();

@@ -137,7 +137,7 @@ namespace PlantUMLEditor.Models
             });
         }
 
-        private void RenameCommandHandler()
+        private async void RenameCommandHandler()
         {
             if (string.IsNullOrEmpty(Rename))
                 return;
@@ -173,7 +173,7 @@ namespace PlantUMLEditor.Models
                 IsRenaming = false;
                 Name = Rename;
             }
-            _folderChangeNotifactions.Change(this.FullPath);
+            await _folderChangeNotifactions.Change(this.FullPath);
         }
 
         private void StartRenameHandler()

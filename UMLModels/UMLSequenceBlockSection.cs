@@ -5,12 +5,12 @@ namespace UMLModels
 {
     public class UMLSequenceBlockSection : UMLOrderedEntity
     {
-        private static Regex _blockSection = new Regex("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.+)");
+        private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.+)");
 
         public UMLSequenceBlockSection()
         {
         }
-
+    
         public UMLSequenceBlockSection(string text, SectionTypes sectionTypes)
         {
             Text = text;
@@ -96,9 +96,6 @@ namespace UMLModels
             return f;
         }
 
-        public bool IsEnding(string line)
-        {
-            return line.StartsWith("end");
-        }
+     
     }
 }

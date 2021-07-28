@@ -12,7 +12,7 @@ namespace PlantUMLEditor.Controls.Coloring
 
 		public void FormatText(string text, FormattedText formattedText)
 		{
-			Stopwatch sw = new Stopwatch();
+			Stopwatch sw = new();
 			sw.Start();
 
 			int documentOffset = 0;
@@ -83,7 +83,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			Debug.WriteLine($"Colorizer complete in { sw.ElapsedTicks / 100d } ns.");
 		}
 
-		private LineType DetermineLineType(string[] tokens)
+		private static LineType DetermineLineType(string[] tokens)
 		{
 			if (tokens.Length == 0)
 			{
@@ -126,7 +126,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			return LineType.Normal;
 		}
 
-		private int ProcessNormal(FormattedText text, Queue<string> lineParts, int documentOffset)
+		private static int ProcessNormal(FormattedText text, Queue<string> lineParts, int documentOffset)
 		{
 			// Format: any line that isn't one of the other types.  Can contain a mixture of keywords
 			// and non-keyword text.  Probably doesn't contain entities.
@@ -290,7 +290,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			return ApplyStyleToEntireLine(TokenType.Keyword, text, line, documentOffset);
 		}
 
-		private int ApplyStyleToEntireLine(TokenType tokenType, FormattedText text, string line, int documentOffset)
+		private static int ApplyStyleToEntireLine(TokenType tokenType, FormattedText text, string line, int documentOffset)
 		{
 			var textStyle = TextStyles.GetStyleForTokenType(tokenType);
 			textStyle.Apply(text, documentOffset, line.Length);
@@ -298,7 +298,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			return documentOffset + line.Length + LINE_SEPARATOR_LENGTH;
 		}
 
-		private int ApplyStyleToNextItem(TextStyle style, Queue<string> itemQueue, FormattedText document, int documentOffset)
+		private static int ApplyStyleToNextItem(TextStyle style, Queue<string> itemQueue, FormattedText document, int documentOffset)
 		{
 			// This code appeared EVERYWHERE, so I broke it into its own method.
 			var currentItem = itemQueue.Dequeue();
@@ -306,7 +306,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			return documentOffset + currentItem.Length + (itemQueue.Count == 0 ? LINE_SEPARATOR_LENGTH : 1);
 		}
 
-		private int GetIndentLevel(string line)
+		private static int GetIndentLevel(string line)
 		{
 			if (string.IsNullOrEmpty(line))
 			{
@@ -322,7 +322,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			return indent;
 		}
 
-		private string[] SplitLine(string line)
+		private static string[] SplitLine(string line)
 		{
 			// Notes:
 			// string.Split() is insufficient, as you can have a single part with spaces in it as long as it's inside
@@ -374,7 +374,7 @@ namespace PlantUMLEditor.Controls.Coloring
 						}
 						else
 						{
-							var word = lineSpan.Slice(currentWordStart, strPos - currentWordStart);
+							var word = lineSpan[currentWordStart..strPos];
 							retList.Add(word.ToString());
 
 							currentWordStart = strPos + 1;
@@ -386,7 +386,7 @@ namespace PlantUMLEditor.Controls.Coloring
 			}
 
 			// Add the last word in
-			var finalWord = lineSpan.Slice(currentWordStart, lineSpan.Length - currentWordStart);
+			var finalWord = lineSpan[currentWordStart..];
 			retList.Add(finalWord.ToString());
 
 			return retList.ToArray();

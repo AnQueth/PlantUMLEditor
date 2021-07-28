@@ -8,7 +8,7 @@ namespace PlantUMLEditor.Controls
 {
     public class ColorCoding
     {
-        private static Dictionary<Regex, Color> _colorCodes = new Dictionary<Regex, Color>()
+        private static readonly Dictionary<Regex, Color> _colorCodes = new()
         {
             {new Regex("(@startuml|@enduml)", RegexOptions.Compiled) , Colors.Coral},
             {new Regex("^\\s*'.+", RegexOptions.Multiline), Colors.Gray},
@@ -18,22 +18,22 @@ namespace PlantUMLEditor.Controls
 
         };
 
-        private static Dictionary<Regex, Color[]> _groupedCodes = new Dictionary<Regex, Color[]>()
+        private static readonly Dictionary<Regex, Color[]> _groupedCodes = new()
         {
             {new Regex(@"^\s*(?<keyword>(?:participant|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(?:\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
         };
 
-        private static Dictionary<Regex, (Color, bool)> _mcolorCodes = new Dictionary<Regex, (Color, bool)>()
+        private static readonly Dictionary<Regex, (Color, bool)> _mcolorCodes = new()
         {
             {new Regex("(\\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
             {new Regex("^\\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), (Colors.Firebrick, false)}
         };
 
-        private static Regex brackets = new Regex("(\\{|\\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static Regex notes = new Regex("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" +as +(?<alias>\\w+))|(?<placement>\\w+) +of +(?<target>\\w+)[.\\s\\S\\W\\r\\n]*?end note| +as +(?<alias>\\\\w+)[.\\s\\S\\W\\r\\n]*?end note)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static Regex parenthesies = new Regex("(\\(|\\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex brackets = new("(\\{|\\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex notes = new("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" +as +(?<alias>\\w+))|(?<placement>\\w+) +of +(?<target>\\w+)[.\\s\\S\\W\\r\\n]*?end note| +as +(?<alias>\\\\w+)[.\\s\\S\\W\\r\\n]*?end note)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex parenthesies = new("(\\(|\\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        public void FormatText(string text, FormattedText formattedText)
+        public static void FormatText(string text, FormattedText formattedText)
         {
             var mn = notes.Matches(text);
 
@@ -72,7 +72,7 @@ namespace PlantUMLEditor.Controls
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
-                    var g = m.Groups[m.Groups.Count - 1];
+                    var g = m.Groups[^1];
                     formattedText.SetForegroundBrush(new SolidColorBrush(item.Value), g.Index, g.Length);
                 }
             }

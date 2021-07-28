@@ -13,13 +13,13 @@ namespace PlantUML
     {
        
 
-           private static Regex _title = new Regex("^title (?<title>.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+           private static readonly Regex _title = new("^title (?<title>.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         
         
 
         private static async Task<UMLUnknownDiagram> Read(StreamReader sr, string fileName)
         {
-            UMLUnknownDiagram d = new UMLUnknownDiagram(string.Empty, fileName);
+            UMLUnknownDiagram d = new(string.Empty, fileName);
             bool started = false;
             string line = null;
 
@@ -48,7 +48,7 @@ namespace PlantUML
                 if (line.StartsWith("title"))
                 {
                     if (line.Length > 6)
-                        d.Title = line.Substring(6);
+                        d.Title = line[6..];
                     continue;
                 }
                
@@ -59,25 +59,19 @@ namespace PlantUML
 
         public static async Task<UMLUnknownDiagram> ReadFile(string file)
         {
-            using (StreamReader sr = new StreamReader(file))
-            {
-                UMLUnknownDiagram c = await Read(sr, file);
+            using StreamReader sr = new(file);
+            UMLUnknownDiagram c = await Read(sr, file);
 
-                return c;
-            }
+            return c;
         }
 
         public static async Task<UMLUnknownDiagram> ReadString(string s)
         {
-            using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(s)))
-            {
-                using (StreamReader sr = new StreamReader(ms))
-                {
-                    UMLUnknownDiagram c = await Read(sr, "");
+            using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
+            using StreamReader sr = new(ms);
+            UMLUnknownDiagram c = await Read(sr, "");
 
-                    return c;
-                }
-            }
+            return c;
         }
     }
 }

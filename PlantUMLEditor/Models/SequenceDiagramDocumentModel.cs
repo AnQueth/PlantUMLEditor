@@ -9,9 +9,9 @@ namespace PlantUMLEditor.Models
     internal class SequenceDiagramDocumentModel : DocumentModel
     {
         private string _autoCompleteAppend = string.Empty;
-        private UMLDataType _currentAutoCompleteLifeLineType;
-        private object _locker = new object();
-        private Action<UMLSequenceDiagram, UMLSequenceDiagram> ChangedCallback;
+       
+
+     
 
         public SequenceDiagramDocumentModel(IConfiguration configuration,
                         IIOService openDirectoryService) : base(configuration, openDirectoryService)
@@ -22,7 +22,7 @@ namespace PlantUMLEditor.Models
             IConfiguration configuration, IIOService openDirectoryService)
             : this(configuration, openDirectoryService)
         {
-            this.ChangedCallback = p;
+            
         }
 
         public List<UMLClassDiagram> DataTypes { get; internal set; }
@@ -63,15 +63,12 @@ namespace PlantUMLEditor.Models
             _autoCompleteAppend = string.Empty;
 
             var text = autoCompleteParameters.Text.Trim();
-            _currentAutoCompleteLifeLineType = null;
+           
             base.AutoComplete(autoCompleteParameters);
 
             MatchingAutoCompletes.Clear();
 
             var types = this.DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
-
-            UMLSequenceConnection connection = null;
-
             if (text.StartsWith("participant") || text.StartsWith("actor"))
             {
                 if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, out var lifeline) && lifeline.DataTypeId != null)
@@ -97,7 +94,8 @@ namespace PlantUMLEditor.Models
             if (diagram == null)
                 return;
 
-            if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out connection))
+
+            if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out UMLSequenceConnection connection))
             {
                 if (text.Length - 2 > autoCompleteParameters.PositionInLine && autoCompleteParameters.PositionInLine < text.IndexOf(":"))
                     return;
@@ -108,7 +106,7 @@ namespace PlantUMLEditor.Models
                     {
                         AddAll(t, this.MatchingAutoCompletes, autoCompleteParameters.WordStart);
 
-                        _currentAutoCompleteLifeLineType = t;
+                       
                     }
                     if (this.MatchingAutoCompletes.Count > 0)
                         ShowAutoComplete(autoCompleteParameters.Position, true);

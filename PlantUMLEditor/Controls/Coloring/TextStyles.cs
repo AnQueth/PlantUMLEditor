@@ -8,8 +8,8 @@ namespace PlantUMLEditor.Controls.Coloring
 	internal static class TextStyles
 	{
 		// Predefined styles.  This could eventually be broken out to a file and parsed if desired.
-		private static Dictionary<TokenType, TextStyle> _mappings = new Dictionary<TokenType, TextStyle>
-		{
+		private static Dictionary<TokenType, TextStyle> _mappings = new()
+        {
 			{ TokenType.Normal, new TextStyle() },
 			{ TokenType.System, new TextStyle { Color = Colors.Coral } },
 			{ TokenType.Comment, new TextStyle { Color = Colors.Gray, IsItalics = true } },

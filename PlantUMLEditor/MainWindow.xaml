@@ -532,8 +532,12 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <Button Content="Scan Directory" Command="{Binding ScanAllFiles}"></Button>
             <Separator></Separator>
             <ComboBox ItemsSource="{Binding MRUFolders}" SelectedItem="{Binding SelectedMRUFolder}">
-                
+
             </ComboBox>
+            <Separator></Separator>
+            <Button Content="Open Terminal" Command="{Binding OpenTerminalCommand}"></Button>
+            <Separator></Separator>
+            <Button Content="Open Explorer" Command="{Binding OpenExplorerCommand}"></Button>
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>

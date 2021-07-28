@@ -9,7 +9,7 @@ namespace PlantUMLEditor.Services
     {
         public string GetDirectory()
         {
-            FolderBrowserDialog ofd = new FolderBrowserDialog();
+            FolderBrowserDialog ofd = new();
 
             if (ofd.ShowDialog() == DialogResult.OK)
             {
@@ -20,9 +20,11 @@ namespace PlantUMLEditor.Services
 
         public string GetSaveFile(string filter, string defaultExt)
         {
-            SaveFileDialog sfd = new SaveFileDialog();
-            sfd.Filter = filter;
-            sfd.DefaultExt = defaultExt;
+            SaveFileDialog sfd = new()
+            {
+                Filter = filter,
+                DefaultExt = defaultExt
+            };
             if (sfd.ShowDialog().GetValueOrDefault())
             {
                 return sfd.FileName;
@@ -32,10 +34,12 @@ namespace PlantUMLEditor.Services
 
         public string NewFile(string directory, string fileExtension)
         {
-            SaveFileDialog ofd = new SaveFileDialog();
-            ofd.InitialDirectory = directory;
-            ofd.DefaultExt = fileExtension;
-            ofd.Filter = "UML|*" + fileExtension;
+            SaveFileDialog ofd = new()
+            {
+                InitialDirectory = directory,
+                DefaultExt = fileExtension,
+                Filter = "UML|*" + fileExtension
+            };
 
             if (ofd.ShowDialog().GetValueOrDefault())
             {

@@ -23,13 +23,13 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        private ScaleTransform GetScaleTransform(UIElement element)
+        private static ScaleTransform GetScaleTransform(UIElement element)
         {
             return (ScaleTransform)((TransformGroup)element.RenderTransform)
               .Children.First(tr => tr is ScaleTransform);
         }
 
-        private TranslateTransform GetTranslateTransform(UIElement element)
+        private static TranslateTransform GetTranslateTransform(UIElement element)
         {
             return (TranslateTransform)((TransformGroup)element.RenderTransform)
               .Children.First(tr => tr is TranslateTransform);
@@ -40,10 +40,10 @@ namespace PlantUMLEditor.Controls
             this.child = element;
             if (child != null)
             {
-                TransformGroup group = new TransformGroup();
-                ScaleTransform st = new ScaleTransform();
+                TransformGroup group = new();
+                ScaleTransform st = new();
                 group.Children.Add(st);
-                TranslateTransform tt = new TranslateTransform();
+                TranslateTransform tt = new();
                 group.Children.Add(tt);
                 child.RenderTransform = group;
                 child.RenderTransformOrigin = new Point(0.0, 0.0);

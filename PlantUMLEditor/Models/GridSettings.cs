@@ -12,9 +12,9 @@ namespace PlantUMLEditor.Models
             _changedCB = changedCb;
 
         }
-        private GridLength _DataTypesHeight = new GridLength(200);
-        private GridLength _DocumentsWell = new GridLength(200);
-        private GridLength _TreeWidth = new GridLength(200);
+        private GridLength _DataTypesHeight = new(200);
+        private GridLength _DocumentsWell = new(200);
+        private GridLength _TreeWidth = new(200);
         private   Action _changedCB;
 
         public GridLength TreeWidth

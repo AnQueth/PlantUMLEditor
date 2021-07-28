@@ -4,6 +4,7 @@ using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -18,7 +19,7 @@ namespace PlantUMLEditor.Models
 {
     public class MainModel : BindingBase, IFolderChangeNotifactions
     {
-        private readonly ObservableCollection<Tuple<string, UMLDataType>> _dataTypes = new ObservableCollection<Tuple<string, UMLDataType>>();
+        private readonly ObservableCollection<Tuple<string, UMLDataType>> _dataTypes = new();
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly IIOService _ioService;
         private readonly Timer _messageChecker;
@@ -38,10 +39,10 @@ namespace PlantUMLEditor.Models
 
         private bool _AllowContinue;
         private bool _confirmOpen;
-        private object _docLock = new object();
-        private Semaphore _fileSave = new Semaphore(1, 1);
+        private readonly object _docLock = new();
+        private readonly Semaphore _fileSave = new(1, 1);
         private string _folderBase;
-        private DelegateCommand<string> _gotoDefinitionCommand;
+        private readonly DelegateCommand<string> _gotoDefinitionCommand;
         private string _metaDataDirectory = "";
         private string _metaDataFile = "";
         private GlobalFindResult _selectedFindResult;
@@ -56,7 +57,7 @@ namespace PlantUMLEditor.Models
             Documents = new UMLModels.UMLDocumentCollection();
             _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
             _ioService = openDirectoryService;
-            OpenDirectoryCommand = new DelegateCommand(() => OpenDirectoryHandler());
+            OpenDirectoryCommand = new DelegateCommand(  ()=>  OpenDirectoryHandler());
 
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
             Folder = new TreeViewModel(null, Path.GetTempPath(), false, "", this);
@@ -73,7 +74,9 @@ namespace PlantUMLEditor.Models
             Messages = new ObservableCollection<DocumentMessage>();
             SelectDocumentCommand = new DelegateCommand<DocumentModel>(SelectDocumentHandler);
             GlobalSearchCommand = new DelegateCommand<string>(GlobalSearchHandler);
-            ScanAllFiles = new DelegateCommand(() => ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
+            ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
+            OpenTerminalCommand = new DelegateCommand(OpenTerminalHandler);
+            OpenExplorerCommand = new DelegateCommand(OpenExplorerHandler);
 
             Configuration = new AppConfiguration()
             {
@@ -98,7 +101,31 @@ namespace PlantUMLEditor.Models
 
         }
 
+        private void OpenExplorerHandler()
+        {
+            ProcessStartInfo psi = new()
+            {
+                UseShellExecute = true,
+                WorkingDirectory = _folderBase,
+                FileName = _folderBase
+            };
+            Process.Start(psi);
 
+        }
+
+        private void OpenTerminalHandler()
+        {
+            ProcessStartInfo psi = new()
+            {
+                UseShellExecute = true,
+                FileName = "wt",
+                WorkingDirectory = _folderBase
+            };
+            psi.ArgumentList.Add("-d");
+            psi.ArgumentList.Add(_folderBase);
+ 
+            Process.Start(psi);
+        }
 
         public int WindowLeft { get; set; }
         public int WindowTop { get; set; }
@@ -236,7 +263,8 @@ namespace PlantUMLEditor.Models
         public DelegateCommand<DocumentModel> SaveCommand { get; }
 
         public DelegateCommand ScanAllFiles { get; }
-
+        public DelegateCommand OpenTerminalCommand { get; }
+        public DelegateCommand OpenExplorerCommand { get; }
         public DelegateCommand<DocumentModel> SelectDocumentCommand { get; }
 
         public GlobalFindResult SelectedGlobalFindResult
@@ -249,8 +277,8 @@ namespace PlantUMLEditor.Models
             {
                 _selectedFindResult = value;
                 if (value != null)
-                    this.AttemptOpeningFile(value.FileName,
-                        value.LineNumber, value.SearchText);
+                      this.AttemptOpeningFile(value.FileName,
+                        value.LineNumber, value.SearchText).ConfigureAwait(false);
             }
         }
 
@@ -262,7 +290,7 @@ namespace PlantUMLEditor.Models
                 SetValue(ref selectedMessage, value);
 
                 if (value != null && !string.IsNullOrEmpty(selectedMessage.FileName))
-                    AttemptOpeningFile(selectedMessage.FileName, selectedMessage.LineNumber);
+                    AttemptOpeningFile(selectedMessage.FileName, selectedMessage.LineNumber).ConfigureAwait(false);
             }
         }
 
@@ -290,12 +318,12 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void AfterCreate(DocumentModel d)
+        private async Task AfterCreate(DocumentModel d)
         {
             lock (_docLock)
                 OpenDocuments.Add(d);
 
-            d.Save();
+            await d.Save();
 
             this.CurrentDocument = d;
         }
@@ -313,7 +341,7 @@ namespace PlantUMLEditor.Models
             }
 
             _fileSave.WaitOne();
-            UMLDiagramTypeDiscovery discovery = new UMLDiagramTypeDiscovery();
+            UMLDiagramTypeDiscovery discovery = new();
             var (cd, sd, comd, ud) = await discovery.TryFindOrAddDocument(Documents, fullPath);
             _fileSave.Release();
 
@@ -335,7 +363,7 @@ namespace PlantUMLEditor.Models
 
         private async void CheckMessages(object state)
         {
-            if (string.IsNullOrEmpty(_metaDataFile))
+            if (string.IsNullOrEmpty(_metaDataFile) || string.IsNullOrEmpty(_folderBase))
             {
                 _messageChecker.Change(2000, Timeout.Infinite);
                 return;
@@ -343,13 +371,14 @@ namespace PlantUMLEditor.Models
 
             if (Application.Current == null)
                 return;
-            List<UMLDiagram> diagrams = new List<UMLDiagram>();
+            List<UMLDiagram> diagrams = new();
 
             try
             {
                 foreach (var doc in OpenDocuments)
                 {
                     var d = await doc.GetEditedDiagram();
+                 
                     d.FileName = doc.FileName;
                     diagrams.Add(d);
                 }
@@ -376,12 +405,14 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
+
+
             Application.Current.Dispatcher.Invoke(() =>
           {
-              //Messages.Clear();
-
-              DocumentMessageGenerator documentMessageGenerator = new DocumentMessageGenerator(diagrams, Messages);
+            
+              DocumentMessageGenerator documentMessageGenerator = new(diagrams, Messages);
               documentMessageGenerator.Generate(_folderBase);
+
 
               foreach (var d in Messages)
               {
@@ -425,7 +456,7 @@ namespace PlantUMLEditor.Models
             Close(doc);
         }
 
-        private void DiagramModelChanged<T>(List<T> list, T old, T @new) where T : UMLDiagram
+        private static void DiagramModelChanged<T>(List<T> list, T old, T @new) where T : UMLDiagram
         {
             if (old != null && string.IsNullOrEmpty(@new.FileName))
             {
@@ -576,8 +607,8 @@ namespace PlantUMLEditor.Models
 
         private async void GlobalSearchHandler(string obj)
         {
-            GlobalSearch gs = new GlobalSearch();
-            var findresults = await gs.Find(_folderBase, obj, new string[]
+         
+            var findresults = await GlobalSearch.Find(_folderBase, obj, new string[]
             {"*.puml"
             });
             GlobalFindResults.Clear();
@@ -598,11 +629,11 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void NewClassDiagram(string fileName, string title)
+        private async Task NewClassDiagram(string fileName, string title)
         {
             var model = new UMLModels.UMLClassDiagram(title, fileName);
 
-            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new),
+            var d = new ClassDiagramDocumentModel(  
                 Configuration, _ioService)
             {
                 DocumentType = DocumentTypes.Class,
@@ -614,26 +645,26 @@ namespace PlantUMLEditor.Models
 
             Documents.ClassDocuments.Add(model);
 
-            AfterCreate(d);
+            await AfterCreate(d);
         }
 
-        private void NewClassDiagramHandler()
+        private async void NewClassDiagramHandler()
         {
             string nf = GetNewFile(".class.puml");
 
             if (!string.IsNullOrEmpty(nf))
             {
-                this.NewClassDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+                await this.NewClassDiagram(nf, Path.GetFileNameWithoutExtension(nf));
             }
 
-            this.ScanDirectory(this._folderBase);
+            await this.ScanDirectory(this._folderBase);
         }
 
-        private void NewComponentDiagram(string fileName, string title)
+        private async Task NewComponentDiagram(string fileName, string title)
         {
             var model = new UMLModels.UMLComponentDiagram(title, fileName);
 
-            var d = new ComponentDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ComponentDiagrams, old, @new), Configuration, _ioService)
+            var d = new ComponentDiagramDocumentModel( Configuration, _ioService)
             {
                 DocumentType = DocumentTypes.Component,
                 Content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n",
@@ -643,22 +674,22 @@ namespace PlantUMLEditor.Models
             };
 
             Documents.ComponentDiagrams.Add(model);
-            AfterCreate(d);
+            await AfterCreate(d);
         }
 
-        private void NewComponentDiagramHandler()
+        private async void NewComponentDiagramHandler()
         {
             string nf = GetNewFile(".component.puml");
 
             if (!string.IsNullOrEmpty(nf))
             {
-                this.NewComponentDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+                await this.NewComponentDiagram(nf, Path.GetFileNameWithoutExtension(nf));
             }
 
-            this.ScanDirectory(this._folderBase);
+            await this.ScanDirectory(this._folderBase);
         }
 
-        private void NewSequenceDiagram(string fileName, string title)
+        private async Task NewSequenceDiagram(string fileName, string title)
         {
             var model = new UMLModels.UMLSequenceDiagram(title, fileName);
 
@@ -673,21 +704,21 @@ namespace PlantUMLEditor.Models
             };
 
             Documents.SequenceDiagrams.Add(model);
-            AfterCreate(d);
+            await AfterCreate(d);
         }
-        private void NewUnknownDiagramHandler()
+        private async void NewUnknownDiagramHandler()
         {
             string nf = GetNewFile(".puml");
 
             if (!string.IsNullOrEmpty(nf))
             {
-                this.NewUnknownUMLDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+                await this.NewUnknownUMLDiagram(nf, Path.GetFileNameWithoutExtension(nf));
             }
 
-            this.ScanDirectory(this._folderBase);
+            await this.ScanDirectory(this._folderBase);
         }
 
-        private void NewUnknownUMLDiagram(string fileName, string title)
+        private async Task NewUnknownUMLDiagram(string fileName, string title)
         {
             var model = new UMLModels.UMLUnknownDiagram(title, fileName);
 
@@ -704,26 +735,26 @@ namespace PlantUMLEditor.Models
             };
 
       
-            AfterCreate(d);
+            await AfterCreate(d);
 
         }
 
-        private void NewSequenceDiagramHandler()
+        private async void NewSequenceDiagramHandler()
         {
             string nf = GetNewFile(".seq.puml");
 
             if (!string.IsNullOrEmpty(nf))
             {
-                this.NewSequenceDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+                await this.NewSequenceDiagram(nf, Path.GetFileNameWithoutExtension(nf));
             }
 
-            this.ScanDirectory(this._folderBase);
+            await this.ScanDirectory(this._folderBase);
         }
 
         private DocumentModel OpenClassDiagram(string fileName,
             UMLClassDiagram diagram, int lineNumber, string searchText)
         {
-            var d = new ClassDiagramDocumentModel((old, @new) => DiagramModelChanged(Documents.ClassDocuments, old, @new), Configuration,
+            var d = new ClassDiagramDocumentModel( Configuration,
                 _ioService)
             {
                 DocumentType = DocumentTypes.Class,
@@ -745,7 +776,7 @@ namespace PlantUMLEditor.Models
         private void OpenComponentDiagram(string fileName, UMLComponentDiagram diagram,
             int lineNumber, string searchText)
         {
-            var d = new ComponentDiagramDocumentModel((old, @new) => { DiagramModelChanged(Documents.ComponentDiagrams, old, @new); }, Configuration, _ioService)
+            var d = new ComponentDiagramDocumentModel( Configuration, _ioService)
             {
                 DocumentType = DocumentTypes.Class,
                 Content = File.ReadAllText(fileName),
@@ -761,12 +792,12 @@ namespace PlantUMLEditor.Models
             this.CurrentDocument = d;
         }
 
-        private async Task OpenDirectoryHandler(bool? useAppSettings = false, string folder = null)
+        private async void OpenDirectoryHandler(bool? useAppSettings = false, string folder = null)
         {
             _folderBase = null;
 
             await SaveAll();
-            string dir = null;
+            string dir;
             if (folder == null)
             {
                 dir = GetWorkingFolder(useAppSettings.GetValueOrDefault());
@@ -907,7 +938,7 @@ namespace PlantUMLEditor.Models
                 DataTypes.Add(item);
         }
 
-        private async Task Save(DocumentModel doc)
+        private static async Task Save(DocumentModel doc)
         {
             await doc.Save();
         }
@@ -922,7 +953,7 @@ namespace PlantUMLEditor.Models
                     return;
                 }
 
-                List<DocumentModel> c = new List<DocumentModel>();
+                List<DocumentModel> c = new();
 
                 lock (_docLock)
                 {
@@ -936,7 +967,7 @@ namespace PlantUMLEditor.Models
                     await Save(file);
                 }
 
-                List<(UMLDiagram, UMLDiagram)> list = new List<(UMLDiagram, UMLDiagram)>();
+                List<(UMLDiagram, UMLDiagram)> list = new();
 
                 await UpdateDiagrams<ClassDiagramDocumentModel, UMLClassDiagram>(Documents.ClassDocuments);
                 await UpdateDiagrams<SequenceDiagramDocumentModel, UMLSequenceDiagram>(Documents.SequenceDiagrams);
@@ -955,9 +986,9 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void SaveAllHandler()
+        private async void SaveAllHandler()
         {
-            SaveAll();
+            await SaveAll();
         }
 
         private async void SaveCommandHandler(DocumentModel doc)
@@ -975,12 +1006,12 @@ namespace PlantUMLEditor.Models
             Documents.ComponentDiagrams.Clear();
 
             var folder = GetWorkingFolder();
-            List<string> potentialSequenceDiagrams = new List<string>();
+            List<string> potentialSequenceDiagrams = new();
             await ScanForFiles(folder, potentialSequenceDiagrams);
 
-            UMLDiagramTypeDiscovery discovery = new UMLDiagramTypeDiscovery();
+  
             foreach (var seq in potentialSequenceDiagrams)
-                await discovery.TryCreateSequenceDiagram(Documents, seq);
+                await UMLDiagramTypeDiscovery.TryCreateSequenceDiagram(Documents, seq);
 
             ProcessDataTypes();
 
@@ -1009,8 +1040,8 @@ namespace PlantUMLEditor.Models
         {
             foreach (var file in Directory.EnumerateFiles(folder, "*.puml"))
             {
-                UMLDiagramTypeDiscovery discovery = new UMLDiagramTypeDiscovery();
-                if (null == await discovery.TryCreateClassDiagram(Documents, file))
+            
+                if (null == await UMLDiagramTypeDiscovery.TryCreateClassDiagram(Documents, file))
                 {
                     potentialSequenceDiagrams.Add(file);
                 }
@@ -1048,13 +1079,13 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public void Change(string fullPath)
+        public async Task Change(string fullPath)
         {
             string dir = GetWorkingFolder();
             if (string.IsNullOrEmpty(dir))
                 return;
 
-            ScanDirectory(dir);
+            await ScanDirectory(dir);
         }
 
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)
@@ -1068,7 +1099,7 @@ namespace PlantUMLEditor.Models
 
         public async void LoadedUI()
         {
-            await OpenDirectoryHandler(true);
+              OpenDirectoryHandler(true);
 
             var files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
             if (files == null)

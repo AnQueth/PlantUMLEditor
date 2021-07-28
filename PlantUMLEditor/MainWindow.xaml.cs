@@ -13,7 +13,7 @@ namespace PlantUMLEditor
     {
         private readonly MainModel _model;
 
-        private bool setEventHandler = false;
+     
 
         public MainWindow()
         {

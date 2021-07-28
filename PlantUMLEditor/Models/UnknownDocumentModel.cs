@@ -8,7 +8,7 @@ namespace PlantUMLEditor.Models
     public class UnknownDocumentModel : DocumentModel
     {
         private readonly Action<UMLDiagram, UMLDiagram> ChangedCallback = null;
-        private IEnumerable<string> _autoCompleteItems;
+      
 
         public UnknownDocumentModel(IConfiguration configuration,
             IIOService openDirectoryService) : base(configuration, openDirectoryService)
@@ -26,15 +26,15 @@ namespace PlantUMLEditor.Models
 
         protected override async void ContentChanged(string text)
         {
-            UMLDiagramTypeDiscovery discovery = new UMLDiagramTypeDiscovery();
-            var r = await discovery.TryCreateDiagram(Diagrams, text);
-            if (r.cd != null)
+            UMLDiagramTypeDiscovery discovery = new();
+            var (cd, sd, ud) = await UMLDiagramTypeDiscovery.TryCreateDiagram(Diagrams, text);
+            if (cd != null)
             {
-                this.ChangedCallback(Diagram, r.cd);
+                this.ChangedCallback(Diagram, cd);
             }
-            else if (r.sd != null)
+            else if (sd != null)
             {
-                this.ChangedCallback(Diagram, r.sd);
+                this.ChangedCallback(Diagram, sd);
             }
 
             base.ContentChanged(text);

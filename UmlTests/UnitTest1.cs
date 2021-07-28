@@ -27,8 +27,8 @@ namespace UmlTests
         [Test]
         public void ClassDiagram1()
         {
-            UMLInterface i1 = new UMLInterface("", "i1", new List<UMLDataType>());
-            UMLClass class2 = new UMLClass("ns", true, "c1", null, i1);
+            UMLInterface i1 = new("", "i1", new List<UMLDataType>());
+            UMLClass class2 = new("ns", true, "c1", null, i1);
 
             class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List));
 
@@ -40,15 +40,14 @@ namespace UmlTests
             var d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);
             d.DataTypes.Add(class2);
-
-            var s = PlantUMLGenerator.Create(d);
+            _ = PlantUMLGenerator.Create(d);
         }
 
         [Test]
         public async Task ClassDiagramRead1()
         {
-            UMLInterface i1 = new UMLInterface("", "i1", new List<UMLDataType>());
-            UMLClass class2 = new UMLClass("ns", true, "c1", null, i1);
+            UMLInterface i1 = new("", "i1", new List<UMLDataType>());
+            UMLClass class2 = new("ns", true, "c1", null, i1);
 
             class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List));
 
@@ -64,22 +63,21 @@ namespace UmlTests
             d.DataTypes.Add(class2);
 
             var s = PlantUMLGenerator.Create(d);
-
-            var gg = await UMLClassDiagramParser.ReadString(s);
+            _ = await UMLClassDiagramParser.ReadString(s);
         }
 
         [Test]
         public void SequenceDiagram1()
         {
-            UMLInterface i1 = new UMLInterface("ns1", "i1", new List<UMLDataType>());
-            UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
+            UMLInterface i1 = new("ns1", "i1", new List<UMLDataType>());
+            UMLClass class2 = new("ns2", true, "c1", null, i1);
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
             class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
             class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
-            UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
+            UMLSequenceDiagram d = new("my diagram", "");
 
             var l1 = new UMLSequenceLifeline("participant", "i1", "i1a", i1.Id);
             var l2 = new UMLSequenceLifeline("participant", "c2", "c2a", class2.Id);
@@ -91,22 +89,21 @@ namespace UmlTests
             d.AddConnection(l1, l2).Action = class2.Methods[0];
             d.AddConnection(l2, l1).Action = new UMLReturnFromMethod(class2.Methods[0]);
             d.AddConnection(l1, null).Action = new UMLReturnFromMethod(i1.Methods[0]);
-
-            var s = PlantUMLGenerator.Create(d);
+            _ = PlantUMLGenerator.Create(d);
         }
 
         [Test]
         public void SequenceDiagram2()
         {
-            UMLInterface i1 = new UMLInterface("ns1", "i1", new List<UMLDataType>());
-            UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
+            UMLInterface i1 = new("ns1", "i1", new List<UMLDataType>());
+            UMLClass class2 = new("ns2", true, "c1", null, i1);
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
             class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
             class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
-            UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
+            UMLSequenceDiagram d = new("my diagram", "");
 
             var l1 = new UMLSequenceLifeline("participant", "ddd", "ddd", i1.Id);
             var l2 = new UMLSequenceLifeline("participant", "c2", "eee", class2.Id);
@@ -133,40 +130,31 @@ namespace UmlTests
             x2.Action = i1.Methods[0];
 
             d.AddConnection(l1, null).Action = new UMLReturnFromMethod(i1.Methods[0]);
-
-            var s = PlantUMLGenerator.Create(d);
+            _ = PlantUMLGenerator.Create(d);
         }
 
         [Test]
         public async Task SequenceDiagramRead2()
         {
-            var bidMask = Convert.ToInt32("18");
+          
+ 
 
-            var ss = bidMask & 0b_1111;
-            var ss2 = bidMask & 0b_110000;
-
-            var cacheWindowSize = ((IEnumerable<int>)Enum.GetValues(typeof(WindowSize))).Sum();
-            var cacheW2 = ((IEnumerable<int>)Enum.GetValues(typeof(W2))).Sum();
-
-            var sss = bidMask & cacheWindowSize;
-            var sss2 = bidMask & cacheW2;
-
-            var dgg = Enum.ToObject(typeof(WindowSize), bidMask);
-            var ggg = Enum.ToObject(typeof(W2), bidMask);
-
-            UMLInterface i1 = new UMLInterface("ns1", "i1", new List<UMLDataType>());
-            UMLClass class2 = new UMLClass("ns2", true, "c1", null, i1);
+    
+ 
+           
+            UMLInterface i1 = new("ns1", "i1", new List<UMLDataType>());
+            UMLClass class2 = new("ns2", true, "c1", null, i1);
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
             class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
 
             class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
-            UMLClassDiagram cd = new UMLClassDiagram("a", "");
+            UMLClassDiagram cd = new("a", "");
             cd.DataTypes.Add(i1);
             cd.DataTypes.Add(class2);
 
-            UMLSequenceDiagram d = new UMLSequenceDiagram("my diagram", "");
+            UMLSequenceDiagram d = new("my diagram", "");
 
             var l1 = new UMLSequenceLifeline("participant", "i1", "ss", i1.Id);
             var l2 = new UMLSequenceLifeline("participant", "c1", "cS", class2.Id);
@@ -195,8 +183,7 @@ namespace UmlTests
             d.AddConnection(l1, null).Action = new UMLReturnFromMethod(i1.Methods[0]);
 
             var s = PlantUMLGenerator.Create(d);
-
-            var sq = await UMLSequenceDiagramParser.ReadString(s, new List<UMLClassDiagram>(new[] { cd }), false);
+            _ = await UMLSequenceDiagramParser.ReadString(s, new List<UMLClassDiagram>(new[] { cd }), false);
         }
 
         [SetUp]
@@ -223,7 +210,7 @@ com1 ----> l
 
 @enduml
 ";
-            var f = await UMLComponentDiagramParser.ReadString(s);
+            _ = await UMLComponentDiagramParser.ReadString(s);
         }
 
         [Test]
@@ -246,7 +233,7 @@ rectangle r1 {
 
 @enduml";
 
-            var f = await UMLComponentDiagramParser.ReadString(s);
+            _ = await UMLComponentDiagramParser.ReadString(s);
         }
     }
 }

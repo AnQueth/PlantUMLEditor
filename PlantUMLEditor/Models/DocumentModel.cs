@@ -133,7 +133,7 @@ namespace PlantUMLEditor.Models
             get => visible; set { SetValue(ref visible, value); }
         }
 
-        private void ShowPreviewCommandHandler()
+        private async void ShowPreviewCommandHandler()
         {
             imageModel = new PreviewDiagramModel(_ioService);
 
@@ -145,7 +145,7 @@ namespace PlantUMLEditor.Models
             PreviewWindow.DataContext = imageModel;
 
             PreviewWindow.Show();
-            ShowPreviewImage(this._textEditor.TextRead());
+            await ShowPreviewImage(this._textEditor.TextRead());
         }
 
         private async Task ShowPreviewImage(string text)
@@ -153,7 +153,7 @@ namespace PlantUMLEditor.Models
             string tmp = Path.GetTempFileName();
             await File.WriteAllTextAsync(tmp, text);
 
-            await imageModel.ShowImage(_jarLocation, tmp, this.Name.Trim('\"'), true);
+              imageModel.ShowImage(_jarLocation, tmp, this.Name.Trim('\"'), true);
         }
 
         protected virtual string AppendAutoComplete(string selection)
@@ -161,7 +161,7 @@ namespace PlantUMLEditor.Models
             return selection;
         }
 
-        protected virtual void ContentChanged(string text)
+        protected virtual async void ContentChanged(string text)
         {
             IsDirty = true;
             _textValue = text;
@@ -180,7 +180,7 @@ namespace PlantUMLEditor.Models
             //}
 
             if (PreviewWindow != null)
-                ShowPreviewImage(text);
+               await ShowPreviewImage(text);
         }
 
         protected virtual void RegenDocumentHandler()

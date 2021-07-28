@@ -13,19 +13,19 @@ namespace PlantUML
     {
         private const string PACKAGE = "package";
 
-        private static Regex _class = new Regex("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
+        private static readonly Regex  _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
 
-        private static Regex _classLine = new Regex("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
+        private static readonly Regex _classLine = new("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
-        private static Regex _packageRegex = new Regex("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"* *\\{", RegexOptions.Compiled);
+        private static readonly Regex _packageRegex = new("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"* *\\{", RegexOptions.Compiled);
 
-        private static Regex _propertyLine = new Regex("^\\s*(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\,\\[\\] \\?]+)\\s+(?<name>[\\w_]+)\\s*$", RegexOptions.Compiled);
+        private static readonly Regex _propertyLine = new("^\\s*(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\,\\[\\] \\?]+)\\s+(?<name>[\\w_]+)\\s*$", RegexOptions.Compiled);
 
-        private static Regex baseClass = new Regex("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
+        private static readonly Regex baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
-        private static Regex composition = new Regex("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\|\\<]*[\\-\\.]+[\\*o\\|\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)", RegexOptions.Compiled);
+        private static readonly Regex composition = new("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\|\\<]*[\\-\\.]+[\\*o\\|\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)", RegexOptions.Compiled);
 
-        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>]+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\\\"(?<text>[\\w\\W]+)\\\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>]+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>]+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\\\"(?<text>[\\w\\W]+)\\\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>]+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static string Clean(string name)
         {
@@ -36,24 +36,24 @@ namespace PlantUML
         private static Tuple<ListTypes, string> CreateFrom(string v)
         {
             if (v.StartsWith("ireadonlycollection<", StringComparison.OrdinalIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v.Substring(20).Trim('>', ' '));
+                return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v[20..].Trim('>', ' '));
             else if (v.StartsWith("list<", StringComparison.OrdinalIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.List, v.Substring(5).Trim('>', ' '));
+                return new Tuple<ListTypes, string>(ListTypes.List, v[5..].Trim('>', ' '));
             else if (v.EndsWith("[]"))
-                return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim().Substring(0, v.Trim().Length - 2));
+                return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim()[0..^2]);
             else
                 return new Tuple<ListTypes, string>(ListTypes.None, v);
         }
 
         private static string GetPackage(Stack<string> packages)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             int x = 0;
             foreach (var item in packages.Reverse())
             {
                 sb.Append(item);
                 if (x < packages.Count - 1)
-                    sb.Append(".");
+                    sb.Append('.');
                 x++;
             }
 
@@ -62,22 +62,22 @@ namespace PlantUML
 
         private static async Task<UMLClassDiagram> ReadClassDiagram(StreamReader sr, string fileName)
         {
-            UMLClassDiagram d = new UMLClassDiagram(string.Empty, fileName);
+            UMLClassDiagram d = new(string.Empty, fileName);
             bool started = false;
             string line = null;
 
-            Stack<string> packages = new Stack<string>();
+            Stack<string> packages = new();
 
-            Dictionary<string, UMLDataType> aliases = new Dictionary<string, UMLDataType>();
+            Dictionary<string, UMLDataType> aliases = new();
 
             bool swallowingNotes = false;
             bool swallowingComments = false;
 
-            Stack<string> brackets = new Stack<string>();
-            Regex removeGenerics = new Regex("\\w+");
-            Stack<UMLPackage> packagesStack = new Stack<UMLPackage>();
+            Stack<string> brackets = new();
+            Regex removeGenerics = new("\\w+");
+            Stack<UMLPackage> packagesStack = new();
 
-            UMLPackage defaultPackage = new UMLPackage("");
+            UMLPackage defaultPackage = new("");
             d.Package = defaultPackage;
             packagesStack.Push(defaultPackage);
             var currentPackage = defaultPackage;
@@ -177,7 +177,7 @@ namespace PlantUML
                 if (line.StartsWith("title"))
                 {
                     if (line.Length > 6)
-                        d.Title = line.Substring(6);
+                        d.Title = line[6..];
                     continue;
                 }
                 else if (_packageRegex.IsMatch(line))
@@ -215,7 +215,7 @@ namespace PlantUML
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 4)
-                        DataType = new UMLEnum(package, Clean(line.Substring(5)));
+                        DataType = new UMLEnum(package, Clean(line[5..]));
 
                     if (line.EndsWith("{"))
                     {
@@ -233,12 +233,12 @@ namespace PlantUML
                         if (line.Contains(" as "))
                         {
                             line = line.Replace("\"", string.Empty);
-                            alias = line.Substring(line.IndexOf(" as ") + 4).TrimEnd(' ', '{');
-                            name = Clean(line.Substring(9, line.IndexOf(" as ") - 9));
+                            alias = line[(line.IndexOf(" as ") + 4)..].TrimEnd(' ', '{');
+                            name = Clean(line[9..line.IndexOf(" as ")]);
                         }
                         else
                         {
-                            name = Clean(line.Substring(9)).Replace("\"", string.Empty);
+                            name = Clean(line[9..]).Replace("\"", string.Empty);
                         }
 
                         DataType = new UMLInterface(package, name
@@ -355,25 +355,19 @@ namespace PlantUML
 
         public static async Task<UMLClassDiagram> ReadFile(string file)
         {
-            using (StreamReader sr = new StreamReader(file))
-            {
-                UMLClassDiagram c = await ReadClassDiagram(sr, file);
+            using StreamReader sr = new(file);
+            UMLClassDiagram c = await ReadClassDiagram(sr, file);
 
-                return c;
-            }
+            return c;
         }
 
         public static async Task<UMLClassDiagram> ReadString(string s)
         {
-            using (MemoryStream ms = new MemoryStream(Encoding.UTF8.GetBytes(s)))
-            {
-                using (StreamReader sr = new StreamReader(ms))
-                {
-                    UMLClassDiagram c = await ReadClassDiagram(sr, "");
+            using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
+            using StreamReader sr = new(ms);
+            UMLClassDiagram c = await ReadClassDiagram(sr, "");
 
-                    return c;
-                }
-            }
+            return c;
         }
 
         public static void TryParseLineForDataType(string line, Dictionary<string, UMLDataType> aliases, UMLDataType DataType)
@@ -407,11 +401,11 @@ namespace PlantUML
                     aliases.Add(returntype, returnType);
                 }
 
-                List<UMLParameter> pars = new List<UMLParameter>();
+                List<UMLParameter> pars = new();
 
-                Stack<char> p = new Stack<char>();
-                StringBuilder pname = new StringBuilder();
-                StringBuilder sbtype = new StringBuilder();
+                Stack<char> p = new();
+                StringBuilder pname = new();
+                StringBuilder sbtype = new();
                 bool inName = false;
                 string v = methodMatch.Groups["params"].Value;
                 v = Regex.Replace(v, "\\s{2,}", " ");

@@ -6,19 +6,19 @@ namespace PlantUMLEditor.Controls
 {
     internal class Indenter
     {
-        private static Regex newLineAfter = new Regex("^(note.+:|end +note|\\'.+|.+\\'\\/|left to right direction)", RegexOptions.Compiled);
-        private static Regex newLineBefore = new Regex("^(note.+|\\'.+|\\/\\'.+|left to right direction)", RegexOptions.Compiled);
-        private static Regex notes = new Regex("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        private static readonly Regex newLineAfter = new("^(note.+:|end +note|\\'.+|.+\\'\\/|left to right direction)", RegexOptions.Compiled);
+        private static readonly Regex newLineBefore = new("^(note.+|\\'.+|\\/\\'.+|left to right direction)", RegexOptions.Compiled);
+       // private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
-        private static Regex reg = new Regex("\n");
-        private static Regex removeSpaces = new Regex(" {2,}", RegexOptions.Compiled);
-        private static Regex tab = new Regex("^(alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
-        private static Regex tab2 = new Regex("^\\s*(abstract|class|interface|package|enum|together|component|database|rectangle|queue|node|folder|cloud).+\\{", RegexOptions.Compiled);
-        private static Regex tab3 = new Regex("^\\s*(if\\s+\\(.*|repeat(?!\\s*while).*|fork(?!\\s*again))$", RegexOptions.Compiled);
-        private static Regex tabReset = new Regex("^(else\\s?.*|fork\\s+again)", RegexOptions.Compiled);
-        private static Regex tabStop = new Regex("^(\\}|end(?! note)|endif|repeat\\s+while.*)", RegexOptions.Compiled);
+        private static readonly Regex reg = new("\n");
+        private static readonly Regex removeSpaces = new(" {2,}", RegexOptions.Compiled);
+        private static readonly Regex tab = new("^(alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
+        private static readonly Regex tab2 = new("^\\s*(abstract|class|interface|package|enum|together|component|database|rectangle|queue|node|folder|cloud).+\\{", RegexOptions.Compiled);
+        private static readonly Regex tab3 = new("^\\s*(if\\s+\\(.*|repeat(?!\\s*while).*|fork(?!\\s*again))$", RegexOptions.Compiled);
+        private static readonly Regex tabReset = new("^(else\\s?.*|fork\\s+again)", RegexOptions.Compiled);
+        private static readonly Regex tabStop = new("^(\\}|end(?! note)|endif|repeat\\s+while.*)", RegexOptions.Compiled);
 
-        private int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
+        private static int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {
             if (string.IsNullOrEmpty(line.Trim()))
                 return indentLevel;
@@ -36,7 +36,7 @@ namespace PlantUMLEditor.Controls
 
             ReadOnlySpan<char> r = line.AsSpan();
 
-            StringBuilder sbNewLine = new StringBuilder(line.Length);
+            StringBuilder sbNewLine = new(line.Length);
             int starts = 0;
             char oldd = '\0';
             foreach (var d in r)
@@ -60,7 +60,7 @@ namespace PlantUMLEditor.Controls
             }
             line = sbNewLine.ToString();
 
-            StringBuilder sbWordsSoFar = new StringBuilder();
+        
             if (tabStop.IsMatch(line))
             {
                 indentLevel--;
@@ -93,7 +93,7 @@ namespace PlantUMLEditor.Controls
             return indentLevel;
         }
 
-        public int GetIndentLevelForLine(string text, int line)
+        public static int GetIndentLevelForLine(string text, int line)
         {
             string[] lines = reg.Split(text);
 
@@ -101,13 +101,13 @@ namespace PlantUMLEditor.Controls
 
             for (var x = 0; x < lines.Length && x <= line; x++)
             {
-                ProcessLine(null, lines[x].Trim(), ref indentLevel);
+                _ = ProcessLine(null, lines[x].Trim(), ref indentLevel);
             }
 
             return indentLevel;
         }
 
-        public string Process(string text, bool removeLines)
+        public static string Process(string text, bool removeLines)
         {
             string[] lines = reg.Split(text);
 
@@ -115,7 +115,7 @@ namespace PlantUMLEditor.Controls
 
             string oldLine = "";
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             for (var x = 0; x < lines.Length; x++)
             {

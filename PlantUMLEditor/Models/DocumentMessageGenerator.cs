@@ -10,8 +10,8 @@ namespace PlantUMLEditor.Models
 {
     public class DocumentMessageGenerator
     {
-        private IEnumerable<UMLDiagram> documents;
-        private ObservableCollection<DocumentMessage> messages;
+        private readonly IEnumerable<UMLDiagram> documents;
+        private readonly ObservableCollection<DocumentMessage> messages;
 
         public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents, ObservableCollection<DocumentMessage> messages)
         {
@@ -19,14 +19,14 @@ namespace PlantUMLEditor.Models
             this.messages = messages;
         }
 
-        private string[] GetCleanName(string name)
+        private static string[] GetCleanName(string name)
         {
             string[] knownwords = {"Task", "List", "IReadOnlyCollection",
                 "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler"};
 
             string[] parts = name.Split(' ', '.', ',', '<', '>', '[', ']');
 
-            List<string> types = new List<string>();
+            List<string> types = new();
             foreach (var p in parts)
             {
                 if (string.IsNullOrEmpty(p) || knownwords.Contains(p))
@@ -42,24 +42,25 @@ namespace PlantUMLEditor.Models
 
         }
 
-        public async Task Generate(string folderBase)
+        public void Generate(string folderBase)
         {
-            List<DocumentMessage> newMessages = new List<DocumentMessage>();
+            List<DocumentMessage> newMessages = new();
 
-            List<(UMLDataType, string)> dataTypes = new List<(UMLDataType, string)>();
+            List<(UMLDataType, string)> dataTypes = new();
 
             foreach (var doc in this.documents)
             {
                 if (doc is UMLComponentDiagram f)
                 {
-                    foreach (var e in f.Errors)
+                    foreach (var (Line, LineNumber, message) in f.Errors)
                     {
                         newMessages.Add(new DocumentMessage()
                         {
                             FileName = f.FileName,
-                            Text = e.Line,
-                            LineNumber = e.LineNumber,
-                            RelativeFileName = f.FileName.Substring(folderBase.Length + 1),
+                            Text = Line + " " + message,
+                            
+                            LineNumber = LineNumber,
+                            RelativeFileName = f.FileName[(folderBase.Length + 1)..],
                             Warning = false
                         });
                     }
@@ -78,7 +79,7 @@ namespace PlantUMLEditor.Models
                             FileName = f2.FileName,
                             Text = e.Value,
                             LineNumber = e.LineNumber,
-                            RelativeFileName = f2.FileName.Substring(folderBase.Length + 1),
+                            RelativeFileName = f2.FileName[(folderBase.Length + 1)..],
                             Warning = false
                         });
                     }
@@ -93,7 +94,7 @@ namespace PlantUMLEditor.Models
 
             FindCircularReferences(folderBase, newMessages, namespaceReferences);
 
-            List<DocumentMessage> removals = new List<DocumentMessage>();
+            List<DocumentMessage> removals = new();
             foreach (var item in messages)
             {
                 DocumentMessage m;
@@ -133,7 +134,7 @@ namespace PlantUMLEditor.Models
                         FileName = i.o.FileName,
                         Text = i.f.Warning,
                         LineNumber = i.f.LineNumber,
-                        RelativeFileName = i.o.FileName.Substring(folderBase.Length + 1),
+                        RelativeFileName = i.o.FileName[(folderBase.Length + 1)..],
                         Warning = true
                     });
                 }
@@ -154,7 +155,7 @@ namespace PlantUMLEditor.Models
                     newMessages.Add(new DocumentMessage()
                     {
                         FileName = fileName,
-                        RelativeFileName = fileName.Substring(folderBase.Length + 1),
+                        RelativeFileName = fileName[(folderBase.Length + 1)..],
                         LineNumber = g.LineNumber,
                         Text = g.Warning,
                         MissingMethodText = c.Action?.Signature,
@@ -184,7 +185,7 @@ namespace PlantUMLEditor.Models
                     newMessages.Add(new DocumentMessage()
                     {
                         FileName = n.Item1.fileName,
-                        RelativeFileName = n.Item1.fileName.Substring(folderBase.Length + 1),
+                        RelativeFileName = n.Item1.fileName[(folderBase.Length + 1)..],
                         LineNumber = n.Item1.lineNumber,
                         Text = "Circular reference " + n.Item1.ns1 + " and " + n.ns2 + " type = " + n.Item1.dt + " offender " + n.Item1.name
                     });
@@ -192,10 +193,10 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> FindBadDataTypes(string folderBase, List<DocumentMessage> newMessages, List<(UMLDataType, string)> dataTypes)
+        private static List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> FindBadDataTypes(string folderBase, List<DocumentMessage> newMessages, List<(UMLDataType, string)> dataTypes)
         {
             List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> namespaceReferences
-                = new List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)>();
+                = new();
 
             foreach (var dt in dataTypes)
             {
@@ -212,7 +213,7 @@ namespace PlantUMLEditor.Models
                             newMessages.Add(new DocumentMessage()
                             {
                                 FileName = dt.Item2,
-                                RelativeFileName = dt.Item2.Substring(folderBase.Length + 1),
+                                RelativeFileName = dt.Item2[(folderBase.Length + 1)..],
                                 LineNumber = dt.Item1.LineNumber,
                                 Text = r + " used by " + m.Name,
                                 MissingDataTypeName = r,
@@ -238,7 +239,7 @@ namespace PlantUMLEditor.Models
                                 newMessages.Add(new DocumentMessage()
                                 {
                                     FileName = dt.Item2,
-                                    RelativeFileName = dt.Item2.Substring(folderBase.Length + 1),
+                                    RelativeFileName = dt.Item2[(folderBase.Length + 1)..],
                                     LineNumber = dt.Item1.LineNumber,
                                     Text = r + " used by " + m.Name,
                                     MissingDataTypeName = r,
@@ -264,7 +265,7 @@ namespace PlantUMLEditor.Models
                                 newMessages.Add(new DocumentMessage()
                                 {
                                     FileName = dt.Item2,
-                                    RelativeFileName = dt.Item2.Substring(folderBase.Length + 1),
+                                    RelativeFileName = dt.Item2[(folderBase.Length + 1)..],
                                     LineNumber = dt.Item1.LineNumber,
                                     Text = r + " used by " + m.Name,
                                     MissingDataTypeName = r,

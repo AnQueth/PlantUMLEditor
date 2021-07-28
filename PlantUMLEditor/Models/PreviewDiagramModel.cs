@@ -19,8 +19,8 @@ namespace PlantUMLEditor.Models
     {
         private readonly IIOService _ioService;
         private readonly ConcurrentQueue<(string, string, bool, string)> _regenRequests
-            = new ConcurrentQueue<(string, string, bool, string)>();
-        private AutoResetEvent _are = new AutoResetEvent(false);
+            = new();
+        private readonly AutoResetEvent _are = new(false);
         private FixedDocument _doc;
         private string _messages;
         private bool _running = false;
@@ -41,7 +41,7 @@ namespace PlantUMLEditor.Models
 
         public DelegateCommand CopyImage { get; }
 
-        public FixedDocument doc
+        public FixedDocument Doc
         {
             get
             {
@@ -105,17 +105,17 @@ namespace PlantUMLEditor.Models
                 int widthSlices = (int)Math.Ceiling(image.PixelWidth / Width);
                 int heightSliced = (int)Math.Ceiling(image.PixelHeight / Height);
 
-                List<DrawingVisual> images = new List<DrawingVisual>();
+                List<DrawingVisual> images = new();
 
                 SaveFrameworkElement(image, widthSlices, heightSliced, (int)Width, (int)Height, images);
 
-                FixedDocument fd = new FixedDocument();
+                FixedDocument fd = new();
 
                 foreach (var item in images)
                 {
                     var fp = new FixedPage();
 
-                    RenderTargetBitmap rtb = new RenderTargetBitmap(1024, 1024, 96d, 96d, PixelFormats.Default);
+                    RenderTargetBitmap rtb = new(1024, 1024, 96d, 96d, PixelFormats.Default);
                     rtb.Render(item);
 
                     fp.Children.Add(new System.Windows.Controls.Image() { Source = rtb });
@@ -127,7 +127,7 @@ namespace PlantUMLEditor.Models
 
                     fd.Pages.Add(pc);
                 }
-                doc = fd;
+                Doc = fd;
                 pdialog.PrintDocument(fd.DocumentPaginator, "");
             }
         }
@@ -145,14 +145,14 @@ namespace PlantUMLEditor.Models
 
                 try
                 {
-                    while (_regenRequests.Count > 0)
+                    while (!_regenRequests.IsEmpty)
                     {
                         Messages = string.Empty;
                         _regenRequests.TryDequeue(out (string, string, bool, string) res);
 
                         string fn = Path.Combine(Path.GetDirectoryName(res.Item2), Path.GetFileNameWithoutExtension(res.Item2) + ".png");
 
-                        Process p = new Process();
+                        Process p = new();
 
                         p.StartInfo.CreateNoWindow = true;
                         p.StartInfo.FileName = "java.exe";
@@ -175,18 +175,16 @@ namespace PlantUMLEditor.Models
                             {
                                 int d = int.Parse(m.Groups[1].Value);
                                 d++;
-                                using (var g = File.OpenText(res.Item2))
+                                using var g = File.OpenText(res.Item2);
+                                int x = 0;
+                                while (x <= d + 1)
                                 {
-                                    int x = 0;
-                                    while (x <= d + 1)
+                                    x++;
+                                    string ll = g.ReadLine();
+                                    if (ll != null)
                                     {
-                                        x++;
-                                        string ll = g.ReadLine();
-                                        if (ll != null)
-                                        {
-                                            if (x > d - 3)
-                                                e += "\r\n" + ll;
-                                        }
+                                        if (x > d - 3)
+                                            e += "\r\n" + ll;
                                     }
                                 }
                             }
@@ -218,13 +216,13 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void SaveFrameworkElement(BitmapSource bitmapImage, int widthSteps, int heightSteps, int width, int height, List<DrawingVisual> images)
+        private static void SaveFrameworkElement(BitmapSource bitmapImage, int widthSteps, int heightSteps, int width, int height, List<DrawingVisual> images)
         {
             for (int startX = 0; startX < widthSteps; startX++)
             {
                 for (int startY = 0; startY < heightSteps; startY++)
                 {
-                    SaveImage(bitmapImage, startX * width, startY * height, width, height, images);
+                    SaveImage(bitmapImage, startX * width, startY * height,   images);
                 }
             }
         }
@@ -234,12 +232,12 @@ namespace PlantUMLEditor.Models
             string fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
             if (fileName == null)
                 return;
-            PngBitmapEncoder encoder = new PngBitmapEncoder();
+            PngBitmapEncoder encoder = new();
 
             encoder.Frames.Add(BitmapFrame.Create((BitmapImage)Image));
 
-            using (var filestream = new FileStream(fileName, FileMode.Create))
-                encoder.Save(filestream);
+            using var filestream = new FileStream(fileName, FileMode.Create);
+            encoder.Save(filestream);
         }
 
         internal void Stop()
@@ -248,20 +246,21 @@ namespace PlantUMLEditor.Models
             _are.Set();
         }
 
-        public void SaveImage(BitmapSource sourceImage,
+        public static void SaveImage(BitmapSource sourceImage,
                                       int startX,
                               int startY,
-                              int width,
-                              int height,
+                        
                               List<DrawingVisual> images)
         {
-            TransformGroup transformGroup = new TransformGroup();
-            TranslateTransform translateTransform = new TranslateTransform();
-            translateTransform.X = -startX;
-            translateTransform.Y = -startY;
+            TransformGroup transformGroup = new();
+            TranslateTransform translateTransform = new()
+            {
+                X = -startX,
+                Y = -startY
+            };
             transformGroup.Children.Add(translateTransform);
 
-            DrawingVisual vis = new DrawingVisual();
+            DrawingVisual vis = new();
             DrawingContext cont = vis.RenderOpen();
             cont.PushTransform(transformGroup);
             cont.DrawImage(sourceImage, new Rect(new System.Windows.Size(sourceImage.PixelWidth, sourceImage.PixelHeight)));
@@ -270,7 +269,7 @@ namespace PlantUMLEditor.Models
             images.Add(vis);
         }
 
-        public async Task ShowImage(string jar, string path, string name, bool delete)
+        public void  ShowImage(string jar, string path, string name, bool delete)
         {
             if (!File.Exists(jar))
             {

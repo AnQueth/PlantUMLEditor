@@ -15,7 +15,7 @@ namespace PlantUML
 
             writer.Write("title ");
             writer.WriteLine(classDiagram.Title);
-            StringBuilder postWriter = new StringBuilder();
+            StringBuilder postWriter = new();
             Write(classDiagram.Package.Children, writer, postWriter);
             writer.Write(postWriter.ToString());
             writer.WriteLine("@enduml");
@@ -41,51 +41,9 @@ namespace PlantUML
             writer.WriteLine("@enduml");
         }
 
-        private static void DrawConnection(TextWriter writer, UMLSequenceConnection item)
-        {
-            //if (item.To == null)
-            //{
-            //    if (item.Action.IsConstructor && !(item.Action is UMLReturnFromMethod))
-            //        writer.Write(" <-- ");
-            //    else
-            //        writer.Write(" <- ");
+     
 
-            //    writer.Write(item.From.Alias);
-            //}
-            //else
-            //{
-            //    if (item.From != null)
-            //        writer.Write(item.From.Alias);
-
-            //    if (item.Action.IsConstructor && !(item.Action is UMLReturnFromMethod))
-            //        writer.Write(" --> ");
-            //    else
-            //        writer.Write(" -> ");
-
-            //    writer.Write(item.To.Alias);
-            //}
-            //writer.Write(" : ");
-
-            //if (item.Action is UMLReturnFromMethod)
-            //{
-            //    writer.Write(" return ");
-            //    writer.WriteLine(item.Action.Signature);
-            //}
-            //else
-            //{
-            //    writer.Write(item.Action.Signature);
-
-            //}
-            //writer.WriteLine();
-        }
-
-        private static void DrawConnections(TextWriter writer, List<UMLSequenceConnection> connections)
-        {
-            foreach (var item in connections)
-            {
-                DrawConnection(writer, item);
-            }
-        }
+ 
 
         private static void DrawEntity(List<UMLOrderedEntity> entities, TextWriter writer)
         {
@@ -117,9 +75,9 @@ namespace PlantUML
                         writer.WriteLine("end");
                     }
                 }
-                else if (entity is UMLSequenceConnection con)
+                else if (entity is UMLSequenceConnection)
                 {
-                    DrawConnection(writer, con);
+                    
                 }
             }
         }
@@ -275,7 +233,7 @@ namespace PlantUML
 
         public static string Create(UMLClassDiagram classDiagram)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             using (TextWriter tw = new StringWriter(sb))
             {
@@ -287,7 +245,7 @@ namespace PlantUML
 
         public static string Create(UMLSequenceDiagram sequenceDiagram)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
 
             using (TextWriter tw = new StringWriter(sb))
             {

@@ -20,7 +20,7 @@ namespace UMLModels
         {
             get
             {
-                List<UMLDataType> dt = new List<UMLDataType>();
+                List<UMLDataType> dt = new();
 
                 AddMore(Package, dt);
 

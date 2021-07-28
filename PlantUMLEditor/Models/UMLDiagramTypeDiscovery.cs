@@ -5,7 +5,7 @@ namespace PlantUMLEditor.Models
 {
     internal class UMLDiagramTypeDiscovery
     {
-        public async Task<UMLClassDiagram> TryCreateClassDiagram(UMLDocumentCollection documents, string fullPath)
+        public static async Task<UMLClassDiagram> TryCreateClassDiagram(UMLDocumentCollection documents, string fullPath)
         {
             if (!fullPath.Contains("class.puml"))
             {
@@ -31,7 +31,7 @@ namespace PlantUMLEditor.Models
             return cd;
         }
 
-        public async Task<UMLComponentDiagram> TryCreateComponentDiagram(UMLDocumentCollection documents, string fullPath)
+        public static async Task<UMLComponentDiagram> TryCreateComponentDiagram(UMLDocumentCollection documents, string fullPath)
         {
             if (!fullPath.Contains("component.puml"))
             {
@@ -57,7 +57,7 @@ namespace PlantUMLEditor.Models
             return cd;
         }
 
-        public async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd, UMLUnknownDiagram ud)> TryCreateDiagram(UMLDocumentCollection documents, string text)
+        public static async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd, UMLUnknownDiagram ud)> TryCreateDiagram(UMLDocumentCollection documents, string text)
         {
             UMLUnknownDiagram ud = null;
             UMLClassDiagram cd = null;
@@ -69,7 +69,7 @@ namespace PlantUMLEditor.Models
             return (cd, sd, ud);
         }
 
-        public async Task<UMLSequenceDiagram> TryCreateSequenceDiagram(UMLDocumentCollection documents, string fullPath)
+        public static async Task<UMLSequenceDiagram> TryCreateSequenceDiagram(UMLDocumentCollection documents, string fullPath)
         {
             if (!fullPath.Contains("seq.puml"))
             {

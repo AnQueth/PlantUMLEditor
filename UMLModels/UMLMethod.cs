@@ -51,7 +51,7 @@ namespace UMLModels
         {
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             if (ReturnType != null && !string.IsNullOrEmpty(ReturnType.Name))
             {
                 sb.Append(ReturnType.Name);

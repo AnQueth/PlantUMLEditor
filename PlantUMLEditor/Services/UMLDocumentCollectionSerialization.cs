@@ -8,13 +8,13 @@ namespace PlantUMLEditor.Services
 {
     internal class UMLDocumentCollectionSerialization : IUMLDocumentCollectionSerialization
     {
-        private JsonSerializerSettings GetOptions()
+        private static JsonSerializerSettings GetOptions()
         {
             return new JsonSerializerSettings()
             {
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
                 TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
-                TypeNameAssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Full,
+          
                 TypeNameHandling = TypeNameHandling.Auto
             };
         }
@@ -23,7 +23,8 @@ namespace PlantUMLEditor.Services
         {
             if (File.Exists(fileName))
             {
-                string s = File.ReadAllText(fileName);
+               
+                string s = await File.ReadAllTextAsync(fileName);
 
                 return JsonConvert.DeserializeObject<UMLModels.UMLDocumentCollection>(s, GetOptions());
             }

@@ -8,34 +8,30 @@ namespace PlantUMLEditor.Models
 {
     public class GlobalSearch
     {
-        public Task<List<GlobalFindResult>> Find(string rootDirectory, string text, string[] extensions)
+        public static Task<List<GlobalFindResult>> Find(string rootDirectory, string text, string[] extensions)
         {
-            ConcurrentBag<GlobalFindResult> res = new ConcurrentBag<GlobalFindResult>();
+            ConcurrentBag<GlobalFindResult> res = new();
             Parallel.ForEach(extensions, (ex) =>
             {
                 foreach (var file in Directory.GetFiles(rootDirectory, ex, SearchOption.AllDirectories))
                 {
-                    using (var f = File.OpenRead(file))
+                    using var f = File.OpenRead(file);
+                    int line = 1;
+                    using StreamReader sr = new(f);
+                    string lineText = null;
+                    while ((lineText = sr.ReadLine()) != null)
                     {
-                        int line = 1;
-                        using (StreamReader sr = new StreamReader(f))
+                        if (lineText.ToLowerInvariant().Contains(text.ToLowerInvariant()))
                         {
-                            string lineText = null;
-                            while ((lineText = sr.ReadLine()) != null)
+                            res.Add(new GlobalFindResult()
                             {
-                                if (lineText.ToLowerInvariant().Contains(text.ToLowerInvariant()))
-                                {
-                                    res.Add(new GlobalFindResult()
-                                    {
-                                        FileName = file,
-                                        LineNumber = line,
-                                        Text = lineText,
-                                        SearchText = text
-                                    });
-                                }
-                                line++;
-                            }
+                                FileName = file,
+                                LineNumber = line,
+                                Text = lineText,
+                                SearchText = text
+                            });
                         }
+                        line++;
                     }
                 }
             });

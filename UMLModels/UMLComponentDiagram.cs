@@ -9,14 +9,14 @@ namespace UMLModels
             Title = title;
 
             FileName = fileName;
-            Errors = new List<(string Line, int LineNumber)>();
+            Errors = new List<(string Line, int LineNumber, string message)>();
         }
 
         public List<UMLDataType> Entities
         {
             get
             {
-                List<UMLDataType> dt = new List<UMLDataType>();
+                List<UMLDataType> dt = new();
 
                 AddMore(Package, dt);
 
@@ -24,7 +24,7 @@ namespace UMLModels
             }
         }
 
-        public List<(string Line, int LineNumber)> Errors { get; set; }
+        public List<(string Line, int LineNumber, string message )> Errors { get; set; }
         public UMLPackage Package { get; set; }
 
         public List<UMLPackage> ContainedPackages { get; set; } = new List<UMLPackage>();
