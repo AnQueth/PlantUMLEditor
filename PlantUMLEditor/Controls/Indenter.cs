@@ -6,17 +6,17 @@ namespace PlantUMLEditor.Controls
 {
     internal class Indenter
     {
-        private static readonly Regex newLineAfter = new("^(note.+:|end +note|\\'.+|.+\\'\\/|left to right direction)", RegexOptions.Compiled);
-        private static readonly Regex newLineBefore = new("^(note.+|\\'.+|\\/\\'.+|left to right direction)", RegexOptions.Compiled);
+        private static readonly Regex newLineAfter = new(@"^(note.+:|end +note|\'.+|.+\'\/|left to right direction)", RegexOptions.Compiled);
+        private static readonly Regex newLineBefore = new(@"^(note.+|\'.+|\/\'.+|left to right direction)", RegexOptions.Compiled);
        // private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static readonly Regex reg = new("\n");
         private static readonly Regex removeSpaces = new(" {2,}", RegexOptions.Compiled);
-        private static readonly Regex tab = new("^(alt|opt|loop|try|group|catch|break|par)\\s+", RegexOptions.Compiled);
-        private static readonly Regex tab2 = new("^\\s*(abstract|class|interface|package|enum|together|component|database|rectangle|queue|node|folder|cloud).+\\{", RegexOptions.Compiled);
-        private static readonly Regex tab3 = new("^\\s*(if\\s+\\(.*|repeat(?!\\s*while).*|fork(?!\\s*again))$", RegexOptions.Compiled);
-        private static readonly Regex tabReset = new("^(else\\s?.*|fork\\s+again)", RegexOptions.Compiled);
-        private static readonly Regex tabStop = new("^(\\}|end(?! note)|endif|repeat\\s+while.*)", RegexOptions.Compiled);
+        private static readonly Regex tab = new(@"^(alt|opt|loop|try|group|catch|break|par)\s+", RegexOptions.Compiled);
+        private static readonly Regex tab2 = new(@"^\s*(abstract|class|interface|package|enum|together|component|database|rectangle|queue|node|folder|cloud).+\{", RegexOptions.Compiled);
+        private static readonly Regex tab3 = new(@"^\s*(if\s+\(.*|repeat(?!\s*while).*|fork(?!\s*again))$", RegexOptions.Compiled);
+        private static readonly Regex tabReset = new(@"^(else\s?.*|fork\s+again)", RegexOptions.Compiled);
+        private static readonly Regex tabStop = new(@"^(\}|end(?! note)|endif|repeat\s+while.*)", RegexOptions.Compiled);
 
         private static int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
         {

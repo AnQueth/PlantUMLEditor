@@ -117,7 +117,9 @@ namespace PlantUMLEditor.Controls
             }
             set
             {
+
                 _lineNumbers = value;
+                _lineNumbers.Freeze();
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineNumbers)));
             }
         }
@@ -324,7 +326,8 @@ namespace PlantUMLEditor.Controls
                         word += chars.Pop();
                 }
 
-                _bindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word, where, typedLength, (Key)state, CaretIndex - c));
+                _bindedDocument.AutoComplete(new AutoCompleteParameters(rec, text, line, word,
+                    where, typedLength, (Key)state, CaretIndex - c));
             });
         }
 
@@ -346,8 +349,8 @@ namespace PlantUMLEditor.Controls
 
                     for (var x = 0; x <= lines; x++)
                     {
-                        FormattedText ft = new((x + 1).ToString(), CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, this.FontSize, Brushes.Black,
-                          p);
+                        FormattedText ft = new((x + 1).ToString(), CultureInfo.InvariantCulture,
+                            FlowDirection.LeftToRight, tf, this.FontSize, Brushes.Black, p);
                         context.DrawText(ft, pt);
                         pt.Y += ft.Height;
                     }
@@ -566,7 +569,7 @@ namespace PlantUMLEditor.Controls
             }
             else if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-               
+
                 int pos = this.CaretIndex;
 
                 this.Text = Indenter.Process(this.TextRead(), false);
@@ -578,7 +581,7 @@ namespace PlantUMLEditor.Controls
             }
             else if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.L) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-              
+
                 int pos = this.CaretIndex;
 
                 this.Text = Indenter.Process(this.TextRead(), true);
@@ -614,7 +617,7 @@ namespace PlantUMLEditor.Controls
             }
             else if (e.Key == Key.Enter)
             {
-                
+
                 int indent = Indenter.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex));
                 string line = "\r\n" + new string(' ', indent * 4);
                 int index = CaretIndex + line.Length;
@@ -703,13 +706,13 @@ namespace PlantUMLEditor.Controls
             if (e.Text == "{")
             {
                 bool process = false;
-                for(var x = CaretIndex; x >= 0; x--)
+                for (var x = CaretIndex; x >= 0; x--)
                 {
-                    if(this.Text[x] == '{')
+                    if (this.Text[x] == '{')
                     {
                         break;
                     }
-                    if(char.IsLetterOrDigit(this.Text[x]) && x != '{')
+                    if (char.IsLetterOrDigit(this.Text[x]) && x != '{')
                     {
                         process = true;
                         break;
@@ -717,7 +720,7 @@ namespace PlantUMLEditor.Controls
                 }
                 if (process)
                 {
-                 
+
                     int indent = Indenter.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex) - 1);
                     string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}";
                     int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
@@ -889,7 +892,7 @@ namespace PlantUMLEditor.Controls
         {
             this.SelectionStart = index;
 
-           // int i = index - 1;
+            // int i = index - 1;
 
             //if (this.Text[i + typedLength] != char.MinValue)
             //{
@@ -907,7 +910,7 @@ namespace PlantUMLEditor.Controls
             this.SelectionStart = index;
 
             this.SelectedText = text;
-           // this.CaretIndex = index + this.SelectionLength;
+            // this.CaretIndex = index + this.SelectionLength;
         }
 
         public override void OnApplyTemplate()
@@ -1052,7 +1055,7 @@ namespace PlantUMLEditor.Controls
                     }
                 }
             }
-            catch (Exception  )
+            catch (Exception)
             {
             }
 
@@ -1080,7 +1083,7 @@ namespace PlantUMLEditor.Controls
 
             if (format)
             {
-               
+
 
                 this.Text = Indenter.Process(text, false);
             }

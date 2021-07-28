@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UmlTests", "UmlTests\UmlTes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UMLModels", "UMLModels\UMLModels.csproj", "{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "PlantUMLEditorSetup", "PlantUMLEditorSetup\PlantUMLEditorSetup.vdproj", "{B5A21EFE-F928-479A-B5E7-DA41D91E83BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug (Old Coloring)|Any CPU = Debug (Old Coloring)|Any CPU
@@ -42,6 +44,9 @@ Global
 		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{43C31323-38E6-431B-8B4C-A5CF6E9A56A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5A21EFE-F928-479A-B5E7-DA41D91E83BA}.Debug (Old Coloring)|Any CPU.ActiveCfg = Debug
+		{B5A21EFE-F928-479A-B5E7-DA41D91E83BA}.Debug|Any CPU.ActiveCfg = Debug
+		{B5A21EFE-F928-479A-B5E7-DA41D91E83BA}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

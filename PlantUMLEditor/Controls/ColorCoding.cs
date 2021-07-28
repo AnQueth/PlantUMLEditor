@@ -11,27 +11,27 @@ namespace PlantUMLEditor.Controls
         private static readonly Dictionary<Regex, Color> _colorCodes = new()
         {
             {new Regex("(@startuml|@enduml)", RegexOptions.Compiled) , Colors.Coral},
-            {new Regex("^\\s*'.+", RegexOptions.Multiline), Colors.Gray},
-            {new Regex("^\\s*(class|interface)\\s+.+?{([\\s.\\w\\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline| RegexOptions.Compiled), Colors.Firebrick },
-            {new Regex("^\\s*(abstract class|title|class|\\{\\w+\\}|interface|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue},
-            {new Regex("^\\s*(start|endif|if\\s+\\(.*|else\\s+\\(.*|repeat\\s+while\\s+\\(.*|repeat|end\\s+fork|fork\\s+again|fork)\\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue}
+            {new Regex(@"^\s*'.+", RegexOptions.Multiline), Colors.Gray},
+            {new Regex(@"^\s*(class|interface)\s+.+?{([\s.\w\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline| RegexOptions.Compiled), Colors.Firebrick },
+            {new Regex(@"^\s*(abstract class|title|class|\{\w+\}|interface|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue},
+            {new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), Colors.Blue}
 
         };
 
         private static readonly Dictionary<Regex, Color[]> _groupedCodes = new()
         {
-            {new Regex(@"^\s*(?<keyword>(?:participant|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(?:\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
+            {new Regex(@"^\s*(?<keyword>(?:participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(?:\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
         };
 
         private static readonly Dictionary<Regex, (Color, bool)> _mcolorCodes = new()
         {
-            {new Regex("(\\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
-            {new Regex("^\\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), (Colors.Firebrick, false)}
+            {new Regex(@"(\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
+            {new Regex(@"^\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), (Colors.Firebrick, false)}
         };
 
-        private static readonly Regex brackets = new("(\\{|\\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex notes = new("note +((?<sl>(?<placement>\\w+) +of +(?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" +as +(?<alias>\\w+))|(?<placement>\\w+) +of +(?<target>\\w+)[.\\s\\S\\W\\r\\n]*?end note| +as +(?<alias>\\\\w+)[.\\s\\S\\W\\r\\n]*?end note)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex parenthesies = new("(\\(|\\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex brackets = new(@"(\{|\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex notes = new(@"note +((?<sl>(?<placement>\w+) +of +(?<target>\w+) *: *(?<text>.*))|(?<sl>(?<placement>\w+) *: *(?<text>.*))|(?<sl>\""(?<text>[\w\W]+)\"" +as +(?<alias>\w+))|(?<placement>\w+) +of +(?<target>\w+)[.\s\S\W\r\n]*?end note| +as +(?<alias>\\w+)[.\s\S\W\r\n]*?end note)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex parenthesies = new(@"(\(|\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static void FormatText(string text, FormattedText formattedText)
         {
