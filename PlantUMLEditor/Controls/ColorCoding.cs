@@ -76,10 +76,7 @@ namespace PlantUMLEditor.Controls
                     formattedText.SetForegroundBrush(new SolidColorBrush(item.Value), g.Index, g.Length);
                 }
             }
-            foreach (Match m in mn)
-            {
-                formattedText.SetForegroundBrush(Brushes.Gray, m.Index, m.Length);
-            }
+        
 
             foreach (Match m in parenthesies.Matches(text))
             {
@@ -90,6 +87,11 @@ namespace PlantUMLEditor.Controls
             {
                 formattedText.SetForegroundBrush(Brushes.Green, m.Index, m.Length);
                 formattedText.SetFontWeight(FontWeights.Bold, m.Index, m.Length);
+            }
+
+            foreach (Match m in mn)
+            {
+                formattedText.SetForegroundBrush(Brushes.Gray, m.Index, m.Length);
             }
         }
     }
