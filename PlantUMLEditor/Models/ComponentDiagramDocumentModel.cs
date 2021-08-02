@@ -14,7 +14,7 @@ namespace PlantUMLEditor.Models
         private IEnumerable<string> _autoCompleteItems = Array.Empty<string>();
         private readonly object _locker = new();
         private bool _running = true;
-        private static string[] STATICWORDS = new[] { "component", "folder", "cloud", "package" };
+        private static readonly string[] STATICWORDS = new[] { "component", "folder", "cloud", "package" };
 
         public ComponentDiagramDocumentModel(IConfiguration configuration,
                  IIOService openDirectoryService) : base(configuration, openDirectoryService)

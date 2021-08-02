@@ -341,8 +341,8 @@ namespace PlantUMLEditor.Models
             }
 
             _fileSave.WaitOne();
-            UMLDiagramTypeDiscovery discovery = new();
-            var (cd, sd, comd, ud) = await discovery.TryFindOrAddDocument(Documents, fullPath);
+             
+            var (cd, sd, comd, ud) = await UMLDiagramTypeDiscovery.TryFindOrAddDocument(Documents, fullPath);
             _fileSave.Release();
 
             if (cd != null)

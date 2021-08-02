@@ -13,7 +13,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using PlantUMLEditor.Controls.Coloring;
+ 
 using PlantUMLEditor.Models;
 using Prism.Commands;
 

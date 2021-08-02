@@ -93,7 +93,7 @@ namespace PlantUMLEditor.Models
             return sd;
         }
 
-        public async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd, UMLComponentDiagram comd, UMLUnknownDiagram ud)> TryFindOrAddDocument(UMLDocumentCollection documents, string fullPath)
+        public static async Task<(UMLClassDiagram cd, UMLSequenceDiagram sd, UMLComponentDiagram comd, UMLUnknownDiagram ud)> TryFindOrAddDocument(UMLDocumentCollection documents, string fullPath)
         {
             UMLUnknownDiagram ud = null;
             UMLClassDiagram cd = null;
