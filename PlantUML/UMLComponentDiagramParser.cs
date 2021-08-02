@@ -13,7 +13,7 @@ namespace PlantUML
     {
         private const string PACKAGE = "name";
 
-        private static readonly Regex _component = new(@"^(?:(?:component |database |queue |actor ) *(?:(?<name>[\w]+)|(?:(?:\[|\"")(?<name>[\w ]+)(?:\]|\"")))) *(?:\[(?<description>[\s\w]+)\])*(?: *as +(?<alias>[\w]+))* *(?<color>#[\w]+)*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _component = new(@"^(?:(?:component |database |queue |actor ) *(?:(?<name>[\w]+)|(?:(?:\[|\"")(?<name>[^\""]+)(?:\]|\"")))) *(?:\[(?<description>[\s\w]+)\])*(?: *as +(?<alias>[\w]+))* *(?<color>#[\w]+)*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|database|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|database|node|folder|together|rectangle) +\""*(?<name>[\w ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));

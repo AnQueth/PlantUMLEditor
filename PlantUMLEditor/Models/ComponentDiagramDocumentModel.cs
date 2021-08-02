@@ -14,6 +14,7 @@ namespace PlantUMLEditor.Models
         private IEnumerable<string> _autoCompleteItems = Array.Empty<string>();
         private readonly object _locker = new();
         private bool _running = true;
+        private static string[] STATICWORDS = new[] { "component", "folder", "cloud", "package" };
 
         public ComponentDiagramDocumentModel(IConfiguration configuration,
                  IIOService openDirectoryService) : base(configuration, openDirectoryService)
@@ -42,10 +43,12 @@ namespace PlantUMLEditor.Models
                                 .Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias).Union(
                                     z.Entities.OfType<UMLInterface>().Select(p => p.Name)
                                     )
-                               .Union(z.ContainedPackages.Select(z=>z.Text))
+                               .Union(z.ContainedPackages.Select(z => z.Text))
                                 .Union(
                                     z.Entities.OfType<UMLComponent>().Select(p => p.Namespace)
-                                    ).ToList();
+                                    )
+                                .Union(STATICWORDS)
+                                .ToArray();
                     }
                 }
             });

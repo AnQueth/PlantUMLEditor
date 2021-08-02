@@ -20,12 +20,12 @@ namespace PlantUMLEditor.Controls
 
         private static readonly Dictionary<Regex, Color[]> _groupedCodes = new()
         {
-            {new Regex(@"^\s*(?<keyword>(?:participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity))\s+(?<tokenName>(?:\[[a-zA-Z0-9\<\>\, ]+\])|\w+)(?<keyword2>\s+as\s+(?<alias>[a-zA-Z0-9]+)?)?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
+            {new Regex(@"^\s*(?<k>package|folder|participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:[\w\s\{]+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] {Colors.Blue, Colors.Green } }
         };
 
         private static readonly Dictionary<Regex, (Color, bool)> _mcolorCodes = new()
         {
-            {new Regex(@"(\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
+            {new Regex(@"((?<!\b(component|folder|package)\b.+)\:.+)",  RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
             {new Regex(@"^\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase| RegexOptions.Compiled), (Colors.Firebrick, false)}
         };
 
@@ -50,22 +50,14 @@ namespace PlantUMLEditor.Controls
             }
             foreach (var item in _groupedCodes)
             {
-                foreach (Match m in item.Key.Matches(text))
+                foreach(Match m in item.Key.Matches(text))
                 {
-                    // Group "0" cannot be stripped out of the regex via non-capturing groups -- it
-                    // is automatically added and represents the entire match.  So we'll filter it out here.
-                    var groupNames = item.Key.GetGroupNames().Where(n => n != "0");
-                    foreach (var n in groupNames)
-                    {
-                        if (n.StartsWith("keyword"))
-                        {
-                            formattedText.SetForegroundBrush(new SolidColorBrush(item.Value[0]), m.Groups[n].Index, m.Groups[n].Length);
-                        }
-                        else
-                        {
-                            formattedText.SetForegroundBrush(new SolidColorBrush(item.Value[1]), m.Groups[n].Index, m.Groups[n].Length);
-                        }
-                    }
+                    var g = m.Groups["k"];
+                   
+                 
+                    formattedText.SetForegroundBrush(new SolidColorBrush(item.Value[0]), g.Captures[0].Index, g.Captures[0].Length);
+                    formattedText.SetForegroundBrush(new SolidColorBrush(item.Value[1]), g.Captures[1].Index, g.Captures[1].Length);
+                   
                 }
             }
             foreach (var item in _colorCodes)
