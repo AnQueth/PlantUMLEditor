@@ -866,13 +866,18 @@ namespace PlantUMLEditor.Controls
                 {
                     CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
 
-                    this._renderText = true;
+
 
                     if (!string.IsNullOrEmpty(findText))
+                    {
                         this.FindText = findText;
-                    this.FindHandler();
+                        this.FindHandler();
+                    }
 
                     this.ScrollToLine(lineNumber - 1);
+
+                    this._renderText = true;
+                    this.InvalidateVisual();
                 }
                 catch { }
                 Keyboard.Focus(this);
