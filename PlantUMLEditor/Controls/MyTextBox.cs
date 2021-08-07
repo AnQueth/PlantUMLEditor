@@ -21,7 +21,11 @@ namespace PlantUMLEditor.Controls
 {
     public class MyTextBox : TextBox, INotifyPropertyChanged, ITextEditor, IAutoComplete
     {
-        private readonly List<(int line, int character)> _errors = new();
+        record Error(int Line, int Character);
+        record FindItem(int Start, int Length);
+        public record FindResult(int Index, string Line, int LineNumber, string ReplacePreview);
+
+        private readonly List<Error> _errors = new();
 
         private IAutoComplete _autoComplete;
 
@@ -30,21 +34,21 @@ namespace PlantUMLEditor.Controls
         private DrawingVisual _cachedDrawing;
         private ListBox _cb;
         private IAutoCompleteCallback _currentCallback = null;
-        private readonly List<(int start, int length)> _found = new();
+        private readonly List<FindItem> _found = new();
         private ImageSource _lineNumbers;
 
         private bool _renderText;
         private FindResult _selectedFindResult = null;
-        private Timer _selectionHandler;
-        private Timer _timer = null;
+        private Timer _timerForSelection = null;
+        private Timer _timerForAutoComplete = null;
 
         private bool findReplaceVisible;
-        private ObservableCollection<FindResult> findResults = new();
-        private string findText;
-        private FormattedText formattedText = null;
-        private string replaceText;
+    
+        private string _findText;
+ 
+        private string _replaceText;
 
-        private bool useRegex;
+        private bool _useRegex;
 
         public static readonly DependencyProperty GotoDefinitionCommandProperty =
             DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
@@ -81,15 +85,15 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        public ObservableCollection<FindResult> FindResults { get => findResults; set => findResults = value; }
+        public ObservableCollection<FindResult> FindResults { get; } = new ObservableCollection<FindResult>();
 
         public string FindText
         {
-            get => findText;
+            get => _findText;
 
             set
             {
-                findText = value;
+                _findText = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FindText)));
             }
         }
@@ -135,11 +139,11 @@ namespace PlantUMLEditor.Controls
 
         public string ReplaceText
         {
-            get => replaceText ?? string.Empty;
+            get => _replaceText ?? string.Empty;
 
             set
             {
-                replaceText = value;
+                _replaceText = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ReplaceText)));
             }
         }
@@ -162,11 +166,11 @@ namespace PlantUMLEditor.Controls
         {
             get
             {
-                return useRegex;
+                return _useRegex;
             }
             set
             {
-                useRegex = value;
+                _useRegex = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseRegex)));
             }
         }
@@ -370,7 +374,7 @@ namespace PlantUMLEditor.Controls
             if (string.IsNullOrEmpty(FindText))
                 return;
 
-            if (useRegex)
+            if (_useRegex)
             {
                 Regex r = new(FindText);
                 this.Text = r.Replace(this.Text, ReplaceText);
@@ -404,7 +408,7 @@ namespace PlantUMLEditor.Controls
             try
             {
                 FindResults.Clear();
-                if (useRegex)
+                if (_useRegex)
                 {
                     if (!text.StartsWith("("))
                         text = "(" + text;
@@ -417,7 +421,7 @@ namespace PlantUMLEditor.Controls
                     foreach (Group item in m)
                     {
                         lock (_found)
-                            _found.Add((item.Index, item.Length));
+                            _found.Add(new FindItem(item.Index, item.Length));
                         int l = GetLineIndexFromCharacterIndex(item.Index);
 
                         string line = GetLineText(l);
@@ -438,7 +442,7 @@ namespace PlantUMLEditor.Controls
                     var p = t.IndexOf(search);
                     while (p != -1)
                     {
-                        _found.Add((p, text.Length));
+                        _found.Add(new FindItem(p, text.Length));
                         int l = GetLineIndexFromCharacterIndex(p);
 
                         string line = GetLineText(l);
@@ -662,10 +666,10 @@ namespace PlantUMLEditor.Controls
                 && e.SystemKey == Key.None
                 && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
-                if (_timer != null)
-                    _timer.Dispose();
+                if (_timerForAutoComplete != null)
+                    _timerForAutoComplete.Dispose();
 
-                _timer = new Timer(ProcessAutoComplete, e.Key, 100, Timeout.Infinite);
+                _timerForAutoComplete = new Timer(ProcessAutoComplete, e.Key, 100, Timeout.Infinite);
             }
 
             base.OnPreviewKeyUp(e);
@@ -746,7 +750,7 @@ namespace PlantUMLEditor.Controls
 
                 var d = _cachedDrawing.RenderOpen();
 
-                SetText(d);
+                DrawText(d);
                 d.Close();
 
                 this._renderText = false;
@@ -768,13 +772,14 @@ namespace PlantUMLEditor.Controls
 
             if (!string.IsNullOrWhiteSpace(this.SelectedText) && !this.SelectedText.Contains("\r\n"))
             {
-                if (_selectionHandler != null)
+                if (_timerForSelection != null)
                 {
-                    _selectionHandler.Dispose();
+                    _timerForSelection.Dispose();
                 }
-                _selectionHandler = new Timer((o) =>
+                _timerForSelection = new Timer((o) =>
                 {
                     Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText.Trim(), true); }));
+
                 }, null, 250, Timeout.Infinite);
 
                 this.FindText = this.SelectedText;
@@ -931,10 +936,12 @@ namespace PlantUMLEditor.Controls
 
         public void ReportError(int line, int character)
         {
-            if (!_errors.Contains((line, character)))
+            var e = new Error(line, character);
+
+            if (!_errors.Contains(e))
             {
                 this._renderText = true;
-                _errors.Add((line, character));
+                _errors.Add(e);
                 this.InvalidateVisual();
             }
         }
@@ -970,9 +977,9 @@ namespace PlantUMLEditor.Controls
             _autoComplete = autoComplete;
         }
 
-        public void SetText(DrawingContext col)
+        public void DrawText(DrawingContext col)
         {
-            formattedText = new FormattedText(
+            var formattedText = new FormattedText(
  this.Text,
  CultureInfo.GetCultureInfo("en-us"),
  FlowDirection.LeftToRight,
@@ -1006,7 +1013,7 @@ namespace PlantUMLEditor.Controls
                 {
                     foreach (var item in _found)
                     {
-                        if (item.start >= start && item.start <= end)
+                        if (item.Start >= start && item.Start <= end)
                         {
 
                             TextDecoration td = new(TextDecorationLocation.Underline,
@@ -1018,7 +1025,7 @@ namespace PlantUMLEditor.Controls
                                 td
                             };
 
-                            formattedText.SetTextDecorations(textDecorations, item.start, item.length);
+                            formattedText.SetTextDecorations(textDecorations, item.Start, item.Length);
 
 
                             //var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
