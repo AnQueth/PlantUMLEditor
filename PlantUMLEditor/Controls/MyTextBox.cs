@@ -1,5 +1,7 @@
 ﻿#define USE_OLD_COLORING
 
+using PlantUMLEditor.Models;
+using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,9 +15,6 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
- 
-using PlantUMLEditor.Models;
-using Prism.Commands;
 
 namespace PlantUMLEditor.Controls
 {
@@ -27,28 +26,24 @@ namespace PlantUMLEditor.Controls
 
         private readonly List<Error> _errors = new();
 
+        private readonly List<FindItem> _found = new();
         private IAutoComplete _autoComplete;
 
         private DocumentModel _bindedDocument;
         private (int selectionStart, int match) _braces;
         private DrawingVisual _cachedDrawing;
         private ListBox _cb;
-        private IAutoCompleteCallback _currentCallback = null;
-        private readonly List<FindItem> _found = new();
+        private IAutoCompleteCallback? _currentCallback = null;
+        private string _findText;
         private ImageSource _lineNumbers;
 
         private bool _renderText;
-        private FindResult _selectedFindResult = null;
-        private Timer _timerForSelection = null;
-        private Timer _timerForAutoComplete = null;
-
-        private bool findReplaceVisible;
-    
-        private string _findText;
- 
         private string _replaceText;
-
+        private FindResult? _selectedFindResult = null;
+        private Timer? _timerForAutoComplete = null;
+        private Timer? _timerForSelection = null;
         private bool _useRegex;
+        private bool findReplaceVisible;
 
         public static readonly DependencyProperty GotoDefinitionCommandProperty =
             DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
@@ -69,7 +64,7 @@ namespace PlantUMLEditor.Controls
             ClearCommand = new DelegateCommand(ClearHandler);
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public DelegateCommand ClearCommand { get; }
 
@@ -121,7 +116,6 @@ namespace PlantUMLEditor.Controls
             }
             set
             {
-
                 _lineNumbers = value;
                 _lineNumbers.Freeze();
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LineNumbers)));
@@ -175,9 +169,10 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        private static T FindDescendant<T>(DependencyObject obj) where T : DependencyObject
+        private static T? FindDescendant<T>(DependencyObject obj) where T : DependencyObject
         {
-            if (obj == null) return default;
+            if (obj == null) 
+                return default;
             int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
             if (numberChildren == 0) return default;
 
@@ -207,7 +202,7 @@ namespace PlantUMLEditor.Controls
         {
             if (e.AddedItems.Count > 0)
             {
-                string currentSelected = e.AddedItems[0] as string;
+                string currentSelected = (string)e.AddedItems[0] ;
 
                 _currentCallback.Selection(currentSelected);
             }
@@ -239,7 +234,7 @@ namespace PlantUMLEditor.Controls
             RunFind(FindText, true);
         }
 
-        private void FindMatchingBackwards(string text, int selectionStart, char inc, char matchChar)
+        private void FindMatchingBackwards(ReadOnlySpan<char> text, int selectionStart, char inc, char matchChar)
         {
             int ends = 1;
             int match = 0;
@@ -263,7 +258,7 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
-        private void FindMatchingForward(string text, int selectionStart, char inc, char matchChar)
+        private void FindMatchingForward(ReadOnlySpan<char> text, int selectionStart, char inc, char matchChar)
         {
             int ends = 1;
             int match = 0;
@@ -287,14 +282,44 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
+        private (int start, int len) GetLineInformation(int ch)
+        {
+            var text = this.Text.AsSpan();
+
+            var linestart = 0;
+
+            for (var i = ch; i >= 0; i--)
+            {
+                if (text[i] == '\n')
+                {
+                    linestart = i + 1;
+                    break;
+                }
+            }
+            for (var i = ch; i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    return (linestart, i - linestart);
+                }
+                if (i == text.Length - 1)
+                    return (linestart, (i - linestart) + 1);
+            }
+
+            throw new ArgumentOutOfRangeException(nameof(ch));
+        }
+
         private void MyTextBox_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            _bindedDocument = e.NewValue as DocumentModel;
+            if (e.NewValue is not DocumentModel)
+                return;
+
+            _bindedDocument = (DocumentModel)e.NewValue;
 
             _bindedDocument?.Binded(this);
         }
 
-        private void ProcessAutoComplete(object state)
+        private void ProcessAutoComplete(object? state)
         {
             int k = (int)(Key)state;
 
@@ -353,7 +378,7 @@ namespace PlantUMLEditor.Controls
 
                     for (var x = 0; x <= lines; x++)
                     {
-                        FormattedText ft = new((x + 1).ToString(), CultureInfo.InvariantCulture,
+                        FormattedText ft = new((x + 1).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
                             FlowDirection.LeftToRight, tf, this.FontSize, Brushes.Black, p);
                         context.DrawText(ft, pt);
                         pt.Y += ft.Height;
@@ -410,9 +435,9 @@ namespace PlantUMLEditor.Controls
                 FindResults.Clear();
                 if (_useRegex)
                 {
-                    if (!text.StartsWith("("))
+                    if (!text.StartsWith("(", StringComparison.InvariantCulture))
                         text = "(" + text;
-                    if (!text.EndsWith(")"))
+                    if (!text.EndsWith(")", StringComparison.InvariantCulture))
                         text += ")";
 
                     Regex r = new(text, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
@@ -439,7 +464,7 @@ namespace PlantUMLEditor.Controls
                     t = t.ToLowerInvariant();
                     string search = text.ToLowerInvariant();
 
-                    var p = t.IndexOf(search);
+                    var p = t.IndexOf(search, StringComparison.InvariantCulture);
                     while (p != -1)
                     {
                         _found.Add(new FindItem(p, text.Length));
@@ -455,7 +480,7 @@ namespace PlantUMLEditor.Controls
 
                         FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
 
-                        p = t.IndexOf(search, p + 1);
+                        p = t.IndexOf(search, p + 1, StringComparison.InvariantCulture);
                     }
                 }
             }
@@ -469,12 +494,7 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        private void ShowFind()
-        {
-            FindText = this.SelectedText;
-            FindReplaceVisible = true;
-        }
-
+     
         private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             //  this._autoComplete.CloseAutoComplete();
@@ -482,36 +502,66 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
+        /// <summary>
+        /// moves the autocomplete selected item up or down
+        /// </summary>
+        /// <param name="e"></param>
+        private void TrySelectingAutoCompleteItem(KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+                this.CloseAutoComplete();
+
+            int index = _cb.SelectedIndex;
+
+            if (e.Key == Key.Up)
+            {
+                index--;
+            }
+            else if (e.Key == Key.Down)
+            {
+                index++;
+            }
+
+            if (index < 0)
+                index = 0;
+            if (index > _cb.Items.Count - 1)
+                index = _cb.Items.Count - 1;
+
+            _cb.SelectedIndex = index;
+
+            _cb.ScrollIntoView(_cb.SelectedItem);
+        }
+
         protected bool BracesMatcher(int start, char c)
         {
             if (c == '{')
             {
-                FindMatchingForward(this.Text, start, c, '}');
+                FindMatchingForward(this.Text.AsSpan(), start, c, '}');
                 return false;
             }
             else if (c == '}')
             {
-                FindMatchingBackwards(this.Text, start, c, '{');
+                FindMatchingBackwards(this.Text.AsSpan(), start, c, '{');
                 return false;
             }
             else if (c == '(')
             {
-                FindMatchingForward(this.Text, start, c, ')');
+                FindMatchingForward(this.Text.AsSpan(), start, c, ')');
                 return false;
             }
             else if (c == ')')
             {
-                FindMatchingBackwards(this.Text, start, c, '(');
+                FindMatchingBackwards(this.Text.AsSpan(), start, c, '(');
                 return false;
             }
             else if (c == '<')
             {
-                FindMatchingForward(this.Text, start, c, '>');
+                FindMatchingForward(this.Text.AsSpan(), start, c, '>');
                 return false;
             }
             else if (c == '>')
             {
-                FindMatchingBackwards(this.Text, start, c, '<');
+                FindMatchingBackwards(this.Text.AsSpan(), start, c, '<');
                 return false;
             }
 
@@ -542,7 +592,7 @@ namespace PlantUMLEditor.Controls
         protected override async void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
         {
             lock (_found)
-              _found.Clear(); 
+                _found.Clear();
 
             if (!this._autoComplete.IsPopupVisible && e.Key == Key.Tab)
             {
@@ -558,10 +608,8 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-         
             else if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-
                 int pos = this.CaretIndex;
 
                 this.Text = Indenter.Process(this.TextRead(), false);
@@ -573,7 +621,6 @@ namespace PlantUMLEditor.Controls
             }
             else if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.L) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
-
                 int pos = this.CaretIndex;
 
                 this.Text = Indenter.Process(this.TextRead(), true);
@@ -583,7 +630,7 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up) )
+            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up))
             {
                 TrySelectingAutoCompleteItem(e);
                 e.Handled = true;
@@ -593,7 +640,6 @@ namespace PlantUMLEditor.Controls
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
-            
             }
             else if (e.Key == Key.Escape)
             {
@@ -602,7 +648,6 @@ namespace PlantUMLEditor.Controls
             }
             else if (e.Key == Key.Enter)
             {
-
                 int indent = Indenter.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex));
                 string line = "\r\n" + new string(' ', indent * 4);
                 int index = CaretIndex + line.Length;
@@ -705,7 +750,6 @@ namespace PlantUMLEditor.Controls
                 }
                 if (process)
                 {
-
                     int indent = Indenter.GetIndentLevelForLine(this.Text, this.GetLineIndexFromCharacterIndex(CaretIndex) - 1);
                     string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}";
                     int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
@@ -744,7 +788,7 @@ namespace PlantUMLEditor.Controls
             base.OnSelectionChanged(e);
 
             //remove spaces from end of selection
-            while (this.SelectedText.EndsWith(" "))
+            while (this.SelectedText.EndsWith(" ", StringComparison.InvariantCulture))
             {
                 if (this.SelectionLength == 0)
                     break;
@@ -752,7 +796,7 @@ namespace PlantUMLEditor.Controls
                 this.SelectionLength--;
             }
 
-            if (!string.IsNullOrWhiteSpace(this.SelectedText) && !this.SelectedText.Contains("\r\n"))
+            if (!string.IsNullOrWhiteSpace(this.SelectedText) && !this.SelectedText.Contains("\r\n", StringComparison.InvariantCulture))
             {
                 //timer used to select text after text selection has calmed down
                 if (_timerForSelection != null)
@@ -762,7 +806,6 @@ namespace PlantUMLEditor.Controls
                 _timerForSelection = new Timer((o) =>
                 {
                     Dispatcher.BeginInvoke((Action)(() => { RunFind(this.SelectedText.Trim(), true); }));
-
                 }, null, 250, Timeout.Infinite);
 
                 this.FindText = this.SelectedText;
@@ -771,7 +814,7 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
-            //notify documents that text has changed 
+            //notify documents that text has changed
             _bindedDocument.TextChanged(this.Text);
 
             lock (_found)
@@ -785,186 +828,9 @@ namespace PlantUMLEditor.Controls
             this.InvalidateVisual();
         }
 
-
-
         public void CloseAutoComplete()
         {
             PopupControl.IsOpen = false;
-        }
-
-        public void FocusAutoComplete(Rect rec, IAutoCompleteCallback autoCompleteCallback, bool allowTyping)
-        {
-            _currentCallback = autoCompleteCallback;
-            if (PopupControl.Parent == null)
-            {
-                if (this.Parent is Grid gf)
-                {
-                    gf.Children.Add(PopupControl);
-                }
-            }
-            var g = PopupControl;
-
-            g.IsOpen = true;
-            g.Placement = PlacementMode.RelativePoint;
-            g.HorizontalOffset = rec.Left;
-            g.VerticalOffset = rec.Bottom;
-
-            g.Visibility = Visibility.Visible;
-
-            _cb = (ListBox)((Grid)g.Child).Children[0];
-
-            _cb.SelectionChanged -= AutoCompleteItemSelected;
-            _cb.SelectionChanged += AutoCompleteItemSelected;
-        }
-
-        private ( int start, int len) GetLineInformation(int ch)
-        {
-            var text = this.Text.AsSpan();
-       
-            var linestart = 0;
-
-
-        
-            for(var i = ch; i >= 0; i--)
-            {
-                if(text[i] == '\n')
-                {
-                    linestart = i + 1;
-                    break;
-                }
-                
-            }
-            for (var i = ch; i < text.Length; i++)
-            {
-              
-
-                if (text[i] == '\n' )
-                {
-            
-                    return (  linestart, i - linestart);
-           
-                }
-                if (i == text.Length - 1)
-                    return (linestart, (i - linestart) +1 );
-            }
-
-
-
-            throw new ArgumentOutOfRangeException(nameof(ch));
-        }
-
-        public void GotoLine(int lineNumber, string findText)
-        {
-            if (lineNumber == 0)
-                lineNumber = 1;
-
-
-
-            Dispatcher.BeginInvoke((Action)(() =>
-            {
-                try
-                {
-                    CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
-
-
-
-                    if (!string.IsNullOrEmpty(findText))
-                    {
-                        this.FindText = findText;
-                        this.FindHandler();
-                    }
-
-                    this.ScrollToLine(lineNumber - 1);
-
-                    this._renderText = true;
-                    this.InvalidateVisual();
-                }
-                catch { }
-                Keyboard.Focus(this);
-            }));
-        }
-
-        public void InsertText(string text)
-        {
-            int c = CaretIndex;
-
-            Text = Text.Insert(c, text);
-
-            CaretIndex = c;
-        }
-
-        public void InsertTextAt(string text, int index, int typedLength)
-        {
-            this.SelectionStart = index;
-
-         
-
-            if (typedLength > this.SelectionLength)
-                this.SelectionLength = typedLength;
-
-            if (!string.IsNullOrEmpty(this.SelectedText))
-                this.SelectedText = "";
-            this.SelectionStart = index;
-
-            this.SelectedText = text;
-        
-        }
-
-        public override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
-
-            var sv = FindDescendant<ScrollViewer>(this);
-            if (sv != null)
-            {
-                sv.ScrollChanged += Sv_ScrollChanged;
-            }
-        }
-
-        public void ReportError(int line, int character)
-        {
-            var e = new Error(line, character);
-
-            if (!_errors.Contains(e))
-            {
-                this._renderText = true;
-                _errors.Add(e);
-                this.InvalidateVisual();
-            }
-        }
-        /// <summary>
-        /// moves the autocomplete selected item up or down
-        /// </summary>
-        /// <param name="e"></param>
-        void TrySelectingAutoCompleteItem(KeyEventArgs e)
-        {
-            if (e.Key == Key.Enter)
-                this.CloseAutoComplete();
-
-            int index = _cb.SelectedIndex;
-
-            if (e.Key == Key.Up)
-            {
-                index--;
-            }
-            else if (e.Key == Key.Down)
-            {
-                index++;
-            }
-
-            if (index < 0)
-                index = 0;
-            if (index > _cb.Items.Count - 1)
-                index = _cb.Items.Count - 1;
-
-            _cb.SelectedIndex = index;
-
-            _cb.ScrollIntoView(_cb.SelectedItem);
-        }
-
-        public void SetAutoComplete(IAutoComplete autoComplete)
-        {
-            _autoComplete = autoComplete;
         }
 
         public void DrawText(DrawingContext col)
@@ -978,7 +844,7 @@ namespace PlantUMLEditor.Controls
 
             try
             {
-                var ( start, len) = this.GetLineInformation(CaretIndex);
+                var (start, len) = this.GetLineInformation(CaretIndex);
 
                 var geo = formattedText.BuildHighlightGeometry(new Point(4, 0),
                     start, len);
@@ -992,17 +858,16 @@ namespace PlantUMLEditor.Controls
             {
                 int end = int.MaxValue;
                 int start = 0;
- 
+
                 ColorCoding coding = new();
                 ColorCoding.FormatText(this.TextRead(), formattedText);
- 
+
                 lock (_found)
                 {//highlight found words
                     foreach (var item in _found)
                     {
                         if (item.Start >= start && item.Start <= end)
                         {
-
                             TextDecoration td = new(TextDecorationLocation.Underline,
                           new System.Windows.Media.Pen(Brushes.DarkBlue, 5), 0, TextDecorationUnit.FontRecommended,
                            TextDecorationUnit.FontRecommended);
@@ -1013,7 +878,6 @@ namespace PlantUMLEditor.Controls
                             };
 
                             formattedText.SetTextDecorations(textDecorations, item.Start, item.Length);
-
 
                             //var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
 
@@ -1061,6 +925,109 @@ namespace PlantUMLEditor.Controls
             col.DrawText(formattedText, new Point(4, 0));
         }
 
+        public void FocusAutoComplete(Rect rec, IAutoCompleteCallback autoCompleteCallback, bool allowTyping)
+        {
+            _currentCallback = autoCompleteCallback;
+            if (PopupControl.Parent == null)
+            {
+                if (this.Parent is Grid gf)
+                {
+                    gf.Children.Add(PopupControl);
+                }
+            }
+            var g = PopupControl;
+
+            g.IsOpen = true;
+            g.Placement = PlacementMode.RelativePoint;
+            g.HorizontalOffset = rec.Left;
+            g.VerticalOffset = rec.Bottom;
+
+            g.Visibility = Visibility.Visible;
+
+            _cb = (ListBox)((Grid)g.Child).Children[0];
+
+            _cb.SelectionChanged -= AutoCompleteItemSelected;
+            _cb.SelectionChanged += AutoCompleteItemSelected;
+        }
+
+        public void GotoLine(int lineNumber, string? findText)
+        {
+            if (lineNumber == 0)
+                lineNumber = 1;
+
+            Dispatcher.BeginInvoke((Action)(() =>
+            {
+                try
+                {
+                    CaretIndex = this.GetCharacterIndexFromLineIndex(lineNumber - 1);
+
+                    if (!string.IsNullOrEmpty(findText))
+                    {
+                        this.FindText = findText;
+                        this.FindHandler();
+                    }
+
+                    this.ScrollToLine(lineNumber - 1);
+
+                    this._renderText = true;
+                    this.InvalidateVisual();
+                }
+                catch { }
+                Keyboard.Focus(this);
+            }));
+        }
+
+        public void InsertText(string text)
+        {
+            int c = CaretIndex;
+
+            Text = Text.Insert(c, text);
+
+            CaretIndex = c;
+        }
+
+        public void InsertTextAt(string text, int index, int typedLength)
+        {
+            this.SelectionStart = index;
+
+            if (typedLength > this.SelectionLength)
+                this.SelectionLength = typedLength;
+
+            if (!string.IsNullOrEmpty(this.SelectedText))
+                this.SelectedText = "";
+            this.SelectionStart = index;
+
+            this.SelectedText = text;
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            var sv = FindDescendant<ScrollViewer>(this);
+            if (sv != null)
+            {
+                sv.ScrollChanged += Sv_ScrollChanged;
+            }
+        }
+
+        public void ReportError(int line, int character)
+        {
+            var e = new Error(line, character);
+
+            if (!_errors.Contains(e))
+            {
+                this._renderText = true;
+                _errors.Add(e);
+                this.InvalidateVisual();
+            }
+        }
+
+        public void SetAutoComplete(IAutoComplete autoComplete)
+        {
+            _autoComplete = autoComplete;
+        }
+
         public void TextClear()
         {
             this.Text = "";
@@ -1082,8 +1049,6 @@ namespace PlantUMLEditor.Controls
 
             if (format)
             {
-
-
                 this.Text = Indenter.Process(text, false);
             }
             this._renderText = true;

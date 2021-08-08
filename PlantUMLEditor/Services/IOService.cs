@@ -7,7 +7,7 @@ namespace PlantUMLEditor.Services
 {
     internal class IOService : IIOService
     {
-        public string GetDirectory()
+        public string? GetDirectory()
         {
             FolderBrowserDialog ofd = new();
 
@@ -18,7 +18,7 @@ namespace PlantUMLEditor.Services
             return null;
         }
 
-        public string GetSaveFile(string filter, string defaultExt)
+        public string? GetSaveFile(string filter, string defaultExt)
         {
             SaveFileDialog sfd = new()
             {
@@ -32,7 +32,7 @@ namespace PlantUMLEditor.Services
             return null;
         }
 
-        public string NewFile(string directory, string fileExtension)
+        public string? NewFile(string directory, string fileExtension)
         {
             SaveFileDialog ofd = new()
             {

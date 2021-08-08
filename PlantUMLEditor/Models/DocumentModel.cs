@@ -29,7 +29,7 @@ namespace PlantUMLEditor.Models
         private bool _isDirty;
 
         private int _lineNumber;
-        private string _findText;
+        private string? _findText;
         private ITextEditor _textEditor;
 
         private string _textValue;
@@ -210,7 +210,7 @@ namespace PlantUMLEditor.Models
         internal void Binded(ITextEditor textEditor)
         {
             _textEditor = textEditor;
-            _autoComplete = textEditor as IAutoComplete;
+            _autoComplete = (IAutoComplete)textEditor ;
 
 
             _textEditor.SetAutoComplete(_autoComplete);
@@ -252,9 +252,9 @@ namespace PlantUMLEditor.Models
                 PreviewWindow.Close();
         }
 
-        public abstract Task<UMLDiagram> GetEditedDiagram();
+        public abstract Task<UMLDiagram?> GetEditedDiagram();
 
-        public void GotoLineNumber(int lineNumber, string findText)
+        public void GotoLineNumber(int lineNumber, string? findText)
         {
             _lineNumber = lineNumber;
             _findText = findText;

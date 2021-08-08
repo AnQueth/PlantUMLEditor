@@ -2,10 +2,10 @@
 {
     public interface IIOService
     {
-        string GetDirectory();
+        string? GetDirectory();
 
-        string GetSaveFile(string filter, string defaultExt);
+        string? GetSaveFile(string filter, string defaultExt);
 
-        string NewFile(string directory, string fileExtension);
+        string? NewFile(string directory, string fileExtension);
     }
 }

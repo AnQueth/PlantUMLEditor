@@ -76,7 +76,8 @@ namespace PlantUMLEditor.Models
 
             lock (_locker)
             {
-                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart) && !autoCompleteParameters.WordStart.EndsWith("<"))
+                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart) 
+                    && !autoCompleteParameters.WordStart.EndsWith("<", StringComparison.InvariantCulture))
                 {
                     foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                         base.MatchingAutoCompletes.Add(item);
@@ -94,7 +95,7 @@ namespace PlantUMLEditor.Models
             base.Close();
         }
 
-        public override async Task<UMLDiagram> GetEditedDiagram()
+        public override async Task<UMLDiagram?> GetEditedDiagram()
         {
             return await PlantUML.UMLClassDiagramParser.ReadString(Content);
         }

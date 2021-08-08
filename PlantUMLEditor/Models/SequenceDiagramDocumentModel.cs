@@ -18,12 +18,7 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        public SequenceDiagramDocumentModel(Action<UMLSequenceDiagram, UMLSequenceDiagram> p,
-            IConfiguration configuration, IIOService openDirectoryService)
-            : this(configuration, openDirectoryService)
-        {
-            
-        }
+     
 
         public List<UMLClassDiagram> DataTypes { get; internal set; }
         public UMLSequenceDiagram Diagram { get; set; }
@@ -69,7 +64,8 @@ namespace PlantUMLEditor.Models
             MatchingAutoCompletes.Clear();
 
             var types = this.DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
-            if (text.StartsWith("participant") || text.StartsWith("actor"))
+            if (text.StartsWith("participant", StringComparison.InvariantCulture) 
+                || text.StartsWith("actor" , StringComparison.InvariantCulture))
             {
                 if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, out var lifeline) && lifeline.DataTypeId != null)
                 {
@@ -95,9 +91,11 @@ namespace PlantUMLEditor.Models
                 return;
 
 
-            if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, out UMLSequenceConnection connection))
+            if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, 
+                out UMLSequenceConnection? connection))
             {
-                if (text.Length - 2 > autoCompleteParameters.PositionInLine && autoCompleteParameters.PositionInLine < text.IndexOf(":"))
+                if (text.Length - 2 > autoCompleteParameters.PositionInLine 
+                    && autoCompleteParameters.PositionInLine < text.IndexOf(":", StringComparison.InvariantCulture))
                     return;
 
                 if (connection.To != null && connection.To.DataTypeId != null)
@@ -114,7 +112,7 @@ namespace PlantUMLEditor.Models
                 }
             }
 
-            if (text.EndsWith("return"))
+            if (text.EndsWith("return", StringComparison.InvariantCulture))
             {
                 foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
                     this.MatchingAutoCompletes.Add(item);
@@ -132,7 +130,7 @@ namespace PlantUMLEditor.Models
                 ShowAutoComplete(autoCompleteParameters.Position, false);
         }
 
-        public override async Task<UMLDiagram> GetEditedDiagram()
+        public override async Task<UMLDiagram?> GetEditedDiagram()
         {
             return await PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, false);
         }

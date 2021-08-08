@@ -1,5 +1,6 @@
 ﻿using Prism.Commands;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -15,7 +16,7 @@ namespace PlantUMLEditor.Models
         private string _name;
         private string _rename;
 
-        public TreeViewModel(TreeViewModel parent, string path, bool isFile, string icon,
+        public TreeViewModel(TreeViewModel? parent, string path, bool isFile, string icon,
             IFolderChangeNotifactions folderChangeNotifactions)
         {
             Parent = parent;
@@ -95,7 +96,7 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand NewFolderCommand { get; }
-        public TreeViewModel Parent { get; }
+        public TreeViewModel? Parent { get; }
 
         public string Rename
         {
@@ -113,7 +114,8 @@ namespace PlantUMLEditor.Models
 
         private void DeleteCommandHandler()
         {
-            if (MessageBoxResult.No == MessageBox.Show(string.Format("Delete {0}", this.FullPath), "Delete?", MessageBoxButton.YesNo))
+            if (MessageBoxResult.No == MessageBox.Show(
+                string.Format(CultureInfo.InvariantCulture, "Delete {0}", this.FullPath), "Delete?", MessageBoxButton.YesNo))
                 return;
 
             if (File.Exists(this.FullPath))
@@ -143,7 +145,11 @@ namespace PlantUMLEditor.Models
                 return;
             if (!this.IsFile)
             {
-                string nf = Path.Combine(Path.GetDirectoryName(this.FullPath), Rename);
+                string? dir = Path.GetDirectoryName(this.FullPath);
+                if (dir == null)
+                    return;
+
+                string nf = Path.Combine(dir, Rename);
                 if (Directory.Exists(nf))
                     return;
                 try
@@ -163,8 +169,10 @@ namespace PlantUMLEditor.Models
                 var words = Name.Split('.');
                 words[0] = Rename;
                 Rename = string.Join('.', words);
-
-                string nf = Path.Combine(Path.GetDirectoryName(this.FullPath), Rename);
+                string? dir = Path.GetDirectoryName(this.FullPath);
+                if (dir == null)
+                    return;
+                string nf = Path.Combine(dir, Rename);
                 if (File.Exists(nf))
                     return;
                 File.Move(this.FullPath, nf);
@@ -180,7 +188,7 @@ namespace PlantUMLEditor.Models
         {
             IsRenaming = true;
             if (this.IsFile)
-                Rename = Name.Split('.').FirstOrDefault();
+                Rename = Name.Split('.').First();
             else
                 Rename = Name;
         }

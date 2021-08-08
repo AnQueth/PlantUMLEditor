@@ -21,7 +21,7 @@ namespace PlantUML
         {
             UMLUnknownDiagram d = new(string.Empty, fileName);
             bool started = false;
-            string line = null;
+            string? line = null;
 
             
 
@@ -32,7 +32,7 @@ namespace PlantUML
                 linenumber++;
                 line = line.Trim();
 
-                if (line == "@startuml" || line == "@startmindmap")
+                if (line is "@startuml" or "@startmindmap")
                 {
                     started = true;
                 }
@@ -45,7 +45,7 @@ namespace PlantUML
 
                
 
-                if (line.StartsWith("title"))
+                if (line.StartsWith("title", StringComparison.InvariantCulture))
                 {
                     if (line.Length > 6)
                         d.Title = line[6..];

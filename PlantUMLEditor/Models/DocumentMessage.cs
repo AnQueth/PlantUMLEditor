@@ -5,10 +5,7 @@ namespace PlantUMLEditor.Models
 {
     public class DocumentMessage
     {
-        public DocumentMessage()
-        {
-        }
-
+     
         public string MissingDataTypeName { get; set; }
         public UMLSequenceDiagram Diagram { get; set; }
 
@@ -31,8 +28,8 @@ namespace PlantUMLEditor.Models
         }
 
         public int LineNumber { get; set; }
-        public string MissingMethodDataTypeId { get; set; }
-        public string MissingMethodText { get; set; }
+        public string? MissingMethodDataTypeId { get; set; }
+        public string? MissingMethodText { get; set; }
 
         public string Text { get; set; }
 

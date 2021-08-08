@@ -7,11 +7,7 @@ namespace PlantUMLEditor.Models
 {
     public class GridSettings
     {
-        public GridSettings(Action changedCb)
-        {
-            _changedCB = changedCb;
-
-        }
+       
         private GridLength _DataTypesHeight = new(200);
         private GridLength _DocumentsWell = new(200);
         private GridLength _TreeWidth = new(200);

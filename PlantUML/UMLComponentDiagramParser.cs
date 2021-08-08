@@ -35,20 +35,20 @@ namespace PlantUML
             int x = 0;
             foreach (var item in packages.Reverse())
             {
-                sb.Append(item);
+                _ = sb.Append(item);
                 if (x < packages.Count - 1)
-                    sb.Append('.');
+                    _ = sb.Append('.');
                 x++;
             }
 
             return sb.ToString();
         }
 
-        private static async Task<UMLComponentDiagram> ReadComponentDiagram(StreamReader sr, string fileName)
+        private static async Task<UMLComponentDiagram?> ReadComponentDiagram(StreamReader sr, string fileName)
         {
             UMLComponentDiagram d = new(string.Empty, fileName);
             bool started = false;
-            string line = null;
+            string? line = null;
 
             Stack<string> packages = new();
 
@@ -98,7 +98,7 @@ namespace PlantUML
                             continue;
                     }
 
-                    if (line.StartsWith("end note"))
+                    if (line.StartsWith("end note", StringComparison.InvariantCulture))
                         swallowingNotes = false;
 
                     if (swallowingNotes)
@@ -109,26 +109,26 @@ namespace PlantUML
                         }
                         continue;
                     }
-                    if (line.StartsWith("participant"))
+                    if (line.StartsWith("participant", StringComparison.InvariantCulture))
                         return null;
 
-                    UMLDataType DataType = null;
+                    UMLDataType? DataType = null;
 
                     if (line == "}" && brackets.Count > 0 && brackets.Peek() == PACKAGE)
                     {
-                        brackets.Pop();
-                        packages.Pop();
-                        packagesStack.Pop();
+                        _ = brackets.Pop();
+                        _ = packages.Pop();
+                        _ = packagesStack.Pop();
                         currentPackage = packagesStack.First();
                     }
 
-                    if (line.StartsWith("title"))
+                    if (line.StartsWith("title", StringComparison.InvariantCulture))
                     {
                         if (line.Length > 6)
                             d.Title = line[6..];
                         continue;
                     }
-                    else if (line.Trim().EndsWith("{") && _packageRegex.IsMatch(line))
+                    else if (line.Trim().EndsWith("{", StringComparison.InvariantCulture) && _packageRegex.IsMatch(line))
                     {
                         var s = _packageRegex.Match(line);
 
@@ -141,12 +141,12 @@ namespace PlantUML
                         d.ContainedPackages.Add(c);
 
                         currentPackage = c;
-                        aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
+                        _ = aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
                         packagesStack.Push(c);
 
                         continue;
                     }
-                    else if (line.Trim().EndsWith("{") && _packageRegex2.IsMatch(line))
+                    else if (line.Trim().EndsWith("{", StringComparison.InvariantCulture) && _packageRegex2.IsMatch(line))
                     {
                         var s = _packageRegex2.Match(line);
 
@@ -157,7 +157,7 @@ namespace PlantUML
                         d.ContainedPackages.Add(c);
                         currentPackage.Children.Add(c);
                         currentPackage = c;
-                        aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
+                        _ = aliases.TryAdd(Clean(s.Groups[PACKAGE].Value), c);
                         packagesStack.Push(c);
 
                         continue;
@@ -172,9 +172,9 @@ namespace PlantUML
 
                         DataType = new UMLComponent(package, Clean(g.Groups["name"].Value), g.Groups["alias"].Value);
 
-                        aliases.TryAdd(g.Groups["alias"].Value, DataType);
+                        _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
 
-                        if (line.EndsWith("{"))
+                        if (line.EndsWith("{", StringComparison.InvariantCulture))
                         {
                             brackets.Push("class");
                         }
@@ -184,9 +184,11 @@ namespace PlantUML
                         var g = _interface.Match(line);
                         string package = GetPackage(packages);
                         if (line.Length > 8)
+                        {
                             DataType = new UMLInterface(package, Clean(g.Groups["name"].Value), new List<UMLDataType>());
-                        aliases.TryAdd(g.Groups["alias"].Value, DataType);
-                        if (line.EndsWith("{"))
+                            _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
+                        }
+                        if (line.EndsWith("{", StringComparison.InvariantCulture))
                         {
                             brackets.Push("interface");
                         }
@@ -225,15 +227,15 @@ namespace PlantUML
                             }
                             else if (leftComponent is UMLComponent c)
                             {
-                                if (arrow.EndsWith("o"))
+                                if (arrow.EndsWith("o", StringComparison.InvariantCulture))
                                 {
                                     c.Exposes.Add(fromType);
                                 }
-                                else if (arrow.EndsWith("("))
+                                else if (arrow.EndsWith("(", StringComparison.InvariantCulture))
                                 {
                                     c.Consumes.Add(fromType);
                                 }
-                                else if (arrow.EndsWith(">"))
+                                else if (arrow.EndsWith(">", StringComparison.InvariantCulture))
                                 {
                                     c.Consumes.Add(fromType);
                                 }
@@ -259,19 +261,19 @@ namespace PlantUML
             return d;
         }
 
-        public static async Task<UMLComponentDiagram> ReadFile(string file)
+        public static async Task<UMLComponentDiagram?> ReadFile(string file)
         {
             using StreamReader sr = new(file);
-            UMLComponentDiagram c = await ReadComponentDiagram(sr, file);
+            UMLComponentDiagram? c = await ReadComponentDiagram(sr, file);
 
             return c;
         }
 
-        public static async Task<UMLComponentDiagram> ReadString(string s)
+        public static async Task<UMLComponentDiagram?> ReadString(string s)
         {
             using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
             using StreamReader sr = new(ms);
-            UMLComponentDiagram c = await ReadComponentDiagram(sr, "");
+            UMLComponentDiagram? c = await ReadComponentDiagram(sr, "");
 
             return c;
         }

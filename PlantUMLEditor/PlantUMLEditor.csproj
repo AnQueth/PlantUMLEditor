@@ -7,6 +7,7 @@
     <UseWPF>true</UseWPF>
     <Configurations>Debug;Release;Debug (Old Coloring)</Configurations>
     <ApplicationIcon>uml.ico</ApplicationIcon>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug (Old Coloring)|AnyCPU'">
@@ -89,6 +90,10 @@
     <Content Include="Images\Save_16x.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\.editorconfig" Link=".editorconfig" />
   </ItemGroup>
 
   <ItemGroup>

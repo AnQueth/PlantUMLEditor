@@ -13,23 +13,19 @@ namespace PlantUMLEditor.Models
             ConcurrentBag<GlobalFindResult> res = new();
             Parallel.ForEach(extensions, (ex) =>
             {
+                
                 foreach (var file in Directory.GetFiles(rootDirectory, ex, SearchOption.AllDirectories))
                 {
                     using var f = File.OpenRead(file);
                     int line = 1;
                     using StreamReader sr = new(f);
-                    string lineText = null;
+                    string? lineText = null;
                     while ((lineText = sr.ReadLine()) != null)
                     {
                         if (lineText.ToLowerInvariant().Contains(text.ToLowerInvariant()))
                         {
-                            res.Add(new GlobalFindResult()
-                            {
-                                FileName = file,
-                                LineNumber = line,
-                                Text = lineText,
-                                SearchText = text
-                            });
+                            res.Add(new GlobalFindResult(file, line, lineText, text));
+                            
                         }
                         line++;
                     }

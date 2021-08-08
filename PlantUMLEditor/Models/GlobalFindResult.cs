@@ -1,11 +1,11 @@
 ﻿namespace PlantUMLEditor.Models
 {
-    public class GlobalFindResult
-    {
-        public string FileName { get; set; }
-        public int LineNumber { get; set; }
-        public string Text { get; set; }
+    public record GlobalFindResult
+    (
+         string FileName,
+         int LineNumber,
+         string Text ,
 
-        public string SearchText { get; set; }
-    }
+         string SearchText
+    );
 }

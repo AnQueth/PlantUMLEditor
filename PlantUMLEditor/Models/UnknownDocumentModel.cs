@@ -7,13 +7,10 @@ namespace PlantUMLEditor.Models
 {
     public class UnknownDocumentModel : DocumentModel
     {
-        private readonly Action<UMLDiagram, UMLDiagram> ChangedCallback = null;
+        private readonly Action<UMLDiagram, UMLDiagram> ChangedCallback;
       
 
-        public UnknownDocumentModel(IConfiguration configuration,
-            IIOService openDirectoryService) : base(configuration, openDirectoryService)
-        {
-        }
+     
 
         public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration,
                         IIOService openDirectoryService) : base(configuration, openDirectoryService)
@@ -40,9 +37,9 @@ namespace PlantUMLEditor.Models
             base.ContentChanged(text);
         }
 
-        public override Task<UMLDiagram> GetEditedDiagram()
+        public override Task<UMLDiagram?> GetEditedDiagram()
         {
-            return Task.FromResult<UMLDiagram>(Diagram);
+            return Task.FromResult<UMLDiagram?>(Diagram);
         }
     }
 }

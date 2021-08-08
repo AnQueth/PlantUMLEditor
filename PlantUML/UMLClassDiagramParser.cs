@@ -39,7 +39,7 @@ namespace PlantUML
                 return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v[20..].Trim('>', ' '));
             else if (v.StartsWith("list<", StringComparison.OrdinalIgnoreCase))
                 return new Tuple<ListTypes, string>(ListTypes.List, v[5..].Trim('>', ' '));
-            else if (v.EndsWith("[]"))
+            else if (v.EndsWith("[]", StringComparison.InvariantCulture))
                 return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim()[0..^2]);
             else
                 return new Tuple<ListTypes, string>(ListTypes.None, v);
@@ -51,20 +51,20 @@ namespace PlantUML
             int x = 0;
             foreach (var item in packages.Reverse())
             {
-                sb.Append(item);
+                _ = sb.Append(item);
                 if (x < packages.Count - 1)
-                    sb.Append('.');
+                    _ = sb.Append('.');
                 x++;
             }
 
             return sb.ToString();
         }
 
-        private static async Task<UMLClassDiagram> ReadClassDiagram(StreamReader sr, string fileName)
+        private static async Task<UMLClassDiagram?> ReadClassDiagram(StreamReader sr, string fileName)
         {
             UMLClassDiagram d = new(string.Empty, fileName);
             bool started = false;
-            string line = null;
+            string? line = null;
 
             Stack<string> packages = new();
 
@@ -102,19 +102,19 @@ namespace PlantUML
                     continue;
                 }
 
-                if (line.StartsWith("'"))
+                if (line.StartsWith("'", StringComparison.InvariantCulture))
                 {
                     currentPackage.Children.Add(new UMLComment(line));
                     continue;
                 }
 
-                if (line.StartsWith("/'"))
+                if (line.StartsWith("/'", StringComparison.InvariantCulture))
                 {
                     string comment = line;
                     swallowingComments = true;
                 }
 
-                if (line.Contains("'/") && swallowingComments)
+                if (line.Contains("'/", StringComparison.InvariantCulture) && swallowingComments)
                 {
                     if (currentPackage.Children.Last() is UMLComment n)
                     {
@@ -145,7 +145,7 @@ namespace PlantUML
                     continue;
                 }
 
-                if (line.StartsWith("end note"))
+                if (line.StartsWith("end note", StringComparison.InvariantCulture))
                 {
                     if (currentPackage.Children.Last() is UMLNote n)
                     {
@@ -161,20 +161,21 @@ namespace PlantUML
                     }
                     continue;
                 }
-                if (line.StartsWith("participant") || line.StartsWith("actor"))
+                if (line.StartsWith("participant", StringComparison.InvariantCulture) 
+                    || line.StartsWith("actor", StringComparison.InvariantCulture))
                     return null;
 
-                UMLDataType DataType = null;
+                UMLDataType? DataType = null;
 
                 if (line == "}" && brackets.Count > 0 && brackets.Peek() == PACKAGE)
                 {
-                    brackets.Pop();
-                    packages.Pop();
-                    packagesStack.Pop();
+                    _ = brackets.Pop();
+                    _ = packages.Pop();
+                    _ = packagesStack.Pop();
                     currentPackage = packagesStack.First();
                 }
 
-                if (line.StartsWith("title"))
+                if (line.StartsWith("title", StringComparison.InvariantCulture))
                 {
                     if (line.Length > 6)
                         d.Title = line[6..];
@@ -206,35 +207,35 @@ namespace PlantUML
                     DataType = new UMLClass(package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
                         , Clean(g.Groups["name"].Value), new List<UMLDataType>());
 
-                    if (line.EndsWith("{"))
+                    if (line.EndsWith("{", StringComparison.InvariantCulture))
                     {
                         brackets.Push("class");
                     }
                 }
-                else if (line.StartsWith("enum"))
+                else if (line.StartsWith("enum", StringComparison.InvariantCulture))
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 4)
                         DataType = new UMLEnum(package, Clean(line[5..]));
 
-                    if (line.EndsWith("{"))
+                    if (line.EndsWith("{", StringComparison.InvariantCulture))
                     {
                         brackets.Push("interface");
                     }
                 }
-                else if (line.StartsWith("interface"))
+                else if (line.StartsWith("interface", StringComparison.InvariantCulture))
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 8)
                     {
-                        string alias = null;
-                        string name = null;
+                        string? alias = null;
+                        string? name = null;
 
                         if (line.Contains(" as "))
                         {
                             line = line.Replace("\"", string.Empty);
-                            alias = line[(line.IndexOf(" as ") + 4)..].TrimEnd(' ', '{');
-                            name = Clean(line[9..line.IndexOf(" as ")]);
+                            alias = line[(line.IndexOf(" as ", StringComparison.InvariantCulture) + 4)..].TrimEnd(' ', '{');
+                            name = Clean(line[9..line.IndexOf(" as ", StringComparison.InvariantCulture)]);
                         }
                         else
                         {
@@ -250,7 +251,7 @@ namespace PlantUML
 
 
                     }
-                    if (line.EndsWith("{"))
+                    if (line.EndsWith("{", StringComparison.InvariantCulture))
                     {
                         brackets.Push("interface");
                     }
@@ -283,7 +284,7 @@ namespace PlantUML
 
                         var fromType = d.DataTypes.Find(p => p.Name == m.Groups["first"].Value);
 
-                        if (!fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
+                        if (fromType != null && !fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
                         {
                             ListTypes l = ListTypes.None;
                             if (m.Groups["fm"].Success)
@@ -302,7 +303,7 @@ namespace PlantUML
                     }
                 }
 
-                if (DataType != null && line.EndsWith("{"))
+                if (DataType != null && line.EndsWith("{", StringComparison.InvariantCulture))
                 {
                     if (aliases.TryGetValue(DataType.Name, out var newType))
                     {
@@ -326,7 +327,7 @@ namespace PlantUML
                         if (line == "}")
                         {
                             if (brackets.Peek() != PACKAGE)
-                                brackets.Pop();
+                                _ = brackets.Pop();
                             break;
                         }
 
@@ -353,19 +354,19 @@ namespace PlantUML
             return UMLVisibility.Public;
         }
 
-        public static async Task<UMLClassDiagram> ReadFile(string file)
+        public static async Task<UMLClassDiagram?> ReadFile(string file)
         {
             using StreamReader sr = new(file);
-            UMLClassDiagram c = await ReadClassDiagram(sr, file);
+            UMLClassDiagram? c = await ReadClassDiagram(sr, file);
 
             return c;
         }
 
-        public static async Task<UMLClassDiagram> ReadString(string s)
+        public static async Task<UMLClassDiagram?> ReadString(string s)
         {
             using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
             using StreamReader sr = new(ms);
-            UMLClassDiagram c = await ReadClassDiagram(sr, "");
+            UMLClassDiagram? c = await ReadClassDiagram(sr, "");
 
             return c;
         }
@@ -415,11 +416,11 @@ namespace PlantUML
                     if (c == '<')
                         p.Push(c);
                     else if (c == '>')
-                        p.Pop();
+                        _ = p.Pop();
 
                     if (c == ' ' && p.Count == 0)
                     {
-                        if (sbtype.ToString() != "out" && sbtype.ToString() != "ref")
+                        if (sbtype.ToString() is not "out" and not "ref")
                         {
                             if (!inName)
                             {
@@ -428,13 +429,13 @@ namespace PlantUML
                         }
                         else
                         {
-                            sbtype.Append(c);
+                            _ = sbtype.Append(c);
                         }
                     }
                     else if ((c == ',' || x == v.Length - 1) && p.Count == 0)
                     {
                         if (c != ',')
-                            pname.Append(c);
+                            _ = pname.Append(c);
 
                         Tuple<ListTypes, string> d = CreateFrom(sbtype.ToString().Trim());
 
@@ -452,18 +453,18 @@ namespace PlantUML
 
                         pars.Add(new UMLParameter(pname.ToString().Trim(), paramType, d.Item1));
 
-                        sbtype.Clear();
-                        pname.Clear();
+                        _ = sbtype.Clear();
+                        _ = pname.Clear();
                         inName = false;
                         x++;
                     }
                     else if (inName)
                     {
-                        pname.Append(c);
+                        _ = pname.Append(c);
                     }
                     else
                     {
-                        sbtype.Append(c);
+                        _ = sbtype.Append(c);
                     }
                 }
 

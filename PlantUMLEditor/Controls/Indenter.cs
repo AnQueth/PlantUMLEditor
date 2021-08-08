@@ -18,7 +18,7 @@ namespace PlantUMLEditor.Controls
         private static readonly Regex tabReset = new(@"^(else\s?.*|fork\s+again)", RegexOptions.Compiled);
         private static readonly Regex tabStop = new(@"^(\}|end(?! note)|endif|repeat\s+while.*)", RegexOptions.Compiled);
 
-        private static int ProcessLine(StringBuilder sb, string line, ref int indentLevel)
+        private static int ProcessLine(StringBuilder? sb, string line, ref int indentLevel)
         {
             if (string.IsNullOrEmpty(line.Trim()))
                 return indentLevel;

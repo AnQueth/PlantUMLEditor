@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -12,6 +13,9 @@ namespace PlantUMLEditor.Models
     {
         private readonly IEnumerable<UMLDiagram> documents;
         private readonly ObservableCollection<DocumentMessage> messages;
+        static readonly string[] knownwords = {"Task", "List", "IReadOnlyCollection",
+                "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler"};
+        static readonly char[] seperators = { ' ', '.', ',', '<', '>', '[', ']' };
 
         public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents, ObservableCollection<DocumentMessage> messages)
         {
@@ -19,24 +23,23 @@ namespace PlantUMLEditor.Models
             this.messages = messages;
         }
 
-        private static string[] GetCleanName(string name)
+        private static List<string> GetCleanName(string name)
         {
-            string[] knownwords = {"Task", "List", "IReadOnlyCollection",
-                "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler"};
+           
 
-            string[] parts = name.Split(' ', '.', ',', '<', '>', '[', ']');
+            string[] parts = name.Split(seperators);
 
             List<string> types = new();
             foreach (var p in parts)
             {
-                if (string.IsNullOrEmpty(p) || knownwords.Contains(p))
+                if (string.IsNullOrEmpty(p) || knownwords.Contains(p, StringComparer.OrdinalIgnoreCase))
                     continue;
 
                 types.Add(p);
 
             }
 
-            return types.ToArray();
+            return types;
 
 
 
@@ -90,15 +93,16 @@ namespace PlantUMLEditor.Models
                 }
             }
 
-            List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> namespaceReferences = FindBadDataTypes(folderBase, newMessages, dataTypes);
+            var namespaceReferences = FindBadDataTypes(folderBase, newMessages, dataTypes);
 
             FindCircularReferences(folderBase, newMessages, namespaceReferences);
 
             List<DocumentMessage> removals = new();
             foreach (var item in messages)
             {
-                DocumentMessage m;
-                if ((m = newMessages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text && z.LineNumber == item.LineNumber)) == null)
+           
+                if (newMessages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 &&
+                string.CompareOrdinal( z.Text , item.Text) == 0 && z.LineNumber == item.LineNumber))
                 {
                     removals.Add(item);
                 }
@@ -108,8 +112,9 @@ namespace PlantUMLEditor.Models
 
             foreach (var item in newMessages)
             {
-                DocumentMessage m;
-                if ((m = messages.FirstOrDefault(z => z.FileName == item.FileName && z.Text == item.Text && z.LineNumber == item.LineNumber)) == null)
+                
+                if ( messages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 && 
+                string.CompareOrdinal(z.Text , item.Text) == 0 && z.LineNumber == item.LineNumber)) 
                 {
                     messages.Add(item);
                 }
@@ -173,13 +178,15 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private static void FindCircularReferences(string folderBase, List<DocumentMessage> newMessages, List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> namespaceReferences)
+        private static void FindCircularReferences(string folderBase, List<DocumentMessage> newMessages,
+            List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> namespaceReferences)
         {
             foreach (var n in namespaceReferences)
             {
-                if (namespaceReferences.Any(p => p.Item1.ns1 == n.ns2 &&
-                p.ns2 == n.Item1.ns1 &&
-                p.Item1.ns1 != p.ns2 && !string.IsNullOrEmpty(p.Item1.ns1)
+                if (namespaceReferences.Any(p => string.CompareOrdinal( p.Item1.ns1 , n.ns2) == 0 &&
+                string.CompareOrdinal( p.ns2 , n.Item1.ns1) == 0 &&
+                string.CompareOrdinal( p.Item1.ns1 , p.ns2) != 0 && 
+                !string.IsNullOrEmpty(p.Item1.ns1)
                 && !string.IsNullOrEmpty(p.ns2)))
                 {
                     newMessages.Add(new DocumentMessage()
@@ -207,7 +214,7 @@ namespace PlantUMLEditor.Models
                     var parsedTypes = GetCleanName(m.ObjectType.Name);
                     foreach (var r in parsedTypes)
                     {
-                        var pdt = dataTypes.FirstOrDefault(z => z.Item1.Name == r);
+                        var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal( z.Item1.Name , r) == 0);
                         if (pdt == default)
                         {
                             newMessages.Add(new DocumentMessage()
@@ -233,7 +240,7 @@ namespace PlantUMLEditor.Models
                         var parsedTypes = GetCleanName(p.ObjectType.Name);
                         foreach (var r in parsedTypes)
                         {
-                            var pdt2 = dataTypes.FirstOrDefault(z => z.Item1.Name == r);
+                            var pdt2 = dataTypes.FirstOrDefault(z => string.CompareOrdinal( z.Item1.Name , r) == 0);
                             if (pdt2 == default)
                             {
                                 newMessages.Add(new DocumentMessage()

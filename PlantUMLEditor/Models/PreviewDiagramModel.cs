@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -150,7 +151,11 @@ namespace PlantUMLEditor.Models
                         Messages = string.Empty;
                         _regenRequests.TryDequeue(out (string, string, bool, string) res);
 
-                        string fn = Path.Combine(Path.GetDirectoryName(res.Item2), Path.GetFileNameWithoutExtension(res.Item2) + ".png");
+                        var dir = Path.GetDirectoryName(res.Item2);
+                        if (dir == null)
+                            continue;
+
+                        string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.Item2) + ".png");
 
                         Process p = new();
 
@@ -173,14 +178,14 @@ namespace PlantUMLEditor.Models
                             var m = Regex.Match(e, "Error line (\\d+)");
                             if (m.Success)
                             {
-                                int d = int.Parse(m.Groups[1].Value);
+                                int d = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
                                 d++;
                                 using var g = File.OpenText(res.Item2);
                                 int x = 0;
                                 while (x <= d + 1)
                                 {
                                     x++;
-                                    string ll = g.ReadLine();
+                                    string? ll = g.ReadLine();
                                     if (ll != null)
                                     {
                                         if (x > d - 3)
@@ -195,7 +200,11 @@ namespace PlantUMLEditor.Models
                             {
                                 if (!File.Exists(fn))
                                 {
-                                    string fn2 = Path.Combine(Path.GetDirectoryName(res.Item2), Path.GetFileNameWithoutExtension(res.Item4) + ".png");
+                                    var dir = Path.GetDirectoryName(res.Item2);
+                                    if (dir == null)
+                                        return;
+
+                                    string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.Item4) + ".png");
 
                                     if (File.Exists(fn2))
                                     {
@@ -229,7 +238,7 @@ namespace PlantUMLEditor.Models
 
         private void SaveImageHandler()
         {
-            string fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
+            string? fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
             if (fileName == null)
                 return;
             PngBitmapEncoder encoder = new();

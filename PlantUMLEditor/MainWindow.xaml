@@ -148,7 +148,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                                     </b:EventTrigger>
                                 </b:Interaction.Triggers>
                             </Button>-->
-                                <TextBox Grid.Row="0" Margin="{DynamicResource TabHeaderMargin}"  Text="{Binding FindText, Mode=TwoWay, ElementName=Editor}">
+                                <TextBox Grid.Row="0" Margin="{DynamicResource TabHeaderMargin}" VerticalContentAlignment="Center"  Text="{Binding FindText, Mode=TwoWay, ElementName=Editor}">
                                     <b:Interaction.Triggers>
                                         <b:KeyTrigger Key="Return">
                                             <b:InvokeCommandAction Command="{Binding FindCommand, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></b:InvokeCommandAction>
@@ -156,15 +156,15 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                                     </b:Interaction.Triggers>
                                 </TextBox>
                                 <Button Grid.Column="1" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding FindCommand, ElementName=Editor}" Content="Find" ></Button>
-                                <CheckBox Grid.Column="2" Margin="{DynamicResource TabHeaderMargin}" IsChecked="{Binding UseRegex, ElementName=Editor}">Use Regex</CheckBox>
-                                <TextBox Grid.Row="0"  Margin="{DynamicResource TabHeaderMargin}"   Grid.Column="3" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                                <CheckBox Grid.Column="2" VerticalAlignment="Center"   Margin="{DynamicResource TabHeaderMargin}" IsChecked="{Binding UseRegex, ElementName=Editor}">Use Regex</CheckBox>
+                                <TextBox Grid.Row="0" VerticalContentAlignment="Center" Margin="{DynamicResource TabHeaderMargin}"   Grid.Column="3" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
                                 <Button Grid.Column="4"  Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ReplaceCommand, ElementName=Editor}" Content="Replace"  ></Button>
                                 <Button Grid.Column="5" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ClearCommand, ElementName=Editor}" Content="Clear"  ></Button>
 
                                 <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="7" MaxHeight="300"
-                                 AutoGenerateColumns="False"     SelectedItem="{Binding SelectedFindResult, Mode=TwoWay, ElementName=Editor}">
+                                 AutoGenerateColumns="False" VerticalContentAlignment="Center"     SelectedItem="{Binding SelectedFindResult, Mode=TwoWay, ElementName=Editor}">
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn  Header="Line" IsReadOnly="true"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
+                                        <DataGridTextColumn Header="Line"  IsReadOnly="true"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
                                         <DataGridTextColumn Header="Match" IsReadOnly="true"  Binding="{Binding Line}" ></DataGridTextColumn>
                                         <DataGridTextColumn Header="Replace" IsReadOnly="true" Binding="{Binding ReplacePreview}" ></DataGridTextColumn>
                                     </DataGrid.Columns>
@@ -702,10 +702,30 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
 									</DataTemplate>
 								</DataGridTemplateColumn.CellTemplate>
 							</DataGridTemplateColumn>
-							<DataGridTextColumn IsReadOnly="true" Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
-							<DataGridTextColumn IsReadOnly="true" Header="Line" Binding="{Binding LineNumber}"></DataGridTextColumn>
-							<DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding RelativeFileName}"></DataGridTextColumn>
-						</DataGrid.Columns>
+                            <DataGridTemplateColumn Header="Text"  IsReadOnly="true"  >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock VerticalAlignment="Center"  Text="{Binding Text}"></TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Line"  IsReadOnly="true"  >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock VerticalAlignment="Center"  Text="{Binding LineNumber}"></TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <DataGridTemplateColumn Header="File"  IsReadOnly="true"  >
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock VerticalAlignment="Center"  Text="{Binding RelativeFileName}"></TextBlock>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                      		 		</DataGrid.Columns>
 					</DataGrid>
 				</TabItem>
                 <TabItem>
@@ -713,7 +733,8 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition></ColumnDefinition>
-                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition Width="100"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"></RowDefinition>
@@ -730,7 +751,10 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                         
                         <Button Margin="2,2,2,2"  Grid.Column="1" Command="{Binding GlobalSearchCommand}"
                                 CommandParameter="{Binding Text, ElementName=txtGF}" >Find</Button>
-                        <DataGrid SelectionMode="Single"  AutoGenerateColumns="False"  ItemsSource="{Binding GlobalFindResults}" Margin="{DynamicResource TabHeaderMargin}"  Grid.Row="1" Grid.ColumnSpan="2" HorizontalContentAlignment="Stretch"
+                        <DataGrid SelectionMode="Single"  AutoGenerateColumns="False" 
+                                  ItemsSource="{Binding GlobalFindResults}" 
+                                  Margin="{DynamicResource TabHeaderMargin}"
+                                  Grid.Row="1" Grid.ColumnSpan="3" HorizontalContentAlignment="Stretch"
                                  SelectedItem="{Binding SelectedGlobalFindResult}">
                             <DataGrid.Columns>
                                 <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding FileName}"></DataGridTextColumn>

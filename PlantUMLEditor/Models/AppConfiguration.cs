@@ -2,8 +2,9 @@
 {
     internal class AppConfiguration : IConfiguration
     {
-        public AppConfiguration()
+        public AppConfiguration(string jarLocation)
         {
+            JarLocation = jarLocation;
         }
 
         public string JarLocation { get; set; }
