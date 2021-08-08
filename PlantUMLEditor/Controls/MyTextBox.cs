@@ -762,6 +762,7 @@ namespace PlantUMLEditor.Controls
         {
             base.OnSelectionChanged(e);
 
+            //remove spaces from end of selection
             while (this.SelectedText.EndsWith(" "))
             {
                 if (this.SelectionLength == 0)
@@ -772,6 +773,7 @@ namespace PlantUMLEditor.Controls
 
             if (!string.IsNullOrWhiteSpace(this.SelectedText) && !this.SelectedText.Contains("\r\n"))
             {
+                //timer used to select text after text selection has calmed down
                 if (_timerForSelection != null)
                 {
                     _timerForSelection.Dispose();
@@ -788,18 +790,21 @@ namespace PlantUMLEditor.Controls
 
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
+            //notify documents that text has changed 
             _bindedDocument.TextChanged(this.Text);
+
             lock (_found)
                 _found.Clear();
 
             _braces = default;
-
             _errors.Clear();
 
             base.OnTextChanged(e);
             this._renderText = true;
             this.InvalidateVisual();
         }
+
+
 
         public void CloseAutoComplete()
         {
@@ -831,29 +836,38 @@ namespace PlantUMLEditor.Controls
             _cb.SelectionChanged += AutoCompleteItemSelected;
         }
 
-        public (int lineNumber, int start, int len) GetLineInformation(int ch)
+        private ( int start, int len) GetLineInformation(int ch)
         {
-            var text = this.Text;
-            var thisLine = 0;
+            var text = this.Text.AsSpan();
+       
             var linestart = 0;
 
 
-            var myline = 0;
-            for (var i = 0; i < text.Length; i++)
+        
+            for(var i = ch; i >= 0; i--)
             {
-                if (i == ch)
+                if(text[i] == '\n')
                 {
-                    myline = thisLine;
-                }
-
-                if (text[i] == '\n')
-                {
-                    if (myline != 0)
-                        return (myline, linestart, i - linestart);
                     linestart = i + 1;
-                    ++thisLine;
+                    break;
                 }
+                
             }
+            for (var i = ch; i < text.Length; i++)
+            {
+              
+
+                if (text[i] == '\n' )
+                {
+            
+                    return (  linestart, i - linestart);
+           
+                }
+                if (i == text.Length - 1)
+                    return (linestart, (i - linestart) +1 );
+            }
+
+
 
             throw new ArgumentOutOfRangeException(nameof(ch));
         }
@@ -988,7 +1002,7 @@ namespace PlantUMLEditor.Controls
 
             try
             {
-                var (lineNumber, start, len) = this.GetLineInformation(CaretIndex);
+                var ( start, len) = this.GetLineInformation(CaretIndex);
 
                 var geo = formattedText.BuildHighlightGeometry(new Point(4, 0),
                     start, len);
@@ -1002,13 +1016,10 @@ namespace PlantUMLEditor.Controls
             {
                 int end = int.MaxValue;
                 int start = 0;
-#if USE_OLD_COLORING
+ 
                 ColorCoding coding = new();
                 ColorCoding.FormatText(this.TextRead(), formattedText);
-#else
-                Colorizer colorizer = new Colorizer();
-                colorizer.FormatText(this.TextRead(), formattedText);
-#endif
+ 
                 lock (_found)
                 {
                     foreach (var item in _found)
