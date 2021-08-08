@@ -542,7 +542,7 @@ namespace PlantUMLEditor.Controls
         protected override async void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
         {
             lock (_found)
-            { _found.Clear(); }
+              _found.Clear(); 
 
             if (!this._autoComplete.IsPopupVisible && e.Key == Key.Tab)
             {
@@ -558,19 +558,7 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            else if (e.KeyboardDevice.IsKeyDown(Key.F) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                ShowFind();
-                e.Handled = true;
-                return;
-            }
-            else if (e.KeyboardDevice.IsKeyDown(Key.H) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
-            {
-                FindText = this.SelectedText.Trim();
-                ShowFind();
-                e.Handled = true;
-                return;
-            }
+         
             else if (e.KeyboardDevice.IsKeyDown(System.Windows.Input.Key.K) && e.KeyboardDevice.Modifiers == ModifierKeys.Control)
             {
 
@@ -595,10 +583,9 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
-            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up)
-                  /*  && (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl))*/)
+            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up) )
             {
-                _autoComplete.SendEvent(e);
+                TrySelectingAutoCompleteItem(e);
                 e.Handled = true;
                 return;
             }
@@ -606,13 +593,7 @@ namespace PlantUMLEditor.Controls
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
-                //if (e.Key == Key.Tab || e.Key == Key.Space)
-                //{
-                //    this.InsertText(" ");
-
-                //    e.Handled = true;
-                //    return;
-                //}
+            
             }
             else if (e.Key == Key.Escape)
             {
@@ -916,15 +897,7 @@ namespace PlantUMLEditor.Controls
         {
             this.SelectionStart = index;
 
-            // int i = index - 1;
-
-            //if (this.Text[i + typedLength] != char.MinValue)
-            //{
-            //    while (char.IsLetterOrDigit(this.Text[i + typedLength]) && this.Text[i + typedLength] != '\r' && i + typedLength < Text.Length)
-            //    {
-            //        typedLength++;
-            //    }
-            //}
+         
 
             if (typedLength > this.SelectionLength)
                 this.SelectionLength = typedLength;
@@ -934,7 +907,7 @@ namespace PlantUMLEditor.Controls
             this.SelectionStart = index;
 
             this.SelectedText = text;
-            // this.CaretIndex = index + this.SelectionLength;
+        
         }
 
         public override void OnApplyTemplate()
@@ -959,8 +932,11 @@ namespace PlantUMLEditor.Controls
                 this.InvalidateVisual();
             }
         }
-
-        public void SendEvent(KeyEventArgs e)
+        /// <summary>
+        /// moves the autocomplete selected item up or down
+        /// </summary>
+        /// <param name="e"></param>
+        void TrySelectingAutoCompleteItem(KeyEventArgs e)
         {
             if (e.Key == Key.Enter)
                 this.CloseAutoComplete();
@@ -1021,7 +997,7 @@ namespace PlantUMLEditor.Controls
                 ColorCoding.FormatText(this.TextRead(), formattedText);
  
                 lock (_found)
-                {
+                {//highlight found words
                     foreach (var item in _found)
                     {
                         if (item.Start >= start && item.Start <= end)

@@ -10,6 +10,6 @@ namespace PlantUMLEditor.Models
 
         void FocusAutoComplete(System.Windows.Rect rec, IAutoCompleteCallback autoCompleteCallback, bool allowTyping);
 
-        void SendEvent(KeyEventArgs e);
+       
     }
 }
