@@ -364,36 +364,35 @@ namespace PlantUMLEditor.Controls
 
         private void RenderLineNumbers()
         {
-            Dispatcher.BeginInvoke((Action)(() =>
+
+            if (this.ActualHeight > 0)
             {
-                if (this.ActualHeight > 0)
+                int lines = this.GetLastVisibleLineIndex();
+                var p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+
+                Typeface tf = new(this.FontFamily, this.FontStyle, this.FontWeight, this.FontStretch);
+                DrawingVisual dv = new();
+                var context = dv.RenderOpen();
+                Point pt = new(0, 0);
+
+                context.PushTransform(new TranslateTransform(0, -this.VerticalOffset));
+
+                for (var x = 0; x <= lines; x++)
                 {
-                    int lines = this.GetLastVisibleLineIndex();
-                    var p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-
-                    Typeface tf = new(this.FontFamily, this.FontStyle, this.FontWeight, this.FontStretch);
-                    DrawingVisual dv = new();
-                    var context = dv.RenderOpen();
-                    Point pt = new(0, 0);
-
-                    context.PushTransform(new TranslateTransform(0, -this.VerticalOffset));
-
-                    for (var x = 0; x <= lines; x++)
-                    {
-                        FormattedText ft = new((x + 1).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
-                            FlowDirection.LeftToRight, tf, this.FontSize, Brushes.Black, p);
-                        context.DrawText(ft, pt);
-                        pt.Y += ft.Height;
-                    }
-
-                    context.Close();
-
-                    RenderTargetBitmap rtb = new(25, (int)this.ActualHeight, 96, 96, PixelFormats.Pbgra32);
-                    rtb.Render(dv);
-
-                    this.LineNumbers = rtb;
+                    FormattedText ft = new((x + 1).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
+                        FlowDirection.LeftToRight, tf, this.FontSize, Brushes.Black, p);
+                    context.DrawText(ft, pt);
+                    pt.Y += ft.Height;
                 }
-            }));
+
+                context.Close();
+
+                RenderTargetBitmap rtb = new(25, (int)this.ActualHeight, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(dv);
+
+                this.LineNumbers = rtb;
+            }
+
         }
 
         private void ReplaceHandler()

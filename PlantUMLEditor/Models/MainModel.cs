@@ -20,7 +20,9 @@ namespace PlantUMLEditor.Models
 {
     public class MainModel : BindingBase, IFolderChangeNotifactions
     {
-        private readonly ObservableCollection<Tuple<string, UMLDataType>> _dataTypes = new();
+        public record DateTypeRecord(string FileName, UMLDataType DataType);
+
+        private readonly ObservableCollection<DateTypeRecord> _dataTypes = new();
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly IIOService _ioService;
         private readonly Timer _messageChecker;
@@ -57,7 +59,7 @@ namespace PlantUMLEditor.Models
         {
             _gotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
             Documents = new UMLModels.UMLDocumentCollection();
-            _messageChecker = new Timer(CheckMessages, null, 1000, Timeout.Infinite);
+            _messageChecker = new Timer(CheckMessages, null, Timeout.Infinite, Timeout.Infinite);
             _ioService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(() => OpenDirectoryHandler());
 
@@ -229,7 +231,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public ObservableCollection<Tuple<string, UMLDataType>> DataTypes
+        public ObservableCollection<DateTypeRecord> DataTypes
         {
             get
             {
@@ -422,6 +424,10 @@ namespace PlantUMLEditor.Models
                 _fileSave.WaitOne();
                 await UpdateDiagramDependencies();
             }
+            catch
+            {
+
+            }
             finally
             {
                 _fileSave.Release();
@@ -460,13 +466,35 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-
+            DocumentMessageGenerator documentMessageGenerator = new(diagrams);
+            var newMessages = documentMessageGenerator.Generate(_folderBase);
 
             Application.Current.Dispatcher.Invoke(() =>
           {
 
-              DocumentMessageGenerator documentMessageGenerator = new(diagrams, Messages);
-              documentMessageGenerator.Generate(_folderBase);
+
+              List<DocumentMessage> removals = new();
+              foreach (var item in Messages)
+              {
+
+                  if (!newMessages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
+                  string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
+                  {
+                      removals.Add(item);
+                  }
+              }
+
+              removals.ForEach(p => Messages.Remove(p));
+
+              foreach (var item in newMessages)
+              {
+
+                  if (!Messages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
+                 string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
+                  {
+                      Messages.Add(item);
+                  }
+              }
 
 
               foreach (var d in Messages)
@@ -504,6 +532,8 @@ namespace PlantUMLEditor.Models
 
             _fileSave.Release();
             Close(doc);
+
+            await ScanAllFilesHandler();
         }
 
         private void CloseDocumentHandler(DocumentModel doc)
@@ -993,11 +1023,10 @@ namespace PlantUMLEditor.Models
         {
             DataTypes.Clear();
 
-            var r = (from o in Documents.ClassDocuments
+            var r = from o in Documents.ClassDocuments
                      from z in o.DataTypes
-
                      orderby z.Namespace descending, z.Name descending
-                     select Tuple.Create(o.FileName, z));
+                     select  new DateTypeRecord(o.FileName, z);
 
             foreach (var item in r)
                 DataTypes.Add(item);
@@ -1006,6 +1035,8 @@ namespace PlantUMLEditor.Models
         private static async Task Save(DocumentModel doc)
         {
             await doc.Save();
+
+
         }
 
         private async Task SaveAll()
@@ -1038,6 +1069,9 @@ namespace PlantUMLEditor.Models
             {
                 _fileSave.Release();
             }
+
+            await ScanAllFilesHandler();
+
         }
 
         private async Task UpdateDiagramDependencies()
@@ -1076,6 +1110,9 @@ namespace PlantUMLEditor.Models
             await Save(doc);
             await UpdateDiagramDependencies();
             _fileSave.Release();
+
+            await ScanAllFilesHandler();
+
         }
 
         private async Task ScanAllFilesHandler()
@@ -1198,6 +1235,8 @@ namespace PlantUMLEditor.Models
                 if (File.Exists(file))
                     await AttemptOpeningFile(file);
             }
+
+            _messageChecker.Change(1000, Timeout.Infinite);
         }
 
         public async void TreeItemClicked(object sender, MouseButtonEventArgs e)

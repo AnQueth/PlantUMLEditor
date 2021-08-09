@@ -17,10 +17,10 @@ namespace PlantUMLEditor.Models
                 "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler"};
         static readonly char[] seperators = { ' ', '.', ',', '<', '>', '[', ']' };
 
-        public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents, ObservableCollection<DocumentMessage> messages)
+        public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents )
         {
             this.documents = documents;
-            this.messages = messages;
+             
         }
 
         private static List<string> GetCleanName(string name)
@@ -45,7 +45,7 @@ namespace PlantUMLEditor.Models
 
         }
 
-        public void Generate(string folderBase)
+        public List<DocumentMessage> Generate(string folderBase)
         {
             List<DocumentMessage> newMessages = new();
 
@@ -97,28 +97,7 @@ namespace PlantUMLEditor.Models
 
             FindCircularReferences(folderBase, newMessages, namespaceReferences);
 
-            List<DocumentMessage> removals = new();
-            foreach (var item in messages)
-            {
-           
-                if (!newMessages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 &&
-                string.CompareOrdinal( z.Text , item.Text) == 0 && z.LineNumber == item.LineNumber))
-                {
-                    removals.Add(item);
-                }
-            }
-
-            removals.ForEach(p => messages.Remove(p));
-
-            foreach (var item in newMessages)
-            {
-                
-                if (! messages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 && 
-                string.CompareOrdinal(z.Text , item.Text) == 0 && z.LineNumber == item.LineNumber)) 
-                {
-                    messages.Add(item);
-                }
-            }
+            return newMessages;
 
         }
 

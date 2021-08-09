@@ -565,8 +565,8 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                 <ListView.View>
                     <GridView>
                         <GridView.Columns>
-                            <GridViewColumn  Header="Namespace" DisplayMemberBinding="{Binding Item2.Namespace}"></GridViewColumn>
-                            <GridViewColumn Header="Type" DisplayMemberBinding="{Binding Item2.Name}"></GridViewColumn>
+                            <GridViewColumn  Header="Namespace" DisplayMemberBinding="{Binding DataType.Namespace}"></GridViewColumn>
+                            <GridViewColumn Header="Type" DisplayMemberBinding="{Binding DataType.Name}"></GridViewColumn>
                         </GridView.Columns>
                     </GridView>
                 </ListView.View>
