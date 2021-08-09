@@ -29,7 +29,8 @@ namespace PlantUMLEditor.Models
 
         internal bool CloseAll()
         {
-            foreach (var item in OpenDocuments)
+            DocumentModel[] dm = GetDocumentModelReadingArray();
+            foreach (var item in dm)
             {
                 if (item.IsDirty)
                     return true;
@@ -43,7 +44,7 @@ namespace PlantUMLEditor.Models
         private bool _AllowContinue;
         private bool _confirmOpen;
         private readonly object _docLock = new();
-        private readonly Semaphore _fileSave = new(1, 1);
+
         private string? _folderBase;
         private readonly DelegateCommand<string> _gotoDefinitionCommand;
         private string _metaDataDirectory = "";
@@ -149,7 +150,7 @@ namespace PlantUMLEditor.Models
 
                 Process.Start(psi);
             }
-            catch(Win32Exception ex)
+            catch (Win32Exception ex)
             {
                 ProcessStartInfo psi = new()
                 {
@@ -157,7 +158,7 @@ namespace PlantUMLEditor.Models
                     FileName = "cmd",
                     WorkingDirectory = _folderBase
                 };
-    
+
 
                 Process.Start(psi);
 
@@ -371,7 +372,11 @@ namespace PlantUMLEditor.Models
         private async Task AttemptOpeningFile(string fullPath,
             int lineNumber = 0, string? searchText = null)
         {
-            var doc = OpenDocuments.FirstOrDefault(p => p.FileName == fullPath);
+
+
+            DocumentModel? doc;
+            lock (_docLock)
+                doc = OpenDocuments.FirstOrDefault(p => p.FileName == fullPath);
 
             if (doc != null)
             {
@@ -380,32 +385,26 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            try
+
+
+            var (cd, sd, comd, ud) = await UMLDiagramTypeDiscovery.TryFindOrAddDocument(Documents, fullPath);
+
+
+            if (cd != null)
             {
-                _fileSave.WaitOne();
-
-                var (cd, sd, comd, ud) = await UMLDiagramTypeDiscovery.TryFindOrAddDocument(Documents, fullPath);
-
-
-                if (cd != null)
-                {
-                    await OpenClassDiagram(fullPath, cd, lineNumber, searchText);
-                }
-                else if (sd != null)
-                {
-                    await OpenSequenceDiagram(fullPath, sd, lineNumber, searchText);
-                }
-                else if (comd != null)
-                    await OpenComponentDiagram(fullPath, comd, lineNumber, searchText);
-                else if (ud != null)
-                {
-                    await OpenUnknownDiagram(fullPath, ud);
-                }
+                await OpenClassDiagram(fullPath, cd, lineNumber, searchText);
             }
-            finally
+            else if (sd != null)
             {
-                _fileSave.Release();
+                await OpenSequenceDiagram(fullPath, sd, lineNumber, searchText);
             }
+            else if (comd != null)
+                await OpenComponentDiagram(fullPath, comd, lineNumber, searchText);
+            else if (ud != null)
+            {
+                await OpenUnknownDiagram(fullPath, ud);
+            }
+
         }
 
         private async void CheckMessages(object? state)
@@ -421,22 +420,20 @@ namespace PlantUMLEditor.Models
             List<UMLDiagram> diagrams = new();
             try
             {
-                _fileSave.WaitOne();
+
                 await UpdateDiagramDependencies();
+
             }
             catch
             {
 
             }
-            finally
-            {
-                _fileSave.Release();
-            }
+
             try
             {
-               
+                DocumentModel[] dm = GetDocumentModelReadingArray();
 
-                foreach (var doc in OpenDocuments)
+                foreach (var doc in dm)
                 {
                     var d = await doc.GetEditedDiagram();
 
@@ -446,17 +443,17 @@ namespace PlantUMLEditor.Models
 
                 foreach (var doc in Documents.ClassDocuments)
                 {
-                    if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
+                    if (!dm.Any(p => p.FileName == doc.FileName))
                         diagrams.Add(doc);
                 }
                 foreach (var doc in Documents.ComponentDiagrams)
                 {
-                    if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
+                    if (!dm.Any(p => p.FileName == doc.FileName))
                         diagrams.Add(doc);
                 }
                 foreach (var doc in Documents.SequenceDiagrams)
                 {
-                    if (!OpenDocuments.Any(p => p.FileName == doc.FileName))
+                    if (!dm.Any(p => p.FileName == doc.FileName))
                         diagrams.Add(doc);
                 }
             }
@@ -502,11 +499,14 @@ namespace PlantUMLEditor.Models
                   if (d.IsMissingMethod || d.IsMissingDataType)
                       d.FixingCommand = new DelegateCommand<DocumentMessage>(FixingCommandHandler);
 
-                  var docs = OpenDocuments.Where(p => string.CompareOrdinal(p.FileName, d.FileName) == 0);
-                  foreach (var doc in docs)
+                  lock (_docLock)
                   {
-                      if (CurrentDocument == doc)
-                          doc.ReportMessage(d);
+                      var docs = OpenDocuments.Where(p => string.CompareOrdinal(p.FileName, d.FileName) == 0);
+                      foreach (var doc in docs)
+                      {
+                          if (CurrentDocument == doc)
+                              doc.ReportMessage(d);
+                      }
                   }
               }
 
@@ -525,12 +525,12 @@ namespace PlantUMLEditor.Models
 
         private async void CloseDocumentAndSaveHandler(DocumentModel doc)
         {
-            _fileSave.WaitOne();
+
             await Save(doc);
-      
+
             await UpdateDiagramDependencies();
 
-            _fileSave.Release();
+
             Close(doc);
 
             await ScanAllFilesHandler();
@@ -548,6 +548,8 @@ namespace PlantUMLEditor.Models
 
         private async void FixingCommandHandler(DocumentMessage sender)
         {
+            DocumentModel[] dm = GetDocumentModelReadingArray();
+
             if (sender.IsMissingMethod)
             {
                 foreach (var doc in Documents.ClassDocuments)
@@ -558,10 +560,10 @@ namespace PlantUMLEditor.Models
                     if (sender.MissingMethodText == null)
                         continue;
 
-                    UMLClassDiagramParser.TryParseLineForDataType(sender.MissingMethodText.Trim(), 
+                    UMLClassDiagramParser.TryParseLineForDataType(sender.MissingMethodText.Trim(),
                         new Dictionary<string, UMLDataType>(), d);
 
-                    var od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => string.CompareOrdinal(p.FileName, doc.FileName) == 0);
+                    var od = dm.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => string.CompareOrdinal(p.FileName, doc.FileName) == 0);
                     if (od != null)
                     {
                         CurrentDocument = od;
@@ -589,7 +591,7 @@ namespace PlantUMLEditor.Models
 
                     string d = Path.Combine(wf, "defaults.class.puml");
 
-                    var od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == d);
+                    var od = dm.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == d);
                     if (od != null)
                     {
                         CurrentDocument = od;
@@ -887,7 +889,7 @@ namespace PlantUMLEditor.Models
 
         private async void OpenDirectoryHandler(bool? useAppSettings = false, string? folder = null)
         {
-         
+
 
             await SaveAll();
             _folderBase = null;
@@ -904,13 +906,16 @@ namespace PlantUMLEditor.Models
                 return;
 
             SelectedMRUFolder = dir;
-            foreach (var d in OpenDocuments)
+            lock (_docLock)
             {
-                d.Close();
-            }
-            if (OpenDocuments.Count > 0)
-                OpenDocuments.Clear();
+                foreach (var d in OpenDocuments)
+                {
+                    d.Close();
+                }
 
+                if (OpenDocuments.Count > 0)
+                    OpenDocuments.Clear();
+            }
             AppSettings.Default.WorkingDir = dir;
             AppSettings.Default.Save();
 
@@ -1022,15 +1027,41 @@ namespace PlantUMLEditor.Models
 
         private void ProcessDataTypes()
         {
-            DataTypes.Clear();
 
-            var r = from o in Documents.ClassDocuments
-                     from z in o.DataTypes
-                     orderby z.Namespace descending, z.Name descending
-                     select  new DateTypeRecord(o.FileName, z);
+            var dt = DataTypes.ToList();
 
-            foreach (var item in r)
-                DataTypes.Add(item);
+            var dataTypes = (from o in Documents.ClassDocuments
+                             from z in o.DataTypes
+                             select new DateTypeRecord(o.FileName, z)).ToArray();
+
+            bool isDirty = false;
+            foreach (var r in dt.ToArray())
+            {
+                if (!dataTypes.Contains(r))
+                {
+                    dt.Remove(r);
+                    isDirty = true;
+                }
+            }
+
+            foreach (var r in dataTypes)
+                if (!dt.Contains(r))
+                {
+                    dt.Add(r);
+                    isDirty = true;
+                }
+            if (isDirty)
+            {
+                DataTypes.Clear();
+                foreach (var d in dt.OrderBy(z => z.DataType.Namespace).ThenBy(z => z.DataType.Name))
+                {
+                    DataTypes.Add(d);
+                }
+            }
+
+
+
+
         }
 
         private static async Task Save(DocumentModel doc)
@@ -1042,32 +1073,27 @@ namespace PlantUMLEditor.Models
 
         private async Task SaveAll()
         {
-            _fileSave.WaitOne();
-            try
+
+
+            if (string.IsNullOrEmpty(_metaDataFile))
             {
-                if (string.IsNullOrEmpty(_metaDataFile))
-                {
-                    return;
-                }
-
-                List<DocumentModel> c = new();
-
-                lock (_docLock)
-                {
-                    c = OpenDocuments.Where(p => p.IsDirty).ToList();
-                }
-
-                foreach (var file in c)
-                {
-                    await Save(file);
-                }
-
-                await UpdateDiagramDependencies();
+                return;
             }
-            finally
+
+            List<DocumentModel> c = new();
+
+            lock (_docLock)
             {
-                _fileSave.Release();
+                c = OpenDocuments.Where(p => p.IsDirty).ToList();
             }
+
+            foreach (var file in c)
+            {
+                await Save(file);
+            }
+
+            await UpdateDiagramDependencies();
+
 
             await ScanAllFilesHandler();
 
@@ -1075,17 +1101,20 @@ namespace PlantUMLEditor.Models
 
         private async Task UpdateDiagramDependencies()
         {
+            DocumentModel[] dm = GetDocumentModelReadingArray();
+
             List<(UMLDiagram, UMLDiagram)> list = new();
 
-            await UpdateDiagrams<ClassDiagramDocumentModel, UMLClassDiagram>(Documents.ClassDocuments);
-            await UpdateDiagrams<SequenceDiagramDocumentModel, UMLSequenceDiagram>(Documents.SequenceDiagrams);
-            await UpdateDiagrams<ComponentDiagramDocumentModel, UMLComponentDiagram>(Documents.ComponentDiagrams);
-           
+            await UpdateDiagrams<ClassDiagramDocumentModel, UMLClassDiagram>(dm, Documents.ClassDocuments);
+            await UpdateDiagrams<SequenceDiagramDocumentModel, UMLSequenceDiagram>(dm, Documents.SequenceDiagrams);
+            await UpdateDiagrams<ComponentDiagramDocumentModel, UMLComponentDiagram>(dm, Documents.ComponentDiagrams);
+
 
             var docs = Application.Current.Dispatcher.Invoke(() =>
             {
                 ProcessDataTypes();
-                return   OpenDocuments.OfType<SequenceDiagramDocumentModel>().ToArray();
+                lock (_docLock)
+                    return OpenDocuments.OfType<SequenceDiagramDocumentModel>().ToArray();
             });
 
 
@@ -1097,6 +1126,14 @@ namespace PlantUMLEditor.Models
             await _documentCollectionSerialization.Save(Documents, _metaDataFile);
         }
 
+        private DocumentModel[] GetDocumentModelReadingArray()
+        {
+            DocumentModel[] dm;
+            lock (_docLock)
+                dm = OpenDocuments.ToArray();
+            return dm;
+        }
+
         private async void SaveAllHandler()
         {
             await SaveAll();
@@ -1105,10 +1142,10 @@ namespace PlantUMLEditor.Models
 
         private async void SaveCommandHandler(DocumentModel doc)
         {
-            _fileSave.WaitOne();
+
             await Save(doc);
             await UpdateDiagramDependencies();
-            _fileSave.Release();
+
 
             await ScanAllFilesHandler();
 
@@ -1178,9 +1215,9 @@ namespace PlantUMLEditor.Models
             CurrentDocument = model;
         }
 
-        private async Task UpdateDiagrams<T1, T2>(List<T2> classDocuments) where T1 : DocumentModel where T2 : UMLDiagram
+        private async Task UpdateDiagrams<T1, T2>(DocumentModel[] documentModels, List<T2> classDocuments) where T1 : DocumentModel where T2 : UMLDiagram
         {
-            foreach (var document in OpenDocuments.OfType<T1>())
+            foreach (var document in documentModels.OfType<T1>())
             {
                 var e = await document.GetEditedDiagram();
                 if (e == null)
@@ -1216,8 +1253,8 @@ namespace PlantUMLEditor.Models
         {
             if (e.AddedItems.Count > 0)
             {
-                var lb = (Tuple<string, UMLDataType>)e.AddedItems[0];
-                await AttemptOpeningFile(lb.Item1, lb.Item2.LineNumber);
+                var lb = (DateTypeRecord)e.AddedItems[0];
+                await AttemptOpeningFile(lb.FileName, lb.DataType.LineNumber);
             }
         }
 
