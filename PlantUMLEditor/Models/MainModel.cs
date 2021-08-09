@@ -887,9 +887,10 @@ namespace PlantUMLEditor.Models
 
         private async void OpenDirectoryHandler(bool? useAppSettings = false, string? folder = null)
         {
-            _folderBase = null;
+         
 
             await SaveAll();
+            _folderBase = null;
             string? dir;
             if (folder == null)
             {
@@ -1053,9 +1054,7 @@ namespace PlantUMLEditor.Models
 
                 lock (_docLock)
                 {
-                    c = OpenDocuments.Where(p => p is ClassDiagramDocumentModel ||
-                    p is SequenceDiagramDocumentModel ||
-                    p is ComponentDiagramDocumentModel).ToList();
+                    c = OpenDocuments.Where(p => p.IsDirty).ToList();
                 }
 
                 foreach (var file in c)
