@@ -142,7 +142,7 @@ namespace PlantUMLEditor.Models
                 ProcessStartInfo psi = new()
                 {
                     UseShellExecute = true,
-                    FileName = "wdt",
+                    FileName = "wt",
                     WorkingDirectory = _folderBase
                 };
                 psi.ArgumentList.Add("-d");
