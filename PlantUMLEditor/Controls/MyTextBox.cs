@@ -171,7 +171,7 @@ namespace PlantUMLEditor.Controls
 
         private static T? FindDescendant<T>(DependencyObject obj) where T : DependencyObject
         {
-            if (obj == null) 
+            if (obj == null)
                 return default;
             int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
             if (numberChildren == 0) return default;
@@ -202,7 +202,7 @@ namespace PlantUMLEditor.Controls
         {
             if (e.AddedItems.Count > 0)
             {
-                string currentSelected = (string)e.AddedItems[0] ;
+                string currentSelected = (string)e.AddedItems[0];
 
                 _currentCallback.Selection(currentSelected);
             }
@@ -219,6 +219,8 @@ namespace PlantUMLEditor.Controls
             this._renderText = true;
             this.InvalidateVisual();
         }
+
+
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
@@ -494,7 +496,7 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-     
+
         private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             //  this._autoComplete.CloseAutoComplete();
@@ -532,40 +534,40 @@ namespace PlantUMLEditor.Controls
             _cb.ScrollIntoView(_cb.SelectedItem);
         }
 
-        protected bool BracesMatcher(int start, char c)
+        protected void BracesMatcher(int start, char c, out bool bracesWillTriggerRender)
         {
             if (c == '{')
             {
                 FindMatchingForward(this.Text.AsSpan(), start, c, '}');
-                return false;
+                bracesWillTriggerRender = true;
             }
             else if (c == '}')
             {
                 FindMatchingBackwards(this.Text.AsSpan(), start, c, '{');
-                return false;
+                bracesWillTriggerRender = true;
             }
             else if (c == '(')
             {
                 FindMatchingForward(this.Text.AsSpan(), start, c, ')');
-                return false;
+                bracesWillTriggerRender = true;
             }
             else if (c == ')')
             {
                 FindMatchingBackwards(this.Text.AsSpan(), start, c, '(');
-                return false;
+                bracesWillTriggerRender = true;
             }
             else if (c == '<')
             {
                 FindMatchingForward(this.Text.AsSpan(), start, c, '>');
-                return false;
+                bracesWillTriggerRender = true;
             }
             else if (c == '>')
             {
                 FindMatchingBackwards(this.Text.AsSpan(), start, c, '<');
-                return false;
+                bracesWillTriggerRender = true;
             }
 
-            return true;
+            bracesWillTriggerRender = false;
         }
 
         protected override void OnLostFocus(RoutedEventArgs e)
@@ -593,6 +595,8 @@ namespace PlantUMLEditor.Controls
         {
             lock (_found)
                 _found.Clear();
+
+            _braces = default;
 
             if (!this._autoComplete.IsPopupVisible && e.Key == Key.Tab)
             {
@@ -636,10 +640,22 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
                 return;
             }
+            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Left || e.Key == Key.Right))
+            {
+                _autoComplete.CloseAutoComplete();
+                return;
+            }
             else if (_autoComplete.IsPopupVisible && (e.Key == Key.Tab || e.Key == Key.Enter || e.Key == Key.Space))
             {
                 this.CaretIndex = this.SelectionStart + this.SelectionLength;
                 _autoComplete.CloseAutoComplete();
+            }
+            else if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right)
+            {
+
+                this._renderText = true;
+                this.InvalidateVisual();
+
             }
             else if (e.Key == Key.Escape)
             {
@@ -666,29 +682,37 @@ namespace PlantUMLEditor.Controls
             {
                 GotoDefinitionCommand?.Execute(this.SelectedText.Trim());
             }
-            if (e.Key == Key.Tab)
+            else if (_autoComplete.IsPopupVisible && (e.Key == Key.Down || e.Key == Key.Up))
+            {
+
+                e.Handled = true;
+                return;
+            }
+            else if (e.Key == Key.Tab)
             {
                 e.Handled = true;
                 return;
             }
 
-            if (e.Key == Key.Enter)
+            else if (e.Key == Key.Enter)
             {
                 this.RenderLineNumbers();
             }
-
-            if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right)
+            else if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right)
             {
                 int l = CaretIndex - 1;
                 if (l < 0)
                     l = 0;
                 char c = this.Text[l];
-                BracesMatcher(l, c);
+                BracesMatcher(l, c, out var bracesWillTriggerRender);
 
-                if (e.Key == Key.Left || e.Key == Key.Right)
-                    this._autoComplete.CloseAutoComplete();
+                if (!bracesWillTriggerRender)
+                {
+                    this._renderText = true;
+                    this.InvalidateVisual();
+                }
             }
-            else if ((e.Key != Key.Enter && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl)
+            else if (e.Key != Key.Escape && e.Key != Key.Enter && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl
                 && e.SystemKey == Key.None
                 && e.KeyboardDevice.Modifiers == ModifierKeys.None)
             {
@@ -713,7 +737,8 @@ namespace PlantUMLEditor.Controls
             if (item < this.Text.Length)
             {
                 char c = this.Text[item];
-                needsRender = BracesMatcher(item, c);
+                BracesMatcher(item, c, out var bracesWillTriggerRender);
+                needsRender = !bracesWillTriggerRender;
             }
 
             if (needsRender)
@@ -759,6 +784,8 @@ namespace PlantUMLEditor.Controls
                     e.Handled = true;
                 }
             }
+
+
             base.OnPreviewTextInput(e);
         }
 
@@ -782,6 +809,8 @@ namespace PlantUMLEditor.Controls
             }
             drawingContext.DrawDrawing(_cachedDrawing.Drawing);
         }
+
+
 
         protected override void OnSelectionChanged(RoutedEventArgs e)
         {

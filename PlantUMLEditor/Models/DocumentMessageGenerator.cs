@@ -101,7 +101,7 @@ namespace PlantUMLEditor.Models
             foreach (var item in messages)
             {
            
-                if (newMessages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 &&
+                if (!newMessages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 &&
                 string.CompareOrdinal( z.Text , item.Text) == 0 && z.LineNumber == item.LineNumber))
                 {
                     removals.Add(item);
@@ -113,7 +113,7 @@ namespace PlantUMLEditor.Models
             foreach (var item in newMessages)
             {
                 
-                if ( messages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 && 
+                if (! messages.Any(z => string.CompareOrdinal( z.FileName , item.FileName) == 0 && 
                 string.CompareOrdinal(z.Text , item.Text) == 0 && z.LineNumber == item.LineNumber)) 
                 {
                     messages.Add(item);

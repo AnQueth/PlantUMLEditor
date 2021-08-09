@@ -25,7 +25,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
     </b:Interaction.Triggers>
 
     <Window.Resources>
-
+    
         <Style TargetType="GridSplitter">
             <Setter Property="Background" Value="DarkGray"></Setter>
         </Style>

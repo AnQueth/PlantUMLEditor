@@ -9,9 +9,10 @@ namespace PlantUMLEditor.Models
     internal class SequenceDiagramDocumentModel : DocumentModel
     {
         private string _autoCompleteAppend = string.Empty;
-       
 
-     
+        private static readonly string[] DEFAULTAUTOCOMPLETES = new string[] { "participant", "actor", "database", "queue", "entity" };
+
+
 
         public SequenceDiagramDocumentModel(IConfiguration configuration,
                         IIOService openDirectoryService) : base(configuration, openDirectoryService)
@@ -87,44 +88,53 @@ namespace PlantUMLEditor.Models
 
             var diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(TextEditor.TextRead(), DataTypes, true);
 
-            if (diagram == null)
-                return;
-
-
-            if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, 
-                out UMLSequenceConnection? connection))
+            if (diagram != null)
             {
-                if (text.Length - 2 > autoCompleteParameters.PositionInLine 
-                    && autoCompleteParameters.PositionInLine < text.IndexOf(":", StringComparison.InvariantCulture))
-                    return;
 
-                if (connection.To != null && connection.To.DataTypeId != null)
+
+                if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null,
+                    out UMLSequenceConnection? connection))
                 {
-                    foreach (var t in types[connection.To.DataTypeId])
-                    {
-                        AddAll(t, this.MatchingAutoCompletes, autoCompleteParameters.WordStart);
+                    if (text.Length - 2 > autoCompleteParameters.PositionInLine
+                        && autoCompleteParameters.PositionInLine < text.IndexOf(":", StringComparison.InvariantCulture))
+                        return;
 
-                       
+                    if (connection.To != null && connection.To.DataTypeId != null)
+                    {
+                        foreach (var t in types[connection.To.DataTypeId])
+                        {
+                            AddAll(t, this.MatchingAutoCompletes, autoCompleteParameters.WordStart);
+
+
+                        }
+                        if (this.MatchingAutoCompletes.Count > 0)
+                            ShowAutoComplete(autoCompleteParameters.Position, true);
+                        return;
                     }
+                }
+
+                if (text.EndsWith("return", StringComparison.InvariantCulture))
+                {
+                    foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
+                        this.MatchingAutoCompletes.Add(item);
+
                     if (this.MatchingAutoCompletes.Count > 0)
-                        ShowAutoComplete(autoCompleteParameters.Position, true);
+                        ShowAutoComplete(autoCompleteParameters.Position, false);
+
                     return;
                 }
-            }
 
-            if (text.EndsWith("return", StringComparison.InvariantCulture))
-            {
-                foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
+                foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
                     this.MatchingAutoCompletes.Add(item);
-
-                if (this.MatchingAutoCompletes.Count > 0)
-                    ShowAutoComplete(autoCompleteParameters.Position, false);
-
-                return;
+            }
+           
+            if(!this.MatchingAutoCompletes.Any())
+            {
+                foreach (var item in DEFAULTAUTOCOMPLETES.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
+                    this.MatchingAutoCompletes.Add(item);
             }
 
-            foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
-                this.MatchingAutoCompletes.Add(item);
+           
 
             if (this.MatchingAutoCompletes.Count > 0)
                 ShowAutoComplete(autoCompleteParameters.Position, false);

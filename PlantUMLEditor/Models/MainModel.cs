@@ -4,6 +4,7 @@ using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -133,16 +134,32 @@ namespace PlantUMLEditor.Models
 
         private void OpenTerminalHandler()
         {
-            ProcessStartInfo psi = new()
+            try
             {
-                UseShellExecute = true,
-                FileName = "wt",
-                WorkingDirectory = _folderBase
-            };
-            psi.ArgumentList.Add("-d");
-            psi.ArgumentList.Add(_folderBase);
+                ProcessStartInfo psi = new()
+                {
+                    UseShellExecute = true,
+                    FileName = "wdt",
+                    WorkingDirectory = _folderBase
+                };
+                psi.ArgumentList.Add("-d");
+                psi.ArgumentList.Add(_folderBase);
 
-            Process.Start(psi);
+                Process.Start(psi);
+            }
+            catch(Win32Exception ex)
+            {
+                ProcessStartInfo psi = new()
+                {
+                    UseShellExecute = true,
+                    FileName = "cmd",
+                    WorkingDirectory = _folderBase
+                };
+    
+
+                Process.Start(psi);
+
+            }
         }
 
         public int WindowLeft { get; set; }
@@ -400,9 +417,19 @@ namespace PlantUMLEditor.Models
             if (Application.Current == null)
                 return;
             List<UMLDiagram> diagrams = new();
-
             try
             {
+                _fileSave.WaitOne();
+                await UpdateDiagramDependencies();
+            }
+            finally
+            {
+                _fileSave.Release();
+            }
+            try
+            {
+               
+
                 foreach (var doc in OpenDocuments)
                 {
                     var d = await doc.GetEditedDiagram();
@@ -472,6 +499,9 @@ namespace PlantUMLEditor.Models
         {
             _fileSave.WaitOne();
             await Save(doc);
+      
+            await UpdateDiagramDependencies();
+
             _fileSave.Release();
             Close(doc);
         }
@@ -1002,18 +1032,7 @@ namespace PlantUMLEditor.Models
                     await Save(file);
                 }
 
-                List<(UMLDiagram, UMLDiagram)> list = new();
-
-                await UpdateDiagrams<ClassDiagramDocumentModel, UMLClassDiagram>(Documents.ClassDocuments);
-                await UpdateDiagrams<SequenceDiagramDocumentModel, UMLSequenceDiagram>(Documents.SequenceDiagrams);
-                await UpdateDiagrams<ComponentDiagramDocumentModel, UMLComponentDiagram>(Documents.ComponentDiagrams);
-                ProcessDataTypes();
-                foreach (var document in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
-                {
-                    document.UpdateDiagram(documents.ClassDocuments);
-                }
-
-                await _documentCollectionSerialization.Save(Documents, _metaDataFile);
+                await UpdateDiagramDependencies();
             }
             finally
             {
@@ -1021,16 +1040,41 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        private async Task UpdateDiagramDependencies()
+        {
+            List<(UMLDiagram, UMLDiagram)> list = new();
+
+            await UpdateDiagrams<ClassDiagramDocumentModel, UMLClassDiagram>(Documents.ClassDocuments);
+            await UpdateDiagrams<SequenceDiagramDocumentModel, UMLSequenceDiagram>(Documents.SequenceDiagrams);
+            await UpdateDiagrams<ComponentDiagramDocumentModel, UMLComponentDiagram>(Documents.ComponentDiagrams);
+           
+
+            var docs = Application.Current.Dispatcher.Invoke(() =>
+            {
+                ProcessDataTypes();
+                return   OpenDocuments.OfType<SequenceDiagramDocumentModel>().ToArray();
+            });
+
+
+            foreach (var document in docs)
+            {
+                document.UpdateDiagram(documents.ClassDocuments);
+            }
+
+            await _documentCollectionSerialization.Save(Documents, _metaDataFile);
+        }
+
         private async void SaveAllHandler()
         {
             await SaveAll();
+
         }
 
         private async void SaveCommandHandler(DocumentModel doc)
         {
             _fileSave.WaitOne();
             await Save(doc);
-
+            await UpdateDiagramDependencies();
             _fileSave.Release();
         }
 
