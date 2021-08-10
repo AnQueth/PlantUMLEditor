@@ -318,32 +318,32 @@ namespace PlantUMLEditor.Controls
             return linestart;
  
         }
-        private (int start, int len) GetLineInformation(int ch)
-        {
-            var text = Text.AsSpan();
+        //private (int start, int len) GetLineInformation(int ch)
+        //{
+        //    var text = Text.AsSpan();
 
-            var linestart = 0;
+        //    var linestart = 0;
 
-            for (var i = ch; i >= 0; i--)
-            {
-                if (text[i] == '\n')
-                {
-                    linestart = i + 1;
-                    break;
-                }
-            }
-            for (var i = ch; i < text.Length; i++)
-            {
-                if (text[i] == '\n')
-                {
-                    return (linestart, i - linestart);
-                }
-                if (i == text.Length - 1)
-                    return (linestart, (i - linestart) + 1);
-            }
+        //    for (var i = ch; i >= 0; i--)
+        //    {
+        //        if (text[i] == '\n')
+        //        {
+        //            linestart = i + 1;
+        //            break;
+        //        }
+        //    }
+        //    for (var i = ch; i < text.Length; i++)
+        //    {
+        //        if (text[i] == '\n')
+        //        {
+        //            return (linestart, i - linestart);
+        //        }
+        //        if (i == text.Length - 1)
+        //            return (linestart, (i - linestart) + 1);
+        //    }
 
-            throw new ArgumentOutOfRangeException(nameof(ch));
-        }
+        //    throw new ArgumentOutOfRangeException(nameof(ch));
+        //}
 
         private void MyTextBox_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
