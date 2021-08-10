@@ -4,6 +4,6 @@
     {
         void NewAutoComplete(string text);
 
-        void Selection(string selection);
+        void Selection(string selection, AutoCompleteParameters autoCompleteParameters);
     }
 }

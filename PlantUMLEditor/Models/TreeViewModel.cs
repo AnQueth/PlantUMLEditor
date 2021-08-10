@@ -14,7 +14,7 @@ namespace PlantUMLEditor.Models
         private bool _isRenaming = false;
         private Visibility _isVisible;
         private string _name;
-        private string _rename;
+        private string _rename = string.Empty;
 
         public TreeViewModel(TreeViewModel? parent, string path, bool isFile, string icon,
             IFolderChangeNotifactions folderChangeNotifactions)
@@ -22,7 +22,7 @@ namespace PlantUMLEditor.Models
             Parent = parent;
             FullPath = path;
             Icon = icon;
-            Name = Path.GetFileName(path);
+            _name = Path.GetFileName(path);
             IsFile = isFile;
             if (!isFile)
             {
@@ -115,20 +115,20 @@ namespace PlantUMLEditor.Models
         private void DeleteCommandHandler()
         {
             if (MessageBoxResult.No == MessageBox.Show(
-                string.Format(CultureInfo.InvariantCulture, "Delete {0}", this.FullPath), "Delete?", MessageBoxButton.YesNo))
+                string.Format(CultureInfo.InvariantCulture, "Delete {0}", FullPath), "Delete?", MessageBoxButton.YesNo))
                 return;
 
-            if (File.Exists(this.FullPath))
+            if (File.Exists(FullPath))
             {
-                File.Delete(this.FullPath);
+                File.Delete(FullPath);
             }
-            this.IsVisible = Visibility.Collapsed;
-            this.Parent?.Children.Remove(this);
+            IsVisible = Visibility.Collapsed;
+            Parent?.Children.Remove(this);
         }
 
         private void NewFolderHandler()
         {
-            string nf = Path.Combine(this.FullPath, "New Folder");
+            string nf = Path.Combine(FullPath, "New Folder");
             if (!Directory.Exists(nf))
                 Directory.CreateDirectory(nf);
 
@@ -143,9 +143,9 @@ namespace PlantUMLEditor.Models
         {
             if (string.IsNullOrEmpty(Rename))
                 return;
-            if (!this.IsFile)
+            if (!IsFile)
             {
-                string? dir = Path.GetDirectoryName(this.FullPath);
+                string? dir = Path.GetDirectoryName(FullPath);
                 if (dir == null)
                     return;
 
@@ -154,8 +154,8 @@ namespace PlantUMLEditor.Models
                     return;
                 try
                 {
-                    Directory.Move(this.FullPath, nf);
-                    this.FullPath = nf;
+                    Directory.Move(FullPath, nf);
+                    FullPath = nf;
 
                     IsRenaming = false;
                     Name = Rename;
@@ -169,25 +169,25 @@ namespace PlantUMLEditor.Models
                 var words = Name.Split('.');
                 words[0] = Rename;
                 Rename = string.Join('.', words);
-                string? dir = Path.GetDirectoryName(this.FullPath);
+                string? dir = Path.GetDirectoryName(FullPath);
                 if (dir == null)
                     return;
                 string nf = Path.Combine(dir, Rename);
                 if (File.Exists(nf))
                     return;
-                File.Move(this.FullPath, nf);
-                this.FullPath = nf;
+                File.Move(FullPath, nf);
+                FullPath = nf;
 
                 IsRenaming = false;
                 Name = Rename;
             }
-            await _folderChangeNotifactions.Change(this.FullPath);
+            await _folderChangeNotifactions.Change(FullPath);
         }
 
         private void StartRenameHandler()
         {
             IsRenaming = true;
-            if (this.IsFile)
+            if (IsFile)
                 Rename = Name.Split('.').First();
             else
                 Rename = Name;

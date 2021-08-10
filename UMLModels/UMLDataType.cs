@@ -44,9 +44,9 @@ namespace UMLModels
             Methods = new List<UMLMethod>();
             Bases = new List<UMLDataType>();
 
-            this.Interfaces = new List<UMLInterface>();
+            Interfaces = new List<UMLInterface>();
             if (interfaces != null && interfaces.Length == 0)
-                this.Interfaces.AddRange(interfaces);
+                Interfaces.AddRange(interfaces);
         }
 
         public List<UMLDataType> Bases { get; set; }

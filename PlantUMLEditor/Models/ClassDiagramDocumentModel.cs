@@ -10,81 +10,91 @@ namespace PlantUMLEditor.Models
 {
     internal class ClassDiagramDocumentModel : DocumentModel
     {
-       
+
         private IEnumerable<string> _autoCompleteItems = Array.Empty<string>();
         private readonly object _locker = new();
         private bool _running = true;
 
 
         public ClassDiagramDocumentModel(IConfiguration configuration,
-            IIOService openDirectoryService) : base(configuration, openDirectoryService)
+            IIOService openDirectoryService,
+          
+            UMLClassDiagram diagram,
+            List<UMLClassDiagram> otherClassDiagrams,
+            string fileName,
+            string title,
+            string content) : base(configuration, openDirectoryService, DocumentTypes.Class, fileName, title, content)
         {
-       
-            
+            Diagram = diagram;
 
-            Task.Run(async () =>
+
+            _ = Task.Run(async () =>
             {
                 while (_running)
                 {
                     await Task.Delay(1000);
 
-                    if (this.IsDirty)
+                    if (IsDirty)
                     {
-                        string text = string.Empty;
-                        text = (string)Application.Current.Dispatcher.Invoke((() =>
+                        string text =  (string?)Application.Current.Dispatcher.Invoke((() =>
                        {
-                           return this.TextEditor.TextRead();
-                       }));
+                           return TextEditor?.TextRead();
+                       })) ?? string.Empty;
 
                         var z = await PlantUML.UMLClassDiagramParser.ReadString(text);
                         if (z != null)
                             lock (_locker)
-                                _autoCompleteItems = z.DataTypes.Select(p => p.Name);
+                                _autoCompleteItems = z.DataTypes.Select(p => p.Name).Union(otherClassDiagrams.SelectMany(z=>z.DataTypes).Select(z=>z.Name)).ToArray();
                     }
                 }
             });
         }
 
-        public UMLClassDiagram Diagram { get; set; }
+        public UMLClassDiagram Diagram { get; private set; }
 
         protected override void RegenDocumentHandler()
         {
-            string t = PlantUMLGenerator.Create(this.Diagram);
+            string t = PlantUMLGenerator.Create(Diagram);
 
-            this.TextEditor.TextWrite(t, true);
+            TextEditor?.TextWrite(t, true);
 
             base.RegenDocumentHandler();
         }
 
         internal void UpdateDiagram(UMLClassDiagram doc)
         {
-            if (this.TextEditor == null)
+            if (TextEditor == null)
             {
                 _bindedAction = () =>
                 {
-                    this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
+                    if (TextEditor != null)
+                        TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
                 };
             }
             else
-                this.TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
+                TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true);
         }
 
-        public override   void AutoComplete(AutoCompleteParameters autoCompleteParameters)
+        internal override   void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
-            base.AutoComplete(autoCompleteParameters);
+            
             base.MatchingAutoCompletes.Clear();
 
+        
+            
+
+            
             lock (_locker)
             {
-                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart) 
-                    && !autoCompleteParameters.WordStart.EndsWith("<", StringComparison.InvariantCulture))
+                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart)
+                    && !autoCompleteParameters.WordStart.EndsWith("<", StringComparison.Ordinal))
                 {
                     foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                         base.MatchingAutoCompletes.Add(item);
                 }
             }
             if (MatchingAutoCompletes.Count > 0)
-                base.ShowAutoComplete(autoCompleteParameters.Position);
+                base.ShowAutoComplete();
             else
                 base.CloseAutoComplete();
         }

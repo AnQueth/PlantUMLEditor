@@ -12,20 +12,20 @@ namespace PlantUMLEditor.Models
     public class DocumentMessageGenerator
     {
         private readonly IEnumerable<UMLDiagram> documents;
-        private readonly ObservableCollection<DocumentMessage> messages;
+
         static readonly string[] knownwords = {"Task", "List", "IReadOnlyCollection",
                 "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler"};
         static readonly char[] seperators = { ' ', '.', ',', '<', '>', '[', ']' };
 
-        public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents )
+        public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents)
         {
             this.documents = documents;
-             
+
         }
 
         private static List<string> GetCleanName(string name)
         {
-           
+
 
             string[] parts = name.Split(seperators);
 
@@ -51,21 +51,14 @@ namespace PlantUMLEditor.Models
 
             List<(UMLDataType, string)> dataTypes = new();
 
-            foreach (var doc in this.documents)
+            foreach (var doc in documents)
             {
                 if (doc is UMLComponentDiagram f)
                 {
                     foreach (var (Line, LineNumber, message) in f.Errors)
                     {
-                        newMessages.Add(new DocumentMessage()
-                        {
-                            FileName = f.FileName,
-                            Text = Line + " " + message,
-                            
-                            LineNumber = LineNumber,
-                            RelativeFileName = f.FileName[(folderBase.Length + 1)..],
-                            Warning = false
-                        });
+                        newMessages.Add(new DocumentMessage(f.FileName, GetRelativeName(folderBase, f.FileName), LineNumber, Line + " " + message, false));
+
                     }
                 }
                 if (doc is UMLClassDiagram f2)
@@ -77,14 +70,8 @@ namespace PlantUMLEditor.Models
 
                     foreach (var e in f2.Errors)
                     {
-                        newMessages.Add(new DocumentMessage()
-                        {
-                            FileName = f2.FileName,
-                            Text = e.Value,
-                            LineNumber = e.LineNumber,
-                            RelativeFileName = f2.FileName[(folderBase.Length + 1)..],
-                            Warning = false
-                        });
+                        newMessages.Add(new DocumentMessage(f2.FileName, GetRelativeName(folderBase, f2.FileName), e.LineNumber, e.Value, false));
+
                     }
                 }
                 if (doc is UMLSequenceDiagram o)
@@ -112,15 +99,8 @@ namespace PlantUMLEditor.Models
                 foreach (var i in items)
                 {
 
-                    newMessages.Add(new DocumentMessage()
-                    {
+                    newMessages.Add(new DocumentMessage(i.o.FileName, GetRelativeName(folderBase, i.o.FileName), i.f.LineNumber, i.f.Warning, true));
 
-                        FileName = i.o.FileName,
-                        Text = i.f.Warning,
-                        LineNumber = i.f.LineNumber,
-                        RelativeFileName = i.o.FileName[(folderBase.Length + 1)..],
-                        Warning = true
-                    });
                 }
 
                 CheckEntities(o.FileName, folderBase, o.Entities, o, newMessages);
@@ -136,18 +116,11 @@ namespace PlantUMLEditor.Models
             {
                 if (g.Warning != null && g is UMLSequenceConnection c)
                 {
-                    newMessages.Add(new DocumentMessage()
+                    if (c.Action != null && c.To != null)
                     {
-                        FileName = fileName,
-                        RelativeFileName = fileName[(folderBase.Length + 1)..],
-                        LineNumber = g.LineNumber,
-                        Text = g.Warning,
-                        MissingMethodText = c.Action?.Signature,
-                        MissingMethodDataTypeId = c.To?.DataTypeId,
-                        Diagram = o,
-                        IsMissingMethod = true,
-                        Warning = true
-                    });
+                        newMessages.Add(new MissingMethodDocumentMessage(fileName, GetRelativeName(folderBase, fileName), g.LineNumber, g.Warning, true, c.Action.Signature,
+                            c.To.DataTypeId, o, true));
+                    }
                 }
 
                 if (g is UMLSequenceBlockSection s)
@@ -162,19 +135,16 @@ namespace PlantUMLEditor.Models
         {
             foreach (var n in namespaceReferences)
             {
-                if (namespaceReferences.Any(p => string.CompareOrdinal( p.Item1.ns1 , n.ns2) == 0 &&
-                string.CompareOrdinal( p.ns2 , n.Item1.ns1) == 0 &&
-                string.CompareOrdinal( p.Item1.ns1 , p.ns2) != 0 && 
+                if (namespaceReferences.Any(p => string.CompareOrdinal(p.Item1.ns1, n.ns2) == 0 &&
+                string.CompareOrdinal(p.ns2, n.Item1.ns1) == 0 &&
+                string.CompareOrdinal(p.Item1.ns1, p.ns2) != 0 &&
                 !string.IsNullOrEmpty(p.Item1.ns1)
                 && !string.IsNullOrEmpty(p.ns2)))
                 {
-                    newMessages.Add(new DocumentMessage()
-                    {
-                        FileName = n.Item1.fileName,
-                        RelativeFileName = n.Item1.fileName[(folderBase.Length + 1)..],
-                        LineNumber = n.Item1.lineNumber,
-                        Text = "Circular reference " + n.Item1.ns1 + " and " + n.ns2 + " type = " + n.Item1.dt + " offender " + n.Item1.name
-                    });
+                    string text = "Circular reference " + n.Item1.ns1 + " and " + n.ns2 + " type = " + n.Item1.dt + " offender " + n.Item1.name;
+
+                    newMessages.Add(new DocumentMessage(n.Item1.fileName, GetRelativeName(folderBase, n.Item1.fileName), n.Item1.lineNumber, text)) ;
+
                 }
             }
         }
@@ -193,18 +163,12 @@ namespace PlantUMLEditor.Models
                     var parsedTypes = GetCleanName(m.ObjectType.Name);
                     foreach (var r in parsedTypes)
                     {
-                        var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal( z.Item1.Name , r) == 0);
+                        var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.Item1.Name, r) == 0);
                         if (pdt == default)
                         {
-                            newMessages.Add(new DocumentMessage()
-                            {
-                                FileName = dt.Item2,
-                                RelativeFileName = dt.Item2[(folderBase.Length + 1)..],
-                                LineNumber = dt.Item1.LineNumber,
-                                Text = r + " used by " + m.Name,
-                                MissingDataTypeName = r,
-                                IsMissingDataType = true
-                            });
+                            newMessages.Add(new MissingDataTypeMessage(dt.Item2, GetRelativeName(folderBase, dt.Item2),
+                                dt.Item1.LineNumber, r + " used by " + m.Name, true, r, true));
+
                         }
                         else
                         {
@@ -219,18 +183,12 @@ namespace PlantUMLEditor.Models
                         var parsedTypes = GetCleanName(p.ObjectType.Name);
                         foreach (var r in parsedTypes)
                         {
-                            var pdt2 = dataTypes.FirstOrDefault(z => string.CompareOrdinal( z.Item1.Name , r) == 0);
+                            var pdt2 = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.Item1.Name, r) == 0);
                             if (pdt2 == default)
                             {
-                                newMessages.Add(new DocumentMessage()
-                                {
-                                    FileName = dt.Item2,
-                                    RelativeFileName = dt.Item2[(folderBase.Length + 1)..],
-                                    LineNumber = dt.Item1.LineNumber,
-                                    Text = r + " used by " + m.Name,
-                                    MissingDataTypeName = r,
-                                    IsMissingDataType = true
-                                });
+                                newMessages.Add(new MissingDataTypeMessage(dt.Item2, GetRelativeName(folderBase, dt.Item2),
+                                   dt.Item1.LineNumber, r + " used by " + m.Name, true, r, true));
+
                             }
                             else
                             {
@@ -245,18 +203,13 @@ namespace PlantUMLEditor.Models
                         foreach (var r in parsedTypes)
                         {
                             var pdt = dataTypes
-                                .FirstOrDefault(z => GetCleanName( z.Item1.Name).Contains( r));
+                                .FirstOrDefault(z => GetCleanName(z.Item1.Name).Contains(r));
                             if (pdt == default)
                             {
-                                newMessages.Add(new DocumentMessage()
-                                {
-                                    FileName = dt.Item2,
-                                    RelativeFileName = dt.Item2[(folderBase.Length + 1)..],
-                                    LineNumber = dt.Item1.LineNumber,
-                                    Text = r + " used by " + m.Name,
-                                    MissingDataTypeName = r,
-                                    IsMissingDataType = true
-                                });
+                                newMessages.Add(new MissingDataTypeMessage(dt.Item2, GetRelativeName(folderBase, dt.Item2),
+                                dt.Item1.LineNumber, r + " used by " + m.Name, true, r, true));
+
+
                             }
                             else
                             {
@@ -269,6 +222,11 @@ namespace PlantUMLEditor.Models
             }
 
             return namespaceReferences;
+        }
+
+        private static string GetRelativeName(string folderBase, string fullPath)
+        {
+            return fullPath[(folderBase.Length + 1)..];
         }
     }
 }

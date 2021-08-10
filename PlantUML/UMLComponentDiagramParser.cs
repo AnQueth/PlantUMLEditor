@@ -98,7 +98,7 @@ namespace PlantUML
                             continue;
                     }
 
-                    if (line.StartsWith("end note", StringComparison.InvariantCulture))
+                    if (line.StartsWith("end note", StringComparison.Ordinal))
                         swallowingNotes = false;
 
                     if (swallowingNotes)
@@ -109,7 +109,7 @@ namespace PlantUML
                         }
                         continue;
                     }
-                    if (line.StartsWith("participant", StringComparison.InvariantCulture))
+                    if (line.StartsWith("participant", StringComparison.Ordinal))
                         return null;
 
                     UMLDataType? DataType = null;
@@ -122,13 +122,13 @@ namespace PlantUML
                         currentPackage = packagesStack.First();
                     }
 
-                    if (line.StartsWith("title", StringComparison.InvariantCulture))
+                    if (line.StartsWith("title", StringComparison.Ordinal))
                     {
                         if (line.Length > 6)
                             d.Title = line[6..];
                         continue;
                     }
-                    else if (line.Trim().EndsWith("{", StringComparison.InvariantCulture) && _packageRegex.IsMatch(line))
+                    else if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex.IsMatch(line))
                     {
                         var s = _packageRegex.Match(line);
 
@@ -146,7 +146,7 @@ namespace PlantUML
 
                         continue;
                     }
-                    else if (line.Trim().EndsWith("{", StringComparison.InvariantCulture) && _packageRegex2.IsMatch(line))
+                    else if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex2.IsMatch(line))
                     {
                         var s = _packageRegex2.Match(line);
 
@@ -174,7 +174,7 @@ namespace PlantUML
 
                         _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
 
-                        if (line.EndsWith("{", StringComparison.InvariantCulture))
+                        if (line.EndsWith("{", StringComparison.Ordinal))
                         {
                             brackets.Push("class");
                         }
@@ -188,7 +188,7 @@ namespace PlantUML
                             DataType = new UMLInterface(package, Clean(g.Groups["name"].Value), new List<UMLDataType>());
                             _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
                         }
-                        if (line.EndsWith("{", StringComparison.InvariantCulture))
+                        if (line.EndsWith("{", StringComparison.Ordinal))
                         {
                             brackets.Push("interface");
                         }
@@ -227,15 +227,15 @@ namespace PlantUML
                             }
                             else if (leftComponent is UMLComponent c)
                             {
-                                if (arrow.EndsWith("o", StringComparison.InvariantCulture))
+                                if (arrow.EndsWith("o", StringComparison.Ordinal))
                                 {
                                     c.Exposes.Add(fromType);
                                 }
-                                else if (arrow.EndsWith("(", StringComparison.InvariantCulture))
+                                else if (arrow.EndsWith("(", StringComparison.Ordinal))
                                 {
                                     c.Consumes.Add(fromType);
                                 }
-                                else if (arrow.EndsWith(">", StringComparison.InvariantCulture))
+                                else if (arrow.EndsWith(">", StringComparison.Ordinal))
                                 {
                                     c.Consumes.Add(fromType);
                                 }

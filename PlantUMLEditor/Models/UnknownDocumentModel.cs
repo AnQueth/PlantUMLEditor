@@ -13,9 +13,13 @@ namespace PlantUMLEditor.Models
      
 
         public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration,
-                        IIOService openDirectoryService) : base(configuration, openDirectoryService)
+                        IIOService openDirectoryService,
+                        UMLUnknownDiagram model, UMLDocumentCollection diagrams, string fileName, string title, string content
+                        ) : base(configuration, openDirectoryService, DocumentTypes.Unknown, fileName, title, content)
         {
-            this.ChangedCallback = changedCallback;
+            ChangedCallback = changedCallback;
+            Diagram = model;
+            Diagrams = diagrams;
         }
 
         public UMLUnknownDiagram Diagram { get; internal set; }
@@ -27,11 +31,11 @@ namespace PlantUMLEditor.Models
             var (cd, sd, ud) = await UMLDiagramTypeDiscovery.TryCreateDiagram(Diagrams, text);
             if (cd != null)
             {
-                this.ChangedCallback(Diagram, cd);
+                ChangedCallback(Diagram, cd);
             }
             else if (sd != null)
             {
-                this.ChangedCallback(Diagram, sd);
+                ChangedCallback(Diagram, sd);
             }
 
             base.ContentChanged(text);
@@ -40,6 +44,11 @@ namespace PlantUMLEditor.Models
         public override Task<UMLDiagram?> GetEditedDiagram()
         {
             return Task.FromResult<UMLDiagram?>(Diagram);
+        }
+
+        internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)
+        {
+             
         }
     }
 }

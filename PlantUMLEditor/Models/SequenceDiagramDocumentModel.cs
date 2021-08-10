@@ -15,26 +15,29 @@ namespace PlantUMLEditor.Models
 
 
         public SequenceDiagramDocumentModel(IConfiguration configuration,
-                        IIOService openDirectoryService) : base(configuration, openDirectoryService)
+                        IIOService openDirectoryService, UMLSequenceDiagram diagram, List<UMLClassDiagram> dataTypes,
+                        string fileName, string title, string content) : base(configuration, openDirectoryService, DocumentTypes.Sequence, fileName, title, content)
         {
+            Diagram = diagram;
+            DataTypes = dataTypes;
         }
 
      
 
-        public List<UMLClassDiagram> DataTypes { get; internal set; }
-        public UMLSequenceDiagram Diagram { get; set; }
+        public List<UMLClassDiagram> DataTypes { get; private set; }
+        public UMLSequenceDiagram Diagram { get; private set; }
 
         private void AddAll(UMLDataType uMLDataType, List<string> matchingAutoCompletes, string word)
         {
             uMLDataType.Methods.ForEach(z =>
             {
                 if (string.IsNullOrEmpty(word) || z.Signature.Contains(word, StringComparison.InvariantCultureIgnoreCase))
-                    this.MatchingAutoCompletes.Add(z.Signature);
+                    MatchingAutoCompletes.Add(z.Signature);
             });
             uMLDataType.Properties.ForEach(z =>
             {
                 if (string.IsNullOrEmpty(word) || z.Signature.Contains(word, StringComparison.InvariantCultureIgnoreCase))
-                    this.MatchingAutoCompletes.Add(z.Signature);
+                    MatchingAutoCompletes.Add(z.Signature);
             });
 
             foreach (var item in uMLDataType.Bases)
@@ -51,20 +54,19 @@ namespace PlantUMLEditor.Models
 
         internal void UpdateDiagram(List<UMLClassDiagram> classDocuments)
         {
-            this.DataTypes = classDocuments;
+            DataTypes = classDocuments;
         }
 
-        public override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
+        internal override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
             _autoCompleteAppend = string.Empty;
 
             var text = autoCompleteParameters.Text.Trim();
-           
-            base.AutoComplete(autoCompleteParameters);
+          
 
             MatchingAutoCompletes.Clear();
 
-            var types = this.DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
+            var types = DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
             if (text.StartsWith("participant", StringComparison.InvariantCulture) 
                 || text.StartsWith("actor" , StringComparison.InvariantCulture))
             {
@@ -77,67 +79,70 @@ namespace PlantUMLEditor.Models
                 {
                     foreach (var item in types)
                         if (string.IsNullOrEmpty(autoCompleteParameters.WordStart) || item.Key.Contains(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase))
-                            this.MatchingAutoCompletes.Add(item.Key);
+                            MatchingAutoCompletes.Add(item.Key);
 
-                    if (this.MatchingAutoCompletes.Count > 0)
-                        ShowAutoComplete(autoCompleteParameters.Position, false);
+                    if (MatchingAutoCompletes.Count > 0)
+                        ShowAutoComplete(  false);
 
                     return;
                 }
             }
 
-            var diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(TextEditor.TextRead(), DataTypes, true);
-
-            if (diagram != null)
+            var str = TextEditor?.TextRead();
+            if (str is not null)
             {
+                var diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(str, DataTypes, true);
 
-
-                if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null,
-                    out UMLSequenceConnection? connection))
+                if (diagram != null)
                 {
-                    if (text.Length - 2 > autoCompleteParameters.PositionInLine
-                        && autoCompleteParameters.PositionInLine < text.IndexOf(":", StringComparison.InvariantCulture))
-                        return;
 
-                    if (connection.To != null && connection.To.DataTypeId != null)
+
+                    if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null,
+                        out UMLSequenceConnection? connection))
                     {
-                        foreach (var t in types[connection.To.DataTypeId])
+                        if (text.Length - 2 > autoCompleteParameters.PositionInLine
+                            && autoCompleteParameters.PositionInLine < text.IndexOf(":", StringComparison.InvariantCulture))
+                            return;
+
+                        if (connection.To != null && connection.To.DataTypeId != null)
                         {
-                            AddAll(t, this.MatchingAutoCompletes, autoCompleteParameters.WordStart);
+                            foreach (var t in types[connection.To.DataTypeId])
+                            {
+                                AddAll(t, MatchingAutoCompletes, autoCompleteParameters.WordStart);
 
 
+                            }
+                            if (MatchingAutoCompletes.Count > 0)
+                                ShowAutoComplete(  true);
+                            return;
                         }
-                        if (this.MatchingAutoCompletes.Count > 0)
-                            ShowAutoComplete(autoCompleteParameters.Position, true);
+                    }
+
+                    if (text.EndsWith("return", StringComparison.InvariantCulture))
+                    {
+                        foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
+                            MatchingAutoCompletes.Add(item);
+
+                        if (MatchingAutoCompletes.Count > 0)
+                            ShowAutoComplete(  false);
+
                         return;
                     }
+
+                    foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
+                        MatchingAutoCompletes.Add(item);
                 }
-
-                if (text.EndsWith("return", StringComparison.InvariantCulture))
-                {
-                    foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
-                        this.MatchingAutoCompletes.Add(item);
-
-                    if (this.MatchingAutoCompletes.Count > 0)
-                        ShowAutoComplete(autoCompleteParameters.Position, false);
-
-                    return;
-                }
-
-                foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
-                    this.MatchingAutoCompletes.Add(item);
             }
-           
-            if(!this.MatchingAutoCompletes.Any())
+            if(!MatchingAutoCompletes.Any())
             {
                 foreach (var item in DEFAULTAUTOCOMPLETES.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
-                    this.MatchingAutoCompletes.Add(item);
+                    MatchingAutoCompletes.Add(item);
             }
 
            
 
-            if (this.MatchingAutoCompletes.Count > 0)
-                ShowAutoComplete(autoCompleteParameters.Position, false);
+            if (MatchingAutoCompletes.Count > 0)
+                ShowAutoComplete(  false);
         }
 
         public override async Task<UMLDiagram?> GetEditedDiagram()

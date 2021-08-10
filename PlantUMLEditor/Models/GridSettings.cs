@@ -11,7 +11,7 @@ namespace PlantUMLEditor.Models
         private GridLength _DataTypesHeight = new(200);
         private GridLength _DocumentsWell = new(200);
         private GridLength _TreeWidth = new(200);
-        private   Action _changedCB;
+        private   Action? _changedCB;
 
         public GridLength TreeWidth
         {

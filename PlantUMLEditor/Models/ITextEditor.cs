@@ -10,7 +10,7 @@
 
         void ReportError(int line, int character);
 
-        void SetAutoComplete(IAutoComplete autoComplete);
+ 
 
         void TextClear();
 

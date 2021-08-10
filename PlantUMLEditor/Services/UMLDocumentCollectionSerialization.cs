@@ -19,7 +19,7 @@ namespace PlantUMLEditor.Services
             };
         }
 
-        public async Task<UMLDocumentCollection> Read(string fileName)
+        public async Task<UMLDocumentCollection?> Read(string fileName)
         {
             if (File.Exists(fileName))
             {

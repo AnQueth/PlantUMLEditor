@@ -22,40 +22,36 @@ namespace PlantUMLEditor.Models
     {
         private readonly IIOService _ioService;
         private readonly string _jarLocation;
-       
-        private IAutoComplete _autoComplete;
-        private AutoCompleteParameters _autoCompleteParameters;
 
+        private IAutoComplete? _autoComplete;
+        
+
+        private string? _findText;
         private bool _isDirty;
 
         private int _lineNumber;
-        private string? _findText;
-        private ITextEditor _textEditor;
+        private ITextEditor? _textEditor;
 
-        private string _textValue;
+        private string _textValue = string.Empty;
 
-        private PreviewDiagramModel imageModel;
+        private PreviewDiagramModel? imageModel;
 
         private string name;
 
-        private Preview PreviewWindow;
+        private Preview? previewWindow;
         private Visibility visible;
 
-        internal void TryClosePreview()
-        {
-            if (PreviewWindow != null)
-            {
-                imageModel.Stop();
-                PreviewWindow.Close();
-            }
-        }
+        protected Action? _bindedAction;
 
-        protected Action _bindedAction;
-        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService)
+        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService, DocumentTypes documentType, string fileName, string title, string content)
         {
+            DocumentType = documentType;
+            name = title;
+            FileName = fileName;
+            Content = content;
+
             _ioService = openDirectoryService;
             _jarLocation = configuration.JarLocation;
- 
 
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
             MatchingAutoCompletes = new List<string>();
@@ -63,9 +59,7 @@ namespace PlantUMLEditor.Models
             RegenDocument = new DelegateCommand(RegenDocumentHandler);
         }
 
-        protected AutoCompleteParameters AutoCompleteParameters => _autoCompleteParameters;
-
-        protected ITextEditor TextEditor { get => _textEditor; }
+        protected ITextEditor? TextEditor { get => _textEditor; }
 
         public string Content
         {
@@ -82,12 +76,12 @@ namespace PlantUMLEditor.Models
 
         public DocumentTypes DocumentType
         {
-            get; set;
+            get; init;
         }
 
         public string FileName
         {
-            get; set;
+            get; init;
         }
 
         public bool IsDirty
@@ -101,6 +95,8 @@ namespace PlantUMLEditor.Models
                 SetValue(ref _isDirty, value);
             }
         }
+
+        internal abstract  void AutoComplete(AutoCompleteParameters autoCompleteParameters);
 
         public List<string> MatchingAutoCompletes
         {
@@ -137,23 +133,25 @@ namespace PlantUMLEditor.Models
         {
             imageModel = new PreviewDiagramModel(_ioService);
 
-            PreviewWindow = new Preview();
-   
+            previewWindow = new Preview();
 
             imageModel.Title = Name;
 
-            PreviewWindow.DataContext = imageModel;
+            previewWindow.DataContext = imageModel;
 
-            PreviewWindow.Show();
-            await ShowPreviewImage(this._textEditor.TextRead());
+            previewWindow.Show();
+            await ShowPreviewImage(_textEditor?.TextRead());
         }
 
-        private async Task ShowPreviewImage(string text)
+        private async Task ShowPreviewImage(string? text)
         {
+            if (string.IsNullOrEmpty(text))
+                return;
+
             string tmp = Path.GetTempFileName();
             await File.WriteAllTextAsync(tmp, text);
 
-              imageModel.ShowImage(_jarLocation, tmp, this.Name.Trim('\"'), true);
+            imageModel?.ShowImage(_jarLocation, tmp, Name.Trim('\"'), true);
         }
 
         protected virtual string AppendAutoComplete(string selection)
@@ -179,15 +177,15 @@ namespace PlantUMLEditor.Models
             //        _mostUsedWords.Add(s, 1);
             //}
 
-            if (PreviewWindow != null)
-               await ShowPreviewImage(text);
+            if (previewWindow != null)
+                await ShowPreviewImage(text);
         }
 
         protected virtual void RegenDocumentHandler()
         {
         }
 
-        protected void ShowAutoComplete(Rect rec, bool allowTyping = false)
+        protected void ShowAutoComplete( bool allowTyping = false)
         {
             SortedMatchingAutoCompletes.Clear();
 
@@ -204,26 +202,25 @@ namespace PlantUMLEditor.Models
             foreach (var item in MatchingAutoCompletes.OrderBy(p => p))
                 SortedMatchingAutoCompletes.Add(item);
 
-            _autoComplete.FocusAutoComplete(rec, this, allowTyping);
+            _autoComplete?.FocusAutoComplete(  this, allowTyping);
         }
 
         internal void Binded(ITextEditor textEditor)
         {
             _textEditor = textEditor;
-            _autoComplete = (IAutoComplete)textEditor ;
+            _autoComplete = (IAutoComplete)textEditor;
 
-
-            _textEditor.SetAutoComplete(_autoComplete);
             _textEditor.TextWrite(_textValue, false);
 
             _bindedAction?.Invoke();
 
-            this.TextEditor.GotoLine(_lineNumber, _findText);
+            TextEditor?.GotoLine(_lineNumber, _findText);
         }
 
         internal void CloseAutoComplete()
         {
-            this._autoComplete.CloseAutoComplete();
+            if (_autoComplete != null)
+                _autoComplete.CloseAutoComplete();
         }
 
         internal void ReportMessage(DocumentMessage d)
@@ -237,19 +234,24 @@ namespace PlantUMLEditor.Models
             IsDirty = false;
         }
 
-        public virtual void AutoComplete(AutoCompleteParameters p)
+        internal void TryClosePreview()
         {
-            _autoCompleteParameters = p;
-
-            //  this._autoComplete.CloseAutoComplete();
+            if (previewWindow != null)
+            {
+                if (imageModel != null)
+                    imageModel.Stop();
+                previewWindow.Close();
+            }
         }
+
+     
 
         public virtual void Close()
         {
             Visible = Visibility.Collapsed;
             imageModel?.Stop();
-            if (PreviewWindow != null)
-                PreviewWindow.Close();
+            if (previewWindow != null)
+                previewWindow.Close();
         }
 
         public abstract Task<UMLDiagram?> GetEditedDiagram();
@@ -258,19 +260,22 @@ namespace PlantUMLEditor.Models
         {
             _lineNumber = lineNumber;
             _findText = findText;
-            if (this.TextEditor != null)
-                this.TextEditor.GotoLine(_lineNumber, findText);
+            if (TextEditor != null)
+                TextEditor.GotoLine(_lineNumber, findText);
         }
 
         public virtual void NewAutoComplete(string text)
         {
         }
 
-        public void Selection(string selection)
+        public void   Selection(string selection, AutoCompleteParameters autoCompleteParameters)
         {
+            if (autoCompleteParameters == null)
+                return;
+
             selection = AppendAutoComplete(selection);
 
-            _textEditor.InsertTextAt(selection, _autoCompleteParameters.CaretPosition, _autoCompleteParameters.WordLength);
+            _textEditor?.InsertTextAt(selection, autoCompleteParameters.Where, autoCompleteParameters.TypedLength);
         }
 
         public void SetActive()
@@ -286,5 +291,6 @@ namespace PlantUMLEditor.Models
                 ContentChanged(text);
             }
         }
+ 
     }
 }

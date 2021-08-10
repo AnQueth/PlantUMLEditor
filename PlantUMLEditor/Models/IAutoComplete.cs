@@ -8,7 +8,7 @@ namespace PlantUMLEditor.Models
 
         void CloseAutoComplete();
 
-        void FocusAutoComplete(System.Windows.Rect rec, IAutoCompleteCallback autoCompleteCallback, bool allowTyping);
+        void FocusAutoComplete(  IAutoCompleteCallback autoCompleteCallback,  bool allowTyping);
 
        
     }

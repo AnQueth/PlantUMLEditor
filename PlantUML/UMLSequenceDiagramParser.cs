@@ -45,7 +45,7 @@ namespace PlantUML
         {
             UMLSignature? action = null;
 
-            if (actionSignature.StartsWith("\"", StringComparison.InvariantCulture) && actionSignature.EndsWith("\"", StringComparison.InvariantCulture))
+            if (actionSignature.StartsWith("\"", StringComparison.Ordinal) && actionSignature.EndsWith("\"", StringComparison.Ordinal))
             {
                 action = new UMLCustomAction(actionSignature);
                 return action;
@@ -66,11 +66,11 @@ namespace PlantUML
 
             if (action == null)
             {
-                if (actionSignature.StartsWith("<<create>>", StringComparison.InvariantCultureIgnoreCase))
+                if (actionSignature.StartsWith("<<create>>", StringComparison.Ordinal))
                 {
                     action = new UMLCreateAction(actionSignature);
                 }
-                else if (actionSignature.StartsWith("return", StringComparison.InvariantCultureIgnoreCase))
+                else if (actionSignature.StartsWith("return", StringComparison.Ordinal))
                 {
                     if (previous != null && previous.Action != null)
                         action = new UMLReturnFromMethod(previous.Action);
@@ -112,7 +112,7 @@ namespace PlantUML
                 lineNumber++;
                 line = line.Trim();
 
-                if (line.StartsWith( "@startuml", StringComparison.InvariantCulture))
+                if (line.StartsWith( "@startuml", StringComparison.Ordinal))
                 {
                     if(line.Length > 9)
                     {
@@ -193,7 +193,7 @@ namespace PlantUML
                         }
                         activeBlocks.Push(sectionBlock);
                     }
-                    else if (activeBlocks.Count != 0 && line.StartsWith("end", StringComparison.InvariantCulture))
+                    else if (activeBlocks.Count != 0 && line.StartsWith("end", StringComparison.Ordinal))
                     {
                         _ = activeBlocks.Pop();
                         if (activeBlocks.Count > 0)
@@ -218,7 +218,7 @@ namespace PlantUML
         {
             connection = null;
 
-            if (!arrow.Contains("->"))
+            if (!arrow.Contains("->", StringComparison.Ordinal))
                 return false;
 
             var from = d.LifeLines.Find(p => p.Alias == fromAlias);
@@ -248,7 +248,7 @@ namespace PlantUML
             string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types, UMLSequenceConnection? previous,
            [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
-            if (arrow.StartsWith("<", StringComparison.InvariantCulture))
+            if (arrow.StartsWith("<", StringComparison.Ordinal))
             {
                 UMLSignature method = GetActionSignature(actionSignature, types, null, previous, d);
 
@@ -273,7 +273,7 @@ namespace PlantUML
             ILookup<string, UMLDataType> types, UMLSequenceConnection? previous, 
             [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
-            if (arrow.StartsWith("-", StringComparison.InvariantCulture))
+            if (arrow.StartsWith("-", StringComparison.Ordinal))
             {
                 bool isCreate = arrow == "-->";
 
@@ -341,7 +341,7 @@ namespace PlantUML
 
                 if (fromAlias == null)
                 {
-                    if (arrow.StartsWith("<", StringComparison.InvariantCulture))
+                    if (arrow.StartsWith("<", StringComparison.Ordinal))
                     {
                         if (TryParseReturnToEmpty(toAlias, arrow, actionSignature, diagram, types, previous, out connection))
                         {

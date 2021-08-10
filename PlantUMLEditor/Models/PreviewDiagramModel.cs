@@ -22,14 +22,15 @@ namespace PlantUMLEditor.Models
         private readonly ConcurrentQueue<(string, string, bool, string)> _regenRequests
             = new();
         private readonly AutoResetEvent _are = new(false);
-        private FixedDocument _doc;
-        private string _messages;
+        private FixedDocument? _doc;
+        private string _messages = string.Empty;
         private bool _running = false;
-        private BitmapSource image;
+        private BitmapSource? image;
         private string title;
 
         public PreviewDiagramModel(IIOService ioService)
         {
+            title = "n/a";
             _ioService = ioService;
             PrintImageCommand = new DelegateCommand(PrintImageHandler);
             CopyImage = new DelegateCommand(CopyImageHandler);
@@ -42,7 +43,7 @@ namespace PlantUMLEditor.Models
 
         public DelegateCommand CopyImage { get; }
 
-        public FixedDocument Doc
+        public FixedDocument? Doc
         {
             get
             {
@@ -59,7 +60,7 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
-        public BitmapSource Image
+        public BitmapSource? Image
         {
             get { return image; }
             set { SetValue(ref image, value); }
@@ -95,20 +96,21 @@ namespace PlantUMLEditor.Models
 
         private void CopyImageHandler()
         {
-            Clipboard.SetImage(Image.Clone());
+            if(Image != null)
+                Clipboard.SetImage(Image.Clone());
         }
 
         private void PrintImage()
         {
             var pdialog = new PrintDialog();
-            if (pdialog.ShowDialog() == true)
+            if (pdialog.ShowDialog() == true && Image != null)
             {
-                int widthSlices = (int)Math.Ceiling(image.PixelWidth / Width);
-                int heightSliced = (int)Math.Ceiling(image.PixelHeight / Height);
+                int widthSlices = (int)Math.Ceiling(Image.PixelWidth / Width);
+                int heightSliced = (int)Math.Ceiling(Image.PixelHeight / Height);
 
                 List<DrawingVisual> images = new();
 
-                SaveFrameworkElement(image, widthSlices, heightSliced, (int)Width, (int)Height, images);
+                SaveFrameworkElement(Image, widthSlices, heightSliced, (int)Width, (int)Height, images);
 
                 FixedDocument fd = new();
 
@@ -239,11 +241,13 @@ namespace PlantUMLEditor.Models
         private void SaveImageHandler()
         {
             string? fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
-            if (fileName == null)
+            
+            if (fileName == null || Image != null)
                 return;
-            PngBitmapEncoder encoder = new();
 
-            encoder.Frames.Add(BitmapFrame.Create((BitmapImage)Image));
+            PngBitmapEncoder encoder = new();
+            
+            encoder.Frames.Add(BitmapFrame.Create((BitmapImage?)Image));
 
             using var filestream = new FileStream(fileName, FileMode.Create);
             encoder.Save(filestream);

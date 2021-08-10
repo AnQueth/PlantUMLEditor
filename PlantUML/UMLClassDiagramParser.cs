@@ -11,6 +11,14 @@ namespace PlantUML
 {
     public class UMLClassDiagramParser : IPlantUMLParser
     {
+        private static readonly (string word, ListTypes listType)[] COLLECTIONS = new[]
+            {
+                ("ireadonlycollection<", ListTypes.IReadOnlyCollection),
+                ("list<", ListTypes.List)
+            };
+
+        private record CollectionRecord(ListTypes ListType, string Word);
+
         private const string PACKAGE = "package";
 
         private static readonly Regex  _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
@@ -33,16 +41,24 @@ namespace PlantUML
             return t.TrimEnd('{').Trim();
         }
 
-        private static Tuple<ListTypes, string> CreateFrom(string v)
+        private static CollectionRecord CreateFrom(string v)
         {
-            if (v.StartsWith("ireadonlycollection<", StringComparison.OrdinalIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.IReadOnlyCollection, v[20..].Trim('>', ' '));
-            else if (v.StartsWith("list<", StringComparison.OrdinalIgnoreCase))
-                return new Tuple<ListTypes, string>(ListTypes.List, v[5..].Trim('>', ' '));
-            else if (v.EndsWith("[]", StringComparison.InvariantCulture))
-                return new Tuple<ListTypes, string>(ListTypes.Array, v.Trim()[0..^2]);
+          
+            v = v.Trim();
+
+           
+
+            foreach(var (word, listType) in COLLECTIONS)
+            {
+                if (v.StartsWith(word, StringComparison.OrdinalIgnoreCase))
+                    return new CollectionRecord(listType, v[word.Length..].Trim('>', ' '));
+            }
+
+         
+            if (v.EndsWith("[]", StringComparison.Ordinal))
+                return new CollectionRecord(ListTypes.Array, v[0..^2]);
             else
-                return new Tuple<ListTypes, string>(ListTypes.None, v);
+                return new CollectionRecord(ListTypes.None, v);
         }
 
         private static string GetPackage(Stack<string> packages)
@@ -102,19 +118,19 @@ namespace PlantUML
                     continue;
                 }
 
-                if (line.StartsWith("'", StringComparison.InvariantCulture))
+                if (line.StartsWith("'", StringComparison.Ordinal))
                 {
                     currentPackage.Children.Add(new UMLComment(line));
                     continue;
                 }
 
-                if (line.StartsWith("/'", StringComparison.InvariantCulture))
+                if (line.StartsWith("/'", StringComparison.Ordinal))
                 {
                     string comment = line;
                     swallowingComments = true;
                 }
 
-                if (line.Contains("'/", StringComparison.InvariantCulture) && swallowingComments)
+                if (line.Contains("'/", StringComparison.Ordinal) && swallowingComments)
                 {
                     if (currentPackage.Children.Last() is UMLComment n)
                     {
@@ -145,7 +161,7 @@ namespace PlantUML
                     continue;
                 }
 
-                if (line.StartsWith("end note", StringComparison.InvariantCulture))
+                if (line.StartsWith("end note", StringComparison.Ordinal))
                 {
                     if (currentPackage.Children.Last() is UMLNote n)
                     {
@@ -161,8 +177,8 @@ namespace PlantUML
                     }
                     continue;
                 }
-                if (line.StartsWith("participant", StringComparison.InvariantCulture) 
-                    || line.StartsWith("actor", StringComparison.InvariantCulture))
+                if (line.StartsWith("participant", StringComparison.Ordinal) 
+                    || line.StartsWith("actor", StringComparison.Ordinal))
                     return null;
 
                 UMLDataType? DataType = null;
@@ -175,7 +191,7 @@ namespace PlantUML
                     currentPackage = packagesStack.First();
                 }
 
-                if (line.StartsWith("title", StringComparison.InvariantCulture))
+                if (line.StartsWith("title", StringComparison.Ordinal))
                 {
                     if (line.Length > 6)
                         d.Title = line[6..];
@@ -207,23 +223,23 @@ namespace PlantUML
                     DataType = new UMLClass(package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
                         , Clean(g.Groups["name"].Value), new List<UMLDataType>());
 
-                    if (line.EndsWith("{", StringComparison.InvariantCulture))
+                    if (line.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("class");
                     }
                 }
-                else if (line.StartsWith("enum", StringComparison.InvariantCulture))
+                else if (line.StartsWith("enum", StringComparison.Ordinal))
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 4)
                         DataType = new UMLEnum(package, Clean(line[5..]));
 
-                    if (line.EndsWith("{", StringComparison.InvariantCulture))
+                    if (line.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("interface");
                     }
                 }
-                else if (line.StartsWith("interface", StringComparison.InvariantCulture))
+                else if (line.StartsWith("interface", StringComparison.Ordinal))
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 8)
@@ -234,8 +250,8 @@ namespace PlantUML
                         if (line.Contains(" as "))
                         {
                             line = line.Replace("\"", string.Empty);
-                            alias = line[(line.IndexOf(" as ", StringComparison.InvariantCulture) + 4)..].TrimEnd(' ', '{');
-                            name = Clean(line[9..line.IndexOf(" as ", StringComparison.InvariantCulture)]);
+                            alias = line[(line.IndexOf(" as ", StringComparison.Ordinal) + 4)..].TrimEnd(' ', '{');
+                            name = Clean(line[9..line.IndexOf(" as ", StringComparison.Ordinal)]);
                         }
                         else
                         {
@@ -251,7 +267,7 @@ namespace PlantUML
 
 
                     }
-                    if (line.EndsWith("{", StringComparison.InvariantCulture))
+                    if (line.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("interface");
                     }
@@ -303,7 +319,7 @@ namespace PlantUML
                     }
                 }
 
-                if (DataType != null && line.EndsWith("{", StringComparison.InvariantCulture))
+                if (DataType != null && line.EndsWith("{", StringComparison.Ordinal))
                 {
                     if (aliases.TryGetValue(DataType.Name, out var newType))
                     {
@@ -437,21 +453,21 @@ namespace PlantUML
                         if (c != ',')
                             _ = pname.Append(c);
 
-                        Tuple<ListTypes, string> d = CreateFrom(sbtype.ToString().Trim());
+                        CollectionRecord d = CreateFrom(sbtype.ToString());
 
                         UMLDataType paramType;
 
-                        if (aliases.ContainsKey(d.Item2))
+                        if (aliases.ContainsKey(d.Word))
                         {
-                            paramType = aliases[d.Item2];
+                            paramType = aliases[d.Word];
                         }
                         else
                         {
-                            paramType = new UMLDataType(d.Item2, string.Empty);
-                            aliases.Add(d.Item2, paramType);
+                            paramType = new UMLDataType(d.Word, string.Empty);
+                            aliases.Add(d.Word, paramType);
                         }
 
-                        pars.Add(new UMLParameter(pname.ToString().Trim(), paramType, d.Item1));
+                        pars.Add(new UMLParameter(pname.ToString().Trim(), paramType, d.ListType));
 
                         _ = sbtype.Clear();
                         _ = pname.Clear();
@@ -479,21 +495,21 @@ namespace PlantUML
 
                 UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
 
-                Tuple<ListTypes, string> p = CreateFrom(g.Groups["type"].Value);
+                var p = CreateFrom(g.Groups["type"].Value);
 
                 UMLDataType c;
 
-                if (aliases.ContainsKey(p.Item2))
+                if (aliases.ContainsKey(p.Word))
                 {
-                    c = aliases[p.Item2];
+                    c = aliases[p.Word];
                 }
                 else
                 {
-                    c = new UMLDataType(p.Item2);
-                    aliases.Add(p.Item2, c);
+                    c = new UMLDataType(p.Word);
+                    aliases.Add(p.Word, c);
                 }
 
-                DataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.Item1));
+                DataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType));
             }
             else
             {

@@ -17,8 +17,8 @@ namespace PlantUMLEditor.Controls
             get { return base.Child; }
             set
             {
-                if (value != null && value != this.Child)
-                    this.Initialize(value);
+                if (value != null && value != Child)
+                    Initialize(value);
                 base.Child = value;
             }
         }
@@ -37,7 +37,7 @@ namespace PlantUMLEditor.Controls
 
         public void Initialize(UIElement element)
         {
-            this.child = element;
+            child = element;
             if (child != null)
             {
                 TransformGroup group = new();
@@ -47,12 +47,12 @@ namespace PlantUMLEditor.Controls
                 group.Children.Add(tt);
                 child.RenderTransform = group;
                 child.RenderTransformOrigin = new Point(0.0, 0.0);
-                this.MouseWheel += child_MouseWheel;
-                this.MouseLeftButtonDown += child_MouseLeftButtonDown;
-                this.MouseLeftButtonUp += child_MouseLeftButtonUp;
-                this.MouseMove += child_MouseMove;
-                this.PreviewMouseRightButtonDown += new MouseButtonEventHandler(
-                  child_PreviewMouseRightButtonDown);
+                MouseWheel += Child_MouseWheel;
+                MouseLeftButtonDown += Child_MouseLeftButtonDown;
+                MouseLeftButtonUp += Child_MouseLeftButtonUp;
+                MouseMove += Child_MouseMove;
+                PreviewMouseRightButtonDown += new MouseButtonEventHandler(
+                  Child_PreviewMouseRightButtonDown);
             }
         }
 
@@ -74,28 +74,28 @@ namespace PlantUMLEditor.Controls
 
         #region Child Events
 
-        private void child_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Child_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (child != null)
             {
                 var tt = GetTranslateTransform(child);
                 start = e.GetPosition(this);
                 origin = new Point(tt.X, tt.Y);
-                this.Cursor = Cursors.Hand;
+                Cursor = Cursors.Hand;
                 child.CaptureMouse();
             }
         }
 
-        private void child_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void Child_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (child != null)
             {
                 child.ReleaseMouseCapture();
-                this.Cursor = Cursors.Arrow;
+                Cursor = Cursors.Arrow;
             }
         }
 
-        private void child_MouseMove(object sender, MouseEventArgs e)
+        private void Child_MouseMove(object sender, MouseEventArgs e)
         {
             if (child != null)
             {
@@ -109,7 +109,7 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        private void child_MouseWheel(object sender, MouseWheelEventArgs e)
+        private void Child_MouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (child != null)
             {
@@ -135,9 +135,9 @@ namespace PlantUMLEditor.Controls
             }
         }
 
-        private void child_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void Child_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            this.Reset();
+            Reset();
         }
 
         #endregion Child Events
