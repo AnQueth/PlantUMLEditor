@@ -862,7 +862,7 @@ namespace PlantUMLEditor.Models
             CurrentDocument = d;
         }
 
-        private async void OpenDirectoryHandler(bool? useAppSettings = false, string? folder = null)
+        private async Task OpenDirectoryHandler(bool? useAppSettings = false, string? folder = null)
         {
 
 
@@ -1226,7 +1226,7 @@ namespace PlantUMLEditor.Models
 
         public async void LoadedUI()
         {
-            OpenDirectoryHandler(true);
+            await OpenDirectoryHandler(true);
 
             var files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
             if (files == null)

@@ -25,7 +25,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
     </b:Interaction.Triggers>
 
     <Window.Resources>
-    
+        <SolidColorBrush x:Key="CustomColor" Color="#FF4D8DEA"></SolidColorBrush>
         <Style TargetType="GridSplitter">
             <Setter Property="Background" Value="DarkGray"></Setter>
         </Style>
@@ -47,14 +47,14 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
         <DataTemplate x:Key="TabControlItemTemplate2">
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="2" CornerRadius="4">
+                <Border BorderThickness="3" CornerRadius="2">
 
                     <Border.Style>
                         <Style TargetType="Border">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsDirty}" Value="true">
                                     <DataTrigger.Setters>
-                                        <Setter   Property="BorderBrush" Value="Red">
+                                        <Setter   Property="BorderBrush" Value="#FFAA0000">
                                         </Setter>
                                      
                                     </DataTrigger.Setters>
@@ -432,7 +432,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                                 <Setter Property="Visibility" TargetName="Expander" Value="Hidden" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="true">
-                                <Setter Property="Background" TargetName="Bd" Value="#FF800080" />
+                                <Setter Property="Background" TargetName="Bd" Value="{DynamicResource CustomColor}" />
                                 <Setter Property="Foreground" Value="White" />
                             </Trigger>
                             <MultiTrigger>
@@ -596,13 +596,13 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
 
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="4" MinWidth="300">
+                            <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="1" MinWidth="300">
                                 <Border.Style>
                                     <Style TargetType="Border">
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding IsDirty}" Value="true">
                                                 <DataTrigger.Setters>
-                                                    <Setter   Property="BorderBrush" Value="Red">
+                                                    <Setter   Property="BorderBrush" Value="#FFAA0000">
                                                     </Setter>
                                                 </DataTrigger.Setters>
                                             </DataTrigger>
@@ -620,7 +620,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                         <Style TargetType="Grid">
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Visible}" Value="0">
-                                                    <Setter Property="Background"  Value="#FF800080"></Setter>
+                                                    <Setter Property="Background"  Value="{DynamicResource CustomColor}"></Setter>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>

@@ -44,7 +44,16 @@ namespace PlantUMLEditor.Models
                         var z = await PlantUML.UMLClassDiagramParser.ReadString(text);
                         if (z != null)
                             lock (_locker)
-                                _autoCompleteItems = z.DataTypes.Select(p => p.Name).Union(otherClassDiagrams.SelectMany(z=>z.DataTypes).Select(z=>z.Name)).ToArray();
+                            {
+                                try
+                                {
+                                    _autoCompleteItems = z.DataTypes.Select(p => p.Name).Union(otherClassDiagrams.SelectMany(z => z.DataTypes).Select(z => z.Name)).ToArray();
+                                }
+                                catch
+                                {
+
+                                }
+                            }
                     }
                 }
             });
