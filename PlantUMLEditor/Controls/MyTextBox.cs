@@ -237,9 +237,8 @@ namespace PlantUMLEditor.Controls
             ReplaceText = "";
             lock (_found)
                 _found.Clear();
-            //CalculateFirstAndLastCharacters();
-            _renderText = true;
-            InvalidateVisual();
+
+            ForceDraw();
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)
@@ -247,9 +246,7 @@ namespace PlantUMLEditor.Controls
             FindReplaceVisible = false;
             lock (_found)
                 _found.Clear();
-            //CalculateFirstAndLastCharacters();
-            //_renderText = true;
-            //InvalidateVisual();
+           
         }
 
         private int CountLines()
@@ -283,6 +280,11 @@ namespace PlantUMLEditor.Controls
 
             _braces = (selectionStart, match);
 
+            ForceDraw();
+        }
+
+        private void ForceDraw()
+        {
             _renderText = true;
             InvalidateVisual();
         }
@@ -307,8 +309,7 @@ namespace PlantUMLEditor.Controls
 
             _braces = (selectionStart, match);
 
-            _renderText = true;
-            InvalidateVisual();
+            ForceDraw();
         }
 
         private int GetCharaceterFromLine(int line)
@@ -531,34 +532,33 @@ namespace PlantUMLEditor.Controls
             lock (_found)
                 _found.Clear();
 
-            _renderText = true;
-            InvalidateVisual();
+            ForceDraw();
         }
 
-        private void RunFind(string text, bool invalidate)
+        private void RunFind(string search, bool invalidate)
         {
             lock (_found)
                 _found.Clear();
             if (_autoComplete.IsPopupVisible)
                 return;
 
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(search))
                 return;
 
-            string t = Text;
+           
 
             try
             {
                 FindResults.Clear();
                 if (_useRegex)
                 {
-                    if (!text.StartsWith("(", StringComparison.InvariantCulture))
-                        text = "(" + text;
-                    if (!text.EndsWith(")", StringComparison.InvariantCulture))
-                        text += ")";
+                    if (!search.StartsWith("(", StringComparison.InvariantCulture))
+                        search = "(" + search;
+                    if (!search.EndsWith(")", StringComparison.InvariantCulture))
+                        search += ")";
 
-                    Regex r = new(text, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
-                    var m = r.Matches(t);
+                    Regex r = new(search, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+                    var m = r.Matches(Text);
 
                     foreach (Group item in m)
                     {
@@ -578,13 +578,12 @@ namespace PlantUMLEditor.Controls
                 }
                 else
                 {
-                    t = t.ToLowerInvariant();
-                    string search = text.ToLowerInvariant();
+                    
 
-                    var p = t.IndexOf(search, StringComparison.InvariantCulture);
+                    var p = Text.IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
                     while (p != -1)
                     {
-                        _found.Add(new FindItem(p, text.Length));
+                        _found.Add(new FindItem(p, search.Length));
                         int l = GetLineIndexFromCharacterIndex(p);
 
                         string line = GetLineText(l);
@@ -592,12 +591,12 @@ namespace PlantUMLEditor.Controls
                         string reps = "";
                         if (!string.IsNullOrEmpty(ReplaceText))
                         {
-                            reps = line.Replace(text, ReplaceText, StringComparison.InvariantCultureIgnoreCase).Trim();
+                            reps = line.Replace(search, ReplaceText, StringComparison.InvariantCultureIgnoreCase).Trim();
                         }
 
                         FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
 
-                        p = t.IndexOf(search, p + 1, StringComparison.InvariantCulture);
+                        p = Text.IndexOf(search, p + 1, StringComparison.InvariantCultureIgnoreCase);
                     }
                 }
             }
@@ -606,8 +605,7 @@ namespace PlantUMLEditor.Controls
             }
             if (invalidate)
             {
-                _renderText = true;
-                Dispatcher.Invoke(InvalidateVisual);
+                ForceDraw();
             }
         }
 
@@ -618,7 +616,7 @@ namespace PlantUMLEditor.Controls
             _scrollOffset = e.VerticalOffset % _lineHeight;
             CalculateFirstAndLastCharacters();
             RenderLineNumbers();
-            InvalidateVisual();
+            ForceDraw();
         }
 
         /// <summary>
@@ -783,16 +781,14 @@ namespace PlantUMLEditor.Controls
             else if (e.Key is Key.Up or Key.Down or Key.Left or Key.Right)
             {
                 CalculateFirstAndLastCharacters();
-                _renderText = true;
-                InvalidateVisual();
+                ForceDraw();
             }
             else if (e.Key is Key.Escape)
             {
                 _autoComplete.CloseAutoComplete();
                 lock (_found)
                     _found.Clear();
-                _renderText = true;
-                InvalidateVisual();
+                ForceDraw();
             }
             else if (e.Key is Key.Enter)
             {
@@ -843,8 +839,7 @@ namespace PlantUMLEditor.Controls
                 if (!bracesWillTriggerRender)
                 {
                     CalculateFirstAndLastCharacters();
-                    _renderText = true;
-                    InvalidateVisual();
+                    ForceDraw();
                 }
             }
             else if (e.Key is not Key.Escape and not Key.Enter and not Key.LeftCtrl and not Key.RightCtrl and not Key.Back
@@ -875,9 +870,7 @@ namespace PlantUMLEditor.Controls
 
             if (needsRender)
             {
-                _renderText = true;
-
-                InvalidateVisual();
+                ForceDraw();
             }
         }
 
@@ -995,8 +988,7 @@ namespace PlantUMLEditor.Controls
             base.OnTextChanged(e);
 
             CalculateFirstAndLastCharacters();
-            _renderText = true;
-            InvalidateVisual();
+            ForceDraw();
         }
 
         public void CloseAutoComplete()
@@ -1181,8 +1173,7 @@ namespace PlantUMLEditor.Controls
                     if (startLine <= lineNumber && endLine >= lineNumber)
                     {
                         CalculateFirstAndLastCharacters();
-                        _renderText = true;
-                        InvalidateVisual();
+                        ForceDraw();
                     }
                     else
                     {
@@ -1235,10 +1226,10 @@ namespace PlantUMLEditor.Controls
 
             if (!_errors.Contains(e))
             {
-                _renderText = true;
+            
 
                 _errors.Add(e);
-                InvalidateVisual();
+                ForceDraw();
             }
         }
 
