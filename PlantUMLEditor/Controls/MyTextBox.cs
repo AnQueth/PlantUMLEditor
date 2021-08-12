@@ -364,7 +364,7 @@ namespace PlantUMLEditor.Controls
             return linestart;
         }
 
-        
+
 
         private (int, int) GetStartAndEndCharacters()
         {
@@ -382,12 +382,12 @@ namespace PlantUMLEditor.Controls
         private double _textTransformOffset = 0;
         private void GetStartAndEndLines(out int startLine, out int endLine)
         {
-            _textTransformOffset = _scrollOffset;
-            startLine = (int)Math.Ceiling(VerticalOffset / _lineHeight);
-           
-               _textTransformOffset = _scrollOffset;
-            
-            Debug.WriteLine($"{VerticalOffset} {_lineHeight} {VerticalOffset / _lineHeight} {_scrollOffset} {startLine}");
+
+            startLine = (int)Math.Floor((VerticalOffset / _lineHeight) + 0.0001);
+
+            _textTransformOffset = _scrollOffset + (startLine == 0 ? 0 : _lineHeight);
+
+            Debug.WriteLine($"{VerticalOffset} {_lineHeight} {(VerticalOffset / _lineHeight) + 0.0001} {_scrollOffset} {startLine}");
 
             endLine = (int)Math.Ceiling((VerticalOffset + ActualHeight) / _lineHeight);
             ++endLine;
@@ -592,7 +592,7 @@ namespace PlantUMLEditor.Controls
                         string reps = "";
                         if (!string.IsNullOrEmpty(ReplaceText))
                         {
-                            reps = line.Replace(text, ReplaceText, StringComparison.InvariantCultureIgnoreCase);
+                            reps = line.Replace(text, ReplaceText, StringComparison.InvariantCultureIgnoreCase).Trim();
                         }
 
                         FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
@@ -982,7 +982,10 @@ namespace PlantUMLEditor.Controls
             //notify documents that text has changed
             _bindedDocument?.TextChanged(Text);
 
-            RunFind(FindText, false);
+            lock (_found)
+                _found.Clear();
+
+
 
             _braces = default;
             _errors.Clear();
@@ -1145,7 +1148,7 @@ namespace PlantUMLEditor.Controls
                 col.DrawText(formattedText, new Point(4, 0));
             }
 
-            var top = (GetLineNumberDuringRender(CaretIndex) * _lineHeight) - VerticalOffset + _scrollOffset;
+            var top = (GetLineNumberDuringRender(CaretIndex) * _lineHeight) - VerticalOffset + _textTransformOffset;
 
             col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), _lineHeight));
 
