@@ -57,8 +57,11 @@ namespace PlantUMLEditor.Models
 
         private DocumentMessage? selectedMessage;
 
-        public MainModel(IIOService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization)
+        private MainWindow _window;
+
+        public MainModel(IIOService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization, MainWindow mainWindow)
         {
+            _window = mainWindow;
             CancelExecutingAction = new DelegateCommand(CancelCurrentExecutingAction, () =>
             {
                 return _cancelCurrentExecutingAction != null;
@@ -135,6 +138,8 @@ namespace PlantUMLEditor.Models
 
         public DelegateCommand<DocumentModel> CloseDocumentAndSave { get; }
 
+        private TaskCompletionSource? _continueClosinTaskSource;
+
         public bool ConfirmOpen
         {
             get
@@ -143,6 +148,18 @@ namespace PlantUMLEditor.Models
             }
             set
             {
+
+                if (value && !_confirmOpen)
+                {
+
+                    _continueClosinTaskSource = new TaskCompletionSource();
+
+                }
+                else if (!value && _confirmOpen)
+                {
+                    _continueClosinTaskSource?.SetResult();
+                }
+
                 SetValue(ref _confirmOpen, value);
             }
         }
@@ -365,10 +382,7 @@ namespace PlantUMLEditor.Models
 
             foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
             {
-                model.Children.Add(new TreeViewModel(model, file, true, !file.Contains(".component.puml") ?
-                    (!file.Contains(".seq.puml") ? "images\\class.png" : "images\\sequence.png") : "images\\com.png", this)
-                {
-                });
+                model.Children.Add(new TreeViewModel(model, file, true, GetIcon(file), this));
             }
 
             foreach (var item in Directory.EnumerateDirectories(dir))
@@ -376,13 +390,32 @@ namespace PlantUMLEditor.Models
                 if (Path.GetFileName(item).StartsWith(".", StringComparison.InvariantCulture))
                     continue;
 
-                var fm = new TreeViewModel(model, item, false, "", this)
-                {
-                };
+                var fm = new TreeViewModel(model, item, false, "", this);
                 model.Children.Add(fm);
 
                 await AddFolderItems(item, fm);
             }
+        }
+
+        private string GetIcon(string file)
+        {
+            if (file.Contains(".component.puml"))
+            {
+                return @"images\com.png";
+            }
+            else if (file.Contains(".class.puml"))
+            {
+                return @"images\class.png";
+            }
+            else if (file.Contains(".seq.puml"))
+            {
+                return @"images\sequence.png";
+            }
+            else
+            {
+                return @"images\uml.png";
+            }
+
         }
 
         private async Task AfterCreate(DocumentModel d)
@@ -603,7 +636,7 @@ namespace PlantUMLEditor.Models
                 var f = Documents.ClassDocuments.FirstOrDefault(p => string.CompareOrdinal(p.Title, "defaults.class") == 0);
                 if (f != null)
                 {
-                   
+
 
                     f.Package.Children.Add(new UMLClass("default", false, missingDataTypeMessage.MissingDataTypeName, new List<UMLDataType>()));
 
@@ -895,16 +928,36 @@ namespace PlantUMLEditor.Models
             CurrentDocument = d;
         }
 
+        private async Task<bool> CanContinueWithDirtyWrites()
+        {
+            if (OpenDocuments.Any(z => z.IsDirty))
+            {
+                ConfirmOpen = true;
+                if (_continueClosinTaskSource is not null)
+                    await _continueClosinTaskSource.Task;
+
+                if (!AllowContinue)
+                {
+                    SelectedMRUFolder = _folderBase;
+                    return false;
+                }
+            }
+            return true;
+        }
+
         private async Task OpenDirectoryHandler(bool? useAppSettings = false, string? folder = null)
         {
             await _checkMessagesRunning.WaitAsync();
             try
             {
-                if (OpenDocuments.Any(z => z.IsDirty))
+
+                if (!await CanContinueWithDirtyWrites())
                 {
                     return;
                 }
-                // await SaveAll();
+
+                var oldFolder = _folderBase;
+
                 _folderBase = null;
                 string? dir;
                 if (folder == null)
@@ -916,7 +969,10 @@ namespace PlantUMLEditor.Models
                     dir = GetWorkingFolder(useAppSettings.GetValueOrDefault(), folder);
                 }
                 if (string.IsNullOrEmpty(dir))
+                {
+                    _folderBase = oldFolder;
                     return;
+                }
 
                 SelectedMRUFolder = dir;
                 lock (_docLock)
@@ -1226,18 +1282,35 @@ namespace PlantUMLEditor.Models
             await _documentCollectionSerialization.Save(Documents, _metaDataFile);
         }
 
-        internal bool CloseAll()
+        public bool CanClose
         {
+            get;
+            private set;
+        }
+
+        internal async Task ShouldAbortCloseAll()
+        {
+            if (!await CanContinueWithDirtyWrites())
+            {
+                CanClose = false;
+                return;
+            }
+
             DocumentModel[] dm = GetDocumentModelReadingArray();
             foreach (var item in dm)
             {
-                if (item.IsDirty)
-                    return true;
+
 
                 item.TryClosePreview();
             }
 
-            return false;
+            CanClose = true;
+
+            _ = Application.Current.Dispatcher.InvokeAsync(() => _window.Close());
+           
+
+
+
         }
 
         public async Task Change(string fullPath)

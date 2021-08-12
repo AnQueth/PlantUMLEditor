@@ -177,19 +177,11 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         </DataTemplate>
 
         <HierarchicalDataTemplate  DataType="{x:Type  models:TreeViewModel}" ItemsSource="{Binding Children}">
+            
+                <StackPanel Orientation="Horizontal">
+               
 
-            <Grid Visibility="{Binding IsVisible}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto">
-                    </ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <b:Interaction.Triggers>
-                    <b:EventTrigger EventName="MouseLeftButtonDown">
-                        <b:CallMethodAction MethodName="TreeItemClicked" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
-AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
-                    </b:EventTrigger>
-                </b:Interaction.Triggers>
+
                 <Image Source="{Binding Icon}" Width="15" Margin="1,0,5,0">
                 </Image>
                 <TextBox x:Name="rename" Text="{Binding Rename, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
@@ -204,9 +196,12 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         </b:KeyTrigger>
                     </b:Interaction.Triggers>
                 </TextBox>
-                <TextBlock x:Name="txt" Grid.Column="1" Text="{Binding Name}" FontWeight="Bold">
+              
+                <TextBlock x:Name="txt" Text="{Binding Name}" Width="Auto" FontWeight="Bold">
                 </TextBlock>
-            </Grid>
+
+                </StackPanel>
+          
             <HierarchicalDataTemplate.Triggers>
                 <DataTrigger Value="true">
                     <DataTrigger.Binding>
@@ -396,7 +391,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             </Setter>
         </Style>
         <Style   TargetType="{x:Type TreeViewItem}">
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"></Setter>
+            <Setter Property="HorizontalContentAlignment" Value="Left"></Setter>
             <Setter Property="IsExpanded" Value="True"></Setter>
             <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
 
@@ -410,6 +405,13 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type TreeViewItem}">
                         <Grid Margin="-5,0,0,0">
+
+                            <b:Interaction.Triggers>
+                                <b:EventTrigger EventName="MouseLeftButtonDown">
+                                    <b:CallMethodAction MethodName="TreeItemClicked" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
+AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
+                                </b:EventTrigger>
+                            </b:Interaction.Triggers>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition MinWidth="19" Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -776,42 +778,45 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                 <TextBlock Text="{Binding CurrentActionExecuting}"></TextBlock>
             </StatusBarItem>
         </StatusBar>
-        
-        <Popup IsOpen="{Binding ConfirmOpen}">
 
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition></RowDefinition>
-                    <RowDefinition></RowDefinition>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition></ColumnDefinition>
-                    <ColumnDefinition></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <TextBlock>You have unsaved changes. Continue closing?</TextBlock>
-                <Button Grid.Row="1">
-                    <Button.Content>Yes</Button.Content>
+        <Popup IsOpen="{Binding ConfirmOpen}" AllowsTransparency="True" Width="Auto" Height="Auto" HorizontalAlignment="Center" VerticalAlignment="Center"   Placement="Center"  >
+          
+                <Border BorderThickness="2" CornerRadius="10" BorderBrush="Black" Background="White">
+                    <Grid Margin="10,10,10,10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition></RowDefinition>
+                            <RowDefinition></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition></ColumnDefinition>
+                            <ColumnDefinition></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.ColumnSpan="2" Background="White" Margin="5,5,5,5">You have unsaved changes. Continue closing?</TextBlock>
+                        <Button Grid.Row="1" Margin="5,5,5,5">
+                            <Button.Content>Yes</Button.Content>
 
-                    <b:Interaction.Triggers>
-                        <b:EventTrigger EventName="Click">
+                            <b:Interaction.Triggers>
+                                <b:EventTrigger EventName="Click">
 
-                            <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinue" Value="true"></b:ChangePropertyAction>
-                            <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="ConfirmOpen" Value="false"></b:ChangePropertyAction>
-                        </b:EventTrigger>
-                    </b:Interaction.Triggers>
-                </Button>
-                <Button Grid.Row="1" Grid.Column="1">
-                    <Button.Content>No</Button.Content>
+                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinue" Value="true"></b:ChangePropertyAction>
+                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="ConfirmOpen" Value="false"></b:ChangePropertyAction>
+                                </b:EventTrigger>
+                            </b:Interaction.Triggers>
+                        </Button>
+                        <Button Grid.Row="1" Grid.Column="1" Margin="5,5,5,5">
+                            <Button.Content>No</Button.Content>
 
-                    <b:Interaction.Triggers>
-                        <b:EventTrigger EventName="Click">
+                            <b:Interaction.Triggers>
+                                <b:EventTrigger EventName="Click">
 
-                            <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinue" Value="false"></b:ChangePropertyAction>
-                            <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="ConfirmOpen" Value="false"></b:ChangePropertyAction>
-                        </b:EventTrigger>
-                    </b:Interaction.Triggers>
-                </Button>
-            </Grid>
+                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinue" Value="false"></b:ChangePropertyAction>
+                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="ConfirmOpen" Value="false"></b:ChangePropertyAction>
+                                </b:EventTrigger>
+                            </b:Interaction.Triggers>
+                        </Button>
+                    </Grid>
+                </Border>
+             
         </Popup>
     </Grid>
 </Window>
