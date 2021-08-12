@@ -118,10 +118,14 @@ namespace PlantUMLEditor.Models
             {
                 if (g.Warning is not null && g is UMLSequenceConnection c)
                 {
-                    if (c.Action is not null && c.To is not null && c.To.DataTypeId is not null)
+                    if (c.Action is not null && c.To is not null && c.To.DataTypeId is not null && c.From is not null)
                     {
                         newMessages.Add(new MissingMethodDocumentMessage(fileName, GetRelativeName(folderBase, fileName), g.LineNumber, g.Warning, true, c.Action.Signature,
                             c.To.DataTypeId, o, true));
+                    }
+                    else
+                    {
+                        newMessages.Add(new DocumentMessage(fileName, GetRelativeName(folderBase, fileName), g.LineNumber, g.Warning, true));
                     }
                 }
 
