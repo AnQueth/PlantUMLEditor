@@ -45,11 +45,13 @@ namespace PlantUMLEditor.Models
 
         }
 
+        private record DataTypeRecord(UMLDataType DataType, string FileName);
+
         public List<DocumentMessage> Generate(string folderBase)
         {
             List<DocumentMessage> newMessages = new();
 
-            List<(UMLDataType, string)> dataTypes = new();
+            List<DataTypeRecord> dataTypes = new();
 
             foreach (var doc in documents)
             {
@@ -65,7 +67,7 @@ namespace PlantUMLEditor.Models
                 {
                     foreach (var fdt in f2.DataTypes)
                     {
-                        dataTypes.Add((fdt, f2.FileName));
+                        dataTypes.Add(new (fdt, f2.FileName));
                     }
 
                     foreach (var e in f2.Errors)
@@ -99,7 +101,7 @@ namespace PlantUMLEditor.Models
                 foreach (var i in items)
                 {
 
-                    newMessages.Add(new DocumentMessage(i.o.FileName, GetRelativeName(folderBase, i.o.FileName), i.f.LineNumber, i.f.Warning, true));
+                    newMessages.Add(new DocumentMessage(i.o.FileName, GetRelativeName(folderBase, i.o.FileName), i.f.LineNumber, i.f.Warning ?? "NULL WARNING", true));
 
                 }
 
@@ -114,9 +116,9 @@ namespace PlantUMLEditor.Models
         {
             foreach (var g in entities)
             {
-                if (g.Warning != null && g is UMLSequenceConnection c)
+                if (g.Warning is not null && g is UMLSequenceConnection c)
                 {
-                    if (c.Action != null && c.To != null)
+                    if (c.Action is not null && c.To is not null && c.To.DataTypeId is not null)
                     {
                         newMessages.Add(new MissingMethodDocumentMessage(fileName, GetRelativeName(folderBase, fileName), g.LineNumber, g.Warning, true, c.Action.Signature,
                             c.To.DataTypeId, o, true));
@@ -131,68 +133,71 @@ namespace PlantUMLEditor.Models
         }
 
         private static void FindCircularReferences(string folderBase, List<DocumentMessage> newMessages,
-            List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> namespaceReferences)
+            List<BadDataTypeAndNS> namespaceReferences)
         {
             foreach (var n in namespaceReferences)
             {
-                if (namespaceReferences.Any(p => string.CompareOrdinal(p.Item1.ns1, n.ns2) == 0 &&
-                string.CompareOrdinal(p.ns2, n.Item1.ns1) == 0 &&
-                string.CompareOrdinal(p.Item1.ns1, p.ns2) != 0 &&
-                !string.IsNullOrEmpty(p.Item1.ns1)
-                && !string.IsNullOrEmpty(p.ns2)))
+                if (namespaceReferences.Any(p => string.CompareOrdinal(p.BadDataType.NS1, n.NS2) == 0 &&
+                string.CompareOrdinal(p.NS2, n.BadDataType.NS1) == 0 &&
+                string.CompareOrdinal(p.BadDataType.NS1, p.NS2) != 0 &&
+                !string.IsNullOrEmpty(p.BadDataType.NS1)
+                && !string.IsNullOrEmpty(p.NS2)))
                 {
-                    string text = "Circular reference " + n.Item1.ns1 + " and " + n.ns2 + " type = " + n.Item1.dt + " offender " + n.Item1.name;
+                    string text = "Circular reference " + n.BadDataType.NS1 + " and " + n.NS2 + " type = " + n.BadDataType.DataType + " offender " + n.BadDataType.Name;
 
-                    newMessages.Add(new DocumentMessage(n.Item1.fileName, GetRelativeName(folderBase, n.Item1.fileName), n.Item1.lineNumber, text)) ;
+                    newMessages.Add(new DocumentMessage(n.BadDataType.FileName, GetRelativeName(folderBase, n.BadDataType.FileName), n.BadDataType.LineNumber, text)) ;
 
                 }
             }
         }
 
-        private static List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> FindBadDataTypes(string folderBase, List<DocumentMessage> newMessages, List<(UMLDataType, string)> dataTypes)
+        private record BadDataType(string FileName, int LineNumber, string NS1, string DataType, string Name);
+        private record BadDataTypeAndNS(BadDataType BadDataType, string NS2);
+
+        private static List<BadDataTypeAndNS> 
+            FindBadDataTypes(string folderBase, List<DocumentMessage> newMessages, List<DataTypeRecord> dataTypes)
         {
-            List<((string fileName, int lineNumber, string ns1, string dt, string name), string ns2)> namespaceReferences
-                = new();
+            List<BadDataTypeAndNS> namespaceReferences                = new();
 
             foreach (var dt in dataTypes)
             {
-                if (dt.Item1 is UMLEnum)
+                if (dt.DataType is UMLEnum)
                     continue;
-                foreach (var m in dt.Item1.Properties)
+                foreach (var m in dt.DataType.Properties)
                 {
                     var parsedTypes = GetCleanName(m.ObjectType.Name);
                     foreach (var r in parsedTypes)
                     {
-                        var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.Item1.Name, r) == 0);
+                        var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
                         if (pdt == default)
                         {
-                            newMessages.Add(new MissingDataTypeMessage(dt.Item2, GetRelativeName(folderBase, dt.Item2),
-                                dt.Item1.LineNumber, r + " used by " + m.Name, true, r, true));
+                            newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
+                                dt.DataType.LineNumber, r + " used by " + m.Name, true, r, true));
 
                         }
                         else
                         {
-                            namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace, r, m.Name), pdt.Item1.Namespace));
+                            namespaceReferences.Add(new(new(dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
                         }
                     }
                 }
-                foreach (var m in dt.Item1.Methods)
+                foreach (var m in dt.DataType.Methods)
                 {
                     foreach (var p in m.Parameters)
                     {
                         var parsedTypes = GetCleanName(p.ObjectType.Name);
                         foreach (var r in parsedTypes)
                         {
-                            var pdt2 = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.Item1.Name, r) == 0);
-                            if (pdt2 == default)
+                            var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
+                            if (pdt == default)
                             {
-                                newMessages.Add(new MissingDataTypeMessage(dt.Item2, GetRelativeName(folderBase, dt.Item2),
-                                   dt.Item1.LineNumber, r + " used by " + m.Name, true, r, true));
+                                newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
+                                   dt.DataType.LineNumber, r + " used by " + m.Name, true, r, true));
 
                             }
                             else
                             {
-                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace, r, m.Name), pdt2.Item1.Namespace));
+                                namespaceReferences.Add(new(new(dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
 
                             }
                         }
@@ -203,17 +208,17 @@ namespace PlantUMLEditor.Models
                         foreach (var r in parsedTypes)
                         {
                             var pdt = dataTypes
-                                .FirstOrDefault(z => GetCleanName(z.Item1.Name).Contains(r));
+                                .FirstOrDefault(z => GetCleanName(z.DataType.Name).Contains(r));
                             if (pdt == default)
                             {
-                                newMessages.Add(new MissingDataTypeMessage(dt.Item2, GetRelativeName(folderBase, dt.Item2),
-                                dt.Item1.LineNumber, r + " used by " + m.Name, true, r, true));
+                                newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
+                                dt.DataType.LineNumber, r + " used by " + m.Name, true, r, true));
 
 
                             }
                             else
                             {
-                                namespaceReferences.Add(((dt.Item2, dt.Item1.LineNumber, dt.Item1.Namespace, r, m.Name), pdt.Item1.Namespace));
+                                namespaceReferences.Add(new(new (dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
 
                             }
                         }

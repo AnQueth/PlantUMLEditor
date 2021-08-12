@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace UMLModels
@@ -7,11 +8,9 @@ namespace UMLModels
     {
         private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.+)");
 
-        public UMLSequenceBlockSection()
-        {
-        }
+       
     
-        public UMLSequenceBlockSection(string text, SectionTypes sectionTypes)
+        public UMLSequenceBlockSection(string text, SectionTypes sectionTypes, int lineNumber) : base(lineNumber)
         {
             Text = text;
             Entities = new List<UMLOrderedEntity>();
@@ -45,7 +44,7 @@ namespace UMLModels
 
         public string Text { get; set; }
 
-        public static UMLSequenceBlockSection TryParse(string line)
+        public static bool TryParse(string line, int lineNumber,  [NotNullWhen(true)] out UMLSequenceBlockSection? block)
         {
             var blockSection = _blockSection.Match(line);
             if (blockSection.Success)
@@ -57,40 +56,45 @@ namespace UMLModels
                 {
                     case "opt":
                     case "alt":
-                        return new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.If);
+                        block =  new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.If, lineNumber);
+                        return true;
 
                     case "else":
-                        return new UMLSequenceBlockSection(text, SectionTypes.Else);
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Else, lineNumber);
+                        return true;
 
                     case "par":
-                        return new UMLSequenceBlockSection(text, SectionTypes.Parrallel);
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Parrallel, lineNumber);
+                        return true;
 
                     case "try":
-                        return new UMLSequenceBlockSection(text, SectionTypes.Try);
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Try, lineNumber);
+                        return true;
 
                     case "catch":
-                        return new UMLSequenceBlockSection(text, SectionTypes.Catch);
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Catch, lineNumber);
+                        return true;
 
                     case "finally":
-                        return new UMLSequenceBlockSection(text, SectionTypes.Finally);
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Finally, lineNumber);
+                        return true;
 
                     case "break":
-                        return new UMLSequenceBlockSection(text, SectionTypes.Break);
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Break, lineNumber);
+                        return true;
 
                     case "loop":
-                        return new UMLSequenceBlockSection(text, SectionTypes.Loop);
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Loop, lineNumber);
+                        return true;
                 }
             }
-            return null;
+            block = null;
+            return false;
         }
 
-        public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to)
+        public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to, int lineNumber)
         {
-            var f = new UMLSequenceConnection()
-            {
-                From = source,
-                To = to
-            };
+            var f = new UMLSequenceConnection(source, to, lineNumber);
             Entities.Add(f);
 
             return f;

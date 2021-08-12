@@ -32,24 +32,17 @@ namespace UMLModels
 
     public class UMLDataType
     {
-        public UMLDataType()
-        {
-        }
-
+   
         public UMLDataType(string name, string @namespace = "", params UMLInterface[] interfaces)
         {
             Namespace = @namespace;
             Name = name;
-            Properties = new List<UMLProperty>();
-            Methods = new List<UMLMethod>();
-            Bases = new List<UMLDataType>();
-
-            Interfaces = new List<UMLInterface>();
+   
             if (interfaces != null && interfaces.Length == 0)
                 Interfaces.AddRange(interfaces);
         }
 
-        public List<UMLDataType> Bases { get; set; }
+        public List<UMLDataType> Bases { get;   } = new();
 
         public string Id
         {
@@ -59,12 +52,12 @@ namespace UMLModels
             }
         }
 
-        public List<UMLInterface> Interfaces { get; set; }
+        public List<UMLInterface> Interfaces { get;  } = new();
         public int LineNumber { get; set; }
-        public List<UMLMethod> Methods { get; set; }
+        public List<UMLMethod> Methods { get;  } = new();
         public string Name { get; set; }
         public string Namespace { get; set; }
-        public List<UMLProperty> Properties { get; set; }
+        public List<UMLProperty> Properties { get; } = new();
     }
 
     public class VoidDataType : UMLDataType

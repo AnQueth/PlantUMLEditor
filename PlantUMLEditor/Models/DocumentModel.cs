@@ -185,7 +185,7 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        protected void ShowAutoComplete( bool allowTyping = false)
+        protected void ShowAutoComplete( )
         {
             SortedMatchingAutoCompletes.Clear();
 
@@ -202,7 +202,7 @@ namespace PlantUMLEditor.Models
             foreach (var item in MatchingAutoCompletes.OrderBy(p => p))
                 SortedMatchingAutoCompletes.Add(item);
 
-            _autoComplete?.FocusAutoComplete(  this, allowTyping);
+            _autoComplete?.ShowAutoComplete(  this);
         }
 
         internal void Binded(ITextEditor textEditor)

@@ -46,7 +46,7 @@ namespace PlantUML
 
         private static async Task<UMLComponentDiagram?> ReadComponentDiagram(StreamReader sr, string fileName)
         {
-            UMLComponentDiagram d = new(string.Empty, fileName);
+            
             bool started = false;
             string? line = null;
 
@@ -61,7 +61,8 @@ namespace PlantUML
             Stack<UMLPackage> packagesStack = new();
 
             UMLPackage defaultPackage = new("");
-            d.Package = defaultPackage;
+         
+            UMLComponentDiagram d = new(string.Empty, fileName, defaultPackage);
             packagesStack.Push(defaultPackage);
             var currentPackage = defaultPackage;
 

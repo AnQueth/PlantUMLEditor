@@ -66,7 +66,7 @@ namespace PlantUML
 
                     foreach (var prop in item.Properties)
                     {
-                        writer.Write(prop.Visibility == UMLVisibility.Private ? "-" : prop.Visibility == UMLVisibility.Protected ? "#" : prop.Visibility == UMLVisibility.Public ? "+" : "");
+                        writer.Write(GetVisibility(prop.Visibility));
                         writer.Write(" ");
 
                         if (prop.ListType == ListTypes.None)
@@ -94,10 +94,12 @@ namespace PlantUML
 
                     foreach (var me in item.Methods)
                     {
+                        writer.Write(GetVisibility(me.Visibility));
+                        writer.Write(' ');
                         writer.Write(me.ReturnType.Name);
-                        writer.Write(" ");
+                        writer.Write(' ');
                         writer.Write(me.Name);
-                        writer.Write("(");
+                        writer.Write('(');
 
                         for (var x = 0; x < me.Parameters.Count; x++)
                         {
@@ -114,7 +116,7 @@ namespace PlantUML
                             {
                                 writer.Write("IReadOnlyCollection<");
                                 writer.Write(p.ObjectType.Name);
-                                writer.Write(">");
+                                writer.Write('>');
                             }
                             else if (p.ListType == ListTypes.List)
                             {
@@ -165,5 +167,15 @@ namespace PlantUML
             }
         }
 
+        private static char GetVisibility(UMLVisibility vis)
+        {
+            return vis switch
+            {
+                UMLVisibility.Private => '-',
+                UMLVisibility.Protected => '#',
+                UMLVisibility.Public => '+',
+                _ => ' ',
+            };
+        }
     }
 }

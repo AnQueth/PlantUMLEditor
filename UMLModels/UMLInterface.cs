@@ -4,13 +4,11 @@ namespace UMLModels
 {
     public class UMLInterface : UMLDataType
     {
-        public UMLInterface()
-        {
-        }
+     
 
-        public UMLInterface(string @namespace, string name, List<UMLDataType> @bases) : base(name, @namespace)
+        public UMLInterface(string @namespace, string name, IEnumerable<UMLDataType> @bases) : base(name, @namespace)
         {
-            Bases = @bases;
+            Bases.AddRange( @bases);
         }
     }
 }

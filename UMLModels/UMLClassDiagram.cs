@@ -4,16 +4,12 @@ namespace UMLModels
 {
     public class UMLClassDiagram : UMLDiagram
     {
-        public UMLClassDiagram()
-        {
-            Errors = new List<UMLError>();
-        }
 
-        public UMLClassDiagram(string title, string fileName) : this()
-        {
-            Title = title;
+        private readonly UMLPackage _package;
 
-            FileName = fileName;
+        public UMLClassDiagram(string title, string fileName, UMLPackage? package = null)  : base(title, fileName)
+        {
+            _package = package ?? new UMLPackage("defaults");
         }
 
         public List<UMLDataType> DataTypes
@@ -28,8 +24,8 @@ namespace UMLModels
             }
         }
 
-        public List<UMLError> Errors { get; }
-        public UMLPackage Package { get; set; }
+        public List<UMLError> Errors { get; } = new();
+        public UMLPackage Package { get => _package; }
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {

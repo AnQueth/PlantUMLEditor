@@ -2,15 +2,12 @@
 {
     public class UMLUnknownDiagram : UMLDiagram
     {
-        public UMLUnknownDiagram()
-        {
-        }
+    
 
-        public UMLUnknownDiagram(string title, string fileName)
+        public UMLUnknownDiagram(string title, string fileName) : base(title, fileName)
         {
-            Title = title;
-
-            FileName = fileName;
+           
+        
         }
     }
 }

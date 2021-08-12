@@ -524,6 +524,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <ToolBar    Grid.ColumnSpan="3">
 
@@ -767,6 +768,15 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
             </TabControl>
         </Grid>
 
+        <StatusBar Grid.Row="2" Grid.ColumnSpan="3">
+            <StatusBarItem>
+                <Button Command="{Binding CancelExecutingAction}">Cancel</Button>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock Text="{Binding CurrentActionExecuting}"></TextBlock>
+            </StatusBarItem>
+        </StatusBar>
+        
         <Popup IsOpen="{Binding ConfirmOpen}">
 
             <Grid>

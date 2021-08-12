@@ -2,9 +2,7 @@
 {
     public class UMLCreateAction : UMLMethod
     {
-        public UMLCreateAction()
-        {
-        }
+       
 
         public UMLCreateAction(string name) : base(name, new VoidDataType(), UMLVisibility.Public)
         {

@@ -4,11 +4,11 @@ namespace UMLModels
 {
     public class UMLPackage : UMLDataType
     {
-        public UMLPackage(string text, string type = null) : base("UMLPackage")
+        public UMLPackage(string text, string? type = null) : base("UMLPackage")
         {
             Text = text;
             Type = type;
-            Children = new List<UMLDataType>();
+            Children = new();
         }
 
         public List<UMLDataType> Children
@@ -21,6 +21,6 @@ namespace UMLModels
             get; set;
         }
 
-        public string Type { get; set; }
+        public string? Type { get; set; }
     }
 }

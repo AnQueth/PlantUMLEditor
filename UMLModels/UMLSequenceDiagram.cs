@@ -4,31 +4,24 @@ namespace UMLModels
 {
     public class UMLSequenceDiagram : UMLDiagram
     {
-        public UMLSequenceDiagram()
-        {
-        }
+    
 
-        public UMLSequenceDiagram(string title, string fileName)
+        public UMLSequenceDiagram(string title, string fileName) : base(title, fileName)
         {
-            Title = title;
-            LifeLines = new List<UMLSequenceLifeline>();
-            Entities = new List<UMLOrderedEntity>();
-            FileName = fileName;
+         
+           
             ValidateAgainstClasses = true;
         }
 
-        public List<UMLOrderedEntity> Entities { get; set; }
-        public List<UMLSequenceLifeline> LifeLines { get; set; }
+        public List<UMLOrderedEntity> Entities { get; init; } = new();
+        public List<UMLSequenceLifeline> LifeLines { get; init; } = new();
 
         public bool ValidateAgainstClasses { get; set; }
 
-        public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to)
+        public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to, int lineNumber)
         {
-            var f = new UMLSequenceConnection()
-            {
-                From = source,
-                To = to
-            };
+            var f = new UMLSequenceConnection(source, to, lineNumber);
+            
             Entities.Add(f);
 
             return f;

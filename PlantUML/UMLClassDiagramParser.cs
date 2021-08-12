@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -78,7 +79,9 @@ namespace PlantUML
 
         private static async Task<UMLClassDiagram?> ReadClassDiagram(StreamReader sr, string fileName)
         {
-            UMLClassDiagram d = new(string.Empty, fileName);
+            UMLPackage defaultPackage = new("");
+           
+            UMLClassDiagram d = new(string.Empty, fileName, defaultPackage);
             bool started = false;
             string? line = null;
 
@@ -93,8 +96,7 @@ namespace PlantUML
             Regex removeGenerics = new("\\w+");
             Stack<UMLPackage> packagesStack = new();
 
-            UMLPackage defaultPackage = new("");
-            d.Package = defaultPackage;
+  
             packagesStack.Push(defaultPackage);
             var currentPackage = defaultPackage;
             int lineNumber = 0;
@@ -297,24 +299,32 @@ namespace PlantUML
                     if (m.Groups["text"].Success)
                     {
                         var propType = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value);
-
-                        var fromType = d.DataTypes.Find(p => p.Name == m.Groups["first"].Value);
-
-                        if (fromType != null && !fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
+                        if (propType == null)
                         {
-                            ListTypes l = ListTypes.None;
-                            if (m.Groups["fm"].Success)
-                            {
-                            }
-                            if (m.Groups["sm"].Success)
-                            {
-                                if (m.Groups["sm"].Value == "*")
-                                {
-                                    l = ListTypes.List;
-                                }
-                            }
+                            Debug.WriteLine($"{m.Groups["second"].Value} propType was not found");
 
-                            fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l));
+                        }
+                        else
+                        {
+
+                            var fromType = d.DataTypes.Find(p => p.Name == m.Groups["first"].Value);
+
+                            if (fromType != null && !fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
+                            {
+                                ListTypes l = ListTypes.None;
+                                if (m.Groups["fm"].Success)
+                                {
+                                }
+                                if (m.Groups["sm"].Success)
+                                {
+                                    if (m.Groups["sm"].Value == "*")
+                                    {
+                                        l = ListTypes.List;
+                                    }
+                                }
+
+                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l));
+                            }
                         }
                     }
                 }
@@ -367,7 +377,7 @@ namespace PlantUML
             else if (item == "+")
                 return UMLVisibility.Public;
 
-            return UMLVisibility.Public;
+            return UMLVisibility.None;
         }
 
         public static async Task<UMLClassDiagram?> ReadFile(string file)
@@ -387,7 +397,7 @@ namespace PlantUML
             return c;
         }
 
-        public static void TryParseLineForDataType(string line, Dictionary<string, UMLDataType> aliases, UMLDataType DataType)
+        public static void TryParseLineForDataType(string line, Dictionary<string, UMLDataType> aliases, UMLDataType dataType)
         {
             var methodMatch = _classLine.Match(line);
             if (methodMatch.Success)
@@ -484,7 +494,7 @@ namespace PlantUML
                     }
                 }
 
-                DataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
+                dataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
                 {
                     IsStatic = modifier == "static"
                 });
@@ -509,11 +519,11 @@ namespace PlantUML
                     aliases.Add(p.Word, c);
                 }
 
-                DataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType));
+                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType));
             }
             else
             {
-                DataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty),
+                dataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty),
                     UMLVisibility.None, ListTypes.None));
             }
         }

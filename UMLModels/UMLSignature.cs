@@ -2,11 +2,12 @@
 {
     public class UMLSignature
     {
+       
         public string Signature
         {
             get
             {
-                return ToString();
+                return this.ToString() ?? string.Empty;
             }
         }
     }

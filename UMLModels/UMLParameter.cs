@@ -13,9 +13,7 @@
 
     public class UMLParameter : UMLSignature
     {
-        public UMLParameter()
-        {
-        }
+       
 
         public UMLParameter(string name, UMLDataType type, ListTypes listTypes = ListTypes.None)
         {
@@ -27,12 +25,12 @@
 
         public ListTypes ListType
         {
-            get; set;
+            get; init;
         }
 
-        public string Name { get; set; }
+        public string Name { get; init; }
 
-        public UMLDataType ObjectType { get; set; }
+        public UMLDataType ObjectType { get; init; }
 
         public override string ToString()
         {

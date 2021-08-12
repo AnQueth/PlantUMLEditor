@@ -4,12 +4,10 @@ namespace UMLModels
 {
     public class UMLComponentDiagram : UMLDiagram
     {
-        public UMLComponentDiagram(string title, string fileName)
+        public UMLComponentDiagram(string title, string fileName, UMLPackage? package) : base(title, fileName)
         {
-            Title = title;
-
-            FileName = fileName;
-            Errors = new List<(string Line, int LineNumber, string message)>();
+            Package = package;
+     
         }
 
         public List<UMLDataType> Entities
@@ -17,17 +15,17 @@ namespace UMLModels
             get
             {
                 List<UMLDataType> dt = new();
-
-                AddMore(Package, dt);
+                if(Package != null)
+                    AddMore(Package, dt);
 
                 return dt;
             }
         }
 
-        public List<(string Line, int LineNumber, string message )> Errors { get; set; }
-        public UMLPackage Package { get; set; }
+        public List<(string Line, int LineNumber, string message)> Errors { get; } = new();
+        public UMLPackage? Package { get; init; }
 
-        public List<UMLPackage> ContainedPackages { get; set; } = new List<UMLPackage>();
+        public List<UMLPackage> ContainedPackages { get;  } = new List<UMLPackage>();
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {

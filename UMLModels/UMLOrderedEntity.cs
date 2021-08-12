@@ -2,7 +2,13 @@
 {
     public abstract class UMLOrderedEntity
     {
-        public int LineNumber { get; set; }
-        public virtual string Warning { get; }
+        public UMLOrderedEntity(int lineNumber)
+        {
+            LineNumber = lineNumber;
+            
+        }
+
+        public int LineNumber { get; init; }
+        public virtual string? Warning { get; }
     }
 }

@@ -4,10 +4,7 @@
     {
         private UMLSignature _returningFrom;
 
-        public UMLReturnFromMethod()
-        {
-        }
-
+        
         public UMLReturnFromMethod(UMLSignature returningFrom)
         {
             _returningFrom = returningFrom;

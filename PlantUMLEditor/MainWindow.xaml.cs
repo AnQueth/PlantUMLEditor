@@ -3,6 +3,7 @@ using PlantUMLEditor.Services;
 using System;
 using System.ComponentModel;
 using System.Windows;
+using System.Threading.Tasks;
 
 namespace PlantUMLEditor
 {
@@ -34,8 +35,10 @@ namespace PlantUMLEditor
         {
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            await Task.Delay(50);
+
             ((MainModel)DataContext).LoadedUI();
         }
     }

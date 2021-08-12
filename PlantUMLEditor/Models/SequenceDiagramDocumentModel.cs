@@ -15,7 +15,7 @@ namespace PlantUMLEditor.Models
 
 
         public SequenceDiagramDocumentModel(IConfiguration configuration,
-                        IIOService openDirectoryService, UMLSequenceDiagram diagram, List<UMLClassDiagram> dataTypes,
+                        IIOService openDirectoryService, UMLSequenceDiagram diagram, LockedList<UMLClassDiagram> dataTypes,
                         string fileName, string title, string content) : base(configuration, openDirectoryService, DocumentTypes.Sequence, fileName, title, content)
         {
             Diagram = diagram;
@@ -24,7 +24,7 @@ namespace PlantUMLEditor.Models
 
      
 
-        public List<UMLClassDiagram> DataTypes { get; private set; }
+        public LockedList<UMLClassDiagram> DataTypes { get; private set; }
         public UMLSequenceDiagram Diagram { get; private set; }
 
         private void AddAll(UMLDataType uMLDataType, List<string> matchingAutoCompletes, string word)
@@ -52,7 +52,7 @@ namespace PlantUMLEditor.Models
             return selection;
         }
 
-        internal void UpdateDiagram(List<UMLClassDiagram> classDocuments)
+        internal void UpdateDiagram(LockedList<UMLClassDiagram> classDocuments)
         {
             DataTypes = classDocuments;
         }
@@ -70,9 +70,9 @@ namespace PlantUMLEditor.Models
             if (text.StartsWith("participant", StringComparison.InvariantCulture) 
                 || text.StartsWith("actor" , StringComparison.InvariantCulture))
             {
-                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, out var lifeline) && lifeline.DataTypeId != null)
+                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, autoCompleteParameters.LineNumber, out var lifeline) && lifeline.DataTypeId != null)
                 {
-                    lifeline.LineNumber = autoCompleteParameters.LineNumber;
+                    
                     return;
                 }
                 else
@@ -82,7 +82,7 @@ namespace PlantUMLEditor.Models
                             MatchingAutoCompletes.Add(item.Key);
 
                     if (MatchingAutoCompletes.Count > 0)
-                        ShowAutoComplete(  false);
+                        ShowAutoComplete( );
 
                     return;
                 }
@@ -97,7 +97,7 @@ namespace PlantUMLEditor.Models
                 {
 
 
-                    if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null,
+                    if (PlantUML.UMLSequenceDiagramParser.TryParseAllConnections(text, diagram, types, null, 0,
                         out UMLSequenceConnection? connection))
                     {
                         if (text.Length - 2 > autoCompleteParameters.PositionInLine
@@ -113,7 +113,7 @@ namespace PlantUMLEditor.Models
 
                             }
                             if (MatchingAutoCompletes.Count > 0)
-                                ShowAutoComplete(  true);
+                                ShowAutoComplete(  );
                             return;
                         }
                     }
@@ -124,7 +124,7 @@ namespace PlantUMLEditor.Models
                             MatchingAutoCompletes.Add(item);
 
                         if (MatchingAutoCompletes.Count > 0)
-                            ShowAutoComplete(  false);
+                            ShowAutoComplete(  );
 
                         return;
                     }
@@ -142,7 +142,7 @@ namespace PlantUMLEditor.Models
            
 
             if (MatchingAutoCompletes.Count > 0)
-                ShowAutoComplete(  false);
+                ShowAutoComplete(  );
         }
 
         public override async Task<UMLDiagram?> GetEditedDiagram()

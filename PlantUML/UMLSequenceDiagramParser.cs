@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -92,7 +93,7 @@ namespace PlantUML
             return action;
         }
 
-        private static async Task<UMLSequenceDiagram?> ReadDiagram(StreamReader sr, List<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
+        private static async Task<UMLSequenceDiagram?> ReadDiagram(StreamReader sr, LockedList<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
         {
             var types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass or UMLInterface).ToLookup(p => p.Name);
 
@@ -156,21 +157,21 @@ namespace PlantUML
                     continue;
                 }
 
-                if (TryParseLifeline(line, types, out UMLSequenceLifeline? lifeline))
+                if (TryParseLifeline(line, types, lineNumber, out UMLSequenceLifeline? lifeline))
                 {
                     d.LifeLines.Add(lifeline);
-                    lifeline.LineNumber = lineNumber;
+                   
 
                     continue;
                 }
 
                 if (!justLifeLines)
                 {
-                    UMLSequenceBlockSection? sectionBlock = null;
+                    
 
-                    if (TryParseAllConnections(line, d, types, previous, out UMLSequenceConnection? connection))
+                    if (TryParseAllConnections(line, d, types, previous, lineNumber, out UMLSequenceConnection ? connection))
                     {
-                        connection.LineNumber = lineNumber;
+                        
 
                         if (activeBlocks.Count == 0)
                             d.Entities.Add(connection);
@@ -179,9 +180,9 @@ namespace PlantUML
 
                         previous = connection;
                     }
-                    else if ((sectionBlock = UMLSequenceBlockSection.TryParse(line)) != null)
+                    else if ( UMLSequenceBlockSection.TryParse(line, lineNumber, out var sectionBlock) )
                     {
-                        sectionBlock.LineNumber = lineNumber;
+                         
 
                         if (activeBlocks.Count == 0)
                         {
@@ -214,6 +215,7 @@ namespace PlantUML
 
         private static bool TryParseConnection(string fromAlias, string arrow, string toAlias,
             string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types, UMLSequenceConnection? previous,
+                int lineNumber,
             [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
             connection = null;
@@ -230,22 +232,15 @@ namespace PlantUML
                 bool isCreate = arrow == "-->";
                 action = GetActionSignature(actionSignature, types, to, previous, d);
             }
-            connection = new UMLSequenceConnection()
-            {
-                ToShouldBeUsed = true,
-                From = from,
-                To = to,
-                Action = action,
-                ToName = toAlias,
-                FromShouldBeUsed = true,
-                FromName = fromAlias
-            };
+            connection = new UMLSequenceConnection(from, to, action, fromAlias, toAlias, true, true, lineNumber);
+            
 
             return true;
         }
 
         private static bool TryParseReturnToEmpty(string fromAlias, string arrow,
             string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types, UMLSequenceConnection? previous,
+            int lineNumber,
            [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
             if (arrow.StartsWith("<", StringComparison.Ordinal))
@@ -253,12 +248,14 @@ namespace PlantUML
                 UMLSignature method = GetActionSignature(actionSignature, types, null, previous, d);
 
                 var ft = d.LifeLines.Find(p => p.Alias == fromAlias);
-
-                connection = new UMLSequenceConnection()
+                if(ft == null)
                 {
-                    From = ft,
-                    Action = method
-                };
+                    Debug.WriteLine($"{fromAlias} not found");
+                    connection = null;
+                    return false;
+                }
+                connection = new UMLSequenceConnection(ft, method, lineNumber);
+                
 
                 return true;
             }
@@ -270,7 +267,7 @@ namespace PlantUML
 
         private static bool TypeParseConnectionFromEmpty(string arrow, string toAlias,
             string actionSignature, UMLSequenceDiagram d,
-            ILookup<string, UMLDataType> types, UMLSequenceConnection? previous, 
+            ILookup<string, UMLDataType> types, UMLSequenceConnection? previous, int lineNumber,
             [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
             if (arrow.StartsWith("-", StringComparison.Ordinal))
@@ -285,13 +282,7 @@ namespace PlantUML
                     action = GetActionSignature(actionSignature, types, to, previous, d);
                 }
 
-                connection = new UMLSequenceConnection()
-                {
-                    ToShouldBeUsed = true,
-                    To = to,
-                    Action = action,
-                    ToName = toAlias
-                };
+                connection = new UMLSequenceConnection( to, true, action, toAlias, lineNumber) ;
 
                 return true;
             }
@@ -300,7 +291,7 @@ namespace PlantUML
             return false;
         }
 
-        public static async Task<UMLSequenceDiagram?> ReadFile(string file, List<UMLClassDiagram> types, bool justLifeLines)
+        public static async Task<UMLSequenceDiagram?> ReadFile(string file, LockedList<UMLClassDiagram> types, bool justLifeLines)
         {
             using StreamReader sr = new(file);
             UMLSequenceDiagram? c = await ReadDiagram(sr, types, file, justLifeLines);
@@ -308,7 +299,7 @@ namespace PlantUML
             return c;
         }
 
-        public static async Task<UMLSequenceDiagram?> ReadString(string s, List<UMLClassDiagram> types, bool justLifeLines)
+        public static async Task<UMLSequenceDiagram?> ReadString(string s, LockedList<UMLClassDiagram> types, bool justLifeLines)
         {
             using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
             using StreamReader sr = new(ms);
@@ -318,7 +309,7 @@ namespace PlantUML
         }
 
         public static bool TryParseAllConnections(string line, UMLSequenceDiagram diagram,
-            ILookup<string, UMLDataType> types, UMLSequenceConnection? previous,
+            ILookup<string, UMLDataType> types, UMLSequenceConnection? previous, int lineNumber,
             [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
             connection = null;
@@ -343,17 +334,17 @@ namespace PlantUML
                 {
                     if (arrow.StartsWith("<", StringComparison.Ordinal))
                     {
-                        if (TryParseReturnToEmpty(toAlias, arrow, actionSignature, diagram, types, previous, out connection))
+                        if (TryParseReturnToEmpty(toAlias, arrow, actionSignature, diagram, types, previous, lineNumber, out connection))
                         {
                             return true;
                         }
                     }
-                    else if (TypeParseConnectionFromEmpty(arrow, toAlias, actionSignature, diagram, types, previous, out connection))
+                    else if (TypeParseConnectionFromEmpty(arrow, toAlias, actionSignature, diagram, types, previous, lineNumber, out connection))
                     {
                         return true;
                     }
                 }
-                else if (TryParseConnection(fromAlias, arrow, toAlias, actionSignature, diagram, types, previous, out connection))
+                else if (TryParseConnection(fromAlias, arrow, toAlias, actionSignature, diagram, types, previous, lineNumber, out connection))
                 {
                     return !string.IsNullOrWhiteSpace(connection.ToName) && !string.IsNullOrWhiteSpace(connection.FromName);
                 }
@@ -366,7 +357,7 @@ namespace PlantUML
         }
 
        
-        public static bool TryParseLifeline(string line, ILookup<string, UMLDataType> types, 
+        public static bool TryParseLifeline(string line, ILookup<string, UMLDataType> types, int lineNumber,
             [NotNullWhen(true)] out UMLSequenceLifeline? lifeline)
         {
             var m = _lifeLineRegex.Match(line);
@@ -380,10 +371,10 @@ namespace PlantUML
 
                 if (!types.Contains(name))
                 {
-                    lifeline = new UMLSequenceLifeline(type, name, alias, null);
+                    lifeline = new UMLSequenceLifeline(type, name, alias, null, lineNumber);
                 }
                 else
-                    lifeline = new UMLSequenceLifeline(type, name, alias, types[name].First().Id);
+                    lifeline = new UMLSequenceLifeline(type, name, alias, types[name].First().Id, lineNumber);
                 return true;
             }
             lifeline = null;

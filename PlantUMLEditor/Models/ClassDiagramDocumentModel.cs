@@ -20,7 +20,7 @@ namespace PlantUMLEditor.Models
             IIOService openDirectoryService,
           
             UMLClassDiagram diagram,
-            List<UMLClassDiagram> otherClassDiagrams,
+            LockedList<UMLClassDiagram> otherClassDiagrams,
             string fileName,
             string title,
             string content) : base(configuration, openDirectoryService, DocumentTypes.Class, fileName, title, content)

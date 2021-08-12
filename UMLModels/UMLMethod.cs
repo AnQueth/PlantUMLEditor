@@ -12,15 +12,12 @@ namespace UMLModels
 
     public class UMLMethod : UMLSignature
     {
-        public UMLMethod()
-        {
-        }
-
+      
         public UMLMethod(string name, UMLDataType type, UMLVisibility visibility, params UMLParameter[] parameters)
         {
             Name = name;
             ReturnType = type;
-            Parameters = new List<UMLParameter>();
+            
             Parameters.AddRange(parameters);
             Visibility = visibility;
         }
@@ -30,21 +27,21 @@ namespace UMLModels
             IsConstructor = true;
         }
 
-        public bool IsConstructor { get; set; }
+        public bool IsConstructor { get; init; }
 
-        public bool IsStatic { get; set; }
+        public bool IsStatic { get; init; }
 
-        public string Name { get; set; }
+        public string Name { get; init; }
 
-        public Overridability OverridableType { get; set; }
+        public Overridability OverridableType { get; init; }
 
-        public List<UMLParameter> Parameters { get; }
+        public List<UMLParameter> Parameters { get; } = new();
 
-        public UMLDataType ReturnType { get; set; }
+        public UMLDataType ReturnType { get; init; }
 
         public UMLVisibility Visibility
         {
-            get; set;
+            get; init;
         }
 
         public override string ToString()
@@ -52,13 +49,14 @@ namespace UMLModels
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
             StringBuilder sb = new();
+ 
             if (ReturnType != null && !string.IsNullOrEmpty(ReturnType.Name))
             {
                 sb.Append(ReturnType.Name);
-                sb.Append(" ");
+                sb.Append(' ');
             }
             sb.Append(Name);
-            sb.Append("(");
+            sb.Append('(');
 
             if (Parameters != null)
                 for (var x = 0; x < Parameters.Count; x++)
@@ -68,7 +66,7 @@ namespace UMLModels
                         sb.Append(", ");
                 }
 
-            sb.Append(")");
+            sb.Append(')');
 
             return sb.ToString();
         }

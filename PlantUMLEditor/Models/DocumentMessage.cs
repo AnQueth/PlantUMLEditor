@@ -40,7 +40,7 @@ namespace PlantUMLEditor.Models
             MissingDataTypeName = missingDataTypeName;
             IsMissingDataType = isMissingDataType;
         }
-        public string? MissingDataTypeName { get; init; }
+        public string MissingDataTypeName { get; init; }
 
         public bool IsMissingDataType { get; init; }
 

@@ -233,7 +233,7 @@ namespace PlantUMLEditor.Controls
             ReplaceText = "";
             lock (_found)
                 _found.Clear();
-            CalculateFirstAndLastCharacters();
+            //CalculateFirstAndLastCharacters();
             _renderText = true;
             InvalidateVisual();
         }
@@ -245,9 +245,9 @@ namespace PlantUMLEditor.Controls
             FindReplaceVisible = false;
             lock (_found)
                 _found.Clear();
-            CalculateFirstAndLastCharacters();
-            _renderText = true;
-            InvalidateVisual();
+            //CalculateFirstAndLastCharacters();
+            //_renderText = true;
+            //InvalidateVisual();
         }
 
         private void FindHandler()
@@ -353,8 +353,7 @@ namespace PlantUMLEditor.Controls
             if (e.NewValue is not DocumentModel)
                 return;
 
-            _lastKnownFirstCharacterIndex = 0;
-            _lastKnownLastCharacterIndex = 0;
+       
             CaretIndex = 0;
 
             _bindedDocument = (DocumentModel)e.NewValue;
@@ -896,7 +895,7 @@ namespace PlantUMLEditor.Controls
                 }
             }
 
-            CalculateFirstAndLastCharacters();
+           // CalculateFirstAndLastCharacters();
 
             base.OnPreviewTextInput(e);
         }
@@ -904,7 +903,7 @@ namespace PlantUMLEditor.Controls
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
-            drawingContext.PushTransform(new TranslateTransform(-HorizontalOffset, -_scrollOffset));
+            drawingContext.PushTransform(new TranslateTransform(-HorizontalOffset, -_scrollOffset ));
             drawingContext.PushClip(new RectangleGeometry(new Rect(HorizontalOffset, _scrollOffset, ViewportWidth, ViewportHeight)));
             //drawingContext.PushTransform(new TranslateTransform(-HorizontalOffset, -VerticalOffset));
             //drawingContext.PushClip(new RectangleGeometry(new Rect(HorizontalOffset, VerticalOffset,
@@ -962,10 +961,57 @@ namespace PlantUMLEditor.Controls
 
         private List<ColorCoding.FormatResult> _colorCodings = new();
 
+        private int CountLines()
+        {
+            int lineCount = Text.Count(c => c == '\n');
+            return lineCount;
 
+        }
+
+        private int GetCharaceterFromLine(int line)
+        {
+            int z = 0;
+            int m = 0;
+            for(var x = 0; x < Text.Length && m != line;x++)
+            {
+                if(Text[x] == '\n')
+                {
+                    m++;
+                }
+                if (m == line)
+                    return z;
+                z++;
+
+            }
+            return z;
+           
+        }
+
+        private (int, int) GetStartAndEndCharacters()
+        {
+            if (_lineHeight == 0)
+                _lineHeight = GetLineHeight();
+
+            GetStartAndEndLines(out int startLine, out int endLine);
+
+            int sc = GetCharaceterFromLine(startLine);
+            int ec = GetCharaceterFromLine(endLine);
+
+
+
+            return (sc, ec);
+
+        }
+
+        private void GetStartAndEndLines(out int startLine, out int endLine)
+        {
+            startLine = (int)Math.Ceiling(VerticalOffset / _lineHeight);
+            endLine = (int)Math.Ceiling((VerticalOffset + ActualHeight) / _lineHeight);
+        }
 
         protected override void OnTextChanged(TextChangedEventArgs e)
         {
+        
             //notify documents that text has changed
             _bindedDocument?.TextChanged(Text);
 
@@ -975,12 +1021,15 @@ namespace PlantUMLEditor.Controls
             _braces = default;
             _errors.Clear();
 
-            ColorCoding coding = new();
+         
             _colorCodings = ColorCoding.FormatText(TextRead());
 
 
             base.OnTextChanged(e);
 
+            
+
+            CalculateFirstAndLastCharacters();
             _renderText = true;
             InvalidateVisual();
         }
@@ -1019,14 +1068,12 @@ namespace PlantUMLEditor.Controls
 
                 if (cf + (cl - cf) > Text.Length || (cl - cf) < 0)
                 {
-                    CalculateFirstAndLastCharacters();
-                    _renderText = true;
-                    Dispatcher.InvokeAsync(() => InvalidateVisual());
+                    Debug.WriteLine("TEXT OUT OF RANGE");
 
                     return;
                 }
 
-                string t = Text.Substring(cf, cl - cf);
+                string t = Text[cf..cl];
                 var formattedText = new FormattedText(t
     ,
     CultureInfo.GetCultureInfo("en-us"),
@@ -1034,7 +1081,7 @@ namespace PlantUMLEditor.Controls
     new Typeface(FontFamily.Source),
     FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-                Debug.WriteLine($"{cf} {cl} {t.Length}");
+                Debug.WriteLine($"{cf} {cl} {Text.Length} {t.Length}");
                 foreach (var c in _colorCodings.Where(z => z.Intersects(cf, cl)))
                 {
 
@@ -1168,61 +1215,67 @@ namespace PlantUMLEditor.Controls
 
         private void CalculateFirstAndLastCharacters()
         {
-            int cl = 0;
-            int cf = 0;
-            int first = GetFirstVisibleLineIndex();
-            int last = GetLastVisibleLineIndex();
+            var g = GetStartAndEndCharacters();
 
-            if (last < LineCount)
-                last++;
+            //int cl;
+            //int cf = 0;
+            //int first = GetFirstVisibleLineIndex();
+            //int last = GetLastVisibleLineIndex();
 
-            if (first == 0 && last == -1)
-            {
-                cf = _lastKnownFirstCharacterIndex;
-                cl = Math.Min(Text.Length, _lastKnownLastCharacterIndex);
-            }
-            else
-            {
-                try
-                {
-                    if (first >= 0)
-                        cf = GetCharacterIndexFromLineIndex(first);
-                }
-                catch
-                {
-                    cf = _lastKnownFirstCharacterIndex;
-                }
+            //if (last < LineCount)
+            //    last++;
 
-
-                try
-                {
-                    if (last > 1)
-                        cl = GetCharacterIndexFromLineIndex(last);
-                    else
-                    {
-                        cl = Text.Length;
-                    }
-                }
-                catch
-                {
-                    cl = Text.Length;
-                }
-            }
-            _lastKnownFirstCharacterIndex = cf;
-            _lastKnownLastCharacterIndex = cl;
+            //if (first == 0 && last == -1)
+            //{
+            //    cf = _lastKnownFirstCharacterIndex;
+            //    cl = Math.Min(Text.Length, _lastKnownLastCharacterIndex);
+            //}
+            //else
+            //{
+            //    try
+            //    {
+            //        if (first >= 0)
+            //            cf = GetCharacterIndexFromLineIndex(first);
+            //    }
+            //    catch
+            //    {
+            //        cf = _lastKnownFirstCharacterIndex;
+            //    }
 
 
-            Debug.WriteLine($"{cf} {cl} {Text.Length}");
+            //    try
+            //    {
+            //        if (last > 1)
+            //            cl = GetCharacterIndexFromLineIndex(last);
+            //        else
+            //        {
+            //            cl = Text.Length;
+            //        }
+            //    }
+            //    catch
+            //    {
+            //        cl = Text.Length;
+            //    }
+            //}
+            _lastKnownFirstCharacterIndex = g.Item1;
+            _lastKnownLastCharacterIndex = g.Item2;
+
+
+            Debug.WriteLine($"{_lastKnownFirstCharacterIndex} {_lastKnownLastCharacterIndex} {Text.Length}");
         }
 
+
+        /// <summary>
+        /// stolen from ms source code
+        /// </summary>
+        /// <returns></returns>
         private double GetLineHeight()
         {
-            // change Text height based on line size
+            
             FontFamily fontFamily = (FontFamily)this.GetValue(FontFamilyProperty);
             double fontSize = (double)this.GetValue(TextElement.FontSizeProperty);
 
-            // If Ps Task 25254 is completed (not likely in V1), LineStackingStrategy
-            // won't be constant and we'll need to call some sort of CalcLineAdvance method.
+  
             double lineHeight = 0;
 
             if (TextOptions.GetTextFormattingMode(this) == TextFormattingMode.Ideal)
@@ -1233,7 +1286,7 @@ namespace PlantUMLEditor.Controls
 
             return lineHeight;
         }
-        public void FocusAutoComplete(IAutoCompleteCallback autoCompleteCallback, bool allowTyping)
+        public void ShowAutoComplete(IAutoCompleteCallback autoCompleteCallback)
         {
             _currentCallback = autoCompleteCallback;
             if (PopupControl.Parent == null)
@@ -1269,7 +1322,8 @@ namespace PlantUMLEditor.Controls
             {
                 Dispatcher.InvokeAsync(() =>
                 {
-                    int c = GetCharacterIndexFromLineIndex(lineNumber - 1);
+                    lineNumber--;
+                    int c = GetCharaceterFromLine(lineNumber);// GetCharacterIndexFromLineIndex(lineNumber - 1);
                     if (c >= 0)
                         CaretIndex = c;
 
@@ -1279,10 +1333,11 @@ namespace PlantUMLEditor.Controls
                         FindHandler();
                     }
 
-                    _lastKnownFirstCharacterIndex = 0;
-                    _lastKnownLastCharacterIndex = 0;
+              
 
-                    if (GetFirstVisibleLineIndex() <= lineNumber - 1 && GetLastVisibleLineIndex() >= lineNumber - 1)
+                    GetStartAndEndLines(out var startLine, out var endLine);
+
+                    if (startLine <= lineNumber   && endLine >= lineNumber )
                     {
                         CalculateFirstAndLastCharacters();
                         _renderText = true;
@@ -1290,7 +1345,7 @@ namespace PlantUMLEditor.Controls
                     }
                     else
                     {
-                        ScrollToLine(lineNumber - 1);
+                        ScrollToLine(lineNumber < 5 ? 1 : lineNumber - 5);
                     }
 
                 });
@@ -1323,7 +1378,13 @@ namespace PlantUMLEditor.Controls
                 SelectedText = "";
             SelectionStart = index;
 
+      
             SelectedText = text;
+           
+            //CalculateFirstAndLastCharacters();
+            //_renderText = true;
+            //InvalidateVisual();
+
         }
 
         public override void OnApplyTemplate()
@@ -1346,7 +1407,7 @@ namespace PlantUMLEditor.Controls
             if (!_errors.Contains(e))
             {
                 _renderText = true;
-                CalculateFirstAndLastCharacters();
+                //CalculateFirstAndLastCharacters();
                 _errors.Add(e);
                 InvalidateVisual();
             }
@@ -1377,9 +1438,9 @@ namespace PlantUMLEditor.Controls
             {
                 Text = Indenter.Process(text, false);
             }
-            CalculateFirstAndLastCharacters();
-            _renderText = true;
-            InvalidateVisual();
+            //CalculateFirstAndLastCharacters();
+            //_renderText = true;
+            //InvalidateVisual();
         }
     }
 }
