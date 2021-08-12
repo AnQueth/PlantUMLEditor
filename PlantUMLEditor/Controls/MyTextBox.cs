@@ -388,7 +388,7 @@ namespace PlantUMLEditor.Controls
 
             _textTransformOffset = _scrollOffset + (startLine == 0 ? 0 : _lineHeight);
 
-            Debug.WriteLine($"{VerticalOffset} {_lineHeight} {(VerticalOffset / _lineHeight) + 0.0001} {_scrollOffset} {startLine}");
+            //Debug.WriteLine($"{VerticalOffset} {_lineHeight} {(VerticalOffset / _lineHeight) + 0.0001} {_scrollOffset} {startLine}");
 
             endLine = (int)Math.Ceiling((VerticalOffset + ActualHeight) / _lineHeight);
             ++endLine;
@@ -998,7 +998,7 @@ namespace PlantUMLEditor.Controls
 
         public void DrawText(DrawingContext col)
         {
-            Debug.WriteLine("DrawText");
+            //Debug.WriteLine("DrawText");
             var sw = Stopwatch.StartNew();
 
             int cf = _lastKnownFirstCharacterIndex;
@@ -1030,7 +1030,7 @@ namespace PlantUMLEditor.Controls
     new Typeface(FontFamily.Source),
     FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-                Debug.WriteLine($"{cf} {cl} {Text.Length} {t.Length}");
+               // Debug.WriteLine($"{cf} {cl} {Text.Length} {t.Length}");
                 foreach (var c in _colorCodings.Where(z => z.Intersects(cf, cl)))
                 {
                     try
