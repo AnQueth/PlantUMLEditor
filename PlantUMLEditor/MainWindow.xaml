@@ -7,6 +7,7 @@
     xmlns:models="clr-namespace:PlantUMLEditor.Models"
     xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
+   
 
         mc:Ignorable="d"
         Title="Aaron's Plant UML Editor" Height="{Binding WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding WindowWidth, Mode=TwoWay, FallbackValue=1000}"
@@ -516,8 +517,9 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
         <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
     </Window.Resources>
-
-    <Grid>
+    
+  
+    <Grid  >
         <Grid.ColumnDefinitions>
             <ColumnDefinition  Width="{Binding GridSettings.TreeWidth, Mode=TwoWay}" />
             <ColumnDefinition Width="Auto" />
@@ -780,8 +782,14 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
         </StatusBar>
 
         <Popup IsOpen="{Binding ConfirmOpen}" AllowsTransparency="True" Width="Auto" Height="Auto" HorizontalAlignment="Center" VerticalAlignment="Center"   Placement="Center"  >
-          
-                <Border BorderThickness="2" CornerRadius="10" BorderBrush="Black" Background="White">
+            <Grid Margin="10,10,10,10">
+             
+            
+
+            <Border BorderThickness="2" CornerRadius="10" BorderBrush="Black" Background="White">
+                    <Border.Effect>
+                        <DropShadowEffect Direction="315"  ShadowDepth="10" BlurRadius="10"  Opacity="0.5" />
+                    </Border.Effect>
                     <Grid Margin="10,10,10,10">
                         <Grid.RowDefinitions>
                             <RowDefinition></RowDefinition>
@@ -816,7 +824,8 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                         </Button>
                     </Grid>
                 </Border>
-             
+            </Grid>
+
         </Popup>
     </Grid>
 </Window>
