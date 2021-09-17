@@ -242,7 +242,7 @@ namespace PlantUMLEditor.Models
         {
             string? fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
             
-            if (fileName == null || Image != null)
+            if (fileName == null || Image == null)
                 return;
 
             PngBitmapEncoder encoder = new();
