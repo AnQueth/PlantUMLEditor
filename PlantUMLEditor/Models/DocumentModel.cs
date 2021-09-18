@@ -24,7 +24,8 @@ namespace PlantUMLEditor.Models
         private readonly string _jarLocation;
 
         private IAutoComplete? _autoComplete;
-        
+
+        private readonly TemporarySave _temporarySave;
 
         private string? _findText;
         private bool _isDirty;
@@ -43,7 +44,8 @@ namespace PlantUMLEditor.Models
 
         protected Action? _bindedAction;
 
-        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService, DocumentTypes documentType, string fileName, string title, string content)
+        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService, DocumentTypes documentType, 
+            string fileName, string title, string content)
         {
             DocumentType = documentType;
             name = title;
@@ -57,6 +59,15 @@ namespace PlantUMLEditor.Models
             MatchingAutoCompletes = new List<string>();
             SortedMatchingAutoCompletes = new ObservableCollection<string>();
             RegenDocument = new DelegateCommand(RegenDocumentHandler);
+            _temporarySave = new TemporarySave(fileName);
+
+            string? tmpContent = _temporarySave.ReadIfExists();
+            if(tmpContent != null)
+            {
+                Content = tmpContent;
+                IsDirty = true;
+            }
+
         }
 
         protected ITextEditor? TextEditor { get => _textEditor; }
@@ -179,6 +190,9 @@ namespace PlantUMLEditor.Models
 
             if (previewWindow != null)
                 await ShowPreviewImage(text);
+
+           _temporarySave.Save(text);
+
         }
 
         protected virtual void RegenDocumentHandler()
@@ -232,6 +246,7 @@ namespace PlantUMLEditor.Models
         {
             await File.WriteAllTextAsync(FileName, Content);
             IsDirty = false;
+            _temporarySave.Clean();
         }
 
         internal void TryClosePreview()
@@ -248,6 +263,8 @@ namespace PlantUMLEditor.Models
 
         public virtual void Close()
         {
+            _temporarySave.Stop();
+            _temporarySave.Clean();
             Visible = Visibility.Collapsed;
             imageModel?.Stop();
             if (previewWindow != null)
