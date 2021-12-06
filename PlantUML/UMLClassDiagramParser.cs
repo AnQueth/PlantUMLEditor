@@ -85,6 +85,7 @@ namespace PlantUML
             bool started = false;
             string? line = null;
 
+            List<string> readPackges = new();
             Stack<string> packages = new();
 
             Dictionary<string, UMLDataType> aliases = new();
@@ -203,14 +204,27 @@ namespace PlantUML
                 {
                     var s = _packageRegex.Match(line);
 
-                    packages.Push(Clean(s.Groups[PACKAGE].Value));
+                    string pn = Clean(s.Groups[PACKAGE].Value);
+          
+                    if (readPackges.Any(z => z == pn))
+                    {
+                        d.Errors.Add(new UMLError($"Package {pn} exists already and will cause rendering issues",
+                            String.Empty, lineNumber));
+                    }
+                    readPackges.Add(pn);
+                    packages.Push(pn);
                     brackets.Push(PACKAGE);
 
-                    var c = new UMLPackage(Clean(s.Groups[PACKAGE].Value));
+
+                    var c = new UMLPackage(pn);
+
+               
+
                     currentPackage.Children.Add(c);
                     currentPackage = c;
 
                     packagesStack.Push(c);
+
 
                     continue;
                 }
