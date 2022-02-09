@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
@@ -12,27 +11,51 @@ namespace PlantUMLEditor.Controls
     {
         private static readonly Dictionary<Regex, Color> _colorCodes = new()
         {
-            { new Regex("(@startuml|@enduml)", RegexOptions.Compiled), Colors.Coral },
-            { new Regex(@"^\s*'.+", RegexOptions.Multiline), Colors.Gray },
-            { new Regex(@"^\s*(class|interface)\s+.+?{([\s.\w\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled), Colors.Firebrick },
-            { new Regex(@"^\s*(abstract class|title|class|\{\w+\}|interface|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), Colors.Blue },
-            { new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), Colors.Blue }
+            {
+                new Regex("(@startuml|@enduml)", RegexOptions.Compiled),
+                Colors.Coral
+            },
+            {
+                new Regex(@"^\s*'.+", RegexOptions.Multiline),
+                Colors.Gray
+            },
+            {
+                new Regex(@"^\s*(class|interface|abstract +class)\s+.+?{([\s.\w\W]+?)}", RegexOptions.IgnoreCase | RegexOptions.Multiline | RegexOptions.Compiled),
+                Colors.Firebrick
+            },
+            {
+                new Regex(@"^\s*(abstract class|title|class|\{\w+\}|usecase|interface|activate|deactivate|package|together|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                Colors.Blue
+            },
+            {
+                new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                Colors.Blue
+            }
 
         };
 
         private static readonly Dictionary<Regex, Color[]> _groupedCodes = new()
         {
-            { new Regex(@"^\s*(?<k>package|folder|participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:[\w\s\{]+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new Color[] { Colors.Blue, Colors.Green } }
+            {
+                new Regex(@"^\s*(?<k>package|usecase|folder|participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:[\w\s\{]+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                new Color[] { Colors.Blue, Colors.Green }
+            }
         };
 
         private static readonly Dictionary<Regex, (Color, bool)> _mcolorCodes = new()
         {
-            { new Regex(@"((?<!\b(component|folder|package)\b.+)\:.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase), (Colors.Firebrick, false) },
-            { new Regex(@"^\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), (Colors.Firebrick, false) }
+            {
+                new Regex(@"((?<!\b(component|folder|package)\b.+)\:.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+                (Colors.Firebrick, false)
+            },
+            {
+                new Regex(@"^\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                (Colors.Firebrick, false)
+            }
         };
 
         private static readonly Regex brackets = new(@"(\{|\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex notes = new(@"note +(?:(?<sl>(?<placement>\w+) +of +(?<target>.+) *: *(?<text>.*))|(?<sl>(?<placement>\w+) *: *(?<text>.*))|(?<sl>\""(?<text>[\w\W]+)\"" +as +(?<alias>\w+))|(?<sl>(?<placement>\w+) +of +(?<target>.+?\n)(?<text>[.\s\S\W]*?)end note)|(?<sl>as +(?<alias>[\w]+?)\n(?<text>[.\s\S\W]*?)end note))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex notes = new(@"note +(?:(?<sl>(?<placement>\w+)( +of +| +)(?<target>.+) *: *(?<text>.*))|(?<sl>(?<placement>\w+) *: *(?<text>.*))|(?<sl>\""(?<text>[\w\W]+)\"" +as +(?<alias>\w+))|(?<sl>(?<placement>\w+)( +of +| +)(?<target>.+?\n)(?<text>[.\s\S\W]*?)end note)|(?<sl>as +(?<alias>[\w]+?)\n(?<text>[.\s\S\W]*?)end note))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex parenthesies = new(@"(\(|\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public record FormatResult(Brush Brush, int Start, int Length, FontWeight FontWeight, string Match)
@@ -42,13 +65,19 @@ namespace PlantUMLEditor.Controls
             public static bool Intersects(int begin, int end, int start, int span)
             {
                 if (start <= begin && span >= begin)
+                {
                     return true;
+                }
 
                 if (start <= end && span >= end)
+                {
                     return true;
+                }
 
                 if (start >= begin && span <= end)
+                {
                     return true;
+                }
 
                 return false;
             }
@@ -86,18 +115,20 @@ namespace PlantUMLEditor.Controls
                 //500 650
                 //500 200
                 if (span > end) // 700 > 650
+                {
                     len = length - (span - end) + startShave; //700 - 650 = 50, 200 - 50 = 150 length
+                }
 
                 return Math.Min(len, end - begin);
             }
 
             public int AdjustedLength(int begin, int end)
             {
-                return AdjustedLength(begin, end, Start, Length, Span); 
+                return AdjustedLength(begin, end, Start, Length, Span);
             }
         }
 
-        public static List<FormatResult> FormatText(string text )
+        public static List<FormatResult> FormatText(string text)
         {
             List<FormatResult> list = new();
             var mn = notes.Matches(text);
@@ -107,7 +138,7 @@ namespace PlantUMLEditor.Controls
                 foreach (Match m in item.Key.Matches(text))
                 {
                     list.Add(new FormatResult(new SolidColorBrush(item.Value.Item1), m.Index, m.Length, FontWeights.Normal, m.Value));
-                    
+
                 }
             }
             foreach (var item in _groupedCodes)
@@ -118,7 +149,7 @@ namespace PlantUMLEditor.Controls
 
                     list.Add(new FormatResult(new SolidColorBrush(item.Value[0]), g.Captures[0].Index, g.Captures[0].Length, FontWeights.Normal, g.Captures[0].Value));
                     list.Add(new FormatResult(new SolidColorBrush(item.Value[1]), g.Captures[1].Index, g.Captures[1].Length, FontWeights.Normal, g.Captures[1].Value));
-                   
+
 
                 }
             }
@@ -128,7 +159,7 @@ namespace PlantUMLEditor.Controls
                 {
                     var g = m.Groups[^1];
                     list.Add(new FormatResult(new SolidColorBrush(item.Value), g.Index, g.Length, FontWeights.Normal, g.Value));
-                 
+
                 }
             }
 
@@ -136,18 +167,18 @@ namespace PlantUMLEditor.Controls
             foreach (Match m in parenthesies.Matches(text))
             {
                 list.Add(new FormatResult(Brushes.Black, m.Index, m.Length, FontWeights.Bold, m.Value));
- 
+
             }
             foreach (Match m in brackets.Matches(text))
             {
                 list.Add(new FormatResult(Brushes.Green, m.Index, m.Length, FontWeights.Bold, m.Value));
- 
+
             }
 
             foreach (Match m in mn)
             {
                 list.Add(new FormatResult(Brushes.Gray, m.Index, m.Length, FontWeights.Normal, m.Value));
-          
+
             }
 
             return list;

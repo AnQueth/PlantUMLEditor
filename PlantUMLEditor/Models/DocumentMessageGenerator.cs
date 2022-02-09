@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xaml;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -14,26 +10,40 @@ namespace PlantUMLEditor.Models
         private readonly IEnumerable<UMLDiagram> documents;
 
         static readonly string[] knownwords = {"Task", "List", "IReadOnlyCollection",
-                "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler"};
+                "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler",
+        "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
+        };
         static readonly char[] seperators = { ' ', '.', ',', '<', '>', '[', ']' };
 
         public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents)
         {
             this.documents = documents;
 
+
         }
 
-        private static List<string> GetCleanName(string name)
+        private static List<string> GetCleanName(List<DataTypeRecord> dataTypes, string name)
         {
+            List<string> types = new();
+            foreach (var type in dataTypes.OrderByDescending(p => p.DataType.Name.Length))
+            {
+                if (name.IndexOf(type.DataType.Name, StringComparison.Ordinal) >= 0)
+                {
+                    types.Add(type.DataType.Name);
 
+                    name = name.Replace(type.DataType.Name, string.Empty);
+                }
+            }
 
             string[] parts = name.Split(seperators);
 
-            List<string> types = new();
+
             foreach (var p in parts)
             {
                 if (string.IsNullOrEmpty(p) || knownwords.Contains(p, StringComparer.OrdinalIgnoreCase))
+                {
                     continue;
+                }
 
                 types.Add(p);
 
@@ -67,7 +77,7 @@ namespace PlantUMLEditor.Models
                 {
                     foreach (var fdt in f2.DataTypes)
                     {
-                        dataTypes.Add(new (fdt, f2.FileName));
+                        dataTypes.Add(new(fdt, f2.FileName));
                     }
 
                     foreach (var e in f2.Errors)
@@ -96,7 +106,11 @@ namespace PlantUMLEditor.Models
             {
                 var items = from z in o.LifeLines
                             where z.Warning != null
-                            select new { o = doc, f = z };
+                            select new
+                            {
+                                o = doc,
+                                f = z
+                            };
 
                 foreach (var i in items)
                 {
@@ -149,7 +163,7 @@ namespace PlantUMLEditor.Models
                 {
                     string text = "Circular reference " + n.BadDataType.NS1 + " and " + n.NS2 + " type = " + n.BadDataType.DataType + " offender " + n.BadDataType.Name;
 
-                    newMessages.Add(new DocumentMessage(n.BadDataType.FileName, GetRelativeName(folderBase, n.BadDataType.FileName), n.BadDataType.LineNumber, text)) ;
+                    newMessages.Add(new DocumentMessage(n.BadDataType.FileName, GetRelativeName(folderBase, n.BadDataType.FileName), n.BadDataType.LineNumber, text));
 
                 }
             }
@@ -158,18 +172,24 @@ namespace PlantUMLEditor.Models
         private record BadDataType(string FileName, int LineNumber, string NS1, string DataType, string Name);
         private record BadDataTypeAndNS(BadDataType BadDataType, string NS2);
 
-        private static List<BadDataTypeAndNS> 
-            FindBadDataTypes(string folderBase, List<DocumentMessage> newMessages, List<DataTypeRecord> dataTypes)
+        private static List<BadDataTypeAndNS>
+            FindBadDataTypes(string folderBase, List<DocumentMessage> newMessages,
+             List<DataTypeRecord> dataTypes)
         {
-            List<BadDataTypeAndNS> namespaceReferences                = new();
+            List<BadDataTypeAndNS> namespaceReferences = new();
 
             foreach (var dt in dataTypes)
             {
                 if (dt.DataType is UMLEnum)
+                {
                     continue;
+                }
+
                 foreach (var m in dt.DataType.Properties)
                 {
-                    var parsedTypes = GetCleanName(m.ObjectType.Name);
+
+
+                    var parsedTypes = GetCleanName(dataTypes, m.ObjectType.Name);
                     foreach (var r in parsedTypes)
                     {
                         var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
@@ -189,7 +209,8 @@ namespace PlantUMLEditor.Models
                 {
                     foreach (var p in m.Parameters)
                     {
-                        var parsedTypes = GetCleanName(p.ObjectType.Name);
+
+                        var parsedTypes = GetCleanName(dataTypes, p.ObjectType.Name);
                         foreach (var r in parsedTypes)
                         {
                             var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
@@ -208,11 +229,12 @@ namespace PlantUMLEditor.Models
                     }
                     if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
                     {
-                        var parsedTypes = GetCleanName(m.ReturnType.Name);
+
+                        var parsedTypes = GetCleanName(dataTypes, m.ReturnType.Name);
                         foreach (var r in parsedTypes)
                         {
                             var pdt = dataTypes
-                                .FirstOrDefault(z => GetCleanName(z.DataType.Name).Contains(r));
+                                .FirstOrDefault(z => GetCleanName(dataTypes, z.DataType.Name).Contains(r));
                             if (pdt == default)
                             {
                                 newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
@@ -222,7 +244,7 @@ namespace PlantUMLEditor.Models
                             }
                             else
                             {
-                                namespaceReferences.Add(new(new (dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
+                                namespaceReferences.Add(new(new(dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
 
                             }
                         }

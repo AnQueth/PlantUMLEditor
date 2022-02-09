@@ -1,0 +1,12 @@
+@startuml
+title defaults.class
+class int {
+}
+class void {
+}
+class G {
+}
+class string {
+}
+@enduml
+

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UMLModels;
 
 namespace PlantUML
@@ -50,18 +48,34 @@ namespace PlantUML
                 else
                 {
                     if (item is UMLInterface)
+                    {
                         writer.Write("interface ");
+                    }
                     else if (item is UMLEnum)
+                    {
                         writer.Write("enum ");
-                    else
+                    }
+                    else if (item is UMLClass cl)
+                    {
+                        if (cl.IsAbstract)
+                        {
+                            writer.Write("abstract ");
+                        }
+
                         writer.Write("class ");
+                    }
 
-                    if (item.Name.Contains("<") || item.Name.Contains(" ") || item.Name.Contains("?"))
-
+                    if (item.Name.Contains(" ") || item.Name.Contains("?"))
+                    {
                         writer.Write("\"");
+                    }
+
                     writer.Write(item.Name);
-                    if (item.Name.Contains("<") || item.Name.Contains(" ") || item.Name.Contains("?"))
+                    if (item.Name.Contains(" ") || item.Name.Contains("?"))
+                    {
                         writer.Write("\"");
+                    }
+
                     writer.WriteLine(" { ");
 
                     foreach (var prop in item.Properties)
@@ -70,7 +84,9 @@ namespace PlantUML
                         writer.Write(" ");
 
                         if (prop.ListType == ListTypes.None)
+                        {
                             writer.Write(prop.ObjectType.Name);
+                        }
                         else if (prop.ListType == ListTypes.Array)
                         {
                             writer.Write(prop.ObjectType.Name);
@@ -106,7 +122,9 @@ namespace PlantUML
                             var p = me.Parameters[x];
 
                             if (p.ListType == ListTypes.None)
+                            {
                                 writer.Write(p.ObjectType.Name);
+                            }
                             else if (p.ListType == ListTypes.Array)
                             {
                                 writer.Write(p.ObjectType.Name);
@@ -128,7 +146,9 @@ namespace PlantUML
                             writer.Write(p.Name);
 
                             if (x != me.Parameters.Count - 1)
+                            {
                                 writer.Write(", ");
+                            }
                         }
                         writer.WriteLine(")");
                     }
@@ -138,8 +158,8 @@ namespace PlantUML
                         foreach (var b in item.Bases)
                         {
                             _ = postWrites.Append(item.Name);
-                            _ = postWrites.Append(" --|> ");
-                            _ = postWrites.AppendLine(b.Name);
+                            _ = postWrites.Append(" -- ");
+                            _ = postWrites.AppendLine(WriteNoGenerics(b.Name));
                         }
                     }
 
@@ -157,7 +177,9 @@ namespace PlantUML
                             writer.Write(" \"1\" --* \"*\" ");
                         }
                         else
+                        {
                             writer.Write(" --* ");
+                        }
 
                         writer.Write(prop.ObjectType.Name);
                         writer.Write(" : ");
@@ -165,6 +187,15 @@ namespace PlantUML
                     }
                 }
             }
+        }
+
+        private static string WriteNoGenerics(string name)
+        {
+            if (name.IndexOf("<") >= 0)
+            {
+                return name.Substring(0, name.IndexOf("<"));
+            }
+            return name;
         }
 
         private static char GetVisibility(UMLVisibility vis)

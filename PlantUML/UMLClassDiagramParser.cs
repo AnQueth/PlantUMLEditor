@@ -52,7 +52,11 @@ namespace PlantUML
             foreach(var (word, listType) in COLLECTIONS)
             {
                 if (v.StartsWith(word, StringComparison.OrdinalIgnoreCase))
-                    return new CollectionRecord(listType, v[word.Length..].Trim('>', ' '));
+                {
+                    string tmp = v[word.Length..];
+
+                    return new CollectionRecord(listType, tmp.Remove(tmp.Length - 1));
+                }
             }
 
          

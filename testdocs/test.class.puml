@@ -1,0 +1,21 @@
+@startuml
+title test.class
+package La{
+    class C1 {
+        C2 la()
+        int test()
+       
+    }
+}
+package a{
+    class C2 {
+        void aaa(C1 la)
+        void doStuff()
+    }
+    class C3 {
+        + C1 aa
+        + G la
+    }
+}
+
+@enduml

@@ -1,0 +1,42 @@
+@startuml
+
+title crossprocess-printing-flow
+
+package "Process" {
+    usecase "Add To Queue" as q
+    usecase "Manage Concurrent Readers" as cr
+    package "Queue Reading thread" {
+        usecase "Read Queue" as read
+        usecase "Generate PDF" as pdf
+        usecase "Save PDF Temporarily" as save
+        usecase "End of processing" as endp
+    }
+
+    usecase "Event Listener" as el
+    usecase "Retry" as retry
+    usecase "Read Temp PDF" as readpdf
+    usecase "Printed" as printed
+    usecase "GP Update" as gp
+}
+
+package "IAA Printing Service" {
+    usecase "PrintCommand" as print
+    usecase "Report Status" as reps
+    usecase "Spool" as spooler
+}
+
+q -> cr
+cr -down-> read : create reader thread per partition up to max concurrent partitions
+read -down-> pdf
+pdf -down-> save
+save -down-> print
+print -down-> spooler
+reps -down-> el
+el --> printed : if printed
+el --> retry : if errored
+retry -down-> readpdf
+readpdf -down-> print
+printed -> gp
+save -> endp
+endp -up-> read : loop while items to print
+@enduml

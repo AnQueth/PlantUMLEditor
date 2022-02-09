@@ -1,0 +1,120 @@
+@startuml
+
+title process.seq
+
+entity "Dream" as pd
+entity "Requirements" as pr
+database "ARB ToDo List" as todo
+database "Project Docs" as Docs
+database "Source Control" as SC
+entity "TDL or Group of TDL" as tdl
+entity "ARB" as review
+entity expert
+--> pd : <<create>>
+
+note right of pd
+We need to be notified before projects start
+of the dream so we can decide what needs to be done
+to support this project.
+end note
+
+note right of todo: this is a todo program that can be viewed and edited by ARB group
+
+note right of SC: project's source control
+
+pd -> review : Notified of a dream
+review -> review : Is the dream valid? what high level concerns ?
+review -> review : Vote on if project needs special oversight or can pass with self assessment
+
+note left of review
+1 vote for special oversight means it becomes special oversight for ARB.
+Provide elaboration on why it needs special oversight.
+this will be recorded along with the TODO.
+end note
+
+alt if needs oversight
+    review -> todo : Add todo for special oversight
+else
+    review -> todo : Self assessment on project due
+end
+review -> pd : give initial dream feedback and tdl
+loop define requirements
+    pd -> pr : meetings to define requirements
+
+    note left of pr
+    i want to stay out of requirement meetings, they are so talky talky.
+    We need the final decision what business wants done first.
+    if the proposed tech solution is bad, we can overrule it
+    in our review of the requirements and tdl docs.
+    end note
+
+    pr -> Docs : requirements written
+    pr -> tdl : create component diagram
+    tdl -> SC : save component diagram
+    pr -> review : submit component diagram and requirements
+    alt if ARB classified the project as needing oversight
+        review -> review : Review project requirements
+        review -> review : Determine if project needs special oversight in specialized areas
+
+        note left of review
+        this is where we may break responsibility to domain level knowledge
+        App Arch, Inf Arch, Data Arch, Security Arch
+        end note
+
+        alt if needs specialized oversight
+            review -> todo: Add oversight todo
+        end
+        review -> pr: Notify of any high level concerns
+    else just need self assessment
+        pr -> review : self assessment documentation
+        review -> todo: mark self assessment completed
+    end
+end
+alt if special oversight project
+    loop while review of tech and requirements is needed
+        pr -> tdl : Create techincal docs
+        tdl -> review : request review
+
+        note left of review: it is our job to ensure tdls know what is required of them
+
+        review -> todo: refer to todo list to make sure TDL follows through
+        review -> tdl : ensure tdl knows standards to follow based on ARB special oversight in specialized areas
+        opt these steps will be based on the review voting results
+            tdl -> tdl : Class Diagram
+            tdl -> tdl : Data model
+            tdl -> tdl : Security docs
+            tdl -> tdl : server / cloud resource planning
+            tdl -> SC : publish docs
+        end
+        tdl -> review :review results
+        alt if review passed
+            review -> todo : mark completed
+        end
+        review -> tdl : give feedback
+    end
+    alt if strategic project or new technology for tdl
+        loop dev process, 1 time every week
+            tdl -> expert : review code, data store, etc..
+
+            note left of review
+            this could just be solution architect work or
+            an appointed developer from arch team depending on complexity of project,
+            but data and azure scripts should be reviewed by
+            infrastructure, data, security
+            end note
+
+            expert -> tdl : return feedback
+            tdl -> expert : ask for release permission
+            alt if time for release
+                tdl -> review : check for permission
+                review -> todo : check for outstanding todos
+                alt if no todos and permission given
+                    tdl -> tdl : release project
+                else
+                    review -> tdl : tell fixes required
+                end
+            end
+        end
+    end
+end
+@enduml

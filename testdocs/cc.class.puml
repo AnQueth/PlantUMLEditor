@@ -1,0 +1,9 @@
+@startuml
+title cc.class
+class la  {
+    
+    string lalala 
+    
+}
+
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+title priceobf.component
+
+component SourceSpriteStrip
+component Randomizer
+component RandomizedImage
+component Map
+component ServerMap
+component WebServer   
+component Browser
+actor Designer
+
+Designer - SourceSpriteStrip : Create master source strip
+Randomizer <-- SourceSpriteStrip : read master
+WebServer -- Randomizer : Create Random Strip , Map, and Server Map
+Randomizer -- RandomizedImage : Create From SourceSpriteStrip
+Randomizer -- Map : Create map for client side
+Randomizer -- ServerMap : Create map for server to see numbers
+Browser <-- WebServer : Serve either server rendered, or js powered number obfuscation
+@enduml
