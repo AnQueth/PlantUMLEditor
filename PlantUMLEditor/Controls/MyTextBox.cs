@@ -828,8 +828,7 @@ namespace PlantUMLEditor.Controls
                 _autoComplete.CloseAutoComplete();
                 return;
             }
-            else if (_autoComplete.IsPopupVisible && (e.Key is Key.Tab or Key.Enter or Key.Space or
-                 Key.OemSemicolon))
+            else if (_autoComplete.IsPopupVisible && (e.Key is Key.Tab or Key.Enter or Key.Space))
             {
                 CaretIndex = SelectionStart + SelectionLength;
                 _autoComplete.CloseAutoComplete();
@@ -948,7 +947,7 @@ namespace PlantUMLEditor.Controls
         {
             _braces = default;
 
-            if (_autoComplete.IsPopupVisible && (e.Text is "(" or ")" or "<" or ">" or "-"))
+            if (_autoComplete.IsPopupVisible && (e.Text is "(" or ")" or "<" or ">" or "-" or ":"))
             {
                 CaretIndex = SelectionStart + SelectionLength;
                 _autoComplete.CloseAutoComplete();
