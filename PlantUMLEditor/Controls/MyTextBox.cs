@@ -948,38 +948,38 @@ namespace PlantUMLEditor.Controls
         {
             _braces = default;
 
-            if (_autoComplete.IsPopupVisible && (e.Text is "(" or ")" or "<" or ">"))
+            if (_autoComplete.IsPopupVisible && (e.Text is "(" or ")" or "<" or ">" or "-"))
             {
                 CaretIndex = SelectionStart + SelectionLength;
                 _autoComplete.CloseAutoComplete();
             }
 
-            if (e.Text is "{")
-            {
-                bool process = false;
-                for (var x = CaretIndex; x >= 0; x--)
-                {
-                    if (Text[x] == '{')
-                    {
-                        break;
-                    }
-                    if (char.IsLetterOrDigit(Text[x]) && x != '{')
-                    {
-                        process = true;
-                        break;
-                    }
-                }
-                if (process)
-                {
-                    int indent = Indenter.GetIndentLevelForLine(Text, GetLineIndexFromCharacterIndex(CaretIndex) - 1);
-                    string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}";
-                    int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
-                    Text = Text.Insert(CaretIndex, line);
-                    CaretIndex = newIndex;
-                    CloseAutoComplete();
-                    e.Handled = true;
-                }
-            }
+            //if (e.Text is "{")
+            //{
+            //    bool process = false;
+            //    for (var x = CaretIndex; x >= 0; x--)
+            //    {
+            //        if (Text[x] == '{')
+            //        {
+            //            break;
+            //        }
+            //        if (char.IsLetterOrDigit(Text[x]) && x != '{')
+            //        {
+            //            process = true;
+            //            break;
+            //        }
+            //    }
+            //    if (process)
+            //    {
+            //        int indent = Indenter.GetIndentLevelForLine(Text, GetLineIndexFromCharacterIndex(CaretIndex) - 1);
+            //        string line = " {\r\n" + new string(' ', (indent + 1) * 4) + "\r\n" + new string(' ', (indent) * 4) + "}";
+            //        int newIndex = CaretIndex + (" {\r\n" + new string(' ', (indent + 1) * 4)).Length;
+            //        Text = Text.Insert(CaretIndex, line);
+            //        CaretIndex = newIndex;
+            //        CloseAutoComplete();
+            //        e.Handled = true;
+            //    }
+            //}
 
             // CalculateFirstAndLastCharacters();
 

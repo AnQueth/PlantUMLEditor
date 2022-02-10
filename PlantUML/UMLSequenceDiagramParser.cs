@@ -22,15 +22,22 @@ namespace PlantUML
         {
             UMLSignature? action = toType.Methods.Find(p => p.Signature == actionSignature);
             if (action == null)
+            {
                 action = toType.Properties.Find(p => p.Signature == actionSignature);
+            }
+
             if (action != null)
+            {
                 return action;
+            }
 
             foreach (var item in toType.Bases)
             {
                 action = CheckActionOnType(item, actionSignature);
                 if (action != null)
+                {
                     return action;
+                }
             }
             return null;
         }
@@ -74,7 +81,9 @@ namespace PlantUML
                 else if (actionSignature.StartsWith("return", StringComparison.Ordinal))
                 {
                     if (previous != null && previous.Action != null)
+                    {
                         action = new UMLReturnFromMethod(previous.Action);
+                    }
                     else
                     {
                         string rest = actionSignature[6..].Trim();
@@ -87,7 +96,9 @@ namespace PlantUML
                 }
 
                 if (action == null)
+                {
                     action = new UMLUnknownAction(actionSignature);
+                }
             }
 
             return action;
@@ -113,9 +124,9 @@ namespace PlantUML
                 lineNumber++;
                 line = line.Trim();
 
-                if (line.StartsWith( "@startuml", StringComparison.Ordinal))
+                if (line.StartsWith("@startuml", StringComparison.Ordinal))
                 {
-                    if(line.Length > 9)
+                    if (line.Length > 9)
                     {
                         d.Title = line[9..].Trim();
                     }
@@ -129,7 +140,9 @@ namespace PlantUML
                 }
 
                 if (!started)
+                {
                     continue;
+                }
 
                 if (notes.IsMatch(line))
                 {
@@ -139,17 +152,25 @@ namespace PlantUML
                         swallowingNotes = true;
                     }
                     else
+                    {
                         continue;
+                    }
                 }
 
                 if (line.StartsWith("end note", StringComparison.Ordinal))
+                {
                     swallowingNotes = false;
+                }
 
                 if (swallowingNotes)
+                {
                     continue;
+                }
 
                 if (line.StartsWith("class", StringComparison.Ordinal) || line.StartsWith("interface", StringComparison.Ordinal) || line.StartsWith("package", StringComparison.Ordinal))
+                {
                     return null;
+                }
 
                 if (line.StartsWith("title", StringComparison.Ordinal))
                 {
@@ -160,29 +181,33 @@ namespace PlantUML
                 if (TryParseLifeline(line, types, lineNumber, out UMLSequenceLifeline? lifeline))
                 {
                     d.LifeLines.Add(lifeline);
-                   
+
 
                     continue;
                 }
 
                 if (!justLifeLines)
                 {
-                    
 
-                    if (TryParseAllConnections(line, d, types, previous, lineNumber, out UMLSequenceConnection ? connection))
+
+                    if (TryParseAllConnections(line, d, types, previous, lineNumber, out UMLSequenceConnection? connection))
                     {
-                        
+
 
                         if (activeBlocks.Count == 0)
+                        {
                             d.Entities.Add(connection);
+                        }
                         else
+                        {
                             activeBlocks.Peek().Entities.Add(connection);
+                        }
 
                         previous = connection;
                     }
-                    else if ( UMLSequenceBlockSection.TryParse(line, lineNumber, out var sectionBlock) )
+                    else if (UMLSequenceBlockSection.TryParse(line, lineNumber, out var sectionBlock))
                     {
-                         
+
 
                         if (activeBlocks.Count == 0)
                         {
@@ -204,7 +229,9 @@ namespace PlantUML
                                 or UMLSequenceBlockSection.SectionTypes.Parrallel
                                 or UMLSequenceBlockSection.SectionTypes.Try
                                 )
+                            {
                                 _ = activeBlocks.Pop();
+                            }
                         }
                     }
                 }
@@ -221,7 +248,9 @@ namespace PlantUML
             connection = null;
 
             if (!arrow.Contains("->", StringComparison.Ordinal))
+            {
                 return false;
+            }
 
             var from = d.LifeLines.Find(p => p.Alias == fromAlias);
 
@@ -233,7 +262,7 @@ namespace PlantUML
                 action = GetActionSignature(actionSignature, types, to, previous, d);
             }
             connection = new UMLSequenceConnection(from, to, action, fromAlias, toAlias, true, true, lineNumber);
-            
+
 
             return true;
         }
@@ -248,14 +277,15 @@ namespace PlantUML
                 UMLSignature method = GetActionSignature(actionSignature, types, null, previous, d);
 
                 var ft = d.LifeLines.Find(p => p.Alias == fromAlias);
-                if(ft == null)
+                if (ft == null)
                 {
+
                     Debug.WriteLine($"{fromAlias} not found");
                     connection = null;
                     return false;
                 }
                 connection = new UMLSequenceConnection(ft, method, lineNumber);
-                
+
 
                 return true;
             }
@@ -282,7 +312,7 @@ namespace PlantUML
                     action = GetActionSignature(actionSignature, types, to, previous, d);
                 }
 
-                connection = new UMLSequenceConnection( to, true, action, toAlias, lineNumber) ;
+                connection = new UMLSequenceConnection(to, true, action, toAlias, lineNumber);
 
                 return true;
             }
@@ -356,7 +386,7 @@ namespace PlantUML
             return false;
         }
 
-       
+
         public static bool TryParseLifeline(string line, ILookup<string, UMLDataType> types, int lineNumber,
             [NotNullWhen(true)] out UMLSequenceLifeline? lifeline)
         {
@@ -364,17 +394,22 @@ namespace PlantUML
             if (m.Success)
             {
                 string type = m.Groups["type"].Value;
-                string name = m.Groups["name"].Value.Trim('\"' );
+                string name = m.Groups["name"].Value.Trim('\"');
                 string alias = m.Groups["alias"].Value;
                 if (string.IsNullOrEmpty(alias))
+                {
                     alias = name;
+                }
 
                 if (!types.Contains(name))
                 {
                     lifeline = new UMLSequenceLifeline(type, name, alias, null, lineNumber);
                 }
                 else
+                {
                     lifeline = new UMLSequenceLifeline(type, name, alias, types[name].First().Id, lineNumber);
+                }
+
                 return true;
             }
             lifeline = null;

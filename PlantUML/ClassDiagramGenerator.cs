@@ -15,11 +15,13 @@ namespace PlantUML
             writer.Write("title ");
             writer.WriteLine(classDiagram.Title);
             StringBuilder postWriter = new();
-            Write(classDiagram.Package.Children, writer, postWriter);
+
+            Write(classDiagram.Package.Children, writer, postWriter, classDiagram.DataTypes);
             writer.Write(postWriter.ToString());
             writer.WriteLine("@enduml");
         }
-        private static void Write(List<UMLDataType> children, TextWriter writer, StringBuilder postWrites)
+        private static void Write(List<UMLDataType> children, TextWriter writer, StringBuilder postWrites,
+            List<UMLDataType> dataTypes)
         {
             foreach (var item in children)
             {
@@ -29,7 +31,7 @@ namespace PlantUML
                     writer.Write(pa.Text);
                     writer.WriteLine("{");
 
-                    Write(pa.Children, writer, postWrites);
+                    Write(pa.Children, writer, postWrites, dataTypes);
 
                     writer.WriteLine("}");
                 }
@@ -78,7 +80,7 @@ namespace PlantUML
 
                     writer.WriteLine(" { ");
 
-                    foreach (var prop in item.Properties)
+                    foreach (var prop in item.Properties.Where(z => !dataTypes.Any(p => p == z.ObjectType)))
                     {
                         writer.Write(GetVisibility(prop.Visibility));
                         writer.Write(" ");
@@ -157,46 +159,38 @@ namespace PlantUML
                     {
                         foreach (var b in item.Bases)
                         {
-                            _ = postWrites.Append(item.Name);
+                            _ = postWrites.Append(item.NonGenericName);
                             _ = postWrites.Append(" -- ");
-                            _ = postWrites.AppendLine(WriteNoGenerics(b.Name));
+                            _ = postWrites.AppendLine(b.NonGenericName);
                         }
                     }
 
                     foreach (var i in item.Interfaces)
                     {
-                        _ = postWrites.Append(item.Name);
+                        _ = postWrites.Append(item.NonGenericName);
                         _ = postWrites.Append(" --* ");
-                        _ = postWrites.AppendLine(i.Name);
+                        _ = postWrites.AppendLine(i.NonGenericName);
                     }
-                    foreach (var prop in item.Properties.Where(z => children.Any(p => p == z.ObjectType)))
+                    foreach (var prop in item.Properties.Where(z => dataTypes.Any(p => p == z.ObjectType)))
                     {
-                        writer.Write(item.Name);
+                        postWrites.Append(item.NonGenericName);
                         if (prop.ListType != ListTypes.None)
                         {
-                            writer.Write(" \"1\" --* \"*\" ");
+                            postWrites.Append(" \"1\" --* \"*\" ");
                         }
                         else
                         {
-                            writer.Write(" --* ");
+                            postWrites.Append(" --* ");
                         }
 
-                        writer.Write(prop.ObjectType.Name);
-                        writer.Write(" : ");
-                        writer.WriteLine(prop.Name);
+                        postWrites.Append(prop.ObjectType.NonGenericName);
+                        postWrites.Append(" : ");
+                        postWrites.AppendLine(prop.Name);
                     }
                 }
             }
         }
 
-        private static string WriteNoGenerics(string name)
-        {
-            if (name.IndexOf("<") >= 0)
-            {
-                return name.Substring(0, name.IndexOf("<"));
-            }
-            return name;
-        }
 
         private static char GetVisibility(UMLVisibility vis)
         {

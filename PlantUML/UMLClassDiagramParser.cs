@@ -22,7 +22,7 @@ namespace PlantUML
 
         private const string PACKAGE = "package";
 
-        private static readonly Regex  _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
+        private static readonly Regex _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
 
         private static readonly Regex _classLine = new("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
@@ -44,12 +44,12 @@ namespace PlantUML
 
         private static CollectionRecord CreateFrom(string v)
         {
-          
+
             v = v.Trim();
 
-           
 
-            foreach(var (word, listType) in COLLECTIONS)
+
+            foreach (var (word, listType) in COLLECTIONS)
             {
                 if (v.StartsWith(word, StringComparison.OrdinalIgnoreCase))
                 {
@@ -59,11 +59,15 @@ namespace PlantUML
                 }
             }
 
-         
+
             if (v.EndsWith("[]", StringComparison.Ordinal))
+            {
                 return new CollectionRecord(ListTypes.Array, v[0..^2]);
+            }
             else
+            {
                 return new CollectionRecord(ListTypes.None, v);
+            }
         }
 
         private static string GetPackage(Stack<string> packages)
@@ -74,7 +78,10 @@ namespace PlantUML
             {
                 _ = sb.Append(item);
                 if (x < packages.Count - 1)
+                {
                     _ = sb.Append('.');
+                }
+
                 x++;
             }
 
@@ -84,7 +91,7 @@ namespace PlantUML
         private static async Task<UMLClassDiagram?> ReadClassDiagram(StreamReader sr, string fileName)
         {
             UMLPackage defaultPackage = new("");
-           
+
             UMLClassDiagram d = new(string.Empty, fileName, defaultPackage);
             bool started = false;
             string? line = null;
@@ -101,7 +108,7 @@ namespace PlantUML
             Regex removeGenerics = new("\\w+");
             Stack<UMLPackage> packagesStack = new();
 
-  
+
             packagesStack.Push(defaultPackage);
             var currentPackage = defaultPackage;
             int lineNumber = 0;
@@ -117,7 +124,9 @@ namespace PlantUML
                 }
 
                 if (!started)
+                {
                     continue;
+                }
 
                 if (line == "left to right direction")
                 {
@@ -162,7 +171,9 @@ namespace PlantUML
                         swallowingNotes = true;
                     }
                     else
+                    {
                         swallowingNotes = false;
+                    }
 
                     currentPackage.Children.Add(new UMLNote(line));
                     continue;
@@ -184,9 +195,11 @@ namespace PlantUML
                     }
                     continue;
                 }
-                if (line.StartsWith("participant", StringComparison.Ordinal) 
+                if (line.StartsWith("participant", StringComparison.Ordinal)
                     || line.StartsWith("actor", StringComparison.Ordinal))
+                {
                     return null;
+                }
 
                 UMLDataType? DataType = null;
 
@@ -201,7 +214,10 @@ namespace PlantUML
                 if (line.StartsWith("title", StringComparison.Ordinal))
                 {
                     if (line.Length > 6)
+                    {
                         d.Title = line[6..];
+                    }
+
                     continue;
                 }
                 else if (_packageRegex.IsMatch(line))
@@ -209,11 +225,11 @@ namespace PlantUML
                     var s = _packageRegex.Match(line);
 
                     string pn = Clean(s.Groups[PACKAGE].Value);
-          
+
                     if (readPackges.Any(z => z == pn))
                     {
                         d.Errors.Add(new UMLError($"Package {pn} exists already and will cause rendering issues",
-                            String.Empty, lineNumber));
+                            string.Empty, lineNumber));
                     }
                     readPackges.Add(pn);
                     packages.Push(pn);
@@ -222,7 +238,7 @@ namespace PlantUML
 
                     var c = new UMLPackage(pn);
 
-               
+
 
                     currentPackage.Children.Add(c);
                     currentPackage = c;
@@ -236,7 +252,9 @@ namespace PlantUML
                 {
                     var g = _class.Match(line);
                     if (string.IsNullOrEmpty(g.Groups["name"].Value))
+                    {
                         continue;
+                    }
 
                     string package = GetPackage(packages);
 
@@ -252,7 +270,9 @@ namespace PlantUML
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 4)
+                    {
                         DataType = new UMLEnum(package, Clean(line[5..]));
+                    }
 
                     if (line.EndsWith("{", StringComparison.Ordinal))
                     {
@@ -283,9 +303,9 @@ namespace PlantUML
                             new List<UMLDataType>());
 
                         if (alias != null)
+                        {
                             aliases.Add(alias, DataType);
-
-
+                        }
                     }
                     if (line.EndsWith("{", StringComparison.Ordinal))
                     {
@@ -305,10 +325,14 @@ namespace PlantUML
                     if (i == null)
                     {
                         if (!aliases.TryGetValue(m.Groups["second"].Value, out i))
+                        {
                             d.Errors.Add(new UMLError("Could not find base type", m.Groups["second"].Value, lineNumber));
+                        }
                     }
                     if (cl != null && i != null)
+                    {
                         cl.Bases.Add(i);
+                    }
                 }
                 else if (composition.IsMatch(line))
                 {
@@ -316,7 +340,7 @@ namespace PlantUML
 
                     if (m.Groups["text"].Success)
                     {
-                        var propType = d.DataTypes.Find(p => p.Name == m.Groups["second"].Value);
+                        var propType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["second"].Value);
                         if (propType == null)
                         {
                             Debug.WriteLine($"{m.Groups["second"].Value} propType was not found");
@@ -325,7 +349,7 @@ namespace PlantUML
                         else
                         {
 
-                            var fromType = d.DataTypes.Find(p => p.Name == m.Groups["first"].Value);
+                            var fromType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["first"].Value);
 
                             if (fromType != null && !fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
                             {
@@ -366,12 +390,17 @@ namespace PlantUML
                         lineNumber++;
                         line = line.Trim();
                         if (string.IsNullOrWhiteSpace(line))
+                        {
                             continue;
+                        }
 
                         if (line == "}")
                         {
                             if (brackets.Peek() != PACKAGE)
+                            {
                                 _ = brackets.Pop();
+                            }
+
                             break;
                         }
 
@@ -389,11 +418,17 @@ namespace PlantUML
         private static UMLVisibility ReadVisibility(string item)
         {
             if (item == "-")
+            {
                 return UMLVisibility.Private;
+            }
             else if (item == "#")
+            {
                 return UMLVisibility.Protected;
+            }
             else if (item == "+")
+            {
                 return UMLVisibility.Public;
+            }
 
             return UMLVisibility.None;
         }
@@ -427,7 +462,10 @@ namespace PlantUML
                 for (var x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
                 {
                     if (x != 0)
+                    {
                         returntype += " ";
+                    }
+
                     returntype += methodMatch.Groups["type"].Captures[x].Value;
                 }
                 returntype = returntype.Trim();
@@ -458,9 +496,13 @@ namespace PlantUML
                 {
                     char c = v[x];
                     if (c == '<')
+                    {
                         p.Push(c);
+                    }
                     else if (c == '>')
+                    {
                         _ = p.Pop();
+                    }
 
                     if (c == ' ' && p.Count == 0)
                     {
@@ -479,7 +521,9 @@ namespace PlantUML
                     else if ((c == ',' || x == v.Length - 1) && p.Count == 0)
                     {
                         if (c != ',')
+                        {
                             _ = pname.Append(c);
+                        }
 
                         CollectionRecord d = CreateFrom(sbtype.ToString());
 

@@ -8,7 +8,7 @@ namespace PlantUMLEditor.Controls
     {
         private static readonly Regex newLineAfter = new(@"^(note.+:|end +note|\'.+|.+\'\/|left to right direction)", RegexOptions.Compiled);
         private static readonly Regex newLineBefore = new(@"^(note.+|\'.+|\/\'.+|left to right direction)", RegexOptions.Compiled);
-       // private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        // private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static readonly Regex reg = new("\n");
         private static readonly Regex removeSpaces = new(" {2,}", RegexOptions.Compiled);
@@ -21,7 +21,9 @@ namespace PlantUMLEditor.Controls
         private static int ProcessLine(StringBuilder? sb, string line, ref int indentLevel)
         {
             if (string.IsNullOrEmpty(line.Trim()))
+            {
                 return indentLevel;
+            }
 
             //if (notes.IsMatch(line))
             //{
@@ -39,14 +41,19 @@ namespace PlantUMLEditor.Controls
             StringBuilder sbNewLine = new(line.Length);
             int starts = 0;
             char oldd = '\0';
-            foreach (var d in r)
+
+            for (var x = 0; x < r.Length; x++)
             {
-                if (d == '<')
+                char d = r[x];
+
+                if (d == '<' && x != 0)
                 {
                     starts++;
                 }
                 else if (d == '>')
+                {
                     starts--;
+                }
 
                 if (starts > 0 && d == ' ' && oldd != ',')
                 {
@@ -56,11 +63,13 @@ namespace PlantUMLEditor.Controls
                     sbNewLine.Append(d);
                 }
                 if (d != ' ')
+                {
                     oldd = d;
+                }
             }
             line = sbNewLine.ToString();
 
-        
+
             if (tabStop.IsMatch(line))
             {
                 indentLevel--;
@@ -88,7 +97,9 @@ namespace PlantUMLEditor.Controls
             }
 
             if (indentLevel < 0)
+            {
                 indentLevel = 0;
+            }
 
             return indentLevel;
         }
@@ -120,22 +131,29 @@ namespace PlantUMLEditor.Controls
             for (var x = 0; x < lines.Length; x++)
             {
                 if (string.IsNullOrWhiteSpace(lines[x]) && removeLines)
-
+                {
                     continue;
+                }
                 else if (string.IsNullOrWhiteSpace(lines[x]))
+                {
                     sb.AppendLine();
+                }
 
                 if (oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase) || oldLine.StartsWith("@startuml",
                     StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))
                 {
                     if (removeLines)
+                    {
                         sb.AppendLine();
+                    }
                 }
                 if (!string.IsNullOrWhiteSpace(oldLine) &&
                     (newLineAfter.IsMatch(oldLine) || newLineBefore.IsMatch(lines[x].Trim())))
                 {
                     if (removeLines)
+                    {
                         sb.AppendLine();
+                    }
                 }
                 oldLine = lines[x].Trim();
 

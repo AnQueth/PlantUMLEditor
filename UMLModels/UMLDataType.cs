@@ -32,32 +32,52 @@ namespace UMLModels
 
     public class UMLDataType
     {
-   
+
         public UMLDataType(string name, string @namespace = "", params UMLInterface[] interfaces)
         {
             Namespace = @namespace;
             Name = name;
-   
-            if (interfaces != null && interfaces.Length == 0)
-                Interfaces.AddRange(interfaces);
-        }
 
-        public List<UMLDataType> Bases { get;   } = new();
-
-        public string Id
-        {
-            get
+            var ix = name.IndexOf('<');
+            if (ix > 0)
             {
-                return Name;
+                NonGenericName = name[..ix];
+            }
+            else
+            {
+                NonGenericName = name;
+            }
+
+            if (interfaces != null && interfaces.Length == 0)
+            {
+                Interfaces.AddRange(interfaces);
             }
         }
 
-        public List<UMLInterface> Interfaces { get;  } = new();
-        public int LineNumber { get; set; }
-        public List<UMLMethod> Methods { get;  } = new();
-        public string Name { get; set; }
-        public string Namespace { get; set; }
+        public List<UMLDataType> Bases { get; } = new();
+
+        public string Id => Name;
+
+        public List<UMLInterface> Interfaces { get; } = new();
+        public int LineNumber
+        {
+            get; set;
+        }
+        public List<UMLMethod> Methods { get; } = new();
+        public string Name
+        {
+            get; set;
+        }
+        public string Namespace
+        {
+            get; set;
+        }
         public List<UMLProperty> Properties { get; } = new();
+
+        public string NonGenericName
+        {
+            get; set;
+        }
     }
 
     public class VoidDataType : UMLDataType
