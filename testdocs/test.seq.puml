@@ -4,11 +4,17 @@ title test.seq
 
 participant	C1
 participant C2
-C1 --> C2 : void doStuff()
-C2 -> C1 : int test()
-C2 -> C1 : C2 la()
+alt if dead
+    C1 --> C2 : void doStuff()
+    alt if other
+        C2 -> C1 : int test()
+    else
+        C2 -> C1 : C2 la()
+    end
+end
 C2 -> C1 : int test()
 C2 -> C1: C2 la()
 C2-> C1: int test()
 C1 -> C1: C2 la()
+C1 ..> C2 :la
 @enduml

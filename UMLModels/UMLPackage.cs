@@ -4,10 +4,11 @@ namespace UMLModels
 {
     public class UMLPackage : UMLDataType
     {
-        public UMLPackage(string text, string? type = null) : base("UMLPackage")
+        public UMLPackage(string text, string? type = null, string? alias = null) : base("UMLPackage")
         {
             Text = text;
             Type = type;
+            Alias = alias;
             Children = new();
         }
 
@@ -21,6 +22,14 @@ namespace UMLModels
             get; set;
         }
 
-        public string? Type { get; set; }
+        public string? Type
+        {
+            get; set;
+        }
+        public string? Alias
+        {
+            get;
+            set;
+        }
     }
 }

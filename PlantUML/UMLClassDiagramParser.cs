@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -186,6 +185,7 @@ namespace PlantUML
                         n.Text += "\r\nend note";
                     }
                     swallowingNotes = false;
+                    continue;
                 }
                 if (swallowingNotes)
                 {
@@ -333,6 +333,7 @@ namespace PlantUML
                     {
                         cl.Bases.Add(i);
                     }
+                    continue;
                 }
                 else if (composition.IsMatch(line))
                 {
@@ -343,7 +344,8 @@ namespace PlantUML
                         var propType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["second"].Value);
                         if (propType == null)
                         {
-                            Debug.WriteLine($"{m.Groups["second"].Value} propType was not found");
+                            d.AddLineError(line, lineNumber);
+
 
                         }
                         else
@@ -368,6 +370,7 @@ namespace PlantUML
                                 fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l));
                             }
                         }
+                        continue;
                     }
                 }
 
@@ -406,6 +409,10 @@ namespace PlantUML
 
                         TryParseLineForDataType(line, aliases, DataType);
                     }
+                }
+                else
+                {
+                    d.AddLineError(line, lineNumber);
                 }
             }
 

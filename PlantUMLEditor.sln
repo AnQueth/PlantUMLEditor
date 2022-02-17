@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29926.136
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32210.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PlantUMLEditor", "PlantUMLEditor\PlantUMLEditor.csproj", "{6969D927-26C4-4DF2-A612-5FC4B16CEAF2}"
 EndProject
@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser", "Parser\Parser.csproj", "{548B3D4A-19CC-493F-B140-03BB84EA3193}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -151,6 +153,30 @@ Global
 		{B5A21EFE-F928-479A-B5E7-DA41D91E83BA}.Release|x64.Build.0 = Release
 		{B5A21EFE-F928-479A-B5E7-DA41D91E83BA}.Release|x86.ActiveCfg = Release
 		{B5A21EFE-F928-479A-B5E7-DA41D91E83BA}.Release|x86.Build.0 = Release
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|Any CPU.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|Any CPU.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|arm64.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|arm64.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|x64.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|x64.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|x86.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug (Old Coloring)|x86.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|arm64.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|arm64.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|x64.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Debug|x86.Build.0 = Debug|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|Any CPU.Build.0 = Release|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|arm64.ActiveCfg = Release|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|arm64.Build.0 = Release|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|x64.ActiveCfg = Release|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|x64.Build.0 = Release|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|x86.ActiveCfg = Release|Any CPU
+		{548B3D4A-19CC-493F-B140-03BB84EA3193}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

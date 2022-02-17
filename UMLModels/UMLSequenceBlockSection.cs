@@ -6,10 +6,10 @@ namespace UMLModels
 {
     public class UMLSequenceBlockSection : UMLOrderedEntity
     {
-        private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.+)");
+        private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.*)");
 
-       
-    
+
+
         public UMLSequenceBlockSection(string text, SectionTypes sectionTypes, int lineNumber) : base(lineNumber)
         {
             Text = text;
@@ -28,23 +28,27 @@ namespace UMLModels
             Parrallel,
             Break,
             IfNoElse,
-            Loop
+            Loop,
+            Group
         }
 
-        public List<UMLOrderedEntity> Entities { get; set; }
-        public SectionTypes SectionType { get; set; }
-
-        public bool TakeOverOwnership
+        public List<UMLOrderedEntity> Entities
         {
-            get
-            {
-                return SectionType == SectionTypes.Else || SectionType == SectionTypes.Catch || SectionType == SectionTypes.Finally;
-            }
+            get; set;
+        }
+        public SectionTypes SectionType
+        {
+            get; set;
         }
 
-        public string Text { get; set; }
+        public bool TakeOverOwnership => SectionType == SectionTypes.Else || SectionType == SectionTypes.Catch || SectionType == SectionTypes.Finally;
 
-        public static bool TryParse(string line, int lineNumber,  [NotNullWhen(true)] out UMLSequenceBlockSection? block)
+        public string Text
+        {
+            get; set;
+        }
+
+        public static bool TryParse(string line, int lineNumber, [NotNullWhen(true)] out UMLSequenceBlockSection? block)
         {
             var blockSection = _blockSection.Match(line);
             if (blockSection.Success)
@@ -56,7 +60,7 @@ namespace UMLModels
                 {
                     case "opt":
                     case "alt":
-                        block =  new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.If, lineNumber);
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.If, lineNumber);
                         return true;
 
                     case "else":
@@ -86,6 +90,10 @@ namespace UMLModels
                     case "loop":
                         block = new UMLSequenceBlockSection(text, SectionTypes.Loop, lineNumber);
                         return true;
+
+                    case "group":
+                        block = new UMLSequenceBlockSection(text, SectionTypes.Group, lineNumber);
+                        return true;
                 }
             }
             block = null;
@@ -100,6 +108,6 @@ namespace UMLModels
             return f;
         }
 
-     
+
     }
 }

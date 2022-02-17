@@ -39,17 +39,22 @@ namespace PlantUMLEditor.Models
 
                          var z = await PlantUML.UMLComponentDiagramParser.ReadString(text);
                          if (z != null)
+                         {
                              lock (_locker)
+                             {
                                  _autoCompleteItems = z.Entities.OfType<UMLComponent>()
                                  .Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias).Union(
                                      z.Entities.OfType<UMLInterface>().Select(p => p.Name)
                                      )
-                                .Union(z.ContainedPackages.Select(z => z.Text))
+
+                                .Union(z.ContainedPackages.Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias))
                                  .Union(
                                      z.Entities.OfType<UMLComponent>().Select(p => p.Namespace)
                                      )
                                  .Union(STATICWORDS)
                                  .ToArray();
+                             }
+                         }
                      }
                  }
              });
@@ -61,7 +66,10 @@ namespace PlantUMLEditor.Models
             base.Close();
         }
 
-        public UMLComponentDiagram Diagram { get; private set; }
+        public UMLComponentDiagram Diagram
+        {
+            get; private set;
+        }
 
         protected override void RegenDocumentHandler()
         {
@@ -90,15 +98,21 @@ namespace PlantUMLEditor.Models
                         !autoCompleteParameters.WordStart.EndsWith("<", StringComparison.InvariantCulture))
                     {
                         foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
+                        {
                             base.MatchingAutoCompletes.Add(item);
+                        }
                     }
                 }
                 catch { }
             }
             if (MatchingAutoCompletes.Count > 0)
+            {
                 base.ShowAutoComplete();
+            }
             else
+            {
                 base.CloseAutoComplete();
+            }
         }
 
         public override async Task<UMLDiagram?> GetEditedDiagram()

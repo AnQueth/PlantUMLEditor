@@ -2,14 +2,15 @@
 
 title process.seq
 
-entity "Dream" as pd
-entity "Requirements" as pr
+entity "Dream Business Owner" as pd
+entity "Requirements Board" as pr
 database "ARB ToDo List" as todo
 database "Project Docs" as Docs
 database "Source Control" as SC
 entity "TDL or Group of TDL" as tdl
 entity "ARB" as review
 entity expert
+entity "Standards" as st
 --> pd : <<create>>
 
 note right of pd
@@ -25,6 +26,14 @@ note right of SC: project's source control
 pd -> review : Notified of a dream
 review -> review : Is the dream valid? what high level concerns ?
 review -> review : Vote on if project needs special oversight or can pass with self assessment
+alt if POC is warranted without requirements
+    review -> expert : Create POC
+    expert -> review : show POC
+    review -> pd : Demo POC
+    alt if POC accepted
+        review -> st : Update standards based on POC
+    end
+end
 
 note left of review
 1 vote for special oversight means it becomes special oversight for ARB.
@@ -49,9 +58,10 @@ loop define requirements
     end note
 
     pr -> Docs : requirements written
+    tdl -> st : Consult standards
     pr -> tdl : create component diagram
     tdl -> SC : save component diagram
-    pr -> review : submit component diagram and requirements
+    tdl -> review : submit component diagram and requirements
     alt if ARB classified the project as needing oversight
         review -> review : Review project requirements
         review -> review : Determine if project needs special oversight in specialized areas
@@ -61,13 +71,51 @@ loop define requirements
         App Arch, Inf Arch, Data Arch, Security Arch
         end note
 
+        review -> st : Update standards as needed
         alt if needs specialized oversight
             review -> todo: Add oversight todo
         end
-        review -> pr: Notify of any high level concerns
+        review -> tdl: Notify of any high level concerns
     else just need self assessment
-        pr -> review : self assessment documentation
+        tdl -> st : Consult standards documentation
+        tdl -> pr : create self assessment documentation
+        alt if does NOT meets standards or NEW Tech
+            alt if legacy
+                tdl -> review : apply for waiver
+                review -> review : vote on waiver
+                alt if no waiver granted
+                    tdl -> review : ask for interactive review
+                    loop while in review
+                        tdl -> review: submit review information
+                        review -> tdl : feedback
+                        tdl -> pr : make changes
+                    end
+                end
+            else NOT legacy
+                tdl -> review : ask for interactive review
+                alt if review determines a POC is warranted
+                    review -> expert : Create POC
+                    expert -> review : show POC
+                    review -> pd : demo POC
+                    alt if POC accepted
+                        review -> st : Update standards based on POC
+                    end
+                end
+                loop while in review
+                    tdl -> review: submit review information
+                    alt if new standards need to be set
+                        review -> st : update standards
+                    end
+                    review -> tdl : feedback
+                    tdl -> tdl : make changes needed
+                end
+            end
+        end
+        tdl -> review : self assessment documentation
         review -> todo: mark self assessment completed
+        alt if anything was agreed to be delayed on
+            tdl -> Docs : add to backlog any changes
+        end
     end
 end
 alt if special oversight project
@@ -95,6 +143,16 @@ alt if special oversight project
     alt if strategic project or new technology for tdl
         loop dev process, 1 time every week
             tdl -> expert : review code, data store, etc..
+            expert -> st : consult standards
+            alt if standards need updating
+                expert -> review : talk about problems in standards
+                alt if agreed
+                    review -> st : update standards
+                end
+            end
+            alt if ARB sais this is a good release
+                review -> todo : mark releasable
+            end
 
             note left of review
             this could just be solution architect work or
@@ -104,7 +162,6 @@ alt if special oversight project
             end note
 
             expert -> tdl : return feedback
-            tdl -> expert : ask for release permission
             alt if time for release
                 tdl -> review : check for permission
                 review -> todo : check for outstanding todos

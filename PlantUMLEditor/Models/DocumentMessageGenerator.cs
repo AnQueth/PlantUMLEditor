@@ -25,7 +25,7 @@ namespace PlantUMLEditor.Models
         private static List<string> GetCleanName(List<DataTypeRecord> dataTypes, string name)
         {
             List<string> types = new();
-            foreach (var type in dataTypes.OrderByDescending(p => p.DataType.Name.Length))
+            foreach (var type in dataTypes)
             {
                 if (name.IndexOf(type.DataType.Name, StringComparison.Ordinal) >= 0)
                 {
@@ -90,15 +90,31 @@ namespace PlantUMLEditor.Models
                 {
                     ValidateSequenceDiagram(folderBase, newMessages, doc, o);
                 }
+
+                AddLineErrors(folderBase, doc, newMessages);
             }
 
-            var namespaceReferences = FindBadDataTypes(folderBase, newMessages, dataTypes);
+
+
+            var namespaceReferences = FindBadDataTypes(folderBase, newMessages,
+                dataTypes.OrderByDescending(p => p.DataType.Name.Length).ToList());
+
 
             FindCircularReferences(folderBase, newMessages, namespaceReferences);
 
             return newMessages;
 
         }
+
+        private void AddLineErrors(string folderBase, UMLDiagram doc, List<DocumentMessage> newMessages)
+        {
+            foreach (var lineError in doc.LineErrors)
+            {
+                newMessages.Add(new DocumentMessage(doc.FileName,
+                    GetRelativeName(folderBase, doc.FileName), lineError.LineNumber, lineError.Text, true));
+            }
+        }
+
 
         private void ValidateSequenceDiagram(string folderBase, List<DocumentMessage> newMessages, UMLDiagram doc, UMLSequenceDiagram o)
         {

@@ -16,7 +16,9 @@ namespace PlantUML
         private static readonly Regex _lifeLineRegex = new(@"^(?<type>participant|actor|control|component|database|boundary|entity|collections)\s+\""*(?<name>[\w \.]+(\s*\<((?<generics>[\s\w]+)\,*)*\>)*)\""*(\s+as (?<alias>[\w]+))*$", RegexOptions.Compiled);
 
         private static readonly Regex lineConnectionRegex = new("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
-        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+)(\\s+of)* (?<target>\\w+) *: *(?<text>.*))|(?<placement>\\w+)(\\s+of)*\\s+(?<target>\\w+)|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+)(\\s+of)*  (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+
+        private static readonly Regex other = new("^(activate|deactivate)\\w*", RegexOptions.Compiled);
 
         private static UMLSignature? CheckActionOnType(UMLDataType toType, string actionSignature)
         {
@@ -137,9 +139,15 @@ namespace PlantUML
                 if (line == "'@@novalidate")
                 {
                     d.ValidateAgainstClasses = false;
+                    continue;
                 }
 
                 if (!started)
+                {
+                    continue;
+                }
+
+                if (line.StartsWith("==", StringComparison.Ordinal) && line.EndsWith("==", StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -160,6 +168,7 @@ namespace PlantUML
                 if (line.StartsWith("end note", StringComparison.Ordinal))
                 {
                     swallowingNotes = false;
+                    continue;
                 }
 
                 if (swallowingNotes)
@@ -222,19 +231,37 @@ namespace PlantUML
                     else if (activeBlocks.Count != 0 && line.StartsWith("end", StringComparison.Ordinal))
                     {
                         _ = activeBlocks.Pop();
-                        if (activeBlocks.Count > 0)
+                        //if (activeBlocks.Count > 0)
+                        //{
+                        //    var p = activeBlocks.Peek().SectionType;
+                        //    if (p is UMLSequenceBlockSection.SectionTypes.If
+                        //        or UMLSequenceBlockSection.SectionTypes.Parrallel
+                        //        or UMLSequenceBlockSection.SectionTypes.Try
+                        //        )
+                        //    {
+                        //        _ = activeBlocks.Pop();
+                        //    }
+                        //}
+                    }
+                    else if (other.IsMatch(line))
+                    {
+                        UMLSequenceOther uMLSequenceOther = new(lineNumber, line);
+                        if (activeBlocks.Count == 0)
                         {
-                            var p = activeBlocks.Peek().SectionType;
-                            if (p is UMLSequenceBlockSection.SectionTypes.If
-                                or UMLSequenceBlockSection.SectionTypes.Parrallel
-                                or UMLSequenceBlockSection.SectionTypes.Try
-                                )
-                            {
-                                _ = activeBlocks.Pop();
-                            }
+                            d.Entities.Add(uMLSequenceOther);
+                        }
+                        else
+                        {
+                            activeBlocks.Peek().Entities.Add(uMLSequenceOther);
                         }
                     }
+                    else
+                    {
+                        d.AddLineError(line, lineNumber);
+                    }
                 }
+
+
             }
 
             return d;
@@ -346,6 +373,8 @@ namespace PlantUML
 
             try
             {
+
+
                 var m = lineConnectionRegex.Match(line);
                 if (!m.Success)
                 {
@@ -379,8 +408,9 @@ namespace PlantUML
                     return !string.IsNullOrWhiteSpace(connection.ToName) && !string.IsNullOrWhiteSpace(connection.FromName);
                 }
             }
-            catch
+            catch (Exception)
             {
+                diagram.AddLineError(line, lineNumber);
             }
 
             return false;
