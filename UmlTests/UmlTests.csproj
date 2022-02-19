@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Parsers\Parsers.csproj" />
     <ProjectReference Include="..\PlantUML\PlantUML.csproj" />
   </ItemGroup>
 

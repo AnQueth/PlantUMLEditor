@@ -36,7 +36,7 @@ namespace UMLModels
 
         public List<LineError> LineErrors
         {
-            get; set;
+            get;
         } = new();
     }
 }

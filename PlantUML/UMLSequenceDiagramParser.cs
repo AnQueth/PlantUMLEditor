@@ -14,6 +14,7 @@ namespace PlantUML
     public class UMLSequenceDiagramParser : IPlantUMLParser
     {
         private static readonly Regex _lifeLineRegex = new(@"^(?<type>participant|actor|control|component|database|boundary|entity|collections)\s+\""*(?<name>[\w \.]+(\s*\<((?<generics>[\s\w]+)\,*)*\>)*)\""*(\s+as (?<alias>[\w]+))*$", RegexOptions.Compiled);
+        private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.*)");
 
         private static readonly Regex lineConnectionRegex = new("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
         private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+)(\\s+of)* (?<target>\\w+) *: *(?<text>.*))|(?<placement>\\w+)(\\s+of)*\\s+(?<target>\\w+)|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+)(\\s+of)*  (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
@@ -126,6 +127,10 @@ namespace PlantUML
                 lineNumber++;
                 line = line.Trim();
 
+                if (line.StartsWith("class", StringComparison.Ordinal) || line.StartsWith("interface", StringComparison.Ordinal) || line.StartsWith("package", StringComparison.Ordinal))
+                {
+                    return null;
+                }
                 if (line.StartsWith("@startuml", StringComparison.Ordinal))
                 {
                     if (line.Length > 9)
@@ -176,10 +181,6 @@ namespace PlantUML
                     continue;
                 }
 
-                if (line.StartsWith("class", StringComparison.Ordinal) || line.StartsWith("interface", StringComparison.Ordinal) || line.StartsWith("package", StringComparison.Ordinal))
-                {
-                    return null;
-                }
 
                 if (line.StartsWith("title", StringComparison.Ordinal))
                 {
@@ -214,7 +215,7 @@ namespace PlantUML
 
                         previous = connection;
                     }
-                    else if (UMLSequenceBlockSection.TryParse(line, lineNumber, out var sectionBlock))
+                    else if (TryParseUMLSequenceBlockSection(line, lineNumber, out var sectionBlock))
                     {
 
 
@@ -267,6 +268,58 @@ namespace PlantUML
             return d;
         }
 
+        private static bool TryParseUMLSequenceBlockSection(string line, int lineNumber,
+            [NotNullWhen(true)] out UMLSequenceBlockSection? block)
+        {
+            var blockSection = _blockSection.Match(line);
+            if (blockSection.Success)
+            {
+                var name = blockSection.Groups["type"].Value;
+                string text = blockSection.Groups["text"].Value;
+
+                switch (name.ToLowerInvariant())
+                {
+                    case "opt":
+                    case "alt":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.If, lineNumber);
+                        return true;
+
+                    case "else":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Else, lineNumber);
+                        return true;
+
+                    case "par":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Parrallel, lineNumber);
+                        return true;
+
+                    case "try":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Try, lineNumber);
+                        return true;
+
+                    case "catch":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Catch, lineNumber);
+                        return true;
+
+                    case "finally":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Finally, lineNumber);
+                        return true;
+
+                    case "break":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Break, lineNumber);
+                        return true;
+
+                    case "loop":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Loop, lineNumber);
+                        return true;
+
+                    case "group":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Group, lineNumber);
+                        return true;
+                }
+            }
+            block = null;
+            return false;
+        }
         private static bool TryParseConnection(string fromAlias, string arrow, string toAlias,
             string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types, UMLSequenceConnection? previous,
                 int lineNumber,

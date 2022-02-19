@@ -67,7 +67,7 @@ namespace PlantUMLEditor.Models
             {
                 if (doc is UMLComponentDiagram f)
                 {
-                    foreach (var (Line, LineNumber, message) in f.Errors)
+                    foreach (var (Line, LineNumber, message) in f.ExplainedErrors)
                     {
                         newMessages.Add(new DocumentMessage(f.FileName, GetRelativeName(folderBase, f.FileName), LineNumber, Line + " " + message, false));
 

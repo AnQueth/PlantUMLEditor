@@ -238,7 +238,7 @@ namespace PlantUML
                             string arrow = m.Groups["arrow"].Value.Trim();
                             if (leftComponent == null || fromType == null)
                             {
-                                d.Errors.Add((line, linenumber, $"{leftComponent} {fromType}"));
+                                d.ExplainedErrors.Add((line, linenumber, $"{leftComponent} {fromType}"));
                             }
                             else if (leftComponent is UMLComponent c)
                             {
@@ -272,7 +272,7 @@ namespace PlantUML
                 {
 
 
-                    d.Errors.Add((line, linenumber, "Regex timeout"));
+                    d.ExplainedErrors.Add((line, linenumber, "Regex timeout"));
                 }
                 catch (Exception ex)
                 {

@@ -7,7 +7,7 @@ namespace UMLModels
         public UMLComponentDiagram(string title, string fileName, UMLPackage? package) : base(title, fileName)
         {
             Package = package;
-     
+
         }
 
         public List<UMLDataType> Entities
@@ -15,17 +15,22 @@ namespace UMLModels
             get
             {
                 List<UMLDataType> dt = new();
-                if(Package != null)
+                if (Package != null)
+                {
                     AddMore(Package, dt);
+                }
 
                 return dt;
             }
         }
 
-        public List<(string Line, int LineNumber, string message)> Errors { get; } = new();
-        public UMLPackage? Package { get; init; }
+        public List<(string Line, int LineNumber, string message)> ExplainedErrors { get; } = new();
+        public UMLPackage? Package
+        {
+            get; init;
+        }
 
-        public List<UMLPackage> ContainedPackages { get;  } = new List<UMLPackage>();
+        public List<UMLPackage> ContainedPackages { get; } = new List<UMLPackage>();
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {
