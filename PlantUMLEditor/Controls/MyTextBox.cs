@@ -864,6 +864,7 @@ namespace PlantUMLEditor.Controls
                 e.Handled = true;
             }
 
+
             base.OnPreviewKeyDown(e);
         }
 
