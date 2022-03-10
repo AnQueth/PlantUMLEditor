@@ -13,7 +13,7 @@ namespace PlantUMLEditor.Models
             ConcurrentBag<GlobalFindResult> res = new();
             Parallel.ForEach(extensions, (ex) =>
             {
-                
+
                 foreach (var file in Directory.GetFiles(rootDirectory, ex, SearchOption.AllDirectories))
                 {
                     using var f = File.OpenRead(file);
@@ -22,17 +22,17 @@ namespace PlantUMLEditor.Models
                     string? lineText = null;
                     while ((lineText = sr.ReadLine()) != null)
                     {
-                        if (lineText.ToLowerInvariant().Contains(text.ToLowerInvariant()))
+                        if (lineText.Contains(text, System.StringComparison.InvariantCultureIgnoreCase))
                         {
                             res.Add(new GlobalFindResult(file, line, lineText, text));
-                            
+
                         }
                         line++;
                     }
                 }
             });
 
-            return Task.FromResult(res.OrderBy(p=>p.FileName).ThenBy(p=>p.LineNumber).ToList());
+            return Task.FromResult(res.OrderBy(p => p.FileName).ThenBy(p => p.LineNumber).ToList());
         }
     }
 }
