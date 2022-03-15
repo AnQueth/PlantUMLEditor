@@ -1,0 +1,17 @@
+﻿<Window x:Class="PlantUMLEditor.MDPreview"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
+        xmlns:local="clr-namespace:PlantUMLEditor" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        mc:Ignorable="d"
+        Title="{Binding Title}" Height="1024" Width="1084" Icon="/Images/md.png">
+    <Window.Resources>
+        <Thickness x:Key="Margin">5,5,5,5</Thickness>
+    </Window.Resources>
+    <Grid>
+
+        <FlowDocumentScrollViewer x:Name="Viewer"  Document="{Binding Document}" />
+    </Grid>
+</Window>

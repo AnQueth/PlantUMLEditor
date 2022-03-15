@@ -1,16 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using PlantUMLEditor.Controls;
+using System;
 using System.Threading.Tasks;
+using System.Windows;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    public class UnknownDocumentModel : DocumentModel
+    internal class UnknownDocumentModel : DocumentModel
     {
         private readonly Action<UMLDiagram, UMLDiagram> ChangedCallback;
-      
 
-     
+
+        protected override (IPreviewModel? model, Window? window) GetPreviewView()
+        {
+            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Name);
+
+            var previewWindow = new Preview
+            {
+                DataContext = imageModel
+            };
+
+            return (imageModel, previewWindow);
+
+        }
 
         public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration,
                         IIOService openDirectoryService,
@@ -20,10 +32,19 @@ namespace PlantUMLEditor.Models
             ChangedCallback = changedCallback;
             Diagram = model;
             Diagrams = diagrams;
+            colorCodingProvider = new UMLColorCoding();
         }
 
-        public UMLUnknownDiagram Diagram { get; internal set; }
-        public UMLDocumentCollection Diagrams { get; internal set; }
+        public UMLUnknownDiagram Diagram
+        {
+            get; internal set;
+        }
+        public UMLDocumentCollection Diagrams
+        {
+            get; internal set;
+        }
+
+        private readonly UMLColorCoding colorCodingProvider;
 
         protected override async void ContentChanged(string text)
         {
@@ -41,6 +62,11 @@ namespace PlantUMLEditor.Models
             base.ContentChanged(text);
         }
 
+        protected override IColorCodingProvider? GetColorCodingProvider()
+        {
+            return colorCodingProvider;
+        }
+
         public override Task<UMLDiagram?> GetEditedDiagram()
         {
             return Task.FromResult<UMLDiagram?>(Diagram);
@@ -48,7 +74,7 @@ namespace PlantUMLEditor.Models
 
         internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
-             
+
         }
     }
 }

@@ -16,21 +16,25 @@ using System.Windows.Media.Imaging;
 
 namespace PlantUMLEditor.Models
 {
-    public class PreviewDiagramModel : BindingBase
+    public class PreviewDiagramModel : BindingBase, IPreviewModel
     {
+        private record QueueItem(string path, bool delete, string name);
+
         private readonly IIOService _ioService;
-        private readonly ConcurrentQueue<(string, string, bool, string)> _regenRequests
+        private readonly ConcurrentQueue<QueueItem> _regenRequests
             = new();
         private readonly AutoResetEvent _are = new(false);
         private FixedDocument? _doc;
         private string _messages = string.Empty;
         private bool _running = false;
         private BitmapSource? image;
-        private string title;
+        private readonly string _jarLocation;
+        private string _name;
 
-        public PreviewDiagramModel(IIOService ioService)
+        public PreviewDiagramModel(IIOService ioService, string jarLocation, string title)
         {
-            title = "n/a";
+            _jarLocation = jarLocation;
+            _name = title;
             _ioService = ioService;
             PrintImageCommand = new DelegateCommand(PrintImageHandler);
             CopyImage = new DelegateCommand(CopyImageHandler);
@@ -41,18 +45,15 @@ namespace PlantUMLEditor.Models
             Task.Run(Runner);
         }
 
-        public DelegateCommand CopyImage { get; }
+        public DelegateCommand CopyImage
+        {
+            get;
+        }
 
         public FixedDocument? Doc
         {
-            get
-            {
-                return _doc;
-            }
-            set
-            {
-                SetValue(ref _doc, value);
-            }
+            get => _doc;
+            set => SetValue(ref _doc, value);
         }
 
         public float Height
@@ -62,30 +63,30 @@ namespace PlantUMLEditor.Models
 
         public BitmapSource? Image
         {
-            get { return image; }
-            set { SetValue(ref image, value); }
+            get => image;
+            set => SetValue(ref image, value);
         }
 
         public string Messages
         {
-            get
-            {
-                return _messages;
-            }
-            set
-            {
-                SetValue(ref _messages, value);
-            }
+            get => _messages;
+            set => SetValue(ref _messages, value);
         }
 
-        public DelegateCommand PrintImageCommand { get; }
+        public DelegateCommand PrintImageCommand
+        {
+            get;
+        }
 
-        public DelegateCommand SaveImageCommand { get; }
+        public DelegateCommand SaveImageCommand
+        {
+            get;
+        }
 
         public string Title
         {
-            get { return title; }
-            set { SetValue(ref title, value); }
+            get => _name;
+            set => SetValue(ref _name, value);
         }
 
         public float Width
@@ -96,8 +97,10 @@ namespace PlantUMLEditor.Models
 
         private void CopyImageHandler()
         {
-            if(Image != null)
+            if (Image != null)
+            {
                 Clipboard.SetImage(Image.Clone());
+            }
         }
 
         private void PrintImage()
@@ -151,19 +154,21 @@ namespace PlantUMLEditor.Models
                     while (!_regenRequests.IsEmpty)
                     {
                         Messages = string.Empty;
-                        _regenRequests.TryDequeue(out (string, string, bool, string) res);
+                        _regenRequests.TryDequeue(out QueueItem res);
 
-                        var dir = Path.GetDirectoryName(res.Item2);
+                        var dir = Path.GetDirectoryName(res.path);
                         if (dir == null)
+                        {
                             continue;
+                        }
 
-                        string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.Item2) + ".png");
+                        string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.path) + ".png");
 
                         Process p = new();
 
                         p.StartInfo.CreateNoWindow = true;
                         p.StartInfo.FileName = "java.exe";
-                        p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {res.Item1} \"{res.Item2}\"";
+                        p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {_jarLocation} \"{res.path}\"";
                         p.StartInfo.RedirectStandardOutput = true;
                         p.StartInfo.RedirectStandardError = true;
 
@@ -182,7 +187,7 @@ namespace PlantUMLEditor.Models
                             {
                                 int d = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
                                 d++;
-                                using var g = File.OpenText(res.Item2);
+                                using var g = File.OpenText(res.path);
                                 int x = 0;
                                 while (x <= d + 1)
                                 {
@@ -191,22 +196,27 @@ namespace PlantUMLEditor.Models
                                     if (ll != null)
                                     {
                                         if (x > d - 3)
+                                        {
                                             e += "\r\n" + ll;
+                                        }
                                     }
                                 }
                             }
                             Messages = e;
                         }
                         else
+                        {
                             Application.Current.Dispatcher.Invoke(() =>
                             {
                                 if (!File.Exists(fn))
                                 {
-                                    var dir = Path.GetDirectoryName(res.Item2);
+                                    var dir = Path.GetDirectoryName(res.path);
                                     if (dir == null)
+                                    {
                                         return;
+                                    }
 
-                                    string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.Item4) + ".png");
+                                    string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.name) + ".png");
 
                                     if (File.Exists(fn2))
                                     {
@@ -215,9 +225,12 @@ namespace PlantUMLEditor.Models
                                 }
                                 Image = new BitmapImage(new Uri(fn));
 
-                                if (res.Item3 && File.Exists(res.Item2))
-                                    File.Delete(res.Item2);
+                                if (res.delete && File.Exists(res.path))
+                                {
+                                    File.Delete(res.path);
+                                }
                             });
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -233,7 +246,7 @@ namespace PlantUMLEditor.Models
             {
                 for (int startY = 0; startY < heightSteps; startY++)
                 {
-                    SaveImage(bitmapImage, startX * width, startY * height,   images);
+                    SaveImage(bitmapImage, startX * width, startY * height, images);
                 }
             }
         }
@@ -241,19 +254,21 @@ namespace PlantUMLEditor.Models
         private void SaveImageHandler()
         {
             string? fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
-            
+
             if (fileName == null || Image == null)
+            {
                 return;
+            }
 
             PngBitmapEncoder encoder = new();
-            
+
             encoder.Frames.Add(BitmapFrame.Create((BitmapImage?)Image));
 
             using var filestream = new FileStream(fileName, FileMode.Create);
             encoder.Save(filestream);
         }
 
-        internal void Stop()
+        public void Stop()
         {
             _running = false;
             _are.Set();
@@ -262,7 +277,7 @@ namespace PlantUMLEditor.Models
         public static void SaveImage(BitmapSource sourceImage,
                                       int startX,
                               int startY,
-                        
+
                               List<DrawingVisual> images)
         {
             TransformGroup transformGroup = new();
@@ -282,14 +297,14 @@ namespace PlantUMLEditor.Models
             images.Add(vis);
         }
 
-        public void  ShowImage(string jar, string path, string name, bool delete)
+        public void Show(string path, string name, bool delete)
         {
-            if (!File.Exists(jar))
+            if (!File.Exists(_jarLocation))
             {
                 MessageBox.Show("plant uml is missing");
             }
             _regenRequests.Clear();
-            _regenRequests.Enqueue((jar, path, delete, name));
+            _regenRequests.Enqueue(new QueueItem(path, delete, name));
 
             _are.Set();
         }

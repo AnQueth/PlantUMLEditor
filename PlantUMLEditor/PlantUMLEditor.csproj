@@ -26,6 +26,7 @@
     <None Remove="Images\Close_8x_16x.png" />
     <None Remove="Images\com.png" />
     <None Remove="Images\FolderClosed_16x.png" />
+    <None Remove="Images\md.png" />
     <None Remove="Images\OpenFolder_16x.png" />
     <None Remove="Images\PreviewTransition_16x.png" />
     <None Remove="Images\SaveAll_16x.png" />
@@ -33,6 +34,7 @@
     <None Remove="Images\Save_16x.png" />
     <None Remove="Images\SEQUENCE.png" />
     <None Remove="Images\uml.png" />
+    <None Remove="Images\yml.png" />
     <None Remove="plantuml.jar" />
   </ItemGroup>
 
@@ -47,6 +49,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\FolderClosed_16x.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\md.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\OpenFolder_16x.png">
@@ -67,10 +72,14 @@
     <Content Include="Images\uml.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Images\yml.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.19" />
+    <PackageReference Include="Neo.Markdig.Xaml" Version="1.0.10" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Prism.Core" Version="7.2.0.1422" />
   </ItemGroup>
@@ -102,6 +111,9 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>AppSettings.settings</DependentUpon>
     </Compile>
+    <Compile Update="MDPreview.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>
@@ -109,6 +121,13 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>AppSettings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Update="MDPreview.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
-﻿using Prism.Commands;
+﻿using PlantUMLEditor.Controls;
+using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,13 +16,14 @@ namespace PlantUMLEditor.Models
         Class,
         Sequence,
         Unknown,
-        Component
+        Component,
+        MarkDown
     }
 
-    public abstract class DocumentModel : BindingBase, IAutoCompleteCallback
+    internal abstract class DocumentModel : BindingBase, IAutoCompleteCallback
     {
-        private readonly IIOService _ioService;
-        private readonly string _jarLocation;
+        protected readonly IIOService _ioService;
+        protected readonly string _jarLocation;
 
         private IAutoComplete? _autoComplete;
 
@@ -35,16 +37,18 @@ namespace PlantUMLEditor.Models
 
         private string _textValue = string.Empty;
 
-        private PreviewDiagramModel? imageModel;
+        private IPreviewModel? imageModel;
 
         private string name;
 
-        private Preview? previewWindow;
+        private Window? previewWindow;
         private Visibility visible;
 
         protected Action? _bindedAction;
 
-        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService, DocumentTypes documentType, 
+        public string Title => name;
+
+        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService, DocumentTypes documentType,
             string fileName, string title, string content)
         {
             DocumentType = documentType;
@@ -62,7 +66,7 @@ namespace PlantUMLEditor.Models
             _temporarySave = new TemporarySave(fileName);
 
             string? tmpContent = _temporarySave.ReadIfExists();
-            if(tmpContent != null)
+            if (tmpContent != null)
             {
                 Content = tmpContent;
                 IsDirty = true;
@@ -70,18 +74,15 @@ namespace PlantUMLEditor.Models
 
         }
 
-        protected ITextEditor? TextEditor { get => _textEditor; }
+        protected ITextEditor? TextEditor => _textEditor;
 
         public string Content
         {
-            get
-            {
-                return _textValue;
-            }
+            get => _textValue;
             set
             {
                 _textValue = value;
-                _textEditor?.TextWrite(value, false);
+                _textEditor?.TextWrite(value, false, GetColorCodingProvider());
             }
         }
 
@@ -97,17 +98,11 @@ namespace PlantUMLEditor.Models
 
         public bool IsDirty
         {
-            get
-            {
-                return _isDirty;
-            }
-            set
-            {
-                SetValue(ref _isDirty, value);
-            }
+            get => _isDirty;
+            set => SetValue(ref _isDirty, value);
         }
 
-        internal abstract  void AutoComplete(AutoCompleteParameters autoCompleteParameters);
+        internal abstract void AutoComplete(AutoCompleteParameters autoCompleteParameters);
 
         public List<string> MatchingAutoCompletes
         {
@@ -116,19 +111,19 @@ namespace PlantUMLEditor.Models
 
         public string Name
         {
-            get
-            {
-                return name;
-            }
-            set
-            {
-                SetValue(ref name, value);
-            }
+            get => name;
+            set => SetValue(ref name, value);
         }
 
-        public DelegateCommand RegenDocument { get; }
+        public DelegateCommand RegenDocument
+        {
+            get;
+        }
 
-        public DelegateCommand ShowPreviewCommand { get; }
+        public DelegateCommand ShowPreviewCommand
+        {
+            get;
+        }
 
         public ObservableCollection<string> SortedMatchingAutoCompletes
         {
@@ -137,18 +132,20 @@ namespace PlantUMLEditor.Models
 
         public Visibility Visible
         {
-            get => visible; set { SetValue(ref visible, value); }
+            get => visible; set => SetValue(ref visible, value);
         }
+
+        protected abstract (IPreviewModel? model, Window? window) GetPreviewView();
 
         private async void ShowPreviewCommandHandler()
         {
-            imageModel = new PreviewDiagramModel(_ioService);
-
-            previewWindow = new Preview();
-
-            imageModel.Title = Name;
-
-            previewWindow.DataContext = imageModel;
+            var res = GetPreviewView();
+            imageModel = res.model;
+            previewWindow = res.window;
+            if (previewWindow is null)
+            {
+                return;
+            }
 
             previewWindow.Show();
             await ShowPreviewImage(_textEditor?.TextRead());
@@ -156,13 +153,15 @@ namespace PlantUMLEditor.Models
 
         private async Task ShowPreviewImage(string? text)
         {
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(text) || imageModel is null)
+            {
                 return;
+            }
 
             string tmp = Path.GetTempFileName();
             await File.WriteAllTextAsync(tmp, text);
 
-            imageModel?.ShowImage(_jarLocation, tmp, Name.Trim('\"'), true);
+            imageModel?.Show(tmp, Name.Trim('\"'), true);
         }
 
         protected virtual string AppendAutoComplete(string selection)
@@ -189,9 +188,11 @@ namespace PlantUMLEditor.Models
             //}
 
             if (previewWindow != null)
+            {
                 await ShowPreviewImage(text);
+            }
 
-           _temporarySave.Save(text);
+            _temporarySave.Save(text);
 
         }
 
@@ -199,7 +200,7 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        protected void ShowAutoComplete( )
+        protected void ShowAutoComplete()
         {
             SortedMatchingAutoCompletes.Clear();
 
@@ -214,17 +215,21 @@ namespace PlantUMLEditor.Models
             //    SortedMatchingAutoCompletes.Add(item);
 
             foreach (var item in MatchingAutoCompletes.OrderBy(p => p))
+            {
                 SortedMatchingAutoCompletes.Add(item);
+            }
 
-            _autoComplete?.ShowAutoComplete(  this);
+            _autoComplete?.ShowAutoComplete(this);
         }
+
+        protected abstract IColorCodingProvider? GetColorCodingProvider();
 
         internal void Binded(ITextEditor textEditor)
         {
             _textEditor = textEditor;
             _autoComplete = (IAutoComplete)textEditor;
 
-            _textEditor.TextWrite(_textValue, false);
+            _textEditor.TextWrite(_textValue, false, GetColorCodingProvider());
 
             _bindedAction?.Invoke();
 
@@ -234,7 +239,9 @@ namespace PlantUMLEditor.Models
         internal void CloseAutoComplete()
         {
             if (_autoComplete != null)
+            {
                 _autoComplete.CloseAutoComplete();
+            }
         }
 
         internal void ReportMessage(DocumentMessage d)
@@ -254,12 +261,15 @@ namespace PlantUMLEditor.Models
             if (previewWindow != null)
             {
                 if (imageModel != null)
+                {
                     imageModel.Stop();
+                }
+
                 previewWindow.Close();
             }
         }
 
-     
+
 
         public virtual void Close()
         {
@@ -268,7 +278,9 @@ namespace PlantUMLEditor.Models
             Visible = Visibility.Collapsed;
             imageModel?.Stop();
             if (previewWindow != null)
+            {
                 previewWindow.Close();
+            }
         }
 
         public abstract Task<UMLDiagram?> GetEditedDiagram();
@@ -278,17 +290,21 @@ namespace PlantUMLEditor.Models
             _lineNumber = lineNumber;
             _findText = findText;
             if (TextEditor != null)
+            {
                 TextEditor.GotoLine(_lineNumber, findText);
+            }
         }
 
         public virtual void NewAutoComplete(string text)
         {
         }
 
-        public void   Selection(string selection, AutoCompleteParameters autoCompleteParameters)
+        public void Selection(string selection, AutoCompleteParameters autoCompleteParameters)
         {
             if (autoCompleteParameters == null)
+            {
                 return;
+            }
 
             selection = AppendAutoComplete(selection);
 
@@ -308,6 +324,6 @@ namespace PlantUMLEditor.Models
                 ContentChanged(text);
             }
         }
- 
+
     }
 }

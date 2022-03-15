@@ -39,7 +39,7 @@ namespace PlantUMLEditor.Controls
         private (int selectionStart, int match) _braces;
         private DrawingVisual? _cachedDrawing;
         private ListBox? _cb;
-        private List<ColorCoding.FormatResult> _colorCodings = new();
+        private List<FormatResult> _colorCodings = new();
         private IAutoCompleteCallback? _currentCallback = null;
         private string _findText = string.Empty;
         private int _lastKnownFirstCharacterIndex = 0;
@@ -393,6 +393,8 @@ namespace PlantUMLEditor.Controls
         }
 
         private double _textTransformOffset = 0;
+        private IColorCodingProvider? _colorCodingProvider;
+
         private void GetStartAndEndLines(out int startLine, out int endLine)
         {
 
@@ -1057,7 +1059,7 @@ namespace PlantUMLEditor.Controls
             _braces = default;
             _errors.Clear();
 
-            _colorCodings = ColorCoding.FormatText(TextRead());
+            _colorCodings = _colorCodingProvider?.FormatText(TextRead()) ?? new();
 
             base.OnTextChanged(e);
 
@@ -1135,10 +1137,10 @@ namespace PlantUMLEditor.Controls
                     {
                         try
                         {
-                            if (ColorCoding.FormatResult.Intersects(cf, cl, item.Start, item.Start + item.Length))
+                            if (FormatResult.Intersects(cf, cl, item.Start, item.Start + item.Length))
                             {
-                                int start = ColorCoding.FormatResult.AdjustedStart(cf, item.Start);
-                                int len = ColorCoding.FormatResult.AdjustedLength(cf, cl, item.Start, item.Length, item.Start + item.Length);
+                                int start = FormatResult.AdjustedStart(cf, item.Start);
+                                int len = FormatResult.AdjustedLength(cf, cl, item.Start, item.Length, item.Start + item.Length);
 
                                 TextDecoration td = new(TextDecorationLocation.Underline,
                               new System.Windows.Media.Pen(Brushes.DarkBlue, 5), 0, TextDecorationUnit.FontRecommended,
@@ -1167,9 +1169,9 @@ namespace PlantUMLEditor.Controls
                 {
                     try
                     {
-                        if (ColorCoding.FormatResult.Intersects(cf, cl, _braces.selectionStart, _braces.selectionStart + 1))
+                        if (FormatResult.Intersects(cf, cl, _braces.selectionStart, _braces.selectionStart + 1))
                         {
-                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), ColorCoding.FormatResult.AdjustedStart(cf, _braces.selectionStart), 1);
+                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.selectionStart), 1);
                             col.DrawGeometry(Brushes.LightBlue, null, g);
                         }
                     }
@@ -1180,9 +1182,9 @@ namespace PlantUMLEditor.Controls
                     }
                     try
                     {
-                        if (ColorCoding.FormatResult.Intersects(cf, cl, _braces.match, _braces.match + 1))
+                        if (FormatResult.Intersects(cf, cl, _braces.match, _braces.match + 1))
                         {
-                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), ColorCoding.FormatResult.AdjustedStart(cf, _braces.match), 1);
+                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.match), 1);
                             col.DrawGeometry(Brushes.LightBlue, null, g);
                         }
                     }
@@ -1359,8 +1361,9 @@ namespace PlantUMLEditor.Controls
             return Dispatcher.Invoke<string>(() => { return Text; });
         }
 
-        public void TextWrite(string text, bool format)
+        public void TextWrite(string text, bool format, IColorCodingProvider? colorCodingProvider)
         {
+            _colorCodingProvider = colorCodingProvider;
             Text = text;
             FindReplaceVisible = false;
 

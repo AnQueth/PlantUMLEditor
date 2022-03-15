@@ -1,4 +1,5 @@
 ﻿using PlantUML;
+using PlantUMLEditor.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,22 @@ namespace PlantUMLEditor.Models
         private readonly object _locker = new();
         private bool _running = true;
         private static readonly string[] STATICWORDS = new[] { "component", "folder", "cloud", "package" };
+        protected override (IPreviewModel? model, Window? window) GetPreviewView()
+        {
+            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Name);
+
+            var previewWindow = new Preview
+            {
+                DataContext = imageModel
+            };
+
+            return (imageModel, previewWindow);
+
+        }
+        protected override IColorCodingProvider? GetColorCodingProvider()
+        {
+            return colorCodingProvider;
+        }
 
         public ComponentDiagramDocumentModel(IConfiguration configuration,
                  IIOService openDirectoryService,
@@ -23,6 +40,7 @@ namespace PlantUMLEditor.Models
         {
             Diagram = diagram;
 
+            colorCodingProvider = new UMLColorCoding();
 
             _ = Task.Run(async () =>
              {
@@ -71,18 +89,20 @@ namespace PlantUMLEditor.Models
             get; private set;
         }
 
+        private readonly UMLColorCoding colorCodingProvider;
+
         protected override void RegenDocumentHandler()
         {
             string t = PlantUMLGenerator.Create(Diagram);
 
-            TextEditor?.TextWrite(t, true);
+            TextEditor?.TextWrite(t, true, GetColorCodingProvider());
 
             base.RegenDocumentHandler();
         }
 
         internal void UpdateDiagram(UMLComponentDiagram doc)
         {
-            TextEditor?.TextWrite(PlantUMLGenerator.Create(doc), true);
+            TextEditor?.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
         }
 
         internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)

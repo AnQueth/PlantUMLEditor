@@ -1,4 +1,6 @@
-﻿namespace PlantUMLEditor.Models
+﻿using PlantUMLEditor.Controls;
+
+namespace PlantUMLEditor.Models
 {
     public interface ITextEditor
     {
@@ -10,12 +12,12 @@
 
         void ReportError(int line, int character);
 
- 
+
 
         void TextClear();
 
         string TextRead();
 
-        void TextWrite(string text, bool format);
+        void TextWrite(string text, bool format, IColorCodingProvider? colorCodingProvider);
     }
 }
