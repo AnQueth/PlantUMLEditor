@@ -1,4 +1,5 @@
 ﻿using PlantUMLEditor.Controls;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -15,7 +16,7 @@ namespace PlantUMLEditor.Models
         }
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var m = new MDPreviewModel(base.Title);
+            var m = new MDPreviewModel(base.Title, Path.GetDirectoryName(base.FileName));
             var p = new MDPreview
             {
                 DataContext = m
