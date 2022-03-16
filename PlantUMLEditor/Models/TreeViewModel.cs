@@ -24,6 +24,11 @@ namespace PlantUMLEditor.Models
             Icon = icon;
             _name = Path.GetFileName(path);
             IsFile = isFile;
+            if (isFile)
+            {
+                IsUML = string.Equals(Path.GetExtension(path), ".puml", System.StringComparison.OrdinalIgnoreCase);
+            }
+
             if (!isFile)
             {
                 Icon = "images\\FolderClosed_16x.png";
@@ -41,82 +46,85 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public DelegateCommand DeleteCommand { get; }
+        public DelegateCommand DeleteCommand
+        {
+            get;
+        }
 
-        public DelegateCommand DoRenameCommand { get; }
+        public DelegateCommand DoRenameCommand
+        {
+            get;
+        }
 
         public string FullPath
         {
             get; set;
         }
 
-        public string Icon { get; private set; }
+        public string Icon
+        {
+            get; private set;
+        }
 
         public bool IsFile
         {
             get; set;
         }
-
+        public bool IsUML
+        {
+            get;
+            set;
+        }
         public bool IsRenaming
         {
-            get
-            {
-                return _isRenaming;
-            }
-            set
-            {
-                SetValue(ref _isRenaming, value);
-            }
+            get => _isRenaming;
+            set => SetValue(ref _isRenaming, value);
         }
 
-        public bool IsSelected { get; set; }
+        public bool IsSelected
+        {
+            get; set;
+        }
 
         public Visibility IsVisible
         {
-            get
-            {
-                return _isVisible;
-            }
-            set
-            {
-                SetValue(ref _isVisible, value);
-            }
+            get => _isVisible;
+            set => SetValue(ref _isVisible, value);
         }
 
         public string Name
         {
-            get
-            {
-                return _name;
-            }
-            set
-            {
-                SetValue(ref _name, value);
-            }
+            get => _name;
+            set => SetValue(ref _name, value);
         }
 
-        public DelegateCommand NewFolderCommand { get; }
-        public TreeViewModel? Parent { get; }
+        public DelegateCommand NewFolderCommand
+        {
+            get;
+        }
+        public TreeViewModel? Parent
+        {
+            get;
+        }
 
         public string Rename
         {
-            get
-            {
-                return _rename;
-            }
-            set
-            {
-                SetValue(ref _rename, value);
-            }
+            get => _rename;
+            set => SetValue(ref _rename, value);
         }
 
-        public DelegateCommand StartRenameCommand { get; }
+        public DelegateCommand StartRenameCommand
+        {
+            get;
+        }
 
         private void DeleteCommandHandler()
         {
             if (MessageBoxResult.No == MessageBox.Show(
                 string.Format(CultureInfo.InvariantCulture, "Delete {0}", FullPath), "Delete?", MessageBoxButton.YesNo))
+            {
                 return;
+            }
 
             if (File.Exists(FullPath))
             {
@@ -130,7 +138,9 @@ namespace PlantUMLEditor.Models
         {
             string nf = Path.Combine(FullPath, "New Folder");
             if (!Directory.Exists(nf))
+            {
                 Directory.CreateDirectory(nf);
+            }
 
             Children.Add(new TreeViewModel(this, nf, false, "", _folderChangeNotifactions)
             {
@@ -142,16 +152,24 @@ namespace PlantUMLEditor.Models
         private async void RenameCommandHandler()
         {
             if (string.IsNullOrEmpty(Rename))
+            {
                 return;
+            }
+
             if (!IsFile)
             {
                 string? dir = Path.GetDirectoryName(FullPath);
                 if (dir == null)
+                {
                     return;
+                }
 
                 string nf = Path.Combine(dir, Rename);
                 if (Directory.Exists(nf))
+                {
                     return;
+                }
+
                 try
                 {
                     Directory.Move(FullPath, nf);
@@ -171,10 +189,16 @@ namespace PlantUMLEditor.Models
                 Rename = string.Join('.', words);
                 string? dir = Path.GetDirectoryName(FullPath);
                 if (dir == null)
+                {
                     return;
+                }
+
                 string nf = Path.Combine(dir, Rename);
                 if (File.Exists(nf))
+                {
                     return;
+                }
+
                 File.Move(FullPath, nf);
                 FullPath = nf;
 
@@ -188,9 +212,13 @@ namespace PlantUMLEditor.Models
         {
             IsRenaming = true;
             if (IsFile)
+            {
                 Rename = Name.Split('.').First();
+            }
             else
+            {
                 Rename = Name;
+            }
         }
     }
 }

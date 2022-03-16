@@ -162,27 +162,17 @@ namespace PlantUMLEditor.Models
                             continue;
                         }
 
-                        string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.path) + ".png");
+                        PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir);
 
-                        Process p = new();
+                        string fn = generator.Create(out string normal, out string errors);
 
-                        p.StartInfo.CreateNoWindow = true;
-                        p.StartInfo.FileName = "java.exe";
-                        p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {_jarLocation} \"{res.path}\"";
-                        p.StartInfo.RedirectStandardOutput = true;
-                        p.StartInfo.RedirectStandardError = true;
 
-                        p.Start();
-                        p.WaitForExit();
 
-                        string l = p.StandardOutput.ReadToEnd();
-                        string e = p.StandardError.ReadToEnd();
-
-                        if (!string.IsNullOrEmpty(e))
+                        if (!string.IsNullOrEmpty(errors))
                         {
-                            Debug.WriteLine(e);
+                            Debug.WriteLine(errors);
 
-                            var m = Regex.Match(e, "Error line (\\d+)");
+                            var m = Regex.Match(errors, "Error line (\\d+)");
                             if (m.Success)
                             {
                                 int d = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
@@ -197,12 +187,12 @@ namespace PlantUMLEditor.Models
                                     {
                                         if (x > d - 3)
                                         {
-                                            e += "\r\n" + ll;
+                                            errors += "\r\n" + ll;
                                         }
                                     }
                                 }
                             }
-                            Messages = e;
+                            Messages = errors;
                         }
                         else
                         {

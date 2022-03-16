@@ -84,7 +84,7 @@ namespace PlantUMLEditor.Models
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateYAMLDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
-
+            CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => !string.IsNullOrEmpty(_selectedFile));
 
 
             CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
@@ -120,6 +120,21 @@ namespace PlantUMLEditor.Models
             _ = new Timer(MRULoader, null, 10, Timeout.Infinite);
         }
 
+        private async void CreateUMLImageHandler()
+        {
+            if (string.IsNullOrEmpty(_selectedFile))
+            {
+                return;
+            }
+
+            PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation, _selectedFile, Path.GetDirectoryName(_selectedFile));
+
+            string fn = generator.Create(out string normal, out string errors);
+
+            await ScanDirectory(_folderBase);
+
+        }
+
         private AppConfiguration Configuration
         {
             get;
@@ -147,6 +162,7 @@ namespace PlantUMLEditor.Models
         }
 
         private TaskCompletionSource? _continueClosinTaskSource;
+        private string _selectedFile;
 
         public bool ConfirmOpen
         {
@@ -193,6 +209,11 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand CreateNewUnknownDiagram
+        {
+            get;
+        }
+
+        public DelegateCommand CreateUMLImage
         {
             get;
         }
@@ -418,17 +439,22 @@ namespace PlantUMLEditor.Models
 
             await Task.Delay(1); //sleep for ui updates
 
-            foreach (var file in Directory.EnumerateFiles(dir, "*.puml"))
+
+
+            foreach (var file in Directory.EnumerateFiles(dir))
             {
-                model.Children.Add(new TreeViewModel(model, file, true, GetIcon(file), this));
-            }
-            foreach (var file in Directory.EnumerateFiles(dir, "*.md"))
-            {
-                model.Children.Add(new TreeViewModel(model, file, true, GetIcon(file), this));
-            }
-            foreach (var file in Directory.EnumerateFiles(dir, "*.yml"))
-            {
-                model.Children.Add(new TreeViewModel(model, file, true, GetIcon(file), this));
+                switch (Path.GetExtension(file))
+                {
+                    case ".md":
+                    case ".yml":
+                    case ".png":
+                    case ".jpg":
+                    case ".puml":
+                        model.Children.Add(new TreeViewModel(model, file, true, GetIcon(file), this));
+                        break;
+
+                }
+
             }
 
             foreach (var item in Directory.EnumerateDirectories(dir))
@@ -466,6 +492,10 @@ namespace PlantUMLEditor.Models
             else if (file.Contains(".yml"))
             {
                 return @"images\yml.png";
+            }
+            else if (file.Contains(".png") || file.Contains(".jpg"))
+            {
+                return @"images\emblem_512.png";
             }
             else
             {
@@ -1585,20 +1615,38 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public async void TreeItemClicked(object sender, MouseButtonEventArgs e)
+        public async void TreeItemClickedButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 1)
-            {
-                return;
-            }
-
             TreeViewModel? fbm = GetSelectedFile(Folder);
             if (fbm == null)
             {
                 return;
             }
 
+
+
+            if (e.ClickCount == 1)
+            {
+                return;
+            }
+
+
+
+
             await AttemptOpeningFile(fbm.FullPath);
+        }
+        public async void TreeItemClickedButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            TreeViewModel? fbm = GetSelectedFile(Folder);
+            if (fbm == null)
+            {
+                return;
+            }
+
+            _selectedFile = fbm.FullPath;
+            CreateUMLImage.RaiseCanExecuteChanged();
+
+
         }
 
         public void UISizeChanged()
