@@ -35,6 +35,10 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             <MenuItem Header="New Sequence Diagram" Command="{Binding DataContext.CreateNewSequenceDiagram , RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New Component Diagram" Command="{Binding DataContext.CreateNewComponentDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New UML Document" Command="{Binding DataContext.CreateNewUnknownDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
+            <MenuItem Header="New Markdown Document" Command="{Binding DataContext.CreateMarkDownDocument, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
+            <MenuItem Header="New YAML Document" Command="{Binding DataContext.CreateYAMLDocument, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
+
+
             <Separator></Separator>
 
             <MenuItem Header="New Folder" Command="{Binding NewFolderCommand}"></MenuItem>

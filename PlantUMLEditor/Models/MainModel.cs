@@ -82,6 +82,11 @@ namespace PlantUMLEditor.Models
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
+            CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
+            CreateYAMLDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
+
+
+
             CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
             SaveCommand = new DelegateCommand<DocumentModel>(SaveCommandHandler);
@@ -173,7 +178,15 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
+        public DelegateCommand CreateYAMLDocument
+        {
+            get;
+        }
 
+        public DelegateCommand CreateMarkDownDocument
+        {
+            get;
+        }
         public DelegateCommand CreateNewSequenceDiagram
         {
             get;
@@ -1019,6 +1032,48 @@ namespace PlantUMLEditor.Models
             }
 
             await ScanDirectory(_folderBase);
+        }
+
+        private async void NewYAMLDocumentHandler()
+        {
+            string? nf = GetNewFile(".yml");
+
+            if (!string.IsNullOrEmpty(nf))
+            {
+                await NewYAMLDocument(nf, Path.GetFileNameWithoutExtension(nf));
+            }
+
+            await ScanDirectory(_folderBase);
+        }
+
+        private async Task NewYAMLDocument(string filePath, string fileName)
+        {
+
+            var d = new YMLDocumentModel(
+            Configuration, _ioService, DocumentTypes.MarkDown, filePath, fileName, string.Empty);
+
+            await AfterCreate(d);
+        }
+
+        private async void NewMarkDownDocumentHandler()
+        {
+            string? nf = GetNewFile(".md");
+
+            if (!string.IsNullOrEmpty(nf))
+            {
+                await NewMarkDownDocument(nf, Path.GetFileNameWithoutExtension(nf));
+            }
+
+            await ScanDirectory(_folderBase);
+        }
+
+        private async Task NewMarkDownDocument(string filePath, string fileName)
+        {
+
+            var d = new MDDocumentModel(
+            Configuration, _ioService, DocumentTypes.MarkDown, filePath, fileName, string.Empty);
+
+            await AfterCreate(d);
         }
 
         private async Task NewUnknownUMLDiagram(string fileName, string title)
