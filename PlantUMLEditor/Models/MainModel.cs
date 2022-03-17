@@ -49,7 +49,7 @@ namespace PlantUMLEditor.Models
 
         private string? _selectedMRUFolder;
 
-        private DocumentModel? currentDocument;
+        private BaseDocumentModel? currentDocument;
 
         private UMLModels.UMLDocumentCollection documents;
 
@@ -76,7 +76,7 @@ namespace PlantUMLEditor.Models
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
             folder = new TreeViewModel(null, Path.GetTempPath(), false, "", this);
             _documentCollectionSerialization = documentCollectionSerialization;
-            OpenDocuments = new ObservableCollection<DocumentModel>();
+            OpenDocuments = new ObservableCollection<BaseDocumentModel>();
             CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
 
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
@@ -87,11 +87,11 @@ namespace PlantUMLEditor.Models
             CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => !string.IsNullOrEmpty(_selectedFile));
 
 
-            CloseDocument = new DelegateCommand<DocumentModel>(CloseDocumentHandler);
-            CloseDocumentAndSave = new DelegateCommand<DocumentModel>(CloseDocumentAndSaveHandler);
-            SaveCommand = new DelegateCommand<DocumentModel>(SaveCommandHandler);
+            CloseDocument = new DelegateCommand<BaseDocumentModel>(CloseDocumentHandler);
+            CloseDocumentAndSave = new DelegateCommand<BaseDocumentModel>(CloseDocumentAndSaveHandler);
+            SaveCommand = new DelegateCommand<BaseDocumentModel>(SaveCommandHandler);
             Messages = new ObservableCollection<DocumentMessage>();
-            SelectDocumentCommand = new DelegateCommand<DocumentModel>(SelectDocumentHandler);
+            SelectDocumentCommand = new DelegateCommand<BaseDocumentModel>(SelectDocumentHandler);
             GlobalSearchCommand = new DelegateCommand<string>(GlobalSearchHandler);
             ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
             OpenTerminalCommand = new DelegateCommand(OpenTerminalHandler);
@@ -151,12 +151,12 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public DelegateCommand<DocumentModel> CloseDocument
+        public DelegateCommand<BaseDocumentModel> CloseDocument
         {
             get;
         }
 
-        public DelegateCommand<DocumentModel> CloseDocumentAndSave
+        public DelegateCommand<BaseDocumentModel> CloseDocumentAndSave
         {
             get;
         }
@@ -239,7 +239,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public DocumentModel? CurrentDocument
+        public BaseDocumentModel? CurrentDocument
         {
             get => currentDocument;
             set
@@ -300,7 +300,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public ObservableCollection<DocumentModel> OpenDocuments
+        public ObservableCollection<BaseDocumentModel> OpenDocuments
         {
             get;
         }
@@ -320,7 +320,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public DelegateCommand<DocumentModel> SaveCommand
+        public DelegateCommand<BaseDocumentModel> SaveCommand
         {
             get;
         }
@@ -330,7 +330,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public DelegateCommand<DocumentModel> SelectDocumentCommand
+        public DelegateCommand<BaseDocumentModel> SelectDocumentCommand
         {
             get;
         }
@@ -396,12 +396,12 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
-        private static async Task Save(DocumentModel doc)
+        private static async Task Save(TextDocumentModel doc)
         {
             await doc.Save();
         }
 
-        private static async Task UpdateDiagrams<T1, T2>(DocumentModel[] documentModels, LockedList<T2> classDocuments) where T1 : DocumentModel where T2 : UMLDiagram
+        private static async Task UpdateDiagrams<T1, T2>(TextDocumentModel[] documentModels, LockedList<T2> classDocuments) where T1 : TextDocumentModel where T2 : UMLDiagram
         {
             foreach (var document in documentModels.OfType<T1>())
             {
@@ -504,7 +504,7 @@ namespace PlantUMLEditor.Models
 
         }
 
-        private async Task AfterCreate(DocumentModel d)
+        private async Task AfterCreate(TextDocumentModel d)
         {
             lock (_docLock)
             {
@@ -519,7 +519,7 @@ namespace PlantUMLEditor.Models
         private async Task AttemptOpeningFile(string fullPath,
             int lineNumber = 0, string? searchText = null)
         {
-            DocumentModel? doc;
+            BaseDocumentModel? doc;
             lock (_docLock)
             {
                 doc = OpenDocuments.FirstOrDefault(p => p.FileName == fullPath);
@@ -528,7 +528,8 @@ namespace PlantUMLEditor.Models
             if (doc != null)
             {
                 CurrentDocument = doc;
-                doc.GotoLineNumber(lineNumber, searchText);
+                if (doc is TextDocumentModel textDocument)
+                    textDocument.GotoLineNumber(lineNumber, searchText);
                 return;
             }
 
@@ -563,14 +564,18 @@ namespace PlantUMLEditor.Models
             {
                 await OpenYMLFile(fullPath, lineNumber, searchText);
             }
+            else if (string.Compare(Path.GetExtension(fullPath), ".png", StringComparison.OrdinalIgnoreCase) == 0 ||
+                string.Compare(Path.GetExtension(fullPath), ".jpg", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                await OpenImageFile(fullPath);
+            }
         }
-        private async Task OpenYMLFile(string fullPath, int lineNumber, string? searchText)
+        private async Task OpenImageFile(string fullPath)
         {
-            string content = await File.ReadAllTextAsync(fullPath);
-            var d = new YMLDocumentModel(Configuration, _ioService, DocumentTypes.MarkDown,
+
+            var d = new ImageDocumentModel(
                 fullPath,
-                Path.GetFileName(fullPath)
-                , content);
+                Path.GetFileName(fullPath));
 
             lock (_docLock)
             {
@@ -579,10 +584,11 @@ namespace PlantUMLEditor.Models
 
             CurrentDocument = d;
         }
-        private async Task OpenMarkDownFile(string fullPath, int lineNumber, string? searchText)
+
+        private async Task OpenYMLFile(string fullPath, int lineNumber, string? searchText)
         {
             string content = await File.ReadAllTextAsync(fullPath);
-            var d = new MDDocumentModel(Configuration, _ioService, DocumentTypes.MarkDown,
+            var d = new YMLDocumentModel(Configuration, _ioService,
                 fullPath,
                 Path.GetFileName(fullPath)
                 , content);
@@ -591,7 +597,22 @@ namespace PlantUMLEditor.Models
             {
                 OpenDocuments.Add(d);
             }
+            d.GotoLineNumber(lineNumber, searchText);
+            CurrentDocument = d;
+        }
+        private async Task OpenMarkDownFile(string fullPath, int lineNumber, string? searchText)
+        {
+            string content = await File.ReadAllTextAsync(fullPath);
+            var d = new MDDocumentModel(Configuration, _ioService,
+                fullPath,
+                Path.GetFileName(fullPath)
+                , content);
 
+            lock (_docLock)
+            {
+                OpenDocuments.Add(d);
+            }
+            d.GotoLineNumber(lineNumber, searchText);
             CurrentDocument = d;
         }
 
@@ -627,7 +648,7 @@ namespace PlantUMLEditor.Models
 
                 try
                 {
-                    DocumentModel[] dm = GetDocumentModelReadingArray();
+                    TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
 
                     foreach (var doc in dm)
                     {
@@ -705,9 +726,9 @@ namespace PlantUMLEditor.Models
                             var docs = OpenDocuments.Where(p => string.CompareOrdinal(p.FileName, d.FileName) == 0);
                             foreach (var doc in docs)
                             {
-                                if (CurrentDocument == doc)
+                                if (CurrentDocument == doc && doc is TextDocumentModel textDoc)
                                 {
-                                    doc.ReportMessage(d);
+                                    textDoc.ReportMessage(d);
                                 }
                             }
                         }
@@ -722,7 +743,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void Close(DocumentModel doc)
+        private void Close(BaseDocumentModel doc)
         {
             doc.Close();
             lock (_docLock)
@@ -733,9 +754,12 @@ namespace PlantUMLEditor.Models
             CurrentDocument = OpenDocuments.LastOrDefault();
         }
 
-        private async void CloseDocumentAndSaveHandler(DocumentModel doc)
+        private async void CloseDocumentAndSaveHandler(BaseDocumentModel doc)
         {
-            await Save(doc);
+            if (doc is TextDocumentModel textDocument)
+            {
+                await Save(textDocument);
+            }
 
             await UpdateDiagramDependencies();
 
@@ -744,7 +768,7 @@ namespace PlantUMLEditor.Models
             await ScanAllFilesHandler();
         }
 
-        private void CloseDocumentHandler(DocumentModel doc)
+        private void CloseDocumentHandler(BaseDocumentModel doc)
         {
             if (doc.IsDirty)
             {
@@ -754,7 +778,7 @@ namespace PlantUMLEditor.Models
 
         private async void FixingCommandHandler(DocumentMessage sender)
         {
-            DocumentModel[] dm = GetDocumentModelReadingArray();
+            TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
 
             if (sender is MissingMethodDocumentMessage missingMethodMessage)
             {
@@ -827,12 +851,12 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private DocumentModel[] GetDocumentModelReadingArray()
+        private TextDocumentModel[] GetTextDocumentModelReadingArray()
         {
-            DocumentModel[] dm;
+            TextDocumentModel[] dm;
             lock (_docLock)
             {
-                dm = OpenDocuments.ToArray();
+                dm = OpenDocuments.OfType<TextDocumentModel>().ToArray();
             }
 
             return dm;
@@ -941,7 +965,7 @@ namespace PlantUMLEditor.Models
             }
 
             var findresults = await GlobalSearch.Find(_folderBase, obj, new string[]
-            {"*.puml"
+            {"*.puml", "*.md", "*.yml"
             });
             GlobalFindResults.Clear();
             foreach (var f in findresults)
@@ -1080,7 +1104,7 @@ namespace PlantUMLEditor.Models
         {
 
             var d = new YMLDocumentModel(
-            Configuration, _ioService, DocumentTypes.MarkDown, filePath, fileName, string.Empty);
+            Configuration, _ioService, filePath, fileName, string.Empty);
 
             await AfterCreate(d);
         }
@@ -1101,7 +1125,7 @@ namespace PlantUMLEditor.Models
         {
 
             var d = new MDDocumentModel(
-            Configuration, _ioService, DocumentTypes.MarkDown, filePath, fileName, string.Empty);
+            Configuration, _ioService, filePath, fileName, string.Empty);
 
             await AfterCreate(d);
         }
@@ -1118,7 +1142,7 @@ namespace PlantUMLEditor.Models
             await AfterCreate(d);
         }
 
-        private async Task<DocumentModel> OpenClassDiagram(string fileName,
+        private async Task<TextDocumentModel> OpenClassDiagram(string fileName,
             UMLClassDiagram diagram, int lineNumber, string? searchText = null)
         {
             var content = await File.ReadAllTextAsync(fileName);
@@ -1255,7 +1279,7 @@ namespace PlantUMLEditor.Models
             {
                 if (!files.Any(p => e.NewItems.Contains(p)))
                 {
-                    var dm = (DocumentModel?)e.NewItems[0];
+                    var dm = (BaseDocumentModel?)e.NewItems[0];
                     if (dm != null)
                     {
                         files.Add(dm.FileName);
@@ -1264,7 +1288,7 @@ namespace PlantUMLEditor.Models
             }
             if (e.OldItems != null)
             {
-                var dm = (DocumentModel?)e.OldItems[0];
+                var dm = (BaseDocumentModel?)e.OldItems[0];
                 if (dm != null)
                 {
                     files.RemoveAll(p => string.CompareOrdinal(p, dm.FileName) == 0);
@@ -1404,11 +1428,11 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            List<DocumentModel> c = new();
+            List<TextDocumentModel> c = new();
 
             lock (_docLock)
             {
-                c = OpenDocuments.Where(p => p.IsDirty).ToList();
+                c = OpenDocuments.OfType<TextDocumentModel>().Where(p => p.IsDirty).ToList();
             }
 
             foreach (var file in c)
@@ -1426,9 +1450,14 @@ namespace PlantUMLEditor.Models
             await SaveAll();
         }
 
-        private async void SaveCommandHandler(DocumentModel doc)
+        private async void SaveCommandHandler(BaseDocumentModel doc)
         {
-            await Save(doc);
+            if (doc is not TextDocumentModel textDocumentModel)
+            {
+                return;
+            }
+            await Save(textDocumentModel as TextDocumentModel);
+
             await UpdateDiagramDependencies();
 
             await ScanAllFilesHandler();
@@ -1510,14 +1539,14 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void SelectDocumentHandler(DocumentModel model)
+        private void SelectDocumentHandler(BaseDocumentModel model)
         {
             CurrentDocument = model;
         }
 
         private async Task UpdateDiagramDependencies()
         {
-            DocumentModel[] dm = GetDocumentModelReadingArray();
+            TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
 
             List<(UMLDiagram, UMLDiagram)> list = new();
 
@@ -1556,7 +1585,7 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            DocumentModel[] dm = GetDocumentModelReadingArray();
+            TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
             foreach (var item in dm)
             {
 

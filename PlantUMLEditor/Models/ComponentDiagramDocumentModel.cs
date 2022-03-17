@@ -9,7 +9,7 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class ComponentDiagramDocumentModel : DocumentModel
+    internal class ComponentDiagramDocumentModel : TextDocumentModel
     {
 
         private IEnumerable<string> _autoCompleteItems = Array.Empty<string>();
@@ -18,7 +18,7 @@ namespace PlantUMLEditor.Models
         private static readonly string[] STATICWORDS = new[] { "component", "folder", "cloud", "package" };
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Name);
+            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
 
             var previewWindow = new Preview
             {
@@ -36,7 +36,7 @@ namespace PlantUMLEditor.Models
         public ComponentDiagramDocumentModel(IConfiguration configuration,
                  IIOService openDirectoryService,
                  UMLComponentDiagram diagram, string filename, string title, string content) : base(configuration, openDirectoryService,
-                     DocumentTypes.Component, filename, title, content)
+                      filename, title, content)
         {
             Diagram = diagram;
 

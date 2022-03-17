@@ -9,7 +9,7 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class ClassDiagramDocumentModel : DocumentModel
+    internal class ClassDiagramDocumentModel : TextDocumentModel
     {
 
         private IEnumerable<string> _autoCompleteItems = Array.Empty<string>();
@@ -18,7 +18,7 @@ namespace PlantUMLEditor.Models
 
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Name);
+            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
 
             var previewWindow = new Preview
             {
@@ -41,7 +41,7 @@ namespace PlantUMLEditor.Models
             LockedList<UMLClassDiagram> otherClassDiagrams,
             string fileName,
             string title,
-            string content) : base(configuration, openDirectoryService, DocumentTypes.Class,
+            string content) : base(configuration, openDirectoryService,
                 fileName, title, content)
         {
             Diagram = diagram;

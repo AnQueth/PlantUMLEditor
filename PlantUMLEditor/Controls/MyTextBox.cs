@@ -35,7 +35,7 @@ namespace PlantUMLEditor.Controls
 
         private AutoCompleteParameters? _autoCompleteParameters;
         private Rect _autoCompleteRect;
-        private DocumentModel? _bindedDocument;
+        private TextDocumentModel? _bindedDocument;
         private (int selectionStart, int match) _braces;
         private DrawingVisual? _cachedDrawing;
         private ListBox? _cb;
@@ -439,14 +439,14 @@ namespace PlantUMLEditor.Controls
 
         private void MyTextBox_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (e.NewValue is not DocumentModel)
+            if (e.NewValue is not TextDocumentModel)
             {
                 return;
             }
 
             CaretIndex = 0;
 
-            _bindedDocument = (DocumentModel)e.NewValue;
+            _bindedDocument = (TextDocumentModel)e.NewValue;
             _autoComplete = this;
             _bindedDocument?.Binded(this);
         }

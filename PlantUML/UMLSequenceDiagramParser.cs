@@ -141,12 +141,17 @@ namespace PlantUML
                     continue;
                 }
 
+
+
                 if (line == "'@@novalidate")
                 {
                     d.ValidateAgainstClasses = false;
                     continue;
                 }
-
+                if (line.StartsWith("'", StringComparison.Ordinal))
+                {
+                    continue;
+                }
                 if (!started)
                 {
                     continue;

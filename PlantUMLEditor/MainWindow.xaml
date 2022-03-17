@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:PlantUMLEditor"
     xmlns:models="clr-namespace:PlantUMLEditor.Models"
     xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
+   xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
    
 
@@ -17,12 +18,12 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/Images/uml.png">
 
     <b:Interaction.Triggers>
-       
+
         <b:EventTrigger EventName="SizeChanged">
             <b:CallMethodAction MethodName="UISizeChanged" TargetObject="{Binding}"></b:CallMethodAction>
 
         </b:EventTrigger>
-     
+
     </b:Interaction.Triggers>
 
     <Window.Resources>
@@ -37,7 +38,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             <MenuItem Header="New UML Document" Command="{Binding DataContext.CreateNewUnknownDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New Markdown Document" Command="{Binding DataContext.CreateMarkDownDocument, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New YAML Document" Command="{Binding DataContext.CreateYAMLDocument, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
-            
+
             <Separator></Separator>
 
             <MenuItem Header="New Folder" Command="{Binding NewFolderCommand}"></MenuItem>
@@ -55,10 +56,25 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
             <Separator></Separator>
             <MenuItem Header="Delete" Command="{Binding DeleteCommand}"></MenuItem>
-         
+
         </ContextMenu>
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
-        <DataTemplate x:Key="TabControlItemTemplate2">
+        <DataTemplate DataType="{x:Type models:ImageDocumentModel}">
+
+            <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+                <Border BorderThickness="3" CornerRadius="2">
+                    <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" PanningMode="Both">
+                        <Behaviors:Interaction.Behaviors>
+                            <Behaviors:TranslateZoomRotateBehavior />
+                        </Behaviors:Interaction.Behaviors>
+                        <localControls:PanAndZoomBorder>
+                            <Image Source="{Binding Image}" Stretch="None" ></Image>
+                        </localControls:PanAndZoomBorder>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type models:TextDocumentModel}">
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
                 <Border BorderThickness="3" CornerRadius="2">
 
@@ -69,14 +85,14 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                                     <DataTrigger.Setters>
                                         <Setter   Property="BorderBrush" Value="#FFAA0000">
                                         </Setter>
-                                     
+
                                     </DataTrigger.Setters>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsDirty}" Value="false">
                                     <DataTrigger.Setters>
                                         <Setter   Property="BorderBrush" Value="Green">
                                         </Setter>
- 
+
                                     </DataTrigger.Setters>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -190,9 +206,9 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         </DataTemplate>
 
         <HierarchicalDataTemplate  DataType="{x:Type  models:TreeViewModel}" ItemsSource="{Binding Children}">
-            
-                <StackPanel Orientation="Horizontal">
-               
+
+            <StackPanel Orientation="Horizontal">
+
 
 
                 <Image Source="{Binding Icon}" Width="15" Margin="1,0,5,0">
@@ -209,12 +225,12 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                         </b:KeyTrigger>
                     </b:Interaction.Triggers>
                 </TextBox>
-              
+
                 <TextBlock x:Name="txt" Text="{Binding Name}" Width="Auto" FontWeight="Bold">
                 </TextBlock>
 
-                </StackPanel>
-          
+            </StackPanel>
+
             <HierarchicalDataTemplate.Triggers>
                 <DataTrigger Value="true">
                     <DataTrigger.Binding>
@@ -260,11 +276,11 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type localControls:MyTextBox}">
-                  
+
                         <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="True">
                             <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" >
-                           
-                           
+
+
                             </ScrollViewer>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -494,8 +510,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         </Setter>
                     </MultiDataTrigger.Setters>
                 </MultiDataTrigger>
-                
-               
+
+
 
                 <Trigger Property="VirtualizingPanel.IsVirtualizing" Value="true">
                     <Setter Property="ItemsPanel">
@@ -551,8 +567,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
         <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
     </Window.Resources>
-    
-  
+
+
     <Grid  >
         <Grid.ColumnDefinitions>
             <ColumnDefinition  Width="{Binding GridSettings.TreeWidth, Mode=TwoWay}" />
@@ -611,7 +627,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                 </ListView.View>
             </ListView>
         </Grid>
-  
+
         <GridSplitter     HorizontalAlignment="Center" 
               VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
         <Grid Grid.Row="1" Grid.Column="2">
@@ -675,6 +691,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                     </Grid.ColumnDefinitions>
 
                                     <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                                       
                                         <Button.Content>
                                             <Grid>
                                                 <Image Source="/Images/Save_16x.png"></Image>
@@ -696,14 +713,16 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                             </Grid>
                                         </Button.Content>
                                     </Button>
-                                    <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3"  Command="{Binding  ShowPreviewCommand}">
+                                    <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" 
+                                             Command="{Binding  ShowPreviewCommand}">
+                                       
                                         <Button.Content>
                                             <Grid>
                                                 <Image Source="/Images/PreviewTransition_16x.png" ></Image>
                                             </Grid>
                                         </Button.Content>
                                     </Button>
-                                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}"  Grid.Column="4"  CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Name}" Margin="{DynamicResource TabHeaderMargin}"></Button>
+                                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}"  Grid.Column="4"  CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Title}" Margin="{DynamicResource TabHeaderMargin}"></Button>
                                 </Grid>
                             </Border>
                         </DataTemplate>
@@ -712,35 +731,35 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
 
                 <ItemsControl Grid.Row="1" x:Name="Tabs"
                           ItemsSource="{Binding OpenDocuments}"
-                          ItemTemplate="{StaticResource TabControlItemTemplate2}">
+                          >
                 </ItemsControl>
             </Grid>
             <GridSplitter Grid.Row="1" ShowsPreview="True"  Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
             <TabControl Grid.Row="2">
                 <TabItem>
                     <TabItem.Header>Errors</TabItem.Header>
-					<DataGrid SelectionMode="Single" IsReadOnly="True"
+                    <DataGrid SelectionMode="Single" IsReadOnly="True"
                               Grid.Row="2"
                               AutoGenerateColumns="False"  ItemsSource="{Binding Messages}" Margin="{DynamicResource TabHeaderMargin}"  
                            HorizontalContentAlignment="Stretch"
                               
                                  SelectedItem="{Binding SelectedMessage}">
-						<DataGrid.Columns>
-							<DataGridTemplateColumn>
-								<DataGridTemplateColumn.CellTemplate>
-									<DataTemplate>
-										<Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn>
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
                                 Content="Fix" Grid.Column="2"></Button>
-										<DataTemplate.Triggers>
-											<DataTrigger Binding="{Binding IsFixable}" Value="false">
-												<DataTrigger.Setters>
-													<Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
-												</DataTrigger.Setters>
-											</DataTrigger>
-										</DataTemplate.Triggers>
-									</DataTemplate>
-								</DataGridTemplateColumn.CellTemplate>
-							</DataGridTemplateColumn>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsFixable}" Value="false">
+                                                <DataTrigger.Setters>
+                                                    <Setter TargetName="createMissingMethod" Property="Visibility" Value="Collapsed"></Setter>
+                                                </DataTrigger.Setters>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
                             <DataGridTemplateColumn Header="Text"  IsReadOnly="true"  >
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
@@ -764,9 +783,9 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
 
-                      		 		</DataGrid.Columns>
-					</DataGrid>
-				</TabItem>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
                 <TabItem>
                     <TabItem.Header>Find</TabItem.Header>
                     <Grid>
@@ -783,11 +802,11 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             <b:Interaction.Triggers>
                                 <b:KeyTrigger Key="Return" ActiveOnFocus="True">
 
-                                <b:InvokeCommandAction   CommandParameter="{Binding Text, ElementName=txtGF}"  Command="{Binding  GlobalSearchCommand}"></b:InvokeCommandAction>
-                            </b:KeyTrigger>
-                                </b:Interaction.Triggers>
+                                    <b:InvokeCommandAction   CommandParameter="{Binding Text, ElementName=txtGF}"  Command="{Binding  GlobalSearchCommand}"></b:InvokeCommandAction>
+                                </b:KeyTrigger>
+                            </b:Interaction.Triggers>
                         </TextBox>
-                        
+
                         <Button Margin="2,2,2,2"  Grid.Column="1" Command="{Binding GlobalSearchCommand}"
                                 CommandParameter="{Binding Text, ElementName=txtGF}" >Find</Button>
                         <DataGrid SelectionMode="Single"  AutoGenerateColumns="False" 
@@ -817,10 +836,10 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
 
         <Popup IsOpen="{Binding ConfirmOpen}" AllowsTransparency="True" Width="Auto" Height="Auto" HorizontalAlignment="Center" VerticalAlignment="Center"   Placement="Center"  >
             <Grid Margin="10,10,10,10">
-             
-            
 
-            <Border BorderThickness="2" CornerRadius="10" BorderBrush="Black" Background="White">
+
+
+                <Border BorderThickness="2" CornerRadius="10" BorderBrush="Black" Background="White">
                     <Border.Effect>
                         <DropShadowEffect Direction="315"  ShadowDepth="10" BlurRadius="10"  Opacity="0.5" />
                     </Border.Effect>

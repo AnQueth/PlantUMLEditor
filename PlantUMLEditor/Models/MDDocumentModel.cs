@@ -6,11 +6,11 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class MDDocumentModel : DocumentModel
+    internal class MDDocumentModel : TextDocumentModel
     {
         public MDDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
-            DocumentTypes documentType, string fileName, string title, string content) :
-            base(configuration, openDirectoryService, documentType, fileName, title, content)
+          string fileName, string title, string content) :
+            base(configuration, openDirectoryService, fileName, title, content)
         {
 
         }

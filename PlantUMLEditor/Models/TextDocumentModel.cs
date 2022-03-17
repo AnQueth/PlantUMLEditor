@@ -11,16 +11,8 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    public enum DocumentTypes
-    {
-        Class,
-        Sequence,
-        Unknown,
-        Component,
-        MarkDown
-    }
 
-    internal abstract class DocumentModel : BindingBase, IAutoCompleteCallback
+    internal abstract class TextDocumentModel : BaseDocumentModel, IAutoCompleteCallback
     {
         protected readonly IIOService _ioService;
         protected readonly string _jarLocation;
@@ -30,7 +22,7 @@ namespace PlantUMLEditor.Models
         private readonly TemporarySave _temporarySave;
 
         private string? _findText;
-        private bool _isDirty;
+
 
         private int _lineNumber;
         private ITextEditor? _textEditor;
@@ -39,21 +31,21 @@ namespace PlantUMLEditor.Models
 
         private IPreviewModel? imageModel;
 
-        private string name;
-
         private Window? previewWindow;
-        private Visibility visible;
+        private readonly Visibility visible;
 
         protected Action? _bindedAction;
 
-        public string Title => name;
 
-        public DocumentModel(IConfiguration configuration, IIOService openDirectoryService, DocumentTypes documentType,
-            string fileName, string title, string content)
+
+
+        public TextDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
+            string fileName, string title, string content) : base(fileName, title)
         {
-            DocumentType = documentType;
-            name = title;
-            FileName = fileName;
+
+
+
+
             Content = content;
 
             _ioService = openDirectoryService;
@@ -86,21 +78,8 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public DocumentTypes DocumentType
-        {
-            get; init;
-        }
 
-        public string FileName
-        {
-            get; init;
-        }
 
-        public bool IsDirty
-        {
-            get => _isDirty;
-            set => SetValue(ref _isDirty, value);
-        }
 
         internal abstract void AutoComplete(AutoCompleteParameters autoCompleteParameters);
 
@@ -109,11 +88,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public string Name
-        {
-            get => name;
-            set => SetValue(ref name, value);
-        }
+
 
         public DelegateCommand RegenDocument
         {
@@ -130,10 +105,6 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        public Visibility Visible
-        {
-            get => visible; set => SetValue(ref visible, value);
-        }
 
         protected abstract (IPreviewModel? model, Window? window) GetPreviewView();
 
@@ -161,7 +132,7 @@ namespace PlantUMLEditor.Models
             string tmp = Path.GetTempFileName();
             await File.WriteAllTextAsync(tmp, text);
 
-            imageModel?.Show(tmp, Name.Trim('\"'), true);
+            imageModel?.Show(tmp, Title.Trim('\"'), true);
         }
 
         protected virtual string AppendAutoComplete(string selection)
@@ -271,7 +242,7 @@ namespace PlantUMLEditor.Models
 
 
 
-        public virtual void Close()
+        public override void Close()
         {
             _temporarySave.Stop();
             _temporarySave.Clean();

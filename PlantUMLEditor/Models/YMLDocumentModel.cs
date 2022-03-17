@@ -5,11 +5,11 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class YMLDocumentModel : DocumentModel
+    internal class YMLDocumentModel : TextDocumentModel
     {
         public YMLDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
-            DocumentTypes documentType, string fileName, string title, string content) :
-            base(configuration, openDirectoryService, documentType, fileName, title, content)
+           string fileName, string title, string content) :
+            base(configuration, openDirectoryService, fileName, title, content)
         {
 
         }

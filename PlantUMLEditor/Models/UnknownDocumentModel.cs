@@ -6,14 +6,14 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class UnknownDocumentModel : DocumentModel
+    internal class UnknownDocumentModel : TextDocumentModel
     {
         private readonly Action<UMLDiagram, UMLDiagram> ChangedCallback;
 
 
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Name);
+            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
 
             var previewWindow = new Preview
             {
@@ -27,7 +27,7 @@ namespace PlantUMLEditor.Models
         public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration,
                         IIOService openDirectoryService,
                         UMLUnknownDiagram model, UMLDocumentCollection diagrams, string fileName, string title, string content
-                        ) : base(configuration, openDirectoryService, DocumentTypes.Unknown, fileName, title, content)
+                        ) : base(configuration, openDirectoryService, fileName, title, content)
         {
             ChangedCallback = changedCallback;
             Diagram = model;

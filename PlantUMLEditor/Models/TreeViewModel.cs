@@ -126,9 +126,18 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
+
             if (File.Exists(FullPath))
             {
-                File.Delete(FullPath);
+                try
+                {
+
+                    File.Delete(FullPath);
+                }
+                catch
+                {
+                    return;
+                }
             }
             IsVisible = Visibility.Collapsed;
             Parent?.Children.Remove(this);

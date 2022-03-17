@@ -8,14 +8,14 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class SequenceDiagramDocumentModel : DocumentModel
+    internal class SequenceDiagramDocumentModel : TextDocumentModel
     {
         private string _autoCompleteAppend = string.Empty;
 
         private static readonly string[] DEFAULTAUTOCOMPLETES = new string[] { "participant", "actor", "database", "queue", "entity" };
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Name);
+            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
 
             var previewWindow = new Preview
             {
@@ -32,7 +32,7 @@ namespace PlantUMLEditor.Models
 
         public SequenceDiagramDocumentModel(IConfiguration configuration,
                         IIOService openDirectoryService, UMLSequenceDiagram diagram, LockedList<UMLClassDiagram> dataTypes,
-                        string fileName, string title, string content) : base(configuration, openDirectoryService, DocumentTypes.Sequence, fileName, title, content)
+                        string fileName, string title, string content) : base(configuration, openDirectoryService, fileName, title, content)
         {
             Diagram = diagram;
             DataTypes = dataTypes;
