@@ -85,6 +85,7 @@ namespace PlantUMLEditor.Models
             CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateYAMLDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => !string.IsNullOrEmpty(_selectedFile));
+            GitCommitAndSyncCommand = new DelegateCommand(GitCommitAndSyncCommandHandler, () => !string.IsNullOrEmpty(_folderBase));
 
 
             CloseDocument = new DelegateCommand<BaseDocumentModel>(CloseDocumentHandler);
@@ -118,6 +119,12 @@ namespace PlantUMLEditor.Models
             WindowLeft = AppSettings.Default.WindowLeft;
 
             _ = new Timer(MRULoader, null, 10, Timeout.Infinite);
+        }
+
+        private void GitCommitAndSyncCommandHandler()
+        {
+            GitSupport gs = new GitSupport();
+            gs.CommitAndSync(_folderBase);
         }
 
         private async void CreateUMLImageHandler()
@@ -214,6 +221,10 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand CreateUMLImage
+        {
+            get;
+        }
+        public DelegateCommand GitCommitAndSyncCommand
         {
             get;
         }
@@ -529,7 +540,10 @@ namespace PlantUMLEditor.Models
             {
                 CurrentDocument = doc;
                 if (doc is TextDocumentModel textDocument)
+                {
                     textDocument.GotoLineNumber(lineNumber, searchText);
+                }
+
                 return;
             }
 
@@ -1246,6 +1260,7 @@ namespace PlantUMLEditor.Models
                 CreateNewSequenceDiagram.RaiseCanExecuteChanged();
                 SaveAllCommand.RaiseCanExecuteChanged();
                 ScanAllFiles.RaiseCanExecuteChanged();
+                GitCommitAndSyncCommand.RaiseCanExecuteChanged();
 
                 await ScanDirectory(dir);
 

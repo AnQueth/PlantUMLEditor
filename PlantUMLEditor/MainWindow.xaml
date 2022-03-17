@@ -62,7 +62,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         <DataTemplate DataType="{x:Type models:ImageDocumentModel}">
 
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="3" CornerRadius="2">
+                <Border BorderThickness="3" CornerRadius="2" BorderBrush="Black">
                     <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" PanningMode="Both">
                         <Behaviors:Interaction.Behaviors>
                             <Behaviors:TranslateZoomRotateBehavior />
@@ -259,6 +259,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
         <Thickness x:Key="TabHeaderMargin">2,2,2,2</Thickness>
+        <local:TabHeaderDataTemplateSelector x:Key="TabHeaderSelector"></local:TabHeaderDataTemplateSelector>
         <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3" />
         <SolidColorBrush x:Key="TextBox.MouseOver.Border" Color="#FF7EB4EA" />
         <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5" />
@@ -566,6 +567,132 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         </Style>
         <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
         <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
+        <DataTemplate x:Key="TextDocumentTabHeader">
+           
+                <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="1" MinWidth="300">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDirty}" Value="true">
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="BorderBrush" Value="#FFAA0000">
+                                        </Setter>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsDirty}" Value="false">
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="BorderBrush" Value="Green">
+                                        </Setter>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <Grid IsHitTestVisible="True">
+                        <Grid.Style>
+                            <Style TargetType="Grid">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Visible}" Value="0">
+                                        <Setter Property="Background"  Value="{DynamicResource CustomColor}"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Grid.Style>
+
+                        <Grid.ColumnDefinitions>
+
+                            <ColumnDefinition Width="Auto" ></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+
+                        <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+
+                            <Button.Content>
+                                <Grid>
+                                    <Image Source="/Images/Save_16x.png"></Image>
+                                </Grid>
+                            </Button.Content>
+                        </Button>
+                        <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                            <Button.Content>
+                                <Grid>
+                                    <Image Source="/Images/SaveClose_16x.png"></Image>
+                                </Grid>
+                            </Button.Content>
+                        </Button>
+
+                        <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                            <Button.Content>
+                                <Grid>
+                                    <Image Source="/Images/Close_8x_16x.png" ></Image>
+                                </Grid>
+                            </Button.Content>
+                        </Button>
+                        <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" 
+                                             Command="{Binding  ShowPreviewCommand}">
+
+                            <Button.Content>
+                                <Grid>
+                                    <Image Source="/Images/PreviewTransition_16x.png" ></Image>
+                                </Grid>
+                            </Button.Content>
+                        </Button>
+                        <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}"  Grid.Column="4"  CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Title}" Margin="{DynamicResource TabHeaderMargin}"></Button>
+                    </Grid>
+                </Border>
+            
+        </DataTemplate>
+        <DataTemplate x:Key="ImageDocumentTabHeader">
+
+            <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="1" MinWidth="300"  BorderBrush="Black">
+               
+                <Grid IsHitTestVisible="True">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Visible}" Value="0">
+                                    <Setter Property="Background"  Value="{DynamicResource CustomColor}"></Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+
+                    <Grid.ColumnDefinitions>
+
+                  
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                     
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                 
+
+                    <Button ToolTip="Close"
+                            Margin="{DynamicResource TabHeaderMargin}" 
+                            Grid.Column="0"
+                            CommandParameter="{Binding}"
+                            Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                        <Button.Content>
+                            <Grid>
+                                <Image Source="/Images/Close_8x_16x.png" ></Image>
+                            </Grid>
+                        </Button.Content>
+                    </Button>
+                   
+                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" 
+                            Grid.Column="1" 
+                            CommandParameter="{Binding}"
+                            FontWeight="ExtraBold"
+                            VerticalAlignment="Center"  
+                            Content="{Binding Title}"
+                            Margin="{DynamicResource TabHeaderMargin}"></Button>
+                </Grid>
+            </Border>
+
+        </DataTemplate>
     </Window.Resources>
 
 
@@ -599,6 +726,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <Button Content="Open Terminal" Command="{Binding OpenTerminalCommand}"></Button>
             <Separator></Separator>
             <Button Content="Open Explorer" Command="{Binding OpenExplorerCommand}"></Button>
+            <Separator></Separator>
+            <Button Content="Quick GIT Commit and Sync" Command="{Binding GitCommitAndSyncCommand}"></Button>
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
@@ -642,91 +771,13 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                     <RowDefinition Height="*"></RowDefinition>
                 </Grid.RowDefinitions>
 
-                <ItemsControl ItemsSource="{Binding OpenDocuments}">
+                <ItemsControl ItemsSource="{Binding OpenDocuments}" ItemTemplateSelector="{StaticResource TabHeaderSelector}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <WrapPanel />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
-
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="1" MinWidth="300">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsDirty}" Value="true">
-                                                <DataTrigger.Setters>
-                                                    <Setter   Property="BorderBrush" Value="#FFAA0000">
-                                                    </Setter>
-                                                </DataTrigger.Setters>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding IsDirty}" Value="false">
-                                                <DataTrigger.Setters>
-                                                    <Setter   Property="BorderBrush" Value="Green">
-                                                    </Setter>
-                                                </DataTrigger.Setters>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <Grid IsHitTestVisible="True">
-                                    <Grid.Style>
-                                        <Style TargetType="Grid">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Visible}" Value="0">
-                                                    <Setter Property="Background"  Value="{DynamicResource CustomColor}"></Setter>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Grid.Style>
-
-                                    <Grid.ColumnDefinitions>
-
-                                        <ColumnDefinition Width="Auto" ></ColumnDefinition>
-                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                                        <ColumnDefinition Width="*"></ColumnDefinition>
-                                    </Grid.ColumnDefinitions>
-
-                                    <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
-                                       
-                                        <Button.Content>
-                                            <Grid>
-                                                <Image Source="/Images/Save_16x.png"></Image>
-                                            </Grid>
-                                        </Button.Content>
-                                    </Button>
-                                    <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
-                                        <Button.Content>
-                                            <Grid>
-                                                <Image Source="/Images/SaveClose_16x.png"></Image>
-                                            </Grid>
-                                        </Button.Content>
-                                    </Button>
-
-                                    <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
-                                        <Button.Content>
-                                            <Grid>
-                                                <Image Source="/Images/Close_8x_16x.png" ></Image>
-                                            </Grid>
-                                        </Button.Content>
-                                    </Button>
-                                    <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" 
-                                             Command="{Binding  ShowPreviewCommand}">
-                                       
-                                        <Button.Content>
-                                            <Grid>
-                                                <Image Source="/Images/PreviewTransition_16x.png" ></Image>
-                                            </Grid>
-                                        </Button.Content>
-                                    </Button>
-                                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}"  Grid.Column="4"  CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Title}" Margin="{DynamicResource TabHeaderMargin}"></Button>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
+ 
                 </ItemsControl>
 
                 <ItemsControl Grid.Row="1" x:Name="Tabs"
