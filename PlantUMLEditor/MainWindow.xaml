@@ -873,6 +873,15 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                         </DataGrid>
                     </Grid>
                 </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        GIT
+                    </TabItem.Header>
+                    <Grid>
+                        
+                        <TextBox Grid.Row="1" Text="{Binding GitMessages}"></TextBox>
+                    </Grid>
+                </TabItem>
             </TabControl>
         </Grid>
 

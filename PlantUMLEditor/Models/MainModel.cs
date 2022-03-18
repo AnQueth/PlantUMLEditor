@@ -58,7 +58,14 @@ namespace PlantUMLEditor.Models
         private DocumentMessage? selectedMessage;
 
         private readonly MainWindow _window;
+        private string? _gitMessages;
 
+        public string? GitMessages
+
+        {
+            get => _gitMessages;
+            set => SetValue(ref _gitMessages, value);
+        }
         public MainModel(IIOService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization, MainWindow mainWindow)
         {
             _window = mainWindow;
@@ -83,7 +90,7 @@ namespace PlantUMLEditor.Models
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
-            CreateYAMLDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
+            CreateYAMLDocument = new DelegateCommand(NewYAMLDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => !string.IsNullOrEmpty(_selectedFile));
             GitCommitAndSyncCommand = new DelegateCommand(GitCommitAndSyncCommandHandler, () => !string.IsNullOrEmpty(_folderBase));
 
@@ -121,10 +128,17 @@ namespace PlantUMLEditor.Models
             _ = new Timer(MRULoader, null, 10, Timeout.Infinite);
         }
 
-        private void GitCommitAndSyncCommandHandler()
+        private async void GitCommitAndSyncCommandHandler()
         {
+            GitMessages = null;
             GitSupport gs = new GitSupport();
-            gs.CommitAndSync(_folderBase);
+            if (string.IsNullOrEmpty(_folderBase))
+            {
+                return;
+            }
+
+            GitMessages = await gs.CommitAndSync(_folderBase);
+
         }
 
         private async void CreateUMLImageHandler()
@@ -136,7 +150,7 @@ namespace PlantUMLEditor.Models
 
             PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation, _selectedFile, Path.GetDirectoryName(_selectedFile));
 
-            string fn = generator.Create(out string normal, out string errors);
+            _ = await generator.Create();
 
             await ScanDirectory(_folderBase);
 

@@ -164,8 +164,9 @@ namespace PlantUMLEditor.Models
 
                         PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir);
 
-                        string fn = generator.Create(out string normal, out string errors);
+                        var createResult = generator.Create().Result;
 
+                        string errors = createResult.errors;
 
 
                         if (!string.IsNullOrEmpty(errors))
@@ -198,6 +199,7 @@ namespace PlantUMLEditor.Models
                         {
                             Application.Current.Dispatcher.Invoke(() =>
                             {
+                                string fn = createResult.fileName;
                                 if (!File.Exists(fn))
                                 {
                                     var dir = Path.GetDirectoryName(res.path);
