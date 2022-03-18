@@ -10,9 +10,6 @@ namespace PlantUMLEditor.Models
         private readonly string path;
         private readonly string dir;
 
-        public PlantUMLImageGenerator()
-        {
-        }
 
         public PlantUMLImageGenerator(string jarLocation, string path, string dir)
         {

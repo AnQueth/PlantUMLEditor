@@ -8,7 +8,7 @@ namespace PlantUMLEditor.Models
 {
     internal class MDPreviewModel : BindableBase, IPreviewModel
     {
-        private FlowDocument _document;
+        private FlowDocument? _document;
         internal class LinkInlineRenderer : Markdig.Renderers.Wpf.Inlines.LinkInlineRenderer
         {
             private readonly Uri _linkpath;
@@ -76,7 +76,7 @@ namespace PlantUMLEditor.Models
             _workingDirectory = workingDirectory;
         }
 
-        public FlowDocument Document
+        public FlowDocument? Document
         {
             get => _document;
             set => SetProperty(ref _document, value);

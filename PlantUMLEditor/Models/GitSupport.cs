@@ -40,11 +40,13 @@ namespace PlantUMLEditor.Models
                         RedirectStandardOutput = true
                     };
                     var p = Process.Start(info);
-
-                    p.WaitForExit();
-                    sb.AppendLine("git add *");
-                    sb.AppendLine(p.StandardOutput.ReadToEnd());
-                    sb.AppendLine(p.StandardError.ReadToEnd());
+                    if (p != null)
+                    {
+                        p.WaitForExit();
+                        sb.AppendLine("git add *");
+                        sb.AppendLine(p.StandardOutput.ReadToEnd());
+                        sb.AppendLine(p.StandardError.ReadToEnd());
+                    }
 
                     string s = $"commit -m \"{DateTimeOffset.Now}\"";
 
@@ -56,12 +58,14 @@ namespace PlantUMLEditor.Models
                         RedirectStandardOutput = true
                     };
                     p = Process.Start(info);
-
-                    p.WaitForExit();
-                    sb.Append("git ");
-                    sb.AppendLine(s);
-                    sb.AppendLine(p.StandardOutput.ReadToEnd());
-                    sb.AppendLine(p.StandardError.ReadToEnd());
+                    if (p != null)
+                    {
+                        p.WaitForExit();
+                        sb.Append("git ");
+                        sb.AppendLine(s);
+                        sb.AppendLine(p.StandardOutput.ReadToEnd());
+                        sb.AppendLine(p.StandardError.ReadToEnd());
+                    }
 
 
                     info = new("git", "push")
@@ -72,13 +76,15 @@ namespace PlantUMLEditor.Models
                         RedirectStandardOutput = true
                     };
                     p = Process.Start(info);
+                    if (p != null)
+                    {
 
-                    p.WaitForExit();
+                        p.WaitForExit();
 
-                    sb.AppendLine("git push");
-                    sb.AppendLine(p.StandardOutput.ReadToEnd());
-                    sb.AppendLine(p.StandardError.ReadToEnd());
-
+                        sb.AppendLine("git push");
+                        sb.AppendLine(p.StandardOutput.ReadToEnd());
+                        sb.AppendLine(p.StandardError.ReadToEnd());
+                    }
                     tcs.SetResult(sb.ToString());
                 }
                 catch (Exception ex)

@@ -8,40 +8,119 @@ using MessageBox = System.Windows.MessageBox;
 
 namespace PlantUMLEditor.Models
 {
+    public class FolderTreeViewModel : TreeViewModel
+    {
+        private bool _isExpanded;
+        public FolderTreeViewModel(TreeViewModel? parent, string path, bool isExpanded) :
+            base(parent, path, "images\\FolderClosed_16x.png")
+        {
+            IsFile = false;
+            IsExpanded = isExpanded;
+
+            NewFolderCommand = new DelegateCommand(NewFolderHandler);
+        }
+
+        protected override void DoRename()
+        {
+            string? dir = Path.GetDirectoryName(FullPath);
+            if (dir == null)
+            {
+                return;
+            }
+
+            string nf = Path.Combine(dir, Rename);
+            if (Directory.Exists(nf))
+            {
+                return;
+            }
+
+            try
+            {
+                Directory.Move(FullPath, nf);
+                FullPath = nf;
+
+                IsRenaming = false;
+                Name = Rename;
+            }
+            catch
+            {
+            }
+        }
+
+        public DelegateCommand NewFolderCommand
+        {
+            get;
+        }
+
+        private void NewFolderHandler()
+        {
+            string nf = Path.Combine(FullPath, "New Folder");
+            if (!Directory.Exists(nf))
+            {
+                Directory.CreateDirectory(nf);
+            }
+
+            Children.Add(new FolderTreeViewModel(this, nf, true)
+            {
+                IsRenaming = true,
+                Rename = "New Folder"
+            });
+        }
+
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set
+            {
+                SetValue(ref _isExpanded, value);
+
+                var f = new FoldersStatusPersistance();
+
+                if (value)
+                {
+                    f.SaveOpenFolders(FullPath);
+                }
+                else
+                {
+                    f.SaveClosedFolders(FullPath);
+                }
+            }
+        }
+    }
+
     public class TreeViewModel : BindingBase
     {
-        private readonly IFolderChangeNotifactions _folderChangeNotifactions;
+
         private bool _isRenaming = false;
         private Visibility _isVisible;
         private string _name;
         private string _rename = string.Empty;
-        private bool _isExpanded;
 
-        public TreeViewModel(TreeViewModel? parent, string path, bool isFile, string icon,
-            IFolderChangeNotifactions folderChangeNotifactions)
+        public TreeViewModel(TreeViewModel? parent, string path, string icon)
         {
             Parent = parent;
             FullPath = path;
-            IsExpanded = true;
+
             Icon = icon;
             _name = Path.GetFileName(path);
-            IsFile = isFile;
-            if (isFile)
+            IsFile = true;
+
+            if (IsFile)
             {
                 IsUML = string.Equals(Path.GetExtension(path), ".puml", System.StringComparison.OrdinalIgnoreCase);
             }
 
-            if (!isFile)
-            {
-                Icon = "images\\FolderClosed_16x.png";
-            }
+
             Children = new ObservableCollection<TreeViewModel>();
-            NewFolderCommand = new DelegateCommand(NewFolderHandler);
+
             StartRenameCommand = new DelegateCommand(StartRenameHandler);
             DoRenameCommand = new DelegateCommand(RenameCommandHandler);
             DeleteCommand = new DelegateCommand(DeleteCommandHandler);
-            _folderChangeNotifactions = folderChangeNotifactions;
+
         }
+
+
 
         public ObservableCollection<TreeViewModel> Children
         {
@@ -79,21 +158,14 @@ namespace PlantUMLEditor.Models
 
         }
 
-        public bool IsExpanded
-        {
-            get => _isExpanded;
-            set => SetValue(ref _isExpanded, value);
-        }
+
         public bool IsRenaming
         {
             get => _isRenaming;
             set => SetValue(ref _isRenaming, value);
         }
 
-        public bool IsSelected
-        {
-            get; set;
-        }
+
 
         public Visibility IsVisible
         {
@@ -107,10 +179,7 @@ namespace PlantUMLEditor.Models
             set => SetValue(ref _name, value);
         }
 
-        public DelegateCommand NewFolderCommand
-        {
-            get;
-        }
+
         public TreeViewModel? Parent
         {
             get;
@@ -152,78 +221,47 @@ namespace PlantUMLEditor.Models
             Parent?.Children.Remove(this);
         }
 
-        private void NewFolderHandler()
+
+        protected virtual void DoRename()
         {
-            string nf = Path.Combine(FullPath, "New Folder");
-            if (!Directory.Exists(nf))
+            var words = Name.Split('.');
+            words[0] = Rename;
+            Rename = string.Join('.', words);
+            string? dir = Path.GetDirectoryName(FullPath);
+            if (dir == null)
             {
-                Directory.CreateDirectory(nf);
+                return;
             }
 
-            Children.Add(new TreeViewModel(this, nf, false, "", _folderChangeNotifactions)
+            string nf = Path.Combine(dir, Rename);
+            if (File.Exists(nf))
             {
-                IsRenaming = true,
-                Rename = "New Folder"
-            });
+                return;
+            }
+
+            File.Move(FullPath, nf);
+            FullPath = nf;
+
+            IsRenaming = false;
+            Name = Rename;
         }
 
-        private async void RenameCommandHandler()
+
+        private void RenameCommandHandler()
         {
             if (string.IsNullOrEmpty(Rename))
             {
                 return;
             }
 
-            if (!IsFile)
-            {
-                string? dir = Path.GetDirectoryName(FullPath);
-                if (dir == null)
-                {
-                    return;
-                }
+            DoRename();
 
-                string nf = Path.Combine(dir, Rename);
-                if (Directory.Exists(nf))
-                {
-                    return;
-                }
 
-                try
-                {
-                    Directory.Move(FullPath, nf);
-                    FullPath = nf;
 
-                    IsRenaming = false;
-                    Name = Rename;
-                }
-                catch
-                {
-                }
-            }
-            else
-            {
-                var words = Name.Split('.');
-                words[0] = Rename;
-                Rename = string.Join('.', words);
-                string? dir = Path.GetDirectoryName(FullPath);
-                if (dir == null)
-                {
-                    return;
-                }
 
-                string nf = Path.Combine(dir, Rename);
-                if (File.Exists(nf))
-                {
-                    return;
-                }
 
-                File.Move(FullPath, nf);
-                FullPath = nf;
 
-                IsRenaming = false;
-                Name = Rename;
-            }
-            await _folderChangeNotifactions.Change(FullPath);
+
         }
 
         private void StartRenameHandler()

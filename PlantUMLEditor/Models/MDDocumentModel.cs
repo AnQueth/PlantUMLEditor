@@ -16,7 +16,13 @@ namespace PlantUMLEditor.Models
         }
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var m = new MDPreviewModel(base.Title, Path.GetDirectoryName(base.FileName));
+            string? path = Path.GetDirectoryName(base.FileName);
+            if (path is null)
+            {
+                return default;
+            }
+
+            var m = new MDPreviewModel(base.Title, path);
             var p = new MDPreview
             {
                 DataContext = m

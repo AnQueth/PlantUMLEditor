@@ -154,7 +154,11 @@ namespace PlantUMLEditor.Models
                     while (!_regenRequests.IsEmpty)
                     {
                         Messages = string.Empty;
-                        _regenRequests.TryDequeue(out QueueItem res);
+                        _regenRequests.TryDequeue(out QueueItem? res);
+                        if (res is null)
+                        {
+                            continue;
+                        }
 
                         var dir = Path.GetDirectoryName(res.path);
                         if (dir == null)

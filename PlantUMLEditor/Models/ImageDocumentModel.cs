@@ -1,11 +1,12 @@
 ﻿using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
 namespace PlantUMLEditor.Models
 {
     internal class ImageDocumentModel : BaseDocumentModel
     {
-        private readonly BitmapImage? _imageSource;
+        private BitmapImage? _imageSource;
 
         public ImageDocumentModel(string fileName, string title) : base(fileName, title)
         {
@@ -14,16 +15,21 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
+
+
+        }
+
+        public async Task Init()
+        {
             MemoryStream ms = new MemoryStream();
             using (var fs = File.OpenRead(FileName))
             {
-                fs.CopyTo(ms);
+                await fs.CopyToAsync(ms);
             }
             _imageSource = new BitmapImage();
             _imageSource.BeginInit();
             _imageSource.StreamSource = ms;
             _imageSource.EndInit();
-
         }
 
         public BitmapImage? Image => _imageSource;

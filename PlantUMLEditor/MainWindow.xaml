@@ -220,6 +220,10 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                             <b:InvokeCommandAction  Command="{Binding  DoRenameCommand}"></b:InvokeCommandAction>
                         </b:KeyTrigger>
 
+                        <b:EventTrigger EventName="LostFocus">
+                            <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="IsRenaming" Value="false"></b:ChangePropertyAction>
+
+                        </b:EventTrigger>
                         <b:KeyTrigger Key="Esc" ActiveOnFocus="True">
                             <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="IsRenaming" Value="false"></b:ChangePropertyAction>
                         </b:KeyTrigger>
@@ -237,7 +241,8 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                         <Binding  Path="IsRenaming"></Binding>
                     </DataTrigger.Binding>
                     <DataTrigger.Setters>
-
+                        <Setter Property="FocusManager.FocusedElement" TargetName="rename" Value="{Binding ElementName=rename}"></Setter>
+                 
                         <Setter Property="Visibility"  TargetName="rename" Value="Visible">
                         </Setter>
                         <Setter Property="Visibility"  TargetName="txt" Value="Collapsed">
@@ -422,8 +427,8 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         </Style>
         <Style   TargetType="{x:Type TreeViewItem}">
             <Setter Property="HorizontalContentAlignment" Value="Left"></Setter>
-            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"></Setter>
-            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay, FallbackValue=False}"></Setter>
+           
 
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />

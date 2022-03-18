@@ -18,7 +18,7 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class MainModel : BindingBase, IFolderChangeNotifactions
+    internal class MainModel : BindingBase
     {
         public record DateTypeRecord(string FileName, UMLDataType DataType);
 
@@ -81,7 +81,7 @@ namespace PlantUMLEditor.Models
             OpenDirectoryCommand = new DelegateCommand(() => _ = OpenDirectoryHandler());
 
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
-            folder = new TreeViewModel(null, Path.GetTempPath(), false, "", this);
+            folder = new FolderTreeViewModel(null, Path.GetTempPath(), true);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<BaseDocumentModel>();
             CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
@@ -91,7 +91,7 @@ namespace PlantUMLEditor.Models
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateYAMLDocument = new DelegateCommand(NewYAMLDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
-            CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => !string.IsNullOrEmpty(_selectedFile));
+            CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => _selectedFile is not null);
             GitCommitAndSyncCommand = new DelegateCommand(GitCommitAndSyncCommandHandler, () => !string.IsNullOrEmpty(_folderBase));
 
 
@@ -143,26 +143,32 @@ namespace PlantUMLEditor.Models
 
         private async void CreateUMLImageHandler()
         {
-            if (string.IsNullOrEmpty(_selectedFile))
+            if (_selectedFile is null)
+            {
+                return;
+            }
+
+            string? dir = Path.GetDirectoryName(_selectedFile.FullPath);
+            if (dir is null)
             {
                 return;
             }
 
             PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation,
-                _selectedFile, Path.GetDirectoryName(_selectedFile));
+                _selectedFile.FullPath, dir);
 
 
-            var folder = FindFolderContaining(Folder, _selectedFile);
+            var folder = FindFolderContaining(Folder, _selectedFile.FullPath);
 
 
             var res = await generator.Create();
 
             if (folder != null)
             {
-                var file = folder.Children.First(z => string.Equals(z.FullPath, _selectedFile, StringComparison.Ordinal));
+                var file = folder.Children.First(z => string.Equals(z.FullPath, _selectedFile.FullPath, StringComparison.Ordinal));
 
                 var ix = folder.Children.IndexOf(file);
-                folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, true, GetIcon(res.fileName), this));
+                folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, GetIcon(res.fileName)));
             }
 
 
@@ -220,7 +226,8 @@ namespace PlantUMLEditor.Models
         }
 
         private TaskCompletionSource? _continueClosinTaskSource;
-        private string _selectedFile;
+        private TreeViewModel? _selectedFile;
+        private TreeViewModel? _selectedFolder;
 
         public bool ConfirmOpen
         {
@@ -512,12 +519,15 @@ namespace PlantUMLEditor.Models
                     case ".png":
                     case ".jpg":
                     case ".puml":
-                        model.Children.Add(new TreeViewModel(model, file, true, GetIcon(file), this));
+                        model.Children.Add(new TreeViewModel(model, file, GetIcon(file)));
                         break;
 
                 }
 
             }
+
+            var fp = new FoldersStatusPersistance();
+            var closed = fp.GetClosedFolders();
 
             foreach (var item in Directory.EnumerateDirectories(dir))
             {
@@ -526,7 +536,13 @@ namespace PlantUMLEditor.Models
                     continue;
                 }
 
-                var fm = new TreeViewModel(model, item, false, "", this);
+                bool isExpanded = true;
+                if (closed.Contains(item))
+                {
+                    isExpanded = false;
+                }
+
+                var fm = new FolderTreeViewModel(model, item, isExpanded);
                 model.Children.Add(fm);
 
                 await AddFolderItems(item, fm);
@@ -641,7 +657,7 @@ namespace PlantUMLEditor.Models
             var d = new ImageDocumentModel(
                 fullPath,
                 Path.GetFileName(fullPath));
-
+            await d.Init();
             lock (_docLock)
             {
                 OpenDocuments.Add(d);
@@ -929,7 +945,7 @@ namespace PlantUMLEditor.Models
 
         private string? GetNewFile(string fileExtension)
         {
-            TreeViewModel? selected = GetSelectedFolder(Folder);
+            TreeViewModel? selected = _selectedFolder;
             if (selected == null)
             {
                 return null;
@@ -946,43 +962,8 @@ namespace PlantUMLEditor.Models
             return nf;
         }
 
-        private TreeViewModel? GetSelectedFile(TreeViewModel item)
-        {
-            if (item.IsSelected && item.IsFile)
-            {
-                return item;
-            }
 
-            foreach (var child in item.Children)
-            {
-                var f = GetSelectedFile(child);
-                if (f != null)
-                {
-                    return f;
-                }
-            }
 
-            return null;
-        }
-
-        private TreeViewModel? GetSelectedFolder(TreeViewModel item)
-        {
-            if (item.IsSelected && !item.IsFile)
-            {
-                return item;
-            }
-
-            foreach (var child in item.Children)
-            {
-                var f = GetSelectedFolder(child);
-                if (f != null)
-                {
-                    return f;
-                }
-            }
-
-            return null;
-        }
 
         private string? GetWorkingFolder(bool useAppSettingIfFound = false, string? folder = null)
         {
@@ -1085,14 +1066,21 @@ namespace PlantUMLEditor.Models
 
         private async void NewClassDiagramHandler()
         {
+            if (_selectedFolder is null)
+            {
+                return;
+            }
+
             string? nf = GetNewFile(".class.puml");
 
             if (!string.IsNullOrEmpty(nf))
             {
                 await NewClassDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+
+
+                _selectedFolder.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
             }
 
-            await ScanDirectory(_folderBase);
         }
 
         private async Task NewComponentDiagram(string fileName, string title)
@@ -1113,9 +1101,10 @@ namespace PlantUMLEditor.Models
             if (!string.IsNullOrEmpty(nf))
             {
                 await NewComponentDiagram(nf, Path.GetFileNameWithoutExtension(nf));
-            }
 
-            await ScanDirectory(_folderBase);
+
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+            }
         }
 
         private async Task NewSequenceDiagram(string fileName, string title)
@@ -1136,9 +1125,10 @@ namespace PlantUMLEditor.Models
             if (!string.IsNullOrEmpty(nf))
             {
                 await NewSequenceDiagram(nf, Path.GetFileNameWithoutExtension(nf));
-            }
 
-            await ScanDirectory(_folderBase);
+
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+            }
         }
 
         private async void NewUnknownDiagramHandler()
@@ -1148,9 +1138,10 @@ namespace PlantUMLEditor.Models
             if (!string.IsNullOrEmpty(nf))
             {
                 await NewUnknownUMLDiagram(nf, Path.GetFileNameWithoutExtension(nf));
-            }
 
-            await ScanDirectory(_folderBase);
+
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+            }
         }
 
         private async void NewYAMLDocumentHandler()
@@ -1160,9 +1151,10 @@ namespace PlantUMLEditor.Models
             if (!string.IsNullOrEmpty(nf))
             {
                 await NewYAMLDocument(nf, Path.GetFileNameWithoutExtension(nf));
-            }
 
-            await ScanDirectory(_folderBase);
+
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+            }
         }
 
         private async Task NewYAMLDocument(string filePath, string fileName)
@@ -1181,9 +1173,10 @@ namespace PlantUMLEditor.Models
             if (!string.IsNullOrEmpty(nf))
             {
                 await NewMarkDownDocument(nf, Path.GetFileNameWithoutExtension(nf));
-            }
 
-            await ScanDirectory(_folderBase);
+
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+            }
         }
 
         private async Task NewMarkDownDocument(string filePath, string fileName)
@@ -1566,11 +1559,11 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            Folder = new TreeViewModel(null, "", false, "", this);
+
 
             Folder.Children.Clear();
 
-            var start = new TreeViewModel(Folder, dir, false, "", this);
+            var start = new FolderTreeViewModel(Folder, dir, true);
 
             Folder.Children.Add(start);
 
@@ -1668,16 +1661,7 @@ namespace PlantUMLEditor.Models
 
         }
 
-        public async Task Change(string fullPath)
-        {
-            string? dir = GetWorkingFolder();
-            if (string.IsNullOrEmpty(dir))
-            {
-                return;
-            }
 
-            await ScanDirectory(dir);
-        }
 
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)
         {
@@ -1712,11 +1696,6 @@ namespace PlantUMLEditor.Models
 
         public async void TreeItemClickedButtonDown(object sender, MouseButtonEventArgs e)
         {
-            TreeViewModel? fbm = GetSelectedFile(Folder);
-            if (fbm == null)
-            {
-                return;
-            }
 
 
 
@@ -1725,21 +1704,46 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-
-
-
-            await AttemptOpeningFile(fbm.FullPath);
-        }
-        public async void TreeItemClickedButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            TreeViewModel? fbm = GetSelectedFile(Folder);
-            if (fbm == null)
+            e.Handled = true;
+            if (e.Source is FrameworkElement frameworkElement)
             {
-                return;
+                TreeViewModel? model = frameworkElement.DataContext as TreeViewModel;
+                if (model is not null)
+                {
+                    await AttemptOpeningFile(model.FullPath);
+                }
             }
 
-            _selectedFile = fbm.FullPath;
-            CreateUMLImage.RaiseCanExecuteChanged();
+
+
+
+        }
+        public void TreeItemClickedButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+            if (e.Source is FrameworkElement frameworkElement)
+            {
+                TreeViewModel? model = frameworkElement.DataContext as TreeViewModel;
+                if (model is not null)
+                {
+                    if (model.IsFile)
+                    {
+                        _selectedFile = model;
+                    }
+                    else
+                    {
+                        _selectedFolder = model;
+                    }
+
+                    CreateUMLImage.RaiseCanExecuteChanged();
+
+                }
+            }
+
+
+
+
+
 
 
         }
@@ -1752,5 +1756,8 @@ namespace PlantUMLEditor.Models
             AppSettings.Default.WindowLeft = WindowLeft;
             AppSettings.Default.Save();
         }
+
+
+
     }
 }
