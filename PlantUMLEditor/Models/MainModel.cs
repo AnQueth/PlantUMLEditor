@@ -148,12 +148,49 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation, _selectedFile, Path.GetDirectoryName(_selectedFile));
+            PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation,
+                _selectedFile, Path.GetDirectoryName(_selectedFile));
 
-            _ = await generator.Create();
 
-            await ScanDirectory(_folderBase);
+            var folder = FindFolderContaining(Folder, _selectedFile);
 
+
+            var res = await generator.Create();
+
+            if (folder != null)
+            {
+                var file = folder.Children.First(z => string.Equals(z.FullPath, _selectedFile, StringComparison.Ordinal));
+
+                var ix = folder.Children.IndexOf(file);
+                folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, true, GetIcon(res.fileName), this));
+            }
+
+
+        }
+
+        private TreeViewModel? FindFolderContaining(TreeViewModel root, string selectedFile)
+        {
+
+            foreach (var f in root.Children)
+            {
+                if (f.IsFile)
+                {
+                    if (string.Equals(f.FullPath, selectedFile, StringComparison.Ordinal))
+                    {
+                        return root;
+                    }
+                }
+                else
+                {
+                    var g = FindFolderContaining(f, selectedFile);
+                    if (g != null)
+                    {
+                        return g;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private AppConfiguration Configuration
@@ -719,7 +756,7 @@ namespace PlantUMLEditor.Models
                 DocumentMessageGenerator documentMessageGenerator = new(diagrams);
                 var newMessages = documentMessageGenerator.Generate(_folderBase);
 
-                Application.Current.Dispatcher.Invoke(() =>
+                Application.Current?.Dispatcher.Invoke(() =>
                 {
                     List<DocumentMessage> removals = new();
                     foreach (var item in Messages)

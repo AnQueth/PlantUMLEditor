@@ -15,12 +15,14 @@ namespace PlantUMLEditor.Models
         private Visibility _isVisible;
         private string _name;
         private string _rename = string.Empty;
+        private bool _isExpanded;
 
         public TreeViewModel(TreeViewModel? parent, string path, bool isFile, string icon,
             IFolderChangeNotifactions folderChangeNotifactions)
         {
             Parent = parent;
             FullPath = path;
+            IsExpanded = true;
             Icon = icon;
             _name = Path.GetFileName(path);
             IsFile = isFile;
@@ -74,6 +76,13 @@ namespace PlantUMLEditor.Models
         {
             get;
             set;
+
+        }
+
+        public bool IsExpanded
+        {
+            get => _isExpanded;
+            set => SetValue(ref _isExpanded, value);
         }
         public bool IsRenaming
         {
