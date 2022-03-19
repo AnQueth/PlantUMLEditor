@@ -13,9 +13,9 @@ namespace PlantUMLEditor.Models
 
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
+            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
 
-            var previewWindow = new Preview
+            Preview? previewWindow = new Preview
             {
                 DataContext = imageModel
             };
@@ -49,7 +49,7 @@ namespace PlantUMLEditor.Models
         protected override async void ContentChanged(string text)
         {
             UMLDiagramTypeDiscovery discovery = new();
-            var (cd, sd, ud) = await UMLDiagramTypeDiscovery.TryCreateDiagram(Diagrams, text);
+            (UMLClassDiagram cd, UMLSequenceDiagram sd, UMLUnknownDiagram ud) = await UMLDiagramTypeDiscovery.TryCreateDiagram(Diagrams, text);
             if (cd != null)
             {
                 ChangedCallback(Diagram, cd);

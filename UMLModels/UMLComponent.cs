@@ -11,8 +11,17 @@ namespace UMLModels
             Alias = alias;
         }
 
-        public string Alias { get; }
-        public List<UMLDataType> Consumes { get; set; }
-        public List<UMLDataType> Exposes { get; set; }
+        public string Alias
+        {
+            get;
+        }
+        public List<UMLDataType> Consumes
+        {
+            get; set;
+        }
+        public List<UMLDataType> Exposes
+        {
+            get; set;
+        }
     }
 }

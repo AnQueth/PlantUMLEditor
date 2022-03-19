@@ -7,7 +7,7 @@ namespace PlantUMLEditor.Models
     {
         internal void SaveClosedFolders(string folder)
         {
-            var closedFolders = GetClosedFolders();
+            HashSet<string>? closedFolders = GetClosedFolders();
             closedFolders.UnionWith(new string[] { folder });
 
             Save(closedFolders);
@@ -15,7 +15,7 @@ namespace PlantUMLEditor.Models
         }
         internal void SaveOpenFolders(string fullPath)
         {
-            var closedFolders = GetClosedFolders();
+            HashSet<string>? closedFolders = GetClosedFolders();
             closedFolders.Remove(fullPath);
             Save(closedFolders);
         }
@@ -23,9 +23,9 @@ namespace PlantUMLEditor.Models
         private void Save(HashSet<string> folders)
         {
             string closedFolders = Path.Combine(Path.GetTempPath(), "closedfolders.dat");
-            using (var sr = new StreamWriter(File.OpenWrite(closedFolders)))
+            using (StreamWriter? sr = new StreamWriter(File.OpenWrite(closedFolders)))
             {
-                foreach (var f in folders)
+                foreach (string? f in folders)
                 {
                     sr.WriteLine(f);
                 }
@@ -48,7 +48,7 @@ namespace PlantUMLEditor.Models
 
         private static void Read(HashSet<string> closedFoldersList, string closedFolders)
         {
-            using (var sr = new StreamReader(File.OpenRead(closedFolders)))
+            using (StreamReader? sr = new StreamReader(File.OpenRead(closedFolders)))
             {
                 string? line;
                 while ((line = sr.ReadLine()) != null)

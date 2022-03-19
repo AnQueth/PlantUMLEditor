@@ -23,7 +23,7 @@ namespace PlantUML
         private static void Write(List<UMLDataType> children, TextWriter writer, StringBuilder postWrites,
             List<UMLDataType> dataTypes)
         {
-            foreach (var item in children)
+            foreach (UMLDataType? item in children)
             {
                 if (item is UMLPackage pa)
                 {
@@ -80,7 +80,7 @@ namespace PlantUML
 
                     writer.WriteLine(" { ");
 
-                    foreach (var prop in item.Properties.Where(z => !dataTypes.Any(p => p == z.ObjectType)))
+                    foreach (UMLProperty? prop in item.Properties.Where(z => !dataTypes.Any(p => p == z.ObjectType)))
                     {
                         writer.Write(GetVisibility(prop.Visibility));
                         writer.Write(" ");
@@ -110,7 +110,7 @@ namespace PlantUML
                         writer.WriteLine(prop.Name);
                     }
 
-                    foreach (var me in item.Methods)
+                    foreach (UMLMethod? me in item.Methods)
                     {
                         writer.Write(GetVisibility(me.Visibility));
                         writer.Write(' ');
@@ -119,9 +119,9 @@ namespace PlantUML
                         writer.Write(me.Name);
                         writer.Write('(');
 
-                        for (var x = 0; x < me.Parameters.Count; x++)
+                        for (int x = 0; x < me.Parameters.Count; x++)
                         {
-                            var p = me.Parameters[x];
+                            UMLParameter? p = me.Parameters[x];
 
                             if (p.ListType == ListTypes.None)
                             {
@@ -157,7 +157,7 @@ namespace PlantUML
                     writer.WriteLine(" } ");
                     if (item is UMLClass c)
                     {
-                        foreach (var b in item.Bases)
+                        foreach (UMLDataType? b in item.Bases)
                         {
                             _ = postWrites.Append(item.NonGenericName);
                             _ = postWrites.Append(" -- ");
@@ -165,13 +165,13 @@ namespace PlantUML
                         }
                     }
 
-                    foreach (var i in item.Interfaces)
+                    foreach (UMLInterface? i in item.Interfaces)
                     {
                         _ = postWrites.Append(item.NonGenericName);
                         _ = postWrites.Append(" --* ");
                         _ = postWrites.AppendLine(i.NonGenericName);
                     }
-                    foreach (var prop in item.Properties.Where(z => dataTypes.Any(p => p == z.ObjectType)))
+                    foreach (UMLProperty? prop in item.Properties.Where(z => dataTypes.Any(p => p == z.ObjectType)))
                     {
                         postWrites.Append(item.NonGenericName);
                         if (prop.ListType != ListTypes.None)

@@ -2,6 +2,9 @@
 {
     public interface IConfiguration
     {
-        string JarLocation { get; set; }
+        string JarLocation
+        {
+            get; set;
+        }
     }
 }

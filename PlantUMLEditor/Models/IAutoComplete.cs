@@ -1,15 +1,16 @@
-﻿using System.Windows.Input;
-
-namespace PlantUMLEditor.Models
+﻿namespace PlantUMLEditor.Models
 {
     public interface IAutoComplete
     {
-        bool IsPopupVisible { get; }
+        bool IsPopupVisible
+        {
+            get;
+        }
 
         void CloseAutoComplete();
 
-        void ShowAutoComplete(  IAutoCompleteCallback autoCompleteCallback);
+        void ShowAutoComplete(IAutoCompleteCallback autoCompleteCallback);
 
-       
+
     }
 }

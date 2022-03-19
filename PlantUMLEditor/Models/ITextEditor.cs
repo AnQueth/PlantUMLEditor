@@ -19,5 +19,6 @@ namespace PlantUMLEditor.Models
         string TextRead();
 
         void TextWrite(string text, bool format, IColorCodingProvider? colorCodingProvider);
+        void InsertTextAtCursor(string text);
     }
 }

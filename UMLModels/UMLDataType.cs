@@ -38,7 +38,7 @@ namespace UMLModels
             Namespace = @namespace;
             Name = name;
 
-            var ix = name.IndexOf('<');
+            int ix = name.IndexOf('<');
             if (ix > 0)
             {
                 NonGenericName = name[..ix];

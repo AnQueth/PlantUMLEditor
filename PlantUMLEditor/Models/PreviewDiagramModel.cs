@@ -105,7 +105,7 @@ namespace PlantUMLEditor.Models
 
         private void PrintImage()
         {
-            var pdialog = new PrintDialog();
+            PrintDialog? pdialog = new PrintDialog();
             if (pdialog.ShowDialog() == true && Image != null)
             {
                 int widthSlices = (int)Math.Ceiling(Image.PixelWidth / Width);
@@ -117,16 +117,16 @@ namespace PlantUMLEditor.Models
 
                 FixedDocument fd = new();
 
-                foreach (var item in images)
+                foreach (DrawingVisual? item in images)
                 {
-                    var fp = new FixedPage();
+                    FixedPage? fp = new FixedPage();
 
                     RenderTargetBitmap rtb = new(1024, 1024, 96d, 96d, PixelFormats.Default);
                     rtb.Render(item);
 
                     fp.Children.Add(new System.Windows.Controls.Image() { Source = rtb });
 
-                    var pc = new PageContent
+                    PageContent? pc = new PageContent
                     {
                         Child = fp
                     };
@@ -160,7 +160,7 @@ namespace PlantUMLEditor.Models
                             continue;
                         }
 
-                        var dir = Path.GetDirectoryName(res.path);
+                        string? dir = Path.GetDirectoryName(res.path);
                         if (dir == null)
                         {
                             continue;
@@ -168,7 +168,7 @@ namespace PlantUMLEditor.Models
 
                         PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir);
 
-                        var createResult = generator.Create().Result;
+                        PlantUMLImageGenerator.UMLImageCreateRecord? createResult = generator.Create().Result;
 
                         string errors = createResult.errors;
 
@@ -177,12 +177,12 @@ namespace PlantUMLEditor.Models
                         {
                             Debug.WriteLine(errors);
 
-                            var m = Regex.Match(errors, "Error line (\\d+)");
+                            Match? m = Regex.Match(errors, "Error line (\\d+)");
                             if (m.Success)
                             {
                                 int d = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
                                 d++;
-                                using var g = File.OpenText(res.path);
+                                using StreamReader? g = File.OpenText(res.path);
                                 int x = 0;
                                 while (x <= d + 1)
                                 {
@@ -206,7 +206,7 @@ namespace PlantUMLEditor.Models
                                 string fn = createResult.fileName;
                                 if (!File.Exists(fn))
                                 {
-                                    var dir = Path.GetDirectoryName(res.path);
+                                    string? dir = Path.GetDirectoryName(res.path);
                                     if (dir == null)
                                     {
                                         return;
@@ -260,7 +260,7 @@ namespace PlantUMLEditor.Models
 
             encoder.Frames.Add(BitmapFrame.Create((BitmapImage?)Image));
 
-            using var filestream = new FileStream(fileName, FileMode.Create);
+            using FileStream? filestream = new FileStream(fileName, FileMode.Create);
             encoder.Save(filestream);
         }
 

@@ -2,8 +2,8 @@
 using PlantUMLEditor.Services;
 using System;
 using System.ComponentModel;
-using System.Windows;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace PlantUMLEditor
 {
@@ -37,7 +37,7 @@ namespace PlantUMLEditor
 
             _ = _model.ShouldAbortCloseAll();
 
-            
+
 
         }
         private void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

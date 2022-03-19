@@ -8,12 +8,11 @@ namespace PlantUMLEditor.Models
     public class DocumentMessageGenerator
     {
         private readonly IEnumerable<UMLDiagram> documents;
-
-        static readonly string[] knownwords = {"Task", "List", "IReadOnlyCollection",
+        private static readonly string[] knownwords = {"Task", "List", "IReadOnlyCollection",
                 "IList", "IEnumerable", "Dictionary", "out", "var", "HashSet","IEnumerableTask", "IHandler",
         "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"
         };
-        static readonly char[] seperators = { ' ', '.', ',', '<', '>', '[', ']' };
+        private static readonly char[] seperators = { ' ', '.', ',', '<', '>', '[', ']' };
 
         public DocumentMessageGenerator(IEnumerable<UMLDiagram> documents)
         {
@@ -25,7 +24,7 @@ namespace PlantUMLEditor.Models
         private static List<string> GetCleanName(List<DataTypeRecord> dataTypes, string name)
         {
             List<string> types = new();
-            foreach (var type in dataTypes)
+            foreach (DataTypeRecord? type in dataTypes)
             {
                 if (name.IndexOf(type.DataType.Name, StringComparison.Ordinal) >= 0)
                 {
@@ -38,7 +37,7 @@ namespace PlantUMLEditor.Models
             string[] parts = name.Split(seperators);
 
 
-            foreach (var p in parts)
+            foreach (string? p in parts)
             {
                 if (string.IsNullOrEmpty(p) || knownwords.Contains(p, StringComparer.OrdinalIgnoreCase))
                 {
@@ -63,11 +62,11 @@ namespace PlantUMLEditor.Models
 
             List<DataTypeRecord> dataTypes = new();
 
-            foreach (var doc in documents)
+            foreach (UMLDiagram? doc in documents)
             {
                 if (doc is UMLComponentDiagram f)
                 {
-                    foreach (var (Line, LineNumber, message) in f.ExplainedErrors)
+                    foreach ((string Line, int LineNumber, string message) in f.ExplainedErrors)
                     {
                         newMessages.Add(new DocumentMessage(f.FileName, GetRelativeName(folderBase, f.FileName), LineNumber, Line + " " + message, false));
 
@@ -75,12 +74,12 @@ namespace PlantUMLEditor.Models
                 }
                 if (doc is UMLClassDiagram f2)
                 {
-                    foreach (var fdt in f2.DataTypes)
+                    foreach (UMLDataType? fdt in f2.DataTypes)
                     {
                         dataTypes.Add(new(fdt, f2.FileName));
                     }
 
-                    foreach (var e in f2.Errors)
+                    foreach (UMLError? e in f2.Errors)
                     {
                         newMessages.Add(new DocumentMessage(f2.FileName, GetRelativeName(folderBase, f2.FileName), e.LineNumber, e.Value, false));
 
@@ -96,7 +95,7 @@ namespace PlantUMLEditor.Models
 
 
 
-            var namespaceReferences = FindBadDataTypes(folderBase, newMessages,
+            List<BadDataTypeAndNS>? namespaceReferences = FindBadDataTypes(folderBase, newMessages,
                 dataTypes.OrderByDescending(p => p.DataType.Name.Length).ToList());
 
 
@@ -108,7 +107,7 @@ namespace PlantUMLEditor.Models
 
         private void AddLineErrors(string folderBase, UMLDiagram doc, List<DocumentMessage> newMessages)
         {
-            foreach (var lineError in doc.LineErrors)
+            foreach (LineError? lineError in doc.LineErrors)
             {
                 newMessages.Add(new DocumentMessage(doc.FileName,
                     GetRelativeName(folderBase, doc.FileName), lineError.LineNumber, lineError.Text, true));
@@ -140,11 +139,11 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        void CheckEntities(string fileName, string folderBase,
+        private void CheckEntities(string fileName, string folderBase,
             List<UMLOrderedEntity> entities, UMLSequenceDiagram o,
             List<DocumentMessage> newMessages)
         {
-            foreach (var g in entities)
+            foreach (UMLOrderedEntity? g in entities)
             {
                 if (g.Warning is not null && g is UMLSequenceConnection c)
                 {
@@ -169,7 +168,7 @@ namespace PlantUMLEditor.Models
         private static void FindCircularReferences(string folderBase, List<DocumentMessage> newMessages,
             List<BadDataTypeAndNS> namespaceReferences)
         {
-            foreach (var n in namespaceReferences)
+            foreach (BadDataTypeAndNS? n in namespaceReferences)
             {
                 if (namespaceReferences.Any(p => string.CompareOrdinal(p.BadDataType.NS1, n.NS2) == 0 &&
                 string.CompareOrdinal(p.NS2, n.BadDataType.NS1) == 0 &&
@@ -194,21 +193,21 @@ namespace PlantUMLEditor.Models
         {
             List<BadDataTypeAndNS> namespaceReferences = new();
 
-            foreach (var dt in dataTypes)
+            foreach (DataTypeRecord? dt in dataTypes)
             {
                 if (dt.DataType is UMLEnum)
                 {
                     continue;
                 }
 
-                foreach (var m in dt.DataType.Properties)
+                foreach (UMLProperty? m in dt.DataType.Properties)
                 {
 
 
-                    var parsedTypes = GetCleanName(dataTypes, m.ObjectType.Name);
-                    foreach (var r in parsedTypes)
+                    List<string>? parsedTypes = GetCleanName(dataTypes, m.ObjectType.Name);
+                    foreach (string? r in parsedTypes)
                     {
-                        var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
+                        DataTypeRecord? pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
                         if (pdt == default)
                         {
                             newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
@@ -221,15 +220,15 @@ namespace PlantUMLEditor.Models
                         }
                     }
                 }
-                foreach (var m in dt.DataType.Methods)
+                foreach (UMLMethod? m in dt.DataType.Methods)
                 {
-                    foreach (var p in m.Parameters)
+                    foreach (UMLParameter? p in m.Parameters)
                     {
 
-                        var parsedTypes = GetCleanName(dataTypes, p.ObjectType.Name);
-                        foreach (var r in parsedTypes)
+                        List<string>? parsedTypes = GetCleanName(dataTypes, p.ObjectType.Name);
+                        foreach (string? r in parsedTypes)
                         {
-                            var pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
+                            DataTypeRecord? pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
                             if (pdt == default)
                             {
                                 newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
@@ -246,10 +245,10 @@ namespace PlantUMLEditor.Models
                     if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
                     {
 
-                        var parsedTypes = GetCleanName(dataTypes, m.ReturnType.Name);
-                        foreach (var r in parsedTypes)
+                        List<string>? parsedTypes = GetCleanName(dataTypes, m.ReturnType.Name);
+                        foreach (string? r in parsedTypes)
                         {
-                            var pdt = dataTypes
+                            DataTypeRecord? pdt = dataTypes
                                 .FirstOrDefault(z => GetCleanName(dataTypes, z.DataType.Name).Contains(r));
                             if (pdt == default)
                             {

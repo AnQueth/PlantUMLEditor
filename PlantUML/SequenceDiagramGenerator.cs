@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UMLModels;
 
 namespace PlantUML
@@ -17,7 +13,7 @@ namespace PlantUML
             writer.Write("title ");
             writer.WriteLine(sequenceDiagram.Title);
 
-            foreach (var item in sequenceDiagram.LifeLines)
+            foreach (UMLSequenceLifeline? item in sequenceDiagram.LifeLines)
             {
                 writer.Write("participant ");
                 writer.Write(item.DataTypeId);
@@ -32,7 +28,7 @@ namespace PlantUML
         }
         private static void DrawEntity(List<UMLOrderedEntity> entities, TextWriter writer)
         {
-            foreach (var entity in entities)
+            foreach (UMLOrderedEntity? entity in entities)
             {
                 if (entity is UMLSequenceBlockSection block)
                 {

@@ -12,12 +12,12 @@ namespace UMLModels
 
     public class UMLMethod : UMLSignature
     {
-      
+
         public UMLMethod(string name, UMLDataType type, UMLVisibility visibility, params UMLParameter[] parameters)
         {
             Name = name;
             ReturnType = type;
-            
+
             Parameters.AddRange(parameters);
             Visibility = visibility;
         }
@@ -27,17 +27,32 @@ namespace UMLModels
             IsConstructor = true;
         }
 
-        public bool IsConstructor { get; init; }
+        public bool IsConstructor
+        {
+            get; init;
+        }
 
-        public bool IsStatic { get; init; }
+        public bool IsStatic
+        {
+            get; init;
+        }
 
-        public string Name { get; init; }
+        public string Name
+        {
+            get; init;
+        }
 
-        public Overridability OverridableType { get; init; }
+        public Overridability OverridableType
+        {
+            get; init;
+        }
 
         public List<UMLParameter> Parameters { get; } = new();
 
-        public UMLDataType ReturnType { get; init; }
+        public UMLDataType ReturnType
+        {
+            get; init;
+        }
 
         public UMLVisibility Visibility
         {
@@ -49,7 +64,7 @@ namespace UMLModels
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
             StringBuilder sb = new();
- 
+
             if (ReturnType != null && !string.IsNullOrEmpty(ReturnType.Name))
             {
                 sb.Append(ReturnType.Name);
@@ -59,12 +74,16 @@ namespace UMLModels
             sb.Append('(');
 
             if (Parameters != null)
-                for (var x = 0; x < Parameters.Count; x++)
+            {
+                for (int x = 0; x < Parameters.Count; x++)
                 {
                     sb.Append(Parameters[x].ToString());
                     if (x < Parameters.Count - 1)
+                    {
                         sb.Append(", ");
+                    }
                 }
+            }
 
             sb.Append(')');
 

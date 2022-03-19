@@ -1,4 +1,4 @@
-﻿using Markdig.Wpf;
+﻿using Markdig;
 using Prism.Mvvm;
 using System;
 using System.IO;
@@ -86,10 +86,10 @@ namespace PlantUMLEditor.Models
         {
 
 
-            var r = new WpfRenderer(_workingDirectory);
-
-            var markdown = File.ReadAllText(path);
-            Document = Markdown.ToFlowDocument(markdown, null, r);
+            WpfRenderer? r = new WpfRenderer(_workingDirectory);
+            MarkdownPipeline? pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+            string? markdown = File.ReadAllText(path);
+            Document = Markdig.Wpf.Markdown.ToFlowDocument(markdown, pipeline, r);
 
 
         }

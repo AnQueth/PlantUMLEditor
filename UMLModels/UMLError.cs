@@ -8,7 +8,13 @@
             LineNumber = lineNumber;
         }
 
-        public int LineNumber { get; }
-        public string Value { get; }
+        public int LineNumber
+        {
+            get;
+        }
+        public string Value
+        {
+            get;
+        }
     }
 }

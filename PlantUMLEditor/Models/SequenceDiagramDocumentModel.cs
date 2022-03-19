@@ -15,9 +15,9 @@ namespace PlantUMLEditor.Models
         private static readonly string[] DEFAULTAUTOCOMPLETES = new string[] { "participant", "actor", "database", "queue", "entity" };
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
+            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
 
-            var previewWindow = new Preview
+            Preview? previewWindow = new Preview
             {
                 DataContext = imageModel
             };
@@ -71,7 +71,7 @@ namespace PlantUMLEditor.Models
                 }
             });
 
-            foreach (var item in uMLDataType.Bases)
+            foreach (UMLDataType? item in uMLDataType.Bases)
             {
                 AddAll(item, matchingAutoCompletes, word);
             }
@@ -96,23 +96,23 @@ namespace PlantUMLEditor.Models
         {
             _autoCompleteAppend = string.Empty;
 
-            var text = autoCompleteParameters.Text.Trim();
+            string? text = autoCompleteParameters.Text.Trim();
 
 
             MatchingAutoCompletes.Clear();
 
-            var types = DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
+            ILookup<string, UMLDataType>? types = DataTypes.SelectMany(p => p.DataTypes).Where(p => p is UMLClass || p is UMLInterface).ToLookup(p => p.Name);
             if (text.StartsWith("participant", StringComparison.InvariantCulture)
                 || text.StartsWith("actor", StringComparison.InvariantCulture))
             {
-                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, autoCompleteParameters.LineNumber, out var lifeline) && lifeline.DataTypeId != null)
+                if (PlantUML.UMLSequenceDiagramParser.TryParseLifeline(text, types, autoCompleteParameters.LineNumber, out UMLSequenceLifeline? lifeline) && lifeline.DataTypeId != null)
                 {
 
                     return;
                 }
                 else
                 {
-                    foreach (var item in types)
+                    foreach (IGrouping<string, UMLDataType>? item in types)
                     {
                         if (string.IsNullOrEmpty(autoCompleteParameters.WordStart) || item.Key.Contains(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase))
                         {
@@ -129,10 +129,10 @@ namespace PlantUMLEditor.Models
                 }
             }
 
-            var str = TextEditor?.TextRead();
+            string? str = TextEditor?.TextRead();
             if (str is not null)
             {
-                var diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(str, DataTypes, true);
+                UMLSequenceDiagram? diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(str, DataTypes, true);
 
                 if (diagram != null)
                 {
@@ -149,7 +149,7 @@ namespace PlantUMLEditor.Models
 
                         if (connection.To != null && connection.To.DataTypeId != null)
                         {
-                            foreach (var t in types[connection.To.DataTypeId])
+                            foreach (UMLDataType? t in types[connection.To.DataTypeId])
                             {
                                 AddAll(t, MatchingAutoCompletes, autoCompleteParameters.WordStart);
 
@@ -166,7 +166,7 @@ namespace PlantUMLEditor.Models
 
                     if (text.EndsWith("return", StringComparison.InvariantCulture))
                     {
-                        foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
+                        foreach (string? item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
                         {
                             MatchingAutoCompletes.Add(item);
                         }
@@ -179,7 +179,7 @@ namespace PlantUMLEditor.Models
                         return;
                     }
 
-                    foreach (var item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
+                    foreach (string? item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
                     {
                         MatchingAutoCompletes.Add(item);
                     }
@@ -187,7 +187,7 @@ namespace PlantUMLEditor.Models
             }
             if (!MatchingAutoCompletes.Any())
             {
-                foreach (var item in DEFAULTAUTOCOMPLETES.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
+                foreach (string? item in DEFAULTAUTOCOMPLETES.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     MatchingAutoCompletes.Add(item);
                 }

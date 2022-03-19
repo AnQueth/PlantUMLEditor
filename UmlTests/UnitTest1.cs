@@ -1,8 +1,6 @@
 using NUnit.Framework;
 using PlantUML;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using UMLModels;
 
@@ -37,7 +35,7 @@ namespace UmlTests
 
             class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
-            var d = new UMLClassDiagram("test", "");
+            UMLClassDiagram d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);
             d.DataTypes.Add(class2);
             _ = PlantUMLGenerator.Create(d);
@@ -58,11 +56,11 @@ namespace UmlTests
 
             class2.Methods.Add(new UMLMethod("Method1", new IntDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
 
-            var d = new UMLClassDiagram("test", "");
+            UMLClassDiagram d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);
             d.DataTypes.Add(class2);
 
-            var s = PlantUMLGenerator.Create(d);
+            string s = PlantUMLGenerator.Create(d);
             _ = await UMLClassDiagramParser.ReadString(s);
         }
 
@@ -79,16 +77,16 @@ namespace UmlTests
 
             UMLSequenceDiagram d = new("my diagram", "");
 
-            var l1 = new UMLSequenceLifeline("participant", "i1", "i1a", i1.Id,1);
-            var l2 = new UMLSequenceLifeline("participant", "c2", "c2a", class2.Id,2);
+            UMLSequenceLifeline l1 = new UMLSequenceLifeline("participant", "i1", "i1a", i1.Id, 1);
+            UMLSequenceLifeline l2 = new UMLSequenceLifeline("participant", "c2", "c2a", class2.Id, 2);
 
             d.LifeLines.Add(l1);
             d.LifeLines.Add(l2);
 
-            d.AddConnection(null, l1,3).Action = i1.Methods[0];
-            d.AddConnection(l1, l2,4).Action = class2.Methods[0];
-            d.AddConnection(l2, l1,5).Action = new UMLReturnFromMethod(class2.Methods[0]);
-            d.AddConnection(l1, null,6).Action = new UMLReturnFromMethod(i1.Methods[0]);
+            d.AddConnection(null, l1, 3).Action = i1.Methods[0];
+            d.AddConnection(l1, l2, 4).Action = class2.Methods[0];
+            d.AddConnection(l2, l1, 5).Action = new UMLReturnFromMethod(class2.Methods[0]);
+            d.AddConnection(l1, null, 6).Action = new UMLReturnFromMethod(i1.Methods[0]);
             _ = PlantUMLGenerator.Create(d);
         }
 
@@ -105,28 +103,28 @@ namespace UmlTests
 
             UMLSequenceDiagram d = new("my diagram", "");
 
-            var l1 = new UMLSequenceLifeline("participant", "ddd", "ddd", i1.Id, 1);
-            var l2 = new UMLSequenceLifeline("participant", "c2", "eee", class2.Id,  2);
+            UMLSequenceLifeline l1 = new UMLSequenceLifeline("participant", "ddd", "ddd", i1.Id, 1);
+            UMLSequenceLifeline l2 = new UMLSequenceLifeline("participant", "c2", "eee", class2.Id, 2);
 
             d.LifeLines.Add(l1);
             d.LifeLines.Add(l2);
 
             d.AddConnection(null, l1, 3).Action = i1.Methods[0];
 
-            var pg = new UMLSequenceBlockSection("if z = 1", UMLSequenceBlockSection.SectionTypes.If, 4);
+            UMLSequenceBlockSection pg = new UMLSequenceBlockSection("if z = 1", UMLSequenceBlockSection.SectionTypes.If, 4);
 
             d.Entities.Add(pg);
 
             pg.AddConnection(l1, l2, 5).Action = class2.Methods[0];
 
-            var elsesection = new UMLSequenceBlockSection("else", UMLSequenceBlockSection.SectionTypes.Else, 6);
+            UMLSequenceBlockSection elsesection = new UMLSequenceBlockSection("else", UMLSequenceBlockSection.SectionTypes.Else, 6);
 
-            elsesection.AddConnection(l2, l2,7).Action = class2.Methods[1];
+            elsesection.AddConnection(l2, l2, 7).Action = class2.Methods[1];
 
-            var x = d.AddConnection(l2, l1, 8);
+            UMLSequenceConnection x = d.AddConnection(l2, l1, 8);
             x.Action = new UMLReturnFromMethod(class2.Methods[0]);
 
-            var x2 = d.AddConnection(l1, l1, 9);
+            UMLSequenceConnection x2 = d.AddConnection(l1, l1, 9);
             x2.Action = i1.Methods[0];
 
             d.AddConnection(l1, null, 10).Action = new UMLReturnFromMethod(i1.Methods[0]);
@@ -136,12 +134,12 @@ namespace UmlTests
         [Test]
         public async Task SequenceDiagramRead2()
         {
-          
- 
 
-    
- 
-           
+
+
+
+
+
             UMLInterface i1 = new("ns1", "i1", new List<UMLDataType>());
             UMLClass class2 = new("ns2", true, "c1", null, i1);
 
@@ -156,33 +154,33 @@ namespace UmlTests
 
             UMLSequenceDiagram d = new("my diagram", "");
 
-            var l1 = new UMLSequenceLifeline("participant", "i1", "ss", i1.Id,1);
-            var l2 = new UMLSequenceLifeline("participant", "c1", "cS", class2.Id,2);
+            UMLSequenceLifeline l1 = new UMLSequenceLifeline("participant", "i1", "ss", i1.Id, 1);
+            UMLSequenceLifeline l2 = new UMLSequenceLifeline("participant", "c1", "cS", class2.Id, 2);
 
             d.LifeLines.Add(l1);
             d.LifeLines.Add(l2);
 
-            d.AddConnection(null, l1,3).Action = i1.Methods[0];
+            d.AddConnection(null, l1, 3).Action = i1.Methods[0];
 
-            var pg = new UMLSequenceBlockSection("if z = 1", UMLSequenceBlockSection.SectionTypes.If,4);
+            UMLSequenceBlockSection pg = new UMLSequenceBlockSection("if z = 1", UMLSequenceBlockSection.SectionTypes.If, 4);
 
             d.Entities.Add(pg);
 
-            pg.AddConnection(l1, l2,5).Action = class2.Methods[0];
+            pg.AddConnection(l1, l2, 5).Action = class2.Methods[0];
 
-            var elsesection = new UMLSequenceBlockSection("else", UMLSequenceBlockSection.SectionTypes.Else,6);
+            UMLSequenceBlockSection elsesection = new UMLSequenceBlockSection("else", UMLSequenceBlockSection.SectionTypes.Else, 6);
 
-            elsesection.AddConnection(l2, l2,7).Action = class2.Methods[1];
+            elsesection.AddConnection(l2, l2, 7).Action = class2.Methods[1];
 
-            var x = d.AddConnection(l2, l1,8);
+            UMLSequenceConnection x = d.AddConnection(l2, l1, 8);
             x.Action = new UMLReturnFromMethod(class2.Methods[0]);
 
-            var x2 = d.AddConnection(l1, l1,9);
+            UMLSequenceConnection x2 = d.AddConnection(l1, l1, 9);
             x2.Action = i1.Methods[0];
 
-            d.AddConnection(l1, null,10).Action = new UMLReturnFromMethod(i1.Methods[0]);
+            d.AddConnection(l1, null, 10).Action = new UMLReturnFromMethod(i1.Methods[0]);
 
-            var s = PlantUMLGenerator.Create(d);
+            string s = PlantUMLGenerator.Create(d);
             _ = await UMLSequenceDiagramParser.ReadString(s, new LockedList<UMLClassDiagram>(new[] { cd }), false);
         }
 

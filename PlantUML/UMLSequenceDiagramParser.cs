@@ -34,7 +34,7 @@ namespace PlantUML
                 return action;
             }
 
-            foreach (var item in toType.Bases)
+            foreach (UMLDataType? item in toType.Bases)
             {
                 action = CheckActionOnType(item, actionSignature);
                 if (action != null)
@@ -47,7 +47,7 @@ namespace PlantUML
 
         private static string Clean(string name)
         {
-            var t = name.Trim();
+            string? t = name.Trim();
             return t.TrimEnd('{').Trim();
         }
 
@@ -64,7 +64,7 @@ namespace PlantUML
 
             if (to != null && to.DataTypeId != null)
             {
-                foreach (var toType in types[to.DataTypeId])
+                foreach (UMLDataType? toType in types[to.DataTypeId])
                 {
                     action = CheckActionOnType(toType, actionSignature);
 
@@ -109,7 +109,7 @@ namespace PlantUML
 
         private static async Task<UMLSequenceDiagram?> ReadDiagram(StreamReader sr, LockedList<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
         {
-            var types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass or UMLInterface).ToLookup(p => p.Name);
+            ILookup<string, UMLDataType>? types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass or UMLInterface).ToLookup(p => p.Name);
 
             UMLSequenceDiagram d = new(string.Empty, fileName);
             bool started = false;
@@ -164,7 +164,7 @@ namespace PlantUML
 
                 if (notes.IsMatch(line))
                 {
-                    var m = notes.Match(line);
+                    Match? m = notes.Match(line);
                     if (!m.Groups["sl"].Success)
                     {
                         swallowingNotes = true;
@@ -220,7 +220,7 @@ namespace PlantUML
 
                         previous = connection;
                     }
-                    else if (TryParseUMLSequenceBlockSection(line, lineNumber, out var sectionBlock))
+                    else if (TryParseUMLSequenceBlockSection(line, lineNumber, out UMLSequenceBlockSection? sectionBlock))
                     {
 
 
@@ -276,10 +276,10 @@ namespace PlantUML
         private static bool TryParseUMLSequenceBlockSection(string line, int lineNumber,
             [NotNullWhen(true)] out UMLSequenceBlockSection? block)
         {
-            var blockSection = _blockSection.Match(line);
+            Match? blockSection = _blockSection.Match(line);
             if (blockSection.Success)
             {
-                var name = blockSection.Groups["type"].Value;
+                string? name = blockSection.Groups["type"].Value;
                 string text = blockSection.Groups["text"].Value;
 
                 switch (name.ToLowerInvariant())
@@ -337,10 +337,10 @@ namespace PlantUML
                 return false;
             }
 
-            var from = d.LifeLines.Find(p => p.Alias == fromAlias);
+            UMLSequenceLifeline? from = d.LifeLines.Find(p => p.Alias == fromAlias);
 
             UMLSignature? action = null;
-            var to = d.LifeLines.Find(p => p.Alias == toAlias);
+            UMLSequenceLifeline? to = d.LifeLines.Find(p => p.Alias == toAlias);
             if (to != null)
             {
                 bool isCreate = arrow == "-->";
@@ -361,7 +361,7 @@ namespace PlantUML
             {
                 UMLSignature method = GetActionSignature(actionSignature, types, null, previous, d);
 
-                var ft = d.LifeLines.Find(p => p.Alias == fromAlias);
+                UMLSequenceLifeline? ft = d.LifeLines.Find(p => p.Alias == fromAlias);
                 if (ft == null)
                 {
 
@@ -389,7 +389,7 @@ namespace PlantUML
             {
                 bool isCreate = arrow == "-->";
 
-                var to = d.LifeLines.Find(p => p.Alias == toAlias);
+                UMLSequenceLifeline? to = d.LifeLines.Find(p => p.Alias == toAlias);
 
                 UMLSignature? action = null;
                 if (to != null && to.DataTypeId != null && types.Contains(to.DataTypeId))
@@ -433,7 +433,7 @@ namespace PlantUML
             {
 
 
-                var m = lineConnectionRegex.Match(line);
+                Match? m = lineConnectionRegex.Match(line);
                 if (!m.Success)
                 {
                     return false;
@@ -478,7 +478,7 @@ namespace PlantUML
         public static bool TryParseLifeline(string line, ILookup<string, UMLDataType> types, int lineNumber,
             [NotNullWhen(true)] out UMLSequenceLifeline? lifeline)
         {
-            var m = _lifeLineRegex.Match(line);
+            Match? m = _lifeLineRegex.Match(line);
             if (m.Success)
             {
                 string type = m.Groups["type"].Value;

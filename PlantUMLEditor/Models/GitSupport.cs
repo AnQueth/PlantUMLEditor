@@ -39,7 +39,7 @@ namespace PlantUMLEditor.Models
                         RedirectStandardError = true,
                         RedirectStandardOutput = true
                     };
-                    var p = Process.Start(info);
+                    Process? p = Process.Start(info);
                     if (p != null)
                     {
                         p.WaitForExit();

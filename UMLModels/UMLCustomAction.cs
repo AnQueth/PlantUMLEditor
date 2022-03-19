@@ -1,7 +1,7 @@
 ﻿namespace UMLModels
 {
     public class UMLCustomAction : UMLMethod
-    { 
+    {
 
         public UMLCustomAction(string name) : base(name, new VoidDataType(), UMLVisibility.Public)
         {

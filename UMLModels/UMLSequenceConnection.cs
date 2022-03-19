@@ -26,7 +26,7 @@
             Action = action;
             ToName = toAlias;
         }
-        public UMLSequenceConnection(UMLSequenceLifeline? from, UMLSequenceLifeline? to, UMLSignature? action, 
+        public UMLSequenceConnection(UMLSequenceLifeline? from, UMLSequenceLifeline? to, UMLSignature? action,
             string fromAlias, string toAlias, bool fromShouldBeUsed, bool toShouldBeUsed, int lineNumber) : base(lineNumber)
         {
             From = from;
@@ -37,27 +37,60 @@
             Action = action;
             ToName = toAlias;
         }
-        public UMLSignature? Action { get; set; }
-        public UMLSequenceLifeline? From { get; set; }
-        public string FromName { get; set; }
-        public bool FromShouldBeUsed { get; set; }
-        public UMLSequenceLifeline? To { get; set; }
+        public UMLSignature? Action
+        {
+            get; set;
+        }
+        public UMLSequenceLifeline? From
+        {
+            get; set;
+        }
+        public string FromName
+        {
+            get; set;
+        }
+        public bool FromShouldBeUsed
+        {
+            get; set;
+        }
+        public UMLSequenceLifeline? To
+        {
+            get; set;
+        }
 
-        public string ToName { get; set; }
-        public bool ToShouldBeUsed { get; set; }
+        public string ToName
+        {
+            get; set;
+        }
+        public bool ToShouldBeUsed
+        {
+            get; set;
+        }
 
         public override string? Warning
         {
             get
             {
                 if (Action is UMLUnknownAction && (To == null || !To.FreeFormed))
+                {
                     return $"Action {Action.Signature} is unknown for {From?.Text} to {To?.Text}";
+                }
+
                 if (From is null && To is null)
+                {
                     return $"From {FromName} To {ToName} is not defined in participants";
+                }
+
                 if (To is null && ToShouldBeUsed && From is not null)
+                {
                     return $"From {From?.Alias} To {ToName} is not defined in participants";
+                }
+
                 if (From is null && FromShouldBeUsed && To is not null)
+                {
                     return $"From {FromName} To {To.Alias} is not defined in participants";
+                }
+
                 return null;
             }
         }

@@ -24,8 +24,9 @@ namespace PlantUMLEditor.Controls
 {
     public class MyTextBox : TextBox, INotifyPropertyChanged, ITextEditor, IAutoComplete
     {
-        record Error(int Line, int Character);
-        record FindItem(int Start, int Length);
+        private record Error(int Line, int Character);
+
+        private record FindItem(int Start, int Length);
         public record FindResult(int Index, string Line, int LineNumber, string ReplacePreview);
 
         private readonly List<Error> _errors = new();
@@ -201,7 +202,7 @@ namespace PlantUMLEditor.Controls
             for (int i = 0; i < numberChildren; i++)
             {
                 DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                var potentialMatch = FindDescendant<T>(child);
+                T? potentialMatch = FindDescendant<T>(child);
                 if (potentialMatch != default(T))
                 {
                     return potentialMatch;
@@ -226,7 +227,7 @@ namespace PlantUMLEditor.Controls
 
         private void CalculateFirstAndLastCharacters()
         {
-            var (cf, ce) = GetStartAndEndCharacters();
+            (int cf, int ce) = GetStartAndEndCharacters();
 
             _lastKnownFirstCharacterIndex = cf;
             _lastKnownLastCharacterIndex = ce;
@@ -271,7 +272,7 @@ namespace PlantUMLEditor.Controls
         {
             int ends = 1;
             int match = 0;
-            for (var c = selectionStart - 1; ends != 0 && c >= 0; c--)
+            for (int c = selectionStart - 1; ends != 0 && c >= 0; c--)
             {
                 if (text[c] == inc)
                 {
@@ -300,7 +301,7 @@ namespace PlantUMLEditor.Controls
         {
             int ends = 1;
             int match = 0;
-            for (var c = selectionStart + 1; ends != 0 && c < text.Length - 1; c++)
+            for (int c = selectionStart + 1; ends != 0 && c < text.Length - 1; c++)
             {
                 if (text[c] == inc)
                 {
@@ -323,7 +324,7 @@ namespace PlantUMLEditor.Controls
         {
             int z = 0;
             int m = 0;
-            for (var x = 0; x < Text.Length && m != line; x++)
+            for (int x = 0; x < Text.Length && m != line; x++)
             {
                 if (Text[x] == '\n')
                 {
@@ -360,11 +361,11 @@ namespace PlantUMLEditor.Controls
 
         private int GetLineNumberDuringRender(int caretIndex)
         {
-            var text = Text.AsSpan();
+            ReadOnlySpan<char> text = Text.AsSpan();
 
-            var linestart = 0;
+            int linestart = 0;
 
-            for (var i = 0; i <= caretIndex && i < text.Length; i++)
+            for (int i = 0; i <= caretIndex && i < text.Length; i++)
             {
                 if (text[i] == '\n')
                 {
@@ -411,9 +412,9 @@ namespace PlantUMLEditor.Controls
         private void GoToDefinition()
         {
             StringBuilder sb = new(20);
-            var tp = Text.AsSpan();
+            ReadOnlySpan<char> tp = Text.AsSpan();
 
-            for (var c = CaretIndex; c >= 0; c--)
+            for (int c = CaretIndex; c >= 0; c--)
             {
                 if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']')
                 {
@@ -422,7 +423,7 @@ namespace PlantUMLEditor.Controls
 
                 sb.Insert(0, tp[c]);
             }
-            for (var c = CaretIndex + 1; c <= tp.Length; c++)
+            for (int c = CaretIndex + 1; c <= tp.Length; c++)
             {
                 if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']')
                 {
@@ -462,9 +463,9 @@ namespace PlantUMLEditor.Controls
 
             Dispatcher.Invoke(() =>
            {
-               var rec = GetRectFromCharacterIndex(CaretIndex);
+               Rect rec = GetRectFromCharacterIndex(CaretIndex);
 
-               var line = GetLineIndexFromCharacterIndex(CaretIndex);
+               int line = GetLineIndexFromCharacterIndex(CaretIndex);
 
                string text = GetLineText(line);
 
@@ -484,7 +485,7 @@ namespace PlantUMLEditor.Controls
                    }
 
                    Stack<char> chars = new();
-                   for (var x = CaretIndex - c - 1; x >= 0; x--)
+                   for (int x = CaretIndex - c - 1; x >= 0; x--)
                    {
                        while (x > text.Length - 1 && x > 0)
                        {
@@ -520,16 +521,16 @@ namespace PlantUMLEditor.Controls
             if (ActualHeight > 0)
             {
                 int lines = GetLastVisibleLineIndex();
-                var p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+                double p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 
                 Typeface tf = new(FontFamily, FontStyle, FontWeight, FontStretch);
                 DrawingVisual dv = new();
-                var context = dv.RenderOpen();
+                DrawingContext? context = dv.RenderOpen();
                 Point pt = new(0, 0);
 
                 context.PushTransform(new TranslateTransform(0, -VerticalOffset));
 
-                for (var x = 0; x <= lines; x++)
+                for (int x = 0; x <= lines; x++)
                 {
                     FormattedText ft = new((x + 1).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
                         FlowDirection.LeftToRight, tf, FontSize, Brushes.Black, p);
@@ -604,7 +605,7 @@ namespace PlantUMLEditor.Controls
                     }
 
                     Regex r = new(search, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
-                    var m = r.Matches(Text);
+                    MatchCollection? m = r.Matches(Text);
 
                     foreach (Group item in m)
                     {
@@ -629,7 +630,7 @@ namespace PlantUMLEditor.Controls
                 {
 
 
-                    var p = Text.IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
+                    int p = Text.IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
                     while (p != -1)
                     {
                         _found.Add(new FindItem(p, search.Length));
@@ -904,7 +905,7 @@ namespace PlantUMLEditor.Controls
                 }
 
                 char c = Text[l];
-                BracesMatcher(l, c, out var bracesWillTriggerRender);
+                BracesMatcher(l, c, out bool bracesWillTriggerRender);
 
                 if (!bracesWillTriggerRender)
                 {
@@ -936,7 +937,7 @@ namespace PlantUMLEditor.Controls
             if (item < Text.Length)
             {
                 char c = Text[item];
-                BracesMatcher(item, c, out var bracesWillTriggerRender);
+                BracesMatcher(item, c, out bool bracesWillTriggerRender);
                 needsRender = !bracesWillTriggerRender;
             }
 
@@ -1001,7 +1002,7 @@ namespace PlantUMLEditor.Controls
             {
                 _cachedDrawing = new DrawingVisual();
 
-                var d = _cachedDrawing.RenderOpen();
+                DrawingContext? d = _cachedDrawing.RenderOpen();
 
                 DrawText(d);
                 d.Close();
@@ -1075,7 +1076,7 @@ namespace PlantUMLEditor.Controls
         public void DrawText(DrawingContext col)
         {
             //Debug.WriteLine("DrawText");
-            var sw = Stopwatch.StartNew();
+            Stopwatch? sw = Stopwatch.StartNew();
 
             int cf = _lastKnownFirstCharacterIndex;
             int cl = _lastKnownLastCharacterIndex;
@@ -1105,7 +1106,7 @@ namespace PlantUMLEditor.Controls
                 }
 
                 string t = Text[cf..cl];
-                var formattedText = new FormattedText(t
+                FormattedText? formattedText = new FormattedText(t
     ,
     CultureInfo.GetCultureInfo("en-us"),
     FlowDirection.LeftToRight,
@@ -1113,7 +1114,7 @@ namespace PlantUMLEditor.Controls
     FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
                 // Debug.WriteLine($"{cf} {cl} {Text.Length} {t.Length}");
-                foreach (var c in _colorCodings.Where(z => z.Intersects(cf, cl)))
+                foreach (FormatResult? c in _colorCodings.Where(z => z.Intersects(cf, cl)))
                 {
                     try
                     {
@@ -1133,7 +1134,7 @@ namespace PlantUMLEditor.Controls
 
                 lock (_found)
                 {//highlight found words
-                    foreach (var item in _found)
+                    foreach (FindItem? item in _found)
                     {
                         try
                         {
@@ -1171,7 +1172,7 @@ namespace PlantUMLEditor.Controls
                     {
                         if (FormatResult.Intersects(cf, cl, _braces.selectionStart, _braces.selectionStart + 1))
                         {
-                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.selectionStart), 1);
+                            Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.selectionStart), 1);
                             col.DrawGeometry(Brushes.LightBlue, null, g);
                         }
                     }
@@ -1184,7 +1185,7 @@ namespace PlantUMLEditor.Controls
                     {
                         if (FormatResult.Intersects(cf, cl, _braces.match, _braces.match + 1))
                         {
-                            var g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.match), 1);
+                            Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.match), 1);
                             col.DrawGeometry(Brushes.LightBlue, null, g);
                         }
                     }
@@ -1195,12 +1196,12 @@ namespace PlantUMLEditor.Controls
                     }
                 }
 
-                foreach (var (line, character) in _errors)
+                foreach ((int line, int character) in _errors)
                 {
                     try
                     {
-                        var l = GetCharacterIndexFromLineIndex(line - 1);
-                        var len = GetLineLength(line - 1);
+                        int l = GetCharacterIndexFromLineIndex(line - 1);
+                        int len = GetLineLength(line - 1);
                         if (l >= cf && l <= cl)
                         {
                             TextDecoration td = new(TextDecorationLocation.Underline,
@@ -1224,7 +1225,7 @@ namespace PlantUMLEditor.Controls
                 col.DrawText(formattedText, new Point(4, 0));
             }
 
-            var top = (GetLineNumberDuringRender(CaretIndex) * _lineHeight) - VerticalOffset + _textTransformOffset;
+            double top = (GetLineNumberDuringRender(CaretIndex) * _lineHeight) - VerticalOffset + _textTransformOffset;
 
             col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), _lineHeight));
 
@@ -1256,7 +1257,7 @@ namespace PlantUMLEditor.Controls
                         FindHandler();
                     }
 
-                    GetStartAndEndLines(out var startLine, out var endLine);
+                    GetStartAndEndLines(out int startLine, out int endLine);
 
                     if (startLine <= lineNumber && endLine >= lineNumber)
                     {
@@ -1305,7 +1306,7 @@ namespace PlantUMLEditor.Controls
         {
             base.OnApplyTemplate();
 
-            var sv = FindDescendant<ScrollViewer>(this);
+            ScrollViewer? sv = FindDescendant<ScrollViewer>(this);
             if (sv != null)
             {
                 sv.ScrollChanged += Sv_ScrollChanged;
@@ -1315,7 +1316,7 @@ namespace PlantUMLEditor.Controls
 
         public void ReportError(int line, int character)
         {
-            var e = new Error(line, character);
+            Error? e = new Error(line, character);
 
             if (!_errors.Contains(e))
             {
@@ -1336,7 +1337,7 @@ namespace PlantUMLEditor.Controls
                     gf.Children.Add(PopupControl);
                 }
             }
-            var g = PopupControl;
+            Popup? g = PopupControl;
 
             g.IsOpen = true;
             g.Placement = PlacementMode.RelativePoint;
@@ -1377,6 +1378,14 @@ namespace PlantUMLEditor.Controls
             {
                 Text = Indenter.Process(text, false);
             }
+        }
+
+        public void InsertTextAtCursor(string text)
+        {
+
+
+            Text = Text.Insert(CaretIndex, text);
+
         }
     }
 }

@@ -23,7 +23,7 @@ namespace PlantUML
 
         private static string Clean(string name)
         {
-            var t = name.Trim();
+            string? t = name.Trim();
             return t.TrimEnd('{').Trim();
         }
 
@@ -31,7 +31,7 @@ namespace PlantUML
         {
             StringBuilder sb = new();
             int x = 0;
-            foreach (var item in packages.Reverse())
+            foreach (string? item in packages.Reverse())
             {
                 _ = sb.Append(item);
                 if (x < packages.Count - 1)
@@ -65,7 +65,7 @@ namespace PlantUML
 
             UMLComponentDiagram d = new(string.Empty, fileName, defaultPackage);
             packagesStack.Push(defaultPackage);
-            var currentPackage = defaultPackage;
+            UMLPackage? currentPackage = defaultPackage;
 
             int linenumber = 0;
 
@@ -94,7 +94,7 @@ namespace PlantUML
 
                     if (notes.IsMatch(line))
                     {
-                        var m = notes.Match(line);
+                        Match? m = notes.Match(line);
                         if (!m.Groups["sl"].Success)
                         {
                             swallowingNotes = true;
@@ -151,7 +151,7 @@ namespace PlantUML
                     }
                     else if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex.IsMatch(line))
                     {
-                        var s = _packageRegex.Match(line);
+                        Match? s = _packageRegex.Match(line);
 
                         currentPackage = AddPackage(packages, aliases, brackets,
                             packagesStack, d, currentPackage, s);
@@ -160,7 +160,7 @@ namespace PlantUML
                     }
                     else if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex2.IsMatch(line))
                     {
-                        var s = _packageRegex2.Match(line);
+                        Match? s = _packageRegex2.Match(line);
 
                         currentPackage = AddPackage(packages, aliases, brackets,
                        packagesStack, d, currentPackage, s);
@@ -172,7 +172,7 @@ namespace PlantUML
                     }
                     else if (_component.IsMatch(line))
                     {
-                        var g = _component.Match(line);
+                        Match? g = _component.Match(line);
                         if (string.IsNullOrEmpty(g.Groups["name"].Value))
                         {
                             continue;
@@ -192,7 +192,7 @@ namespace PlantUML
                     }
                     else if (_interface.IsMatch(line))
                     {
-                        var g = _interface.Match(line);
+                        Match? g = _interface.Match(line);
                         string package = GetPackage(packages);
                         if (line.Length > 8)
                         {
@@ -209,12 +209,12 @@ namespace PlantUML
                     {
                         try
                         {
-                            var m = composition.Match(line);
+                            Match? m = composition.Match(line);
 
                             string left = m.Groups["left"].Value.Trim();
                             string right = m.Groups["right"].Value.Trim();
 
-                            var leftComponent = d.Entities.Find(p => p.Name == left)
+                            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left)
                                 ?? d.ContainedPackages.Find(p => p.Name == left);
                             if (leftComponent == null)
                             {
@@ -227,7 +227,7 @@ namespace PlantUML
                                     leftComponent = null;
                                 }
                             }
-                            var fromType = d.Entities.Find(p => p.Name == right)
+                            UMLDataType? fromType = d.Entities.Find(p => p.Name == right)
                                  ?? d.ContainedPackages.Find(p => p.Name == right);
                             if (fromType == null)
                             {
@@ -296,7 +296,7 @@ namespace PlantUML
             packages.Push(Clean(s.Groups["name"].Value));
             brackets.Push("name");
 
-            var c = new UMLPackage(Clean(s.Groups["name"].Value),
+            UMLPackage? c = new UMLPackage(Clean(s.Groups["name"].Value),
                 s.Groups["type"].Value, s.Groups["alias"].Value);
 
             currentPackage.Children.Add(c);

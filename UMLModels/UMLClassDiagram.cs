@@ -7,7 +7,7 @@ namespace UMLModels
 
         private readonly UMLPackage _package;
 
-        public UMLClassDiagram(string title, string fileName, UMLPackage? package = null)  : base(title, fileName)
+        public UMLClassDiagram(string title, string fileName, UMLPackage? package = null) : base(title, fileName)
         {
             _package = package ?? new UMLPackage("defaults");
         }
@@ -25,11 +25,11 @@ namespace UMLModels
         }
 
         public List<UMLError> Errors { get; } = new();
-        public UMLPackage Package { get => _package; }
+        public UMLPackage Package => _package;
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {
-            foreach (var c in p.Children)
+            foreach (UMLDataType? c in p.Children)
             {
                 if (c is UMLPackage z)
                 {

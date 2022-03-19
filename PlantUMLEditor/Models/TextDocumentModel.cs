@@ -105,12 +105,17 @@ namespace PlantUMLEditor.Models
             get;
         }
 
+        internal void InsertAtCursor(string imageMD)
+        {
+
+            _textEditor.InsertTextAtCursor(imageMD);
+        }
 
         protected abstract (IPreviewModel? model, Window? window) GetPreviewView();
 
         private async void ShowPreviewCommandHandler()
         {
-            var res = GetPreviewView();
+            (IPreviewModel? model, Window? window) res = GetPreviewView();
             imageModel = res.model;
             previewWindow = res.window;
             if (previewWindow is null)
@@ -185,7 +190,7 @@ namespace PlantUMLEditor.Models
             //foreach (var item in MatchingAutoCompletes.Where(z => !s.Any(p => p.o == z)).OrderBy(p => p))
             //    SortedMatchingAutoCompletes.Add(item);
 
-            foreach (var item in MatchingAutoCompletes.OrderBy(p => p))
+            foreach (string? item in MatchingAutoCompletes.OrderBy(p => p))
             {
                 SortedMatchingAutoCompletes.Add(item);
             }

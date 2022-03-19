@@ -42,7 +42,7 @@ namespace PlantUMLEditor.Controls
             int starts = 0;
             char oldd = '\0';
 
-            for (var x = 0; x < r.Length; x++)
+            for (int x = 0; x < r.Length; x++)
             {
                 char d = r[x];
 
@@ -110,7 +110,7 @@ namespace PlantUMLEditor.Controls
 
             int indentLevel = 0;
 
-            for (var x = 0; x < lines.Length && x <= line; x++)
+            for (int x = 0; x < lines.Length && x <= line; x++)
             {
                 _ = ProcessLine(null, lines[x].Trim(), ref indentLevel);
             }
@@ -128,7 +128,7 @@ namespace PlantUMLEditor.Controls
 
             StringBuilder sb = new();
 
-            for (var x = 0; x < lines.Length; x++)
+            for (int x = 0; x < lines.Length; x++)
             {
                 if (string.IsNullOrWhiteSpace(lines[x]) && removeLines)
                 {

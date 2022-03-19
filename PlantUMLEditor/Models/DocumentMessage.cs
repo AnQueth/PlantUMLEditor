@@ -16,10 +16,19 @@ namespace PlantUMLEditor.Models
 
         }
 
-        public string MissingMethodDataTypeId { get; init; }
-        public string MissingMethodText { get; init; }
+        public string MissingMethodDataTypeId
+        {
+            get; init;
+        }
+        public string MissingMethodText
+        {
+            get; init;
+        }
 
-        public UMLSequenceDiagram? Diagram { get; init; }
+        public UMLSequenceDiagram? Diagram
+        {
+            get; init;
+        }
 
         public bool IsMissingMethod
         {
@@ -40,9 +49,15 @@ namespace PlantUMLEditor.Models
             MissingDataTypeName = missingDataTypeName;
             IsMissingDataType = isMissingDataType;
         }
-        public string MissingDataTypeName { get; init; }
+        public string MissingDataTypeName
+        {
+            get; init;
+        }
 
-        public bool IsMissingDataType { get; init; }
+        public bool IsMissingDataType
+        {
+            get; init;
+        }
 
 
 
@@ -67,9 +82,15 @@ namespace PlantUMLEditor.Models
 
 
 
-        public string FileName { get; init; }
+        public string FileName
+        {
+            get; init;
+        }
 
-        public string RelativeFileName { get; init; }
+        public string RelativeFileName
+        {
+            get; init;
+        }
 
         public ICommand? FixingCommand
         {
@@ -80,11 +101,20 @@ namespace PlantUMLEditor.Models
         public virtual bool IsFixable => false;
 
 
-        public int LineNumber { get; init; }
+        public int LineNumber
+        {
+            get; init;
+        }
 
 
-        public string Text { get; init; }
+        public string Text
+        {
+            get; init;
+        }
 
-        public bool Warning { get; init; }
+        public bool Warning
+        {
+            get; init;
+        }
     }
 }

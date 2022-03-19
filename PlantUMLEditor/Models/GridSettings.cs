@@ -1,24 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Windows;
 
 namespace PlantUMLEditor.Models
 {
     public class GridSettings
     {
-       
+
         private GridLength _DataTypesHeight = new(200);
         private GridLength _DocumentsWell = new(200);
         private GridLength _TreeWidth = new(200);
-        private   Action? _changedCB;
+        private Action? _changedCB;
 
         public GridLength TreeWidth
         {
-            get
-            {
-                return _TreeWidth;
-            }
+            get => _TreeWidth;
             set
             {
                 _TreeWidth = value;
@@ -28,10 +23,7 @@ namespace PlantUMLEditor.Models
 
         public GridLength DocumentsWell
         {
-            get
-            {
-                return _DocumentsWell;
-            }
+            get => _DocumentsWell;
             set
             {
                 _DocumentsWell = value;
@@ -41,10 +33,7 @@ namespace PlantUMLEditor.Models
 
         public GridLength DataTypesHeight
         {
-            get
-            {
-                return _DataTypesHeight;
-            }
+            get => _DataTypesHeight;
             set
             {
                 _DataTypesHeight = value;
@@ -54,11 +43,7 @@ namespace PlantUMLEditor.Models
 
         internal Action ChangedCB
         {
-              set
-            {
-                _changedCB = value;
-
-            }
+            set => _changedCB = value;
         }
     }
 }

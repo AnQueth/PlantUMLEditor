@@ -14,9 +14,9 @@ namespace PlantUMLEditor.Models
             Parallel.ForEach(extensions, (ex) =>
             {
 
-                foreach (var file in Directory.GetFiles(rootDirectory, ex, SearchOption.AllDirectories))
+                foreach (string? file in Directory.GetFiles(rootDirectory, ex, SearchOption.AllDirectories))
                 {
-                    using var f = File.OpenRead(file);
+                    using FileStream? f = File.OpenRead(file);
                     int line = 1;
                     using StreamReader sr = new(f);
                     string? lineText = null;

@@ -12,9 +12,9 @@ namespace Parsers
 
 
             bool inQuotes = false;
-            for (var x = 0; x < line.Length; x++)
+            for (int x = 0; x < line.Length; x++)
             {
-                var c = line[x];
+                char c = line[x];
 
                 if (c == quoteChar)
                 {

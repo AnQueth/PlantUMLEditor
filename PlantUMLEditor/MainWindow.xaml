@@ -112,7 +112,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                             <RowDefinition Height="50" ></RowDefinition>
                         </Grid.RowDefinitions>
                         <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
-                        <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True"
+                        <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True" AllowDrop="True"
                                               UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                             DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
@@ -120,6 +120,16 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                             AcceptsReturn="True"  AcceptsTab="True"
                                                  GotoDefinitionCommand="{Binding DataContext.GotoDefinitionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                FontFamily="Cascadia Code" FontSize="14">
+                            <b:Interaction.Triggers>
+                                <b:EventTrigger EventName="PreviewDrop">
+                                    <b:CallMethodAction MethodName="TextDrop" TargetObject="{Binding DataContext,
+                                        RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"></b:CallMethodAction>
+                                </b:EventTrigger>
+                                <b:EventTrigger EventName="PreviewDragOver">
+                                    <b:CallMethodAction MethodName="TextDragOver" TargetObject="{Binding DataContext,
+                                        RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"></b:CallMethodAction>
+                                </b:EventTrigger>
+                            </b:Interaction.Triggers>
                             <localControls:MyTextBox.PopupControl>
                                 <Popup>
 
@@ -442,6 +452,13 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                         <Grid Margin="-5,0,0,0">
 
                             <b:Interaction.Triggers>
+                          
+                                    <b:EventTrigger EventName="MouseMove">
+                                        <b:CallMethodAction MethodName="TreeMouseMove" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
+AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
+                                    </b:EventTrigger>
+                           
+                                
                                 <b:EventTrigger EventName="MouseLeftButtonUp">
                                     <b:CallMethodAction MethodName="TreeItemClickedButtonUp" TargetObject="{Binding Path=DataContext,  RelativeSource={RelativeSource FindAncestor,
 AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
@@ -725,7 +742,26 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <Button Content="Scan Directory" Command="{Binding ScanAllFiles}"></Button>
             <Separator></Separator>
             <ComboBox ItemsSource="{Binding MRUFolders}" SelectedItem="{Binding SelectedMRUFolder}">
-
+                <ComboBox.ItemContainerStyle>
+                    <Style TargetType="{x:Type ComboBoxItem}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    </Style>
+                </ComboBox.ItemContainerStyle>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="50"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding}" VerticalAlignment="Center"> </TextBlock>
+                            <Button Grid.Column="1" Margin="1" Command="{Binding  Path=DataContext.DeleteMRUCommand,  RelativeSource={RelativeSource FindAncestor,
+AncestorType={x:Type Window}}}" CommandParameter="{Binding}">
+                                <Button.Content>X</Button.Content>
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
             </ComboBox>
             <Separator></Separator>
             <Button Content="Open Terminal" Command="{Binding OpenTerminalCommand}"></Button>
@@ -742,6 +778,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 <RowDefinition Height="{Binding GridSettings.DataTypesHeight, Mode=TwoWay}"></RowDefinition>
             </Grid.RowDefinitions>
             <TreeView Style="{DynamicResource TreeViewStyle1}"    Grid.Row="0" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
+             
             </TreeView>
             <GridSplitter Grid.Row="1" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" ></GridSplitter>
             <ListView Grid.Row="2"  ItemsSource="{Binding DataTypes}">

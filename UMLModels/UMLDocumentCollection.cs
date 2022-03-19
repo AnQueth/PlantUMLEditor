@@ -14,10 +14,19 @@ namespace UMLModels
             ComponentDiagrams = new();
         }
 
-        public LockedList<UMLClassDiagram> ClassDocuments { get; set; }
+        public LockedList<UMLClassDiagram> ClassDocuments
+        {
+            get; set;
+        }
 
-        public LockedList<UMLComponentDiagram> ComponentDiagrams { get; set; }
-        public LockedList<UMLSequenceDiagram> SequenceDiagrams { get; set; }
+        public LockedList<UMLComponentDiagram> ComponentDiagrams
+        {
+            get; set;
+        }
+        public LockedList<UMLSequenceDiagram> SequenceDiagrams
+        {
+            get; set;
+        }
     }
 
     public class LockedList<T> : IEnumerable<T> where T : UMLDiagram
@@ -35,19 +44,25 @@ namespace UMLModels
         public T? Find(Predicate<T> pred)
         {
             lock (_lock)
+            {
                 return _list.Find(pred);
+            }
         }
 
         public void RemoveAll(Predicate<T> pred)
         {
             lock (_lock)
+            {
                 _list.RemoveAll(pred);
+            }
         }
 
         public void Clear()
         {
             lock (_lock)
+            {
                 _list.Clear();
+            }
         }
         public void Add(T item)
         {
@@ -60,10 +75,12 @@ namespace UMLModels
         public void Remove(T item)
         {
             lock (_lock)
+            {
                 _list.Remove(item);
+            }
         }
 
-        class LockedListEnumerator : IEnumerator<T>
+        private class LockedListEnumerator : IEnumerator<T>
         {
             private readonly List<T> _list;
             private readonly object _lockingObject;

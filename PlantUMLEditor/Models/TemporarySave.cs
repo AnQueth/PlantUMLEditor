@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace PlantUMLEditor.Models
 {
-    class TemporarySave
+    internal class TemporarySave
     {
         private readonly string _fileName;
         private volatile bool _running;
@@ -46,7 +42,10 @@ namespace PlantUMLEditor.Models
         public string? ReadIfExists()
         {
             if (File.Exists(_fileName))
-                return   File.ReadAllText(_fileName);
+            {
+                return File.ReadAllText(_fileName);
+            }
+
             return null;
         }
 

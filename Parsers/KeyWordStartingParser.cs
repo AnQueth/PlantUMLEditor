@@ -17,7 +17,7 @@ namespace Parsers
         public string LeftOverToString()
         {
             StringBuilder sb = new StringBuilder();
-            for (var a = 0; a < _leftOvers.Count; a++)
+            for (int a = 0; a < _leftOvers.Count; a++)
             {
 
                 sb.Append(_leftOvers[a]);

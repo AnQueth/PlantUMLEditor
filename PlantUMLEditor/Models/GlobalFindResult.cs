@@ -4,7 +4,7 @@
     (
          string FileName,
          int LineNumber,
-         string Text ,
+         string Text,
 
          string SearchText
     );

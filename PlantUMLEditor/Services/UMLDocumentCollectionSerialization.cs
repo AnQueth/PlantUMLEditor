@@ -14,7 +14,7 @@ namespace PlantUMLEditor.Services
             {
                 PreserveReferencesHandling = PreserveReferencesHandling.Objects,
                 TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Full,
-          
+
                 TypeNameHandling = TypeNameHandling.Auto
             };
         }
@@ -23,7 +23,7 @@ namespace PlantUMLEditor.Services
         {
             if (File.Exists(fileName))
             {
-               
+
                 string s = await File.ReadAllTextAsync(fileName);
 
                 return JsonConvert.DeserializeObject<UMLModels.UMLDocumentCollection>(s, GetOptions());

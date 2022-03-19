@@ -34,7 +34,7 @@ namespace UMLModels
 
         private void AddMore(UMLPackage p, List<UMLDataType> dt)
         {
-            foreach (var c in p.Children)
+            foreach (UMLDataType? c in p.Children)
             {
                 if (c is UMLPackage z)
                 {

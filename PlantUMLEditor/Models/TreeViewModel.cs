@@ -75,7 +75,7 @@ namespace PlantUMLEditor.Models
             {
                 SetValue(ref _isExpanded, value);
 
-                var f = new FoldersStatusPersistance();
+                FoldersStatusPersistance? f = new FoldersStatusPersistance();
 
                 if (value)
                 {
@@ -97,7 +97,7 @@ namespace PlantUMLEditor.Models
         private string _name;
         private string _rename = string.Empty;
 
-        public TreeViewModel(TreeViewModel? parent, string path, string icon)
+        public TreeViewModel(TreeViewModel? parent, string path, string? icon)
         {
             Parent = parent;
             FullPath = path;
@@ -108,7 +108,7 @@ namespace PlantUMLEditor.Models
 
             if (IsFile)
             {
-                IsUML = string.Equals(Path.GetExtension(path), ".puml", System.StringComparison.OrdinalIgnoreCase);
+                IsUML = string.Equals(Path.GetExtension(path), FileExtension.PUML.Extension, System.StringComparison.OrdinalIgnoreCase);
             }
 
 
@@ -142,7 +142,7 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
-        public string Icon
+        public string? Icon
         {
             get; private set;
         }
@@ -224,7 +224,7 @@ namespace PlantUMLEditor.Models
 
         protected virtual void DoRename()
         {
-            var words = Name.Split('.');
+            string[]? words = Name.Split('.');
             words[0] = Rename;
             Rename = string.Join('.', words);
             string? dir = Path.GetDirectoryName(FullPath);

@@ -59,9 +59,9 @@ namespace PlantUMLEditor.Controls
         public List<FormatResult> FormatText(string text)
         {
             List<FormatResult> list = new();
-            var mn = notes.Matches(text);
+            MatchCollection? mn = notes.Matches(text);
 
-            foreach (var item in _mcolorCodes)
+            foreach (KeyValuePair<Regex, (Color, bool)> item in _mcolorCodes)
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
@@ -69,11 +69,11 @@ namespace PlantUMLEditor.Controls
 
                 }
             }
-            foreach (var item in _groupedCodes)
+            foreach (KeyValuePair<Regex, Color[]> item in _groupedCodes)
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
-                    var g = m.Groups["k"];
+                    Group? g = m.Groups["k"];
 
                     list.Add(new FormatResult(new SolidColorBrush(item.Value[0]), g.Captures[0].Index, g.Captures[0].Length, FontWeights.Normal, g.Captures[0].Value));
                     list.Add(new FormatResult(new SolidColorBrush(item.Value[1]), g.Captures[1].Index, g.Captures[1].Length, FontWeights.Normal, g.Captures[1].Value));
@@ -81,11 +81,11 @@ namespace PlantUMLEditor.Controls
 
                 }
             }
-            foreach (var item in _colorCodes)
+            foreach (KeyValuePair<Regex, Color> item in _colorCodes)
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
-                    var g = m.Groups[^1];
+                    Group? g = m.Groups[^1];
                     list.Add(new FormatResult(new SolidColorBrush(item.Value), g.Index, g.Length, FontWeights.Normal, g.Value));
 
                 }

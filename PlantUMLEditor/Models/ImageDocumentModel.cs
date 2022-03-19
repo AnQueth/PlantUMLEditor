@@ -22,7 +22,7 @@ namespace PlantUMLEditor.Models
         public async Task Init()
         {
             MemoryStream ms = new MemoryStream();
-            using (var fs = File.OpenRead(FileName))
+            using (FileStream? fs = File.OpenRead(FileName))
             {
                 await fs.CopyToAsync(ms);
             }

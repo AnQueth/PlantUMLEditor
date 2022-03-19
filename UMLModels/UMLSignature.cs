@@ -2,13 +2,7 @@
 {
     public class UMLSignature
     {
-       
-        public string Signature
-        {
-            get
-            {
-                return this.ToString() ?? string.Empty;
-            }
-        }
+
+        public string Signature => this.ToString() ?? string.Empty;
     }
 }

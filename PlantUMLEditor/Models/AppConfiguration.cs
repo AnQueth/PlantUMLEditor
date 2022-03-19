@@ -7,6 +7,9 @@
             JarLocation = jarLocation;
         }
 
-        public string JarLocation { get; set; }
+        public string JarLocation
+        {
+            get; set;
+        }
     }
 }

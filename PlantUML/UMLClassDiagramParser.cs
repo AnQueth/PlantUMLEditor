@@ -37,7 +37,7 @@ namespace PlantUML
 
         private static string Clean(string name)
         {
-            var t = name.Trim();
+            string? t = name.Trim();
             return t.TrimEnd('{').Trim();
         }
 
@@ -48,7 +48,7 @@ namespace PlantUML
 
 
 
-            foreach (var (word, listType) in COLLECTIONS)
+            foreach ((string word, ListTypes listType) in COLLECTIONS)
             {
                 if (v.StartsWith(word, StringComparison.OrdinalIgnoreCase))
                 {
@@ -73,7 +73,7 @@ namespace PlantUML
         {
             StringBuilder sb = new();
             int x = 0;
-            foreach (var item in packages.Reverse())
+            foreach (string? item in packages.Reverse())
             {
                 _ = sb.Append(item);
                 if (x < packages.Count - 1)
@@ -109,7 +109,7 @@ namespace PlantUML
 
 
             packagesStack.Push(defaultPackage);
-            var currentPackage = defaultPackage;
+            UMLPackage? currentPackage = defaultPackage;
             int lineNumber = 0;
             while ((line = await sr.ReadLineAsync()) != null)
             {
@@ -164,7 +164,7 @@ namespace PlantUML
                 }
                 if (notes.IsMatch(line))
                 {
-                    var m = notes.Match(line);
+                    Match? m = notes.Match(line);
                     if (!m.Groups["sl"].Success)
                     {
                         swallowingNotes = true;
@@ -222,7 +222,7 @@ namespace PlantUML
                 }
                 else if (_packageRegex.IsMatch(line))
                 {
-                    var s = _packageRegex.Match(line);
+                    Match? s = _packageRegex.Match(line);
 
                     string pn = Clean(s.Groups[PACKAGE].Value);
 
@@ -236,7 +236,7 @@ namespace PlantUML
                     brackets.Push(PACKAGE);
 
 
-                    var c = new UMLPackage(pn);
+                    UMLPackage? c = new UMLPackage(pn);
 
 
 
@@ -250,7 +250,7 @@ namespace PlantUML
                 }
                 else if (_class.IsMatch(line))
                 {
-                    var g = _class.Match(line);
+                    Match? g = _class.Match(line);
                     if (string.IsNullOrEmpty(g.Groups["name"].Value))
                     {
                         continue;
@@ -314,13 +314,13 @@ namespace PlantUML
                 }
                 else if (baseClass.IsMatch(line))
                 {
-                    var m = baseClass.Match(line);
-                    var cl = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["first"].Value);
+                    Match? m = baseClass.Match(line);
+                    UMLDataType? cl = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["first"].Value);
                     if (cl == null)
                     {
                         d.Errors.Add(new UMLError("Could not find parent type", m.Groups["first"].Value, lineNumber));
                     }
-                    var i = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["second"].Value
+                    UMLDataType? i = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["second"].Value
                 || removeGenerics.Match(p.Name).Value == m.Groups["second"].Value);
                     if (i == null)
                     {
@@ -337,11 +337,11 @@ namespace PlantUML
                 }
                 else if (composition.IsMatch(line))
                 {
-                    var m = composition.Match(line);
+                    Match? m = composition.Match(line);
 
                     if (m.Groups["text"].Success)
                     {
-                        var propType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["second"].Value);
+                        UMLDataType? propType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["second"].Value);
                         if (propType == null)
                         {
                             d.AddLineError(line, lineNumber);
@@ -351,7 +351,7 @@ namespace PlantUML
                         else
                         {
 
-                            var fromType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["first"].Value);
+                            UMLDataType? fromType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["first"].Value);
 
                             if (fromType != null && !fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
                             {
@@ -376,7 +376,7 @@ namespace PlantUML
 
                 if (DataType != null && line.EndsWith("{", StringComparison.Ordinal))
                 {
-                    if (aliases.TryGetValue(DataType.Name, out var newType))
+                    if (aliases.TryGetValue(DataType.Name, out UMLDataType? newType))
                     {
                         newType.Namespace = DataType.Namespace;
                     }
@@ -459,14 +459,14 @@ namespace PlantUML
 
         public static void TryParseLineForDataType(string line, Dictionary<string, UMLDataType> aliases, UMLDataType dataType)
         {
-            var methodMatch = _classLine.Match(line);
+            Match? methodMatch = _classLine.Match(line);
             if (methodMatch.Success)
             {
                 UMLVisibility visibility = ReadVisibility(methodMatch.Groups["visibility"].Value);
                 string name = methodMatch.Groups["name"].Value;
 
                 string returntype = string.Empty;
-                for (var x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
+                for (int x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
                 {
                     if (x != 0)
                     {
@@ -499,7 +499,7 @@ namespace PlantUML
                 bool inName = false;
                 string v = methodMatch.Groups["params"].Value;
                 v = Regex.Replace(v, "\\s{2,}", " ");
-                for (var x = 0; x < v.Length; x++)
+                for (int x = 0; x < v.Length; x++)
                 {
                     char c = v[x];
                     if (c == '<')
@@ -570,11 +570,11 @@ namespace PlantUML
             }
             else if (_propertyLine.IsMatch(line))
             {
-                var g = _propertyLine.Match(line);
+                Match? g = _propertyLine.Match(line);
 
                 UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
 
-                var p = CreateFrom(g.Groups["type"].Value);
+                CollectionRecord? p = CreateFrom(g.Groups["type"].Value);
 
                 UMLDataType c;
 

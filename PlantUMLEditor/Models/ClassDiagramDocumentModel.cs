@@ -18,9 +18,9 @@ namespace PlantUMLEditor.Models
 
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            var imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
+            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
 
-            var previewWindow = new Preview
+            Preview? previewWindow = new Preview
             {
                 DataContext = imageModel
             };
@@ -56,12 +56,12 @@ namespace PlantUMLEditor.Models
 
                     if (IsDirty)
                     {
-                        string text = (string?)Application.Current.Dispatcher.Invoke((() =>
+                        string text = Application.Current.Dispatcher.Invoke((() =>
                       {
                           return TextEditor?.TextRead();
                       })) ?? string.Empty;
 
-                        var z = await PlantUML.UMLClassDiagramParser.ReadString(text);
+                        UMLClassDiagram? z = await PlantUML.UMLClassDiagramParser.ReadString(text);
                         if (z != null)
                         {
                             lock (_locker)
@@ -129,7 +129,7 @@ namespace PlantUMLEditor.Models
                 if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart)
                     && !autoCompleteParameters.WordStart.EndsWith("<", StringComparison.Ordinal))
                 {
-                    foreach (var item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
+                    foreach (string? item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         base.MatchingAutoCompletes.Add(item);
                     }

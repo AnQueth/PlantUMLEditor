@@ -11,7 +11,7 @@ namespace PlantUMLEditor.Models
             {
                 return null;
             }
-            var cd = documents.ClassDocuments.Find(p => p.FileName == fullPath);
+            UMLClassDiagram? cd = documents.ClassDocuments.Find(p => p.FileName == fullPath);
             if (cd == null)
             {
                 try
@@ -37,7 +37,7 @@ namespace PlantUMLEditor.Models
             {
                 return null;
             }
-            var cd = documents.ComponentDiagrams.Find(p => p.FileName == fullPath);
+            UMLComponentDiagram? cd = documents.ComponentDiagrams.Find(p => p.FileName == fullPath);
             if (cd == null)
             {
                 try
@@ -63,9 +63,15 @@ namespace PlantUMLEditor.Models
             UMLClassDiagram? cd = null;
             UMLSequenceDiagram? sd = await PlantUML.UMLSequenceDiagramParser.ReadString(text, documents.ClassDocuments, false);
             if (sd == null)
+            {
                 cd = await PlantUML.UMLClassDiagramParser.ReadString(text);
+            }
+
             if (cd == null)
+            {
                 ud = new UMLUnknownDiagram("", "");
+            }
+
             return (cd, sd, ud);
         }
 
@@ -75,7 +81,7 @@ namespace PlantUMLEditor.Models
             {
                 return null;
             }
-            var sd = documents.SequenceDiagrams.Find(p => p.FileName == fullPath);
+            UMLSequenceDiagram? sd = documents.SequenceDiagrams.Find(p => p.FileName == fullPath);
             if (sd == null)
             {
                 try
@@ -100,11 +106,19 @@ namespace PlantUMLEditor.Models
             UMLComponentDiagram? comd = null;
             UMLSequenceDiagram? sd = await TryCreateSequenceDiagram(documents, fullPath);
             if (sd == null)
+            {
                 cd = await TryCreateClassDiagram(documents, fullPath);
+            }
+
             if (cd == null)
+            {
                 comd = await TryCreateComponentDiagram(documents, fullPath);
+            }
+
             if (cd == null)
-                ud = await     PlantUML.UnknownDiagramParser.ReadFile(fullPath);
+            {
+                ud = await PlantUML.UnknownDiagramParser.ReadFile(fullPath);
+            }
 
             return (cd, sd, comd, ud);
         }

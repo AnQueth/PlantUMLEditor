@@ -22,8 +22,8 @@ namespace PlantUMLEditor.Models
                 return default;
             }
 
-            var m = new MDPreviewModel(base.Title, path);
-            var p = new MDPreview
+            MDPreviewModel? m = new MDPreviewModel(base.Title, path);
+            MDPreview? p = new MDPreview
             {
                 DataContext = m
             };

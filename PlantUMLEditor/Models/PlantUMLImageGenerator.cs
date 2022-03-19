@@ -42,8 +42,8 @@ namespace PlantUMLEditor.Models
                 p.Start();
                 p.WaitForExit();
 
-                var normal = p.StandardOutput.ReadToEnd();
-                var errors = p.StandardError.ReadToEnd();
+                string? normal = p.StandardOutput.ReadToEnd();
+                string? errors = p.StandardError.ReadToEnd();
 
                 taskCompletionSource.SetResult(new UMLImageCreateRecord(fn, normal, errors));
             });
