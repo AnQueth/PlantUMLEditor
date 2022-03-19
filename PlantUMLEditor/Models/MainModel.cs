@@ -804,7 +804,7 @@ namespace PlantUMLEditor.Models
 
                         lock (_docLock)
                         {
-                            var docs = OpenDocuments.Where(p => string.CompareOrdinal(p.FileName, d.FileName) == 0);
+                            var docs = OpenDocuments.Where(p => string.Equals(p.FileName, d.FileName, StringComparison.Ordinal));
                             foreach (var doc in docs)
                             {
                                 if (CurrentDocument == doc && doc is TextDocumentModel textDoc)
