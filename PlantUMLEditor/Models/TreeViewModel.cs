@@ -12,7 +12,7 @@ namespace PlantUMLEditor.Models
     {
         private bool _isExpanded;
         public FolderTreeViewModel(TreeViewModel? parent, string path, bool isExpanded) :
-            base(parent, path, "images\\FolderClosed_16x.png")
+            base(parent, path, "pack://application:,,,/PlantUMLEditor;component/images/FolderClosed_16x.png")
         {
             IsFile = false;
             IsExpanded = isExpanded;

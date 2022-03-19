@@ -553,31 +553,32 @@ namespace PlantUMLEditor.Models
         {
             if (file.Contains(".component.puml"))
             {
-                return @"images\com.png";
+                return @"pack://application:,,,/PlantUMLEditor;component/images/com.png";
             }
             else if (file.Contains(".class.puml"))
             {
-                return @"images\class.png";
+                return @"pack://application:,,,/PlantUMLEditor;component/images/class.png";
             }
             else if (file.Contains(".seq.puml"))
             {
-                return @"images\sequence.png";
+                return @"pack://application:,,,/PlantUMLEditor;component/images/sequence.png";
             }
             else if (file.Contains(".md"))
             {
-                return @"images\md.png";
+                return @"pack://application:,,,/PlantUMLEditor;component/images/md.png";
             }
             else if (file.Contains(".yml"))
             {
-                return @"images\yml.png";
+                return @"pack://application:,,,/PlantUMLEditor;component/images/yml.png";
             }
             else if (file.Contains(".png") || file.Contains(".jpg"))
             {
-                return @"images\emblem_512.png";
+                return @"pack://application:,,,/PlantUMLEditor;component/images/emblem_512.png";
             }
             else
             {
-                return @"images\uml.png";
+                return @"pack://application:,,,/PlantUMLEditor;component/images/uml.png";
+
             }
 
         }

@@ -279,7 +279,7 @@ namespace PlantUML
 
                     d.ExplainedErrors.Add((line, linenumber, "Regex timeout"));
                 }
-                catch (Exception ex)
+                catch
                 {
                     d.AddLineError(line, linenumber);
 

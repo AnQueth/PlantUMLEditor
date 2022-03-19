@@ -26,11 +26,7 @@ namespace UMLModels
                 return;
             }
 
-            LineErrors.Add(new LineError()
-            {
-                Text = text,
-                LineNumber = lineNumber
-            });
+            LineErrors.Add(new LineError(text, lineNumber));
         }
 
 

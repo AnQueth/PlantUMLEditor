@@ -1,16 +1,4 @@
 ﻿namespace UMLModels
 {
-    public class LineError
-    {
-        public string Text
-        {
-            get; set;
-        }
-
-        public int LineNumber
-        {
-            get; set;
-
-        }
-    }
+    public record LineError(string? Text, int LineNumber);
 }

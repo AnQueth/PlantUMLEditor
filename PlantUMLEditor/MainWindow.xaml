@@ -15,7 +15,7 @@
 FontFamily="Consolas Code"  Loaded="Window_Loaded"
     Left="{Binding WindowLeft, Mode=TwoWay}"
     Top="{Binding WindowTop, Mode=TwoWay}"
-    xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/Images/uml.png">
+    xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/PlantUMLEditor;component/Images/uml.png">
 
     <b:Interaction.Triggers>
 
@@ -617,14 +617,14 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
                             <Button.Content>
                                 <Grid>
-                                    <Image Source="/Images/Save_16x.png"></Image>
+                                <Image Source="/PlantUMLEditor;component/Images/Save_16x.png"></Image>
                                 </Grid>
                             </Button.Content>
                         </Button>
                         <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                             <Button.Content>
                                 <Grid>
-                                    <Image Source="/Images/SaveClose_16x.png"></Image>
+                                <Image Source="/PlantUMLEditor;component/Images/SaveClose_16x.png"></Image>
                                 </Grid>
                             </Button.Content>
                         </Button>
@@ -632,7 +632,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                             <Button.Content>
                                 <Grid>
-                                    <Image Source="/Images/Close_8x_16x.png" ></Image>
+                                <Image Source="/PlantUMLEditor;component/Images/Close_8x_16x.png" ></Image>
                                 </Grid>
                             </Button.Content>
                         </Button>
@@ -641,7 +641,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
                             <Button.Content>
                                 <Grid>
-                                    <Image Source="/Images/PreviewTransition_16x.png" ></Image>
+                                <Image Source="/PlantUMLEditor;component/Images/PreviewTransition_16x.png" ></Image>
                                 </Grid>
                             </Button.Content>
                         </Button>
@@ -682,7 +682,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
                         <Button.Content>
                             <Grid>
-                                <Image Source="/Images/Close_8x_16x.png" ></Image>
+                                <Image Source="/PlantUMLEditor;component/Images/Close_8x_16x.png" ></Image>
                             </Grid>
                         </Button.Content>
                     </Button>
@@ -715,11 +715,11 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <ToolBar    Grid.ColumnSpan="3">
 
             <Button   Command="{Binding OpenDirectoryCommand}"  ToolTip="Open Directory">
-                <Image Source="/Images/OpenFolder_16x.png"></Image>
+                <Image Source="/PlantUMLEditor;component/Images/OpenFolder_16x.png"></Image>
             </Button>
             <Separator />
             <Button    Command="{Binding SaveAllCommand}"  ToolTip="Save All">
-                <Image Source="/Images/SaveAll_16x.png"></Image>
+                <Image Source="/PlantUMLEditor;component/Images/SaveAll_16x.png"></Image>
             </Button>
             <Separator />
             <Button Content="Scan Directory" Command="{Binding ScanAllFiles}"></Button>

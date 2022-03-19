@@ -6,7 +6,7 @@
         xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
         xmlns:local="clr-namespace:PlantUMLEditor" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="1024" Width="1084" Icon="/Images/md.png">
+        Title="{Binding Title}" Height="1024" Width="1084" Icon="/PlantUMLEditor;component/Images/uml.png">
     <Window.Resources>
         <Thickness x:Key="Margin">5,5,5,5</Thickness>
     </Window.Resources>
