@@ -14,6 +14,14 @@ namespace PlantUMLEditor.Models
         {
 
         }
+
+        public override void Close()
+        {
+            base.Close();
+
+
+        }
+
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
             string? path = Path.GetDirectoryName(base.FileName);

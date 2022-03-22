@@ -1387,5 +1387,13 @@ namespace PlantUMLEditor.Controls
             Text = Text.Insert(CaretIndex, text);
 
         }
+
+        public void Destroy()
+        {
+            this._bindedDocument = null;
+            this._cachedDrawing = null;
+            this.DataContext = null;
+
+        }
     }
 }

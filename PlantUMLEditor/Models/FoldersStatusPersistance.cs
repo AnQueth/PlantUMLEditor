@@ -23,11 +23,14 @@ namespace PlantUMLEditor.Models
         private void Save(HashSet<string> folders)
         {
             string closedFolders = Path.Combine(Path.GetTempPath(), "closedfolders.dat");
-            using (StreamWriter? sr = new StreamWriter(File.OpenWrite(closedFolders)))
+            using (StreamWriter? sr = new StreamWriter(new FileStream(closedFolders, FileMode.Create, FileAccess.Write)))
             {
-                foreach (string? f in folders)
                 {
-                    sr.WriteLine(f);
+                    foreach (string? f in folders)
+                    {
+                        sr.WriteLine(f);
+                    }
+
                 }
             }
         }

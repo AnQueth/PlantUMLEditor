@@ -98,6 +98,7 @@ namespace PlantUMLEditor.Models
         public void Stop()
         {
 
+            Document = null;
         }
     }
 }

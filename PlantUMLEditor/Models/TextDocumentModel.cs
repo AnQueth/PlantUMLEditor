@@ -93,11 +93,13 @@ namespace PlantUMLEditor.Models
         public DelegateCommand RegenDocument
         {
             get;
+            private set;
         }
 
         public DelegateCommand ShowPreviewCommand
         {
             get;
+            private set;
         }
 
         public ObservableCollection<string> SortedMatchingAutoCompletes
@@ -123,8 +125,15 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
+            previewWindow.Closed += PreviewWindow_Closed;
+
             previewWindow.Show();
             await ShowPreviewImage(_textEditor?.TextRead());
+        }
+
+        private void PreviewWindow_Closed(object? sender, EventArgs e)
+        {
+            TryClosePreview();
         }
 
         private async Task ShowPreviewImage(string? text)
@@ -236,12 +245,20 @@ namespace PlantUMLEditor.Models
         {
             if (previewWindow != null)
             {
+                previewWindow.Closed -= PreviewWindow_Closed;
+
                 if (imageModel != null)
                 {
                     imageModel.Stop();
+                    imageModel = null;
                 }
 
+
+
                 previewWindow.Close();
+                previewWindow.DataContext = null;
+                previewWindow = null;
+
             }
         }
 
@@ -255,8 +272,19 @@ namespace PlantUMLEditor.Models
             imageModel?.Stop();
             if (previewWindow != null)
             {
-                previewWindow.Close();
+
+                TryClosePreview();
+
+
             }
+            _autoComplete = null;
+            _textEditor?.Destroy();
+            _textEditor = null;
+            imageModel = null;
+            ShowPreviewCommand = null;
+            RegenDocument = null;
+
+
         }
 
         public abstract Task<UMLDiagram?> GetEditedDiagram();
