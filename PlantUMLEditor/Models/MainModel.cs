@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-
+using System.Windows.Media;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -474,13 +474,116 @@ namespace PlantUMLEditor.Models
                     {
                         string name = Path.GetFileNameWithoutExtension(fileName);
                         fileName = Path.GetRelativePath(Path.GetDirectoryName(currentDocument.FileName), fileName);
+                        string extension = Path.GetExtension(fileName);
 
-                        string imageMD = $"[![{name}]({fileName})]({fileName})";
-                        e.Data.SetData(DataFormats.StringFormat, imageMD);
+
+
+                        if (extension.Equals(".png", StringComparison.OrdinalIgnoreCase) || extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase))
+                        {
+
+                            string imageMD = $"[![{name}]({fileName})]({fileName})";
+                            e.Data.SetData(DataFormats.StringFormat, imageMD);
+                        }
+                        else
+                        {
+                            string imageMD = $"[{name}]({fileName})";
+                            e.Data.SetData(DataFormats.StringFormat, imageMD);
+
+                        }
                     }
+
                 }
             }
         }
+
+
+        public void TreeDragOver(object sender, DragEventArgs e)
+        {
+
+
+
+            FrameworkElement? item = e.Source as FrameworkElement;
+
+
+            if (item is not null)
+            {
+                FolderTreeViewModel? model = GetItemAtLocation<FolderTreeViewModel>(item, e.GetPosition(item));
+                if (model is not null)
+                {
+
+                    e.Effects = DragDropEffects.Move;
+                    e.Handled = true;
+
+                }
+
+            }
+
+        }
+
+        private T? GetItemAtLocation<T>(FrameworkElement el, Point location)
+        {
+
+            HitTestResult hitTestResults = VisualTreeHelper.HitTest(el, location);
+
+            if (hitTestResults is not null && hitTestResults.VisualHit is FrameworkElement)
+            {
+                if (hitTestResults.VisualHit is FrameworkElement fe)
+                {
+                    object dataObject = fe.DataContext;
+
+
+                    if (dataObject is T t)
+                    {
+                        return t;
+                    }
+                }
+
+            }
+
+            return default(T);
+        }
+
+        public async void TreeDrop(object sender, DragEventArgs e)
+        {
+            FrameworkElement? item = e.Source as FrameworkElement;
+
+
+            if (item is not null)
+            {
+                FolderTreeViewModel? model = GetItemAtLocation<FolderTreeViewModel>(item, e.GetPosition(item));
+                if (model is not null)
+                {
+                    if (!model.IsFile)
+                    {
+                        string oldFile = (string)e.Data.GetData(DataFormats.StringFormat);
+                        string newPath = Path.Combine(model.FullPath, Path.GetFileName(oldFile));
+
+                        try
+                        {
+
+                            File.Move(oldFile, newPath);
+
+                            e.Handled = true;
+                            await ScanDirectory(this._folderBase);
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine(ex);
+                        }
+
+
+
+
+
+                    }
+                }
+
+            }
+
+
+        }
+
+
 
         public async void TreeItemClickedButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -531,12 +634,11 @@ namespace PlantUMLEditor.Models
 
             if (e.Source is FrameworkElement fe)
             {
-                if (fe.DataContext is TreeViewModel tvm && currentDocument is not null &&
-                    FileExtension.MD.Compare(Path.GetExtension(currentDocument.FileName)))
+                if (fe.DataContext is TreeViewModel tvm)
                 {
-                    if (FileExtension.PNG.Compare(Path.GetExtension(tvm.FullPath)))
+                    if (tvm.IsFile)
                     {
-                        DragDrop.DoDragDrop(fe, tvm.FullPath, DragDropEffects.Link);
+                        DragDrop.DoDragDrop(fe, tvm.FullPath, DragDropEffects.Link | DragDropEffects.Move);
                     }
                 }
             }
@@ -910,6 +1012,8 @@ namespace PlantUMLEditor.Models
             {
                 return;
             }
+
+            
 
             PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation,
                 _selectedFile.FullPath, dir);
