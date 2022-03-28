@@ -476,7 +476,7 @@ namespace PlantUMLEditor.Models
                         fileName = Path.GetRelativePath(Path.GetDirectoryName(currentDocument.FileName), fileName);
                         string extension = Path.GetExtension(fileName);
 
-
+                        fileName = fileName.Replace('\\', '/');
 
                         if (extension.Equals(".png", StringComparison.OrdinalIgnoreCase) || extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase))
                         {
@@ -1013,7 +1013,7 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            
+
 
             PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation,
                 _selectedFile.FullPath, dir);
