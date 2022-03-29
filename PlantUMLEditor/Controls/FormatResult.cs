@@ -6,7 +6,7 @@ using System.Windows.Media;
 namespace PlantUMLEditor.Controls
 {
 
-    public record FormatResult(Brush Brush, int Start, int Length, FontWeight FontWeight, string Match)
+    public record FormatResult(Brush Brush, int Start, int Length, FontWeight FontWeight, string Match, bool Italic = false)
     {
         public int Span => Start + Length;
 

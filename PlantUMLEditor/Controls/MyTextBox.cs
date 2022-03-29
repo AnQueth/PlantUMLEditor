@@ -1123,6 +1123,10 @@ namespace PlantUMLEditor.Controls
                         {
                             formattedText.SetFontWeight(c.FontWeight, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
                         }
+                        if (c.Italic)
+                        {
+                            formattedText.SetFontStyle(FontStyles.Italic, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
+                        }
                     }
                     catch (Exception ex)
                     {

@@ -45,7 +45,7 @@ namespace PlantUMLEditor.Models
 
         protected override IColorCodingProvider? GetColorCodingProvider()
         {
-            return null;
+            return new MDColorCoding();
         }
 
         internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)
