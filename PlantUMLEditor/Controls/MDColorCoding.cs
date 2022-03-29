@@ -8,11 +8,11 @@ namespace PlantUMLEditor.Controls
     internal class MDColorCoding : IColorCodingProvider
     {
 
-        private static readonly Regex _hs = new Regex("^(?<hs>[#\\*]+)", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly Regex _bolds = new Regex("(?<hs>[\\*]{2}\\w+[\\*]{2})", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly Regex _italics = new Regex("(?<hs>(?<!\\*)[\\*]{1}\\w+(?<!\\*)[\\*]{1}|[_]{1}\\w+[_]{1})", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly Regex _lists = new Regex("^ *(?<hs>[#\\*\\-\\d])", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly Regex _links = new Regex("(?<hs>\\[.+\\))", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex _hs = new Regex("^[#\\*]+", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex _bolds = new Regex("[\\*]{2}\\w+[\\*]{2}", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex _italics = new Regex("(?<!\\*)[\\*]{1}\\w+(?<!\\*)[\\*]{1}|[_]{1}\\w+[_]{1}", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex _lists = new Regex("^ *[#\\*\\-\\d]", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex _links = new Regex("\\[.+\\)", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex _code = new Regex("`{3}[.\\w\\W]*?`{3}", RegexOptions.Compiled | RegexOptions.Multiline);
 
         //[![process.seq](process.seq.png)](process.seq.png)
@@ -32,7 +32,7 @@ namespace PlantUMLEditor.Controls
             {
 
 
-                results.Add(new FormatResult(new SolidColorBrush(Colors.Black), m.Groups["hs"].Index, m.Groups["hs"].Length, FontWeights.Bold, m.Groups["hs"].Value));
+                results.Add(new FormatResult(new SolidColorBrush(Colors.Black), m.Index, m.Length, FontWeights.Bold, m.Value));
             }
 
             MatchCollection? lists = _lists.Matches(text);
@@ -41,7 +41,7 @@ namespace PlantUMLEditor.Controls
             {
 
 
-                results.Add(new FormatResult(new SolidColorBrush(Colors.Green), m.Groups["hs"].Index, m.Groups["hs"].Length, FontWeights.Normal, m.Groups["hs"].Value));
+                results.Add(new FormatResult(new SolidColorBrush(Colors.Green), m.Index, m.Length, FontWeights.Normal, m.Value));
             }
 
             MatchCollection? italics = _italics.Matches(text);
@@ -50,7 +50,7 @@ namespace PlantUMLEditor.Controls
             {
 
 
-                results.Add(new FormatResult(new SolidColorBrush(Colors.Black), m.Groups["hs"].Index, m.Groups["hs"].Length, FontWeights.Normal, m.Groups["hs"].Value, true));
+                results.Add(new FormatResult(new SolidColorBrush(Colors.Black), m.Index, m.Length, FontWeights.Normal, m.Value, true));
             }
 
             MatchCollection? links = _links.Matches(text);
@@ -59,7 +59,7 @@ namespace PlantUMLEditor.Controls
             {
 
 
-                results.Add(new FormatResult(new SolidColorBrush(Colors.DarkGreen), m.Groups["hs"].Index, m.Groups["hs"].Length, FontWeights.Normal, m.Groups["hs"].Value, true));
+                results.Add(new FormatResult(new SolidColorBrush(Colors.DarkGreen), m.Index, m.Length, FontWeights.Normal, m.Value, true));
             }
 
 
@@ -78,7 +78,7 @@ namespace PlantUMLEditor.Controls
             {
 
 
-                results.Add(new FormatResult(new SolidColorBrush(Colors.Blue), m.Groups["hs"].Index, m.Groups["hs"].Length, FontWeights.Normal, m.Groups["hs"].Value));
+                results.Add(new FormatResult(new SolidColorBrush(Colors.Blue), m.Index, m.Length, FontWeights.Normal, m.Value));
             }
             return results;
         }
