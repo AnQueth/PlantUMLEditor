@@ -118,6 +118,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                                                  CaretBrush="Green"
                             AcceptsReturn="True"  AcceptsTab="True"
+                                                 FindAllReferencesCommand="{Binding DataContext.FindAllReferencesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                                  GotoDefinitionCommand="{Binding DataContext.GotoDefinitionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                FontFamily="Cascadia Code" FontSize="14">
                             <b:Interaction.Triggers>
@@ -846,6 +847,9 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                            HorizontalContentAlignment="Stretch"
                               
                                  SelectedItem="{Binding SelectedMessage}">
+                        <DataGrid.Resources>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Cyan"/>
+                        </DataGrid.Resources>
                         <DataGrid.Columns>
                             <DataGridTemplateColumn>
                                 <DataGridTemplateColumn.CellTemplate>
@@ -916,6 +920,28 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                   Margin="{DynamicResource TabHeaderMargin}"
                                   Grid.Row="1" Grid.ColumnSpan="3" HorizontalContentAlignment="Stretch"
                                  SelectedItem="{Binding SelectedGlobalFindResult}">
+                            <DataGrid.Resources>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Cyan"/>
+                            </DataGrid.Resources>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
+                                <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
+                                <DataGridTextColumn IsReadOnly="true" Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>Find References</TabItem.Header>
+                    <Grid>
+                        <DataGrid SelectionMode="Single"  AutoGenerateColumns="False" 
+                                  ItemsSource="{Binding FindReferenceResults}" 
+                                  Margin="{DynamicResource TabHeaderMargin}"
+                                  Grid.Row="1" Grid.ColumnSpan="3" HorizontalContentAlignment="Stretch"
+                                 SelectedItem="{Binding SelectedGlobalFindResult}">
+                            <DataGrid.Resources>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Cyan"/>
+                            </DataGrid.Resources>
                             <DataGrid.Columns>
                                 <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
                                 <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>

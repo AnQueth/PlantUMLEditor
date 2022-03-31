@@ -30,6 +30,7 @@ namespace PlantUMLEditor.Models
         private readonly object _docLock = new();
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
         private readonly DelegateCommand<string> _gotoDefinitionCommand;
+        private readonly DelegateCommand<string> _findAllReferencesCommand;
         private readonly Lazy<GridSettings> _gridSettingLoader;
         private readonly IIOService _ioService;
         private readonly Timer _messageChecker;
@@ -74,6 +75,7 @@ namespace PlantUMLEditor.Models
             });
 
             _gotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
+            _findAllReferencesCommand = new DelegateCommand<string>(FindAllReferencesInvoked);
             documents = new UMLModels.UMLDocumentCollection();
             _messageChecker = new Timer(CheckMessages, null, Timeout.Infinite, Timeout.Infinite);
             _ioService = openDirectoryService;
@@ -278,13 +280,18 @@ namespace PlantUMLEditor.Models
             set => SetValue(ref _gitMessages, value);
         }
 
+        public ObservableCollection<GlobalFindResult> FindReferenceResults
+        {
+            get;
+        } = new();
+
         public ObservableCollection<GlobalFindResult> GlobalFindResults { get; } = new ObservableCollection<GlobalFindResult>();
 
         public DelegateCommand<string> GlobalSearchCommand
         {
             get;
         }
-
+        public DelegateCommand<string> FindAllReferencesCommand => _findAllReferencesCommand;
         public DelegateCommand<string> GotoDefinitionCommand => _gotoDefinitionCommand;
 
         public GridSettings GridSettings => _gridSettingLoader.Value;
@@ -1259,6 +1266,65 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        private void FindAllReferencesInvoked(string text)
+        {
+            FindReferenceResults.Clear();
+
+            List<UMLDataType> dataTypes = new();
+
+            foreach (UMLDataType? fdt in Documents.ClassDocuments.SelectMany(z => z.DataTypes))
+            {
+                dataTypes.Add(fdt);
+            }
+
+
+
+            foreach (var item in Documents.ClassDocuments.Where(z =>
+         z.DataTypes.Any(v => string.CompareOrdinal(v.Name, text) == 0)).Select(p => new
+         {
+             FN = p.FileName,
+             D = p,
+             DT = p.DataTypes.First(z => z.Name == text)
+         }))
+            {
+                FindReferenceResults.Add(new GlobalFindResult(item.FN, item.DT.LineNumber, item.DT.Name, text));
+
+
+                foreach (GlobalFindResult? ln in Documents.ClassDocuments.SelectMany(z => z.DataTypes.SelectMany(x => x.Properties.Where(g =>
+                DocumentMessageGenerator.GetCleanName(dataTypes, g.ObjectType.Name).Contains(item.DT.Id))
+                .Select(g => new GlobalFindResult(z.FileName, x.LineNumber, g.Signature, text)))))
+                {
+                    FindReferenceResults.Add(ln);
+                }
+                foreach (GlobalFindResult? ln in Documents.ClassDocuments.SelectMany(z => z.DataTypes.SelectMany(x => x.Methods.SelectMany(k => k.Parameters.Where(g =>
+                  DocumentMessageGenerator.GetCleanName(dataTypes, g.ObjectType.Name).Contains(item.DT.Id))
+              .Select(g => new GlobalFindResult(z.FileName, x.LineNumber, k.Signature, text))))))
+                {
+                    FindReferenceResults.Add(ln);
+                }
+                foreach (GlobalFindResult? ln in Documents.ClassDocuments.SelectMany(z => z.DataTypes.SelectMany(x => x.Methods.Where(k =>
+                DocumentMessageGenerator.GetCleanName(dataTypes, k.ReturnType.Name).Contains(item.DT.Id))
+           .Select(g => new GlobalFindResult(z.FileName, x.LineNumber, g.Signature, text)))))
+                {
+                    FindReferenceResults.Add(ln);
+                }
+
+                foreach (GlobalFindResult? ln in Documents.SequenceDiagrams.SelectMany(z => z.LifeLines.Where(x => x.DataTypeId == item.DT.Id).Select(c =>
+                new GlobalFindResult(z.FileName, c.LineNumber, c.Text, text))))
+
+                {
+                    FindReferenceResults.Add(ln);
+                }
+                foreach (GlobalFindResult? ln in Documents.SequenceDiagrams.SelectMany(z => z.Entities.OfType<UMLSequenceConnection>()
+                .Where(x => x.From?.DataTypeId == item.DT.Id || x.To?.DataTypeId == item.DT.Id).Where(c => c.Action is not null).Select(c =>
+               new GlobalFindResult(z.FileName, c.LineNumber, c.Action.Signature, text))))
+
+                {
+                    FindReferenceResults.Add(ln);
+                }
+
+            }
+        }
         private async void GotoDefinitionInvoked(string text)
         {
             foreach (var item in Documents.ClassDocuments.Where(z =>

@@ -56,6 +56,11 @@ namespace PlantUMLEditor.Controls
         private bool _useRegex;
         private bool findReplaceVisible;
 
+
+        public static readonly DependencyProperty FindAllReferencesCommandProperty =
+DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
+
+
         public static readonly DependencyProperty GotoDefinitionCommandProperty =
             DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
 
@@ -109,6 +114,13 @@ namespace PlantUMLEditor.Controls
                 _findText = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FindText)));
             }
+        }
+
+        public DelegateCommand<string> FindAllReferencesCommand
+        {
+            get => (DelegateCommand<string>)GetValue(FindAllReferencesCommandProperty);
+
+            set => SetValue(FindAllReferencesCommandProperty, value);
         }
 
         public DelegateCommand<string> GotoDefinitionCommand
@@ -409,7 +421,21 @@ namespace PlantUMLEditor.Controls
             ++endLine;
         }
 
+        private void FindAllReferences()
+        {
+            string found = GetWordFromCursor();
+
+            FindAllReferencesCommand?.Execute(found.Trim());
+        }
+
         private void GoToDefinition()
+        {
+            string found = GetWordFromCursor();
+
+            GotoDefinitionCommand?.Execute(found.Trim());
+        }
+
+        private string GetWordFromCursor()
         {
             StringBuilder sb = new(20);
             ReadOnlySpan<char> tp = Text.AsSpan();
@@ -434,8 +460,7 @@ namespace PlantUMLEditor.Controls
             }
 
             string found = sb.ToString();
-
-            GotoDefinitionCommand?.Execute(found.Trim());
+            return found;
         }
 
         private void MyTextBox_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -638,13 +663,18 @@ namespace PlantUMLEditor.Controls
 
                         string line = GetLineText(l);
 
-                        string reps = "";
-                        if (!string.IsNullOrEmpty(ReplaceText))
-                        {
-                            reps = line.Replace(search, ReplaceText, StringComparison.InvariantCultureIgnoreCase).Trim();
-                        }
 
-                        FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
+                        if (line is not null)
+                        {
+                            string reps = "";
+                            if (!string.IsNullOrEmpty(ReplaceText))
+                            {
+                                reps = line.Replace(search, ReplaceText, StringComparison.InvariantCultureIgnoreCase).Trim();
+                            }
+
+
+                            FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
+                        }
 
                         p = Text.IndexOf(search, p + 1, StringComparison.InvariantCultureIgnoreCase);
                     }
@@ -876,6 +906,10 @@ namespace PlantUMLEditor.Controls
             if (e.Key == Key.F12)
             {
                 GoToDefinition();
+            }
+            else if (e.Key == Key.F11)
+            {
+                FindAllReferences();
             }
             else if (_autoComplete.IsPopupVisible && (e.Key is Key.Down or Key.Up))
             {

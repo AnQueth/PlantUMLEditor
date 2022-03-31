@@ -20,17 +20,16 @@ namespace PlantUMLEditor.Models
 
 
         }
-
-        private static List<string> GetCleanName(List<DataTypeRecord> dataTypes, string name)
+        public static List<string> GetCleanName(IEnumerable<UMLDataType> dataTypes, string name)
         {
             List<string> types = new();
-            foreach (DataTypeRecord? type in dataTypes)
+            foreach (UMLDataType? type in dataTypes)
             {
-                if (name.IndexOf(type.DataType.Name, StringComparison.Ordinal) >= 0)
+                if (name.IndexOf(type.Name, StringComparison.Ordinal) >= 0)
                 {
-                    types.Add(type.DataType.Name);
+                    types.Add(type.Name);
 
-                    name = name.Replace(type.DataType.Name, string.Empty);
+                    name = name.Replace(type.Name, string.Empty);
                 }
             }
 
@@ -49,6 +48,12 @@ namespace PlantUMLEditor.Models
             }
 
             return types;
+        }
+        private static List<string> GetCleanName(List<DataTypeRecord> dataTypes, string name)
+        {
+            return GetCleanName(dataTypes.Select(z => z.DataType), name);
+
+
 
 
 
