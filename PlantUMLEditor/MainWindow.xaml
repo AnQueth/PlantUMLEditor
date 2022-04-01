@@ -43,6 +43,10 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
 
             <MenuItem Header="New Folder" Command="{Binding NewFolderCommand}"></MenuItem>
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
+            <Separator>
+                
+            </Separator>
+            <MenuItem Header="Delete" Command="{Binding DeleteCommand}"></MenuItem>
         </ContextMenu>
         <ContextMenu x:Key="FileMenuUML">
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>

@@ -198,23 +198,38 @@ namespace PlantUMLEditor.Models
 
         private void DeleteCommandHandler()
         {
+            if (!IsFile)
+            {
+                if (Directory.GetFiles(FullPath).Length > 0)
+                {
+                    MessageBox.Show("Folder must be empty", "Cannot delete", MessageBoxButton.OK);
+                    return;
+                }
+            }
             if (MessageBoxResult.No == MessageBox.Show(
                 string.Format(CultureInfo.InvariantCulture, "Delete {0}", FullPath), "Delete?", MessageBoxButton.YesNo))
             {
                 return;
             }
 
-
-            if (File.Exists(FullPath))
+            if (!IsFile)
             {
-                try
-                {
+                Directory.Delete(FullPath, true);
+            }
+            else
+            {
 
-                    File.Delete(FullPath);
-                }
-                catch
+                if (File.Exists(FullPath))
                 {
-                    return;
+                    try
+                    {
+
+                        File.Delete(FullPath);
+                    }
+                    catch
+                    {
+                        return;
+                    }
                 }
             }
             IsVisible = Visibility.Collapsed;
