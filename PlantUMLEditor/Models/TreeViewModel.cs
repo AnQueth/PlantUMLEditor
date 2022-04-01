@@ -113,14 +113,17 @@ namespace PlantUMLEditor.Models
 
 
             Children = new ObservableCollection<TreeViewModel>();
-
+            Children.CollectionChanged += Children_CollectionChanged;
             StartRenameCommand = new DelegateCommand(StartRenameHandler);
             DoRenameCommand = new DelegateCommand(RenameCommandHandler);
-            DeleteCommand = new DelegateCommand(DeleteCommandHandler);
+            DeleteCommand = new DelegateCommand(DeleteCommandHandler, () => IsFile || (!IsFile && Directory.GetFiles(FullPath).Length == 0));
 
         }
 
-
+        private void Children_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            DeleteCommand.RaiseCanExecuteChanged();
+        }
 
         public ObservableCollection<TreeViewModel> Children
         {
