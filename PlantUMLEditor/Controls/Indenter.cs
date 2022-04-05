@@ -126,6 +126,7 @@ namespace PlantUMLEditor.Controls
 
             string oldLine = "";
 
+            bool processedTitle = false;
             StringBuilder sb = new();
 
             for (int x = 0; x < lines.Length; x++)
@@ -139,9 +140,14 @@ namespace PlantUMLEditor.Controls
                     sb.AppendLine();
                 }
 
-                if (oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase) || oldLine.StartsWith("@startuml",
+                if ((!processedTitle && oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase)) || oldLine.StartsWith("@startuml",
                     StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))
                 {
+                    if (oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        processedTitle = true;
+                    }
+
                     if (removeLines)
                     {
                         sb.AppendLine();
