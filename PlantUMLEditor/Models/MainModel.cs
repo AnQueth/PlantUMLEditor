@@ -1034,7 +1034,10 @@ namespace PlantUMLEditor.Models
                 TreeViewModel? file = folder.Children.First(z => string.Equals(z.FullPath, _selectedFile.FullPath, StringComparison.Ordinal));
 
                 int ix = folder.Children.IndexOf(file);
-                folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, GetIcon(res.fileName)));
+                if (!folder.Children.Any(z => z.FullPath == res.fileName))
+                {
+                    folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, GetIcon(res.fileName)));
+                }
             }
         }
 
