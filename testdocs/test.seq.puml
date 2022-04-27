@@ -2,7 +2,7 @@
 
 title test.seq
 
-participant	C1
+participant	C1 
 participant C2
 alt if dead
     C1 --> C2 : void doStuff()

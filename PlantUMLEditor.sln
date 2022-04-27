@@ -18,7 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parsers", "Parsers\Parsers.csproj", "{0FE85E74-9CF9-4D14-81B9-876B8AA83835}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parsers", "Parsers\Parsers.csproj", "{0FE85E74-9CF9-4D14-81B9-876B8AA83835}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

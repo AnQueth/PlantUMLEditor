@@ -17,7 +17,7 @@ namespace PlantUML
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +\""*(?<name>[\w\W ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex composition = new(@"^\[*(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\.\#]+(?<direction>[\w]+)*[\->\(\)o\[\]\.\#]*) *\[*(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
+        private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\.\#]+(?<direction>[\w]+)*[\->\(\)o\[\]\.\#]*) *(?<rightbracket>\[*)(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
 
         private static readonly Regex notes = new(@"note *((?<sl>(?<placement>\w+) of (?<target>\w+) *: *(?<text>.*))|(?<sl>(?<placement>\w+) *: *(?<text>.*))|(?<sl>\""(?<text>[\w\W]+)\"" as (?<alias>\w+))|(?<placement>\w+) of (?<target>\w+)| as (?<alias>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -219,8 +219,8 @@ namespace PlantUML
                             string left = m.Groups["left"].Value.Trim();
                             string right = m.Groups["right"].Value.Trim();
 
-                            var leftComponent = TryGetComponent(left, d, packages, aliases);
-                            var rightComponent = TryGetComponent(right, d, packages, aliases);
+                            var leftComponent = TryGetComponent(left, d, packages, aliases, m.Groups["leftbracket"].Length == 1);
+                            var rightComponent = TryGetComponent(right, d, packages, aliases, m.Groups["rightbracket"].Length == 1);
 
 
                             string arrow = m.Groups["arrow"].Value.Trim();
@@ -274,7 +274,7 @@ namespace PlantUML
             return d;
         }
 
-        private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, Dictionary<string, UMLDataType> aliases)
+        private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, Dictionary<string, UMLDataType> aliases, bool bracketExists)
         {
             UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left)
                               ?? d.ContainedPackages.Find(p => p.Name == left);
@@ -286,7 +286,7 @@ namespace PlantUML
                 }
                 else
                 {
-                    if (left is not null)
+                    if (left is not null && bracketExists)
                     {
 
                         string package = GetPackage(packages);

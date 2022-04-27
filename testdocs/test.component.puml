@@ -1,0 +1,22 @@
+@startuml
+title test.component
+
+
+component "Post Sale" as ps #lightblue
+component "Auction Management" as am #lightblue
+component Tenant #green
+component AN #green 
+component GBP #green
+
+am <-> Tenant : read items, auction mangement events
+
+am --> AN : can push auctions
+am --> GBP : can push auctions
+
+AN -> ps
+
+ps --> Tenant : push 
+
+
+
+@enduml
