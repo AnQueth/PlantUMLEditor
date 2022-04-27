@@ -14,7 +14,7 @@ namespace PlantUMLEditor.Controls
                 Colors.Coral
             },
             {
-                new Regex(@"^\s*'.+", RegexOptions.Multiline),
+                new Regex(@"^\s*['!].+", RegexOptions.Multiline),
                 Colors.Gray
             },
             {

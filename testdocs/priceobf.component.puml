@@ -1,8 +1,10 @@
 @startuml
-title priceobf.component
 
-component SourceSpriteStrip
-component Randomizer
+title priceobf.component
+!theme sketchy-outline
+
+component SourceSpriteStrip #red
+component Randomizer #green
 component RandomizedImage
 component Map
 component ServerMap
@@ -10,7 +12,10 @@ component WebServer
 component Browser
 actor Designer
 
+[laa] -> [aaaa] : test
+[laa] --> SourceSpriteStrip : test
 Designer - SourceSpriteStrip : Create master source strip
+Designer .. SourceSpriteStrip : Create master source strip
 Randomizer <-- SourceSpriteStrip : read master
 WebServer -- Randomizer : Create Random Strip , Map, and Server Map
 Randomizer -- RandomizedImage : Create From SourceSpriteStrip

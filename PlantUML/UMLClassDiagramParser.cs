@@ -127,6 +127,11 @@ namespace PlantUML
                     continue;
                 }
 
+                if (line.StartsWith("!", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 if (line == "left to right direction")
                 {
                     currentPackage.Children.Add(new UMLOther(line));

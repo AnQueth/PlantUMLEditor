@@ -141,7 +141,10 @@ namespace PlantUML
                     continue;
                 }
 
-
+                if (line.StartsWith("!", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 if (line == "'@@novalidate")
                 {

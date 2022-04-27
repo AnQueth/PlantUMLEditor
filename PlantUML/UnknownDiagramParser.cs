@@ -41,6 +41,11 @@ namespace PlantUML
                     continue;
                 }
 
+                if (line.StartsWith("!", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 if (line.StartsWith("title", StringComparison.InvariantCulture))
                 {
                     if (line.Length > 6)

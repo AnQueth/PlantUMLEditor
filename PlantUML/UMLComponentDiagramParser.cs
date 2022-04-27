@@ -17,7 +17,7 @@ namespace PlantUML
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +\""*(?<name>[\w\W ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex composition = new(@"^\[*(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\#]+(?<direction>[\w]+)*[\->\(\)o\[\]\#]+) *\[*(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
+        private static readonly Regex composition = new(@"^\[*(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\.\#]+(?<direction>[\w]+)*[\->\(\)o\[\]\.\#]*) *\[*(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
 
         private static readonly Regex notes = new(@"note *((?<sl>(?<placement>\w+) of (?<target>\w+) *: *(?<text>.*))|(?<sl>(?<placement>\w+) *: *(?<text>.*))|(?<sl>\""(?<text>[\w\W]+)\"" as (?<alias>\w+))|(?<placement>\w+) of (?<target>\w+)| as (?<alias>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -88,6 +88,11 @@ namespace PlantUML
                     }
 
                     if (line == "left to right direction")
+                    {
+                        continue;
+                    }
+
+                    if (line.StartsWith("!", StringComparison.Ordinal))
                     {
                         continue;
                     }
@@ -214,50 +219,28 @@ namespace PlantUML
                             string left = m.Groups["left"].Value.Trim();
                             string right = m.Groups["right"].Value.Trim();
 
-                            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left)
-                                ?? d.ContainedPackages.Find(p => p.Name == left);
-                            if (leftComponent == null)
-                            {
-                                if (aliases.ContainsKey(left))
-                                {
-                                    leftComponent = aliases[left];
-                                }
-                                else
-                                {
-                                    leftComponent = null;
-                                }
-                            }
-                            UMLDataType? fromType = d.Entities.Find(p => p.Name == right)
-                                 ?? d.ContainedPackages.Find(p => p.Name == right);
-                            if (fromType == null)
-                            {
-                                if (aliases.ContainsKey(right))
-                                {
-                                    fromType = aliases[right];
-                                }
-                                else
-                                {
-                                    fromType = null;
-                                }
-                            }
+                            var leftComponent = TryGetComponent(left, d, packages, aliases);
+                            var rightComponent = TryGetComponent(right, d, packages, aliases);
+
+
                             string arrow = m.Groups["arrow"].Value.Trim();
-                            if (leftComponent == null || fromType == null)
+                            if (leftComponent == null || rightComponent == null)
                             {
-                                d.ExplainedErrors.Add((line, linenumber, $"{leftComponent} {fromType}"));
+                                d.ExplainedErrors.Add((line, linenumber, $"left: {leftComponent} right: {rightComponent}"));
                             }
                             else if (leftComponent is UMLComponent c)
                             {
                                 if (arrow.EndsWith("o", StringComparison.Ordinal))
                                 {
-                                    c.Exposes.Add(fromType);
+                                    c.Exposes.Add(rightComponent);
                                 }
                                 else if (arrow.EndsWith("(", StringComparison.Ordinal))
                                 {
-                                    c.Consumes.Add(fromType);
+                                    c.Consumes.Add(rightComponent);
                                 }
                                 else if (arrow.EndsWith(">", StringComparison.Ordinal))
                                 {
-                                    c.Consumes.Add(fromType);
+                                    c.Consumes.Add(rightComponent);
                                 }
                             }
                         }
@@ -289,6 +272,36 @@ namespace PlantUML
             }
 
             return d;
+        }
+
+        private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, Dictionary<string, UMLDataType> aliases)
+        {
+            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left)
+                              ?? d.ContainedPackages.Find(p => p.Name == left);
+            if (leftComponent == null)
+            {
+                if (aliases.ContainsKey(left))
+                {
+                    leftComponent = aliases[left];
+                }
+                else
+                {
+                    if (left is not null)
+                    {
+
+                        string package = GetPackage(packages);
+
+                        leftComponent = new UMLComponent(package, Clean(left), left);
+                        _ = aliases.TryAdd(left, leftComponent);
+                    }
+                    else
+                    {
+                        leftComponent = null;
+                    }
+                }
+            }
+
+            return leftComponent;
         }
 
         private static UMLPackage AddPackage(Stack<string> packages, Dictionary<string, UMLDataType> aliases, Stack<string> brackets, Stack<UMLPackage> packagesStack, UMLComponentDiagram d, UMLPackage currentPackage, Match s)
