@@ -17,7 +17,9 @@ namespace PlantUML
             All = Tite | Note | Direction | SkinParam | PreProcessor | Comment
 
         }
-        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>\\[\\]]+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\\\"(?<text>[\\w\\W]+)\\\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>]+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        private static readonly Regex notes2 = new("note *((?<sl>(?<placement>\\w+)(\\s+of)* (?<target>\\w+) *: *(?<text>.*))|(?<placement>\\w+)(\\s+of)*\\s+(?<target>\\w+)|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+)(\\s+of)*  (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+
+        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+)(\\s+of)* (?<target>[\\\"\\w\\,\\s\\<\\>\\[\\]]+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\\\"(?<text>[\\w\\W]+)\\\\\" as (?<alias>\\w+))|(?<placement>\\w+)(\\s+of)* (?<target>[\\\"\\w\\,\\s\\<\\>]+)| as (?<alias>\\w+))", RegexOptions.Compiled);
         private static readonly Regex skinparams = new Regex(@"skinparam[\w\s]+(?<sl>\{*)", RegexOptions.Compiled);
         private bool _swallowingNotes;
         private bool _swallowingSkinParams;

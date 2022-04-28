@@ -1,6 +1,6 @@
 @startuml
 title cc.class
-class la as j  {
+class la  {
     
     string lalala 
     

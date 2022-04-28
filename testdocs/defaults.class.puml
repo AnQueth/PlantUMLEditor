@@ -8,5 +8,14 @@ class G {
 }
 class string {
 }
+note top of string
+aaa
+end note
+
+
+'aaaa fgggg
+ 
+
+
 @enduml
 

@@ -16,6 +16,8 @@ package a{
         + C1 aa
         + G la
     }
+    
+    note right of C3: lalala
 }
 
 @enduml

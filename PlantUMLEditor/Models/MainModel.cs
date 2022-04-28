@@ -1791,7 +1791,7 @@ namespace PlantUMLEditor.Models
 
             DateTypeRecord[]? dataTypes = (from o in Documents.ClassDocuments
                                            from z in o.DataTypes
-                                           where z is not UMLOther
+                                           where z is not UMLOther && z is not UMLComment
                                            select new DateTypeRecord(o.FileName, z)).ToArray();
 
             bool isDirty = false;

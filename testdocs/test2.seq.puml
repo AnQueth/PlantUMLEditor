@@ -1,0 +1,147 @@
+@startuml
+
+title check-printing-queue.seq
+
+entity "JobController<T>" as jc
+entity "PrinterMonitor" as jm
+entity JobsGroup
+entity Runner
+entity "IJobStateRepository<T>" as jr
+entity "JobState<T>" as js
+--> jc : <<create>>
+
+note over jc: singleton for process
+
+--> jm : <<create>>
+
+note over jm: singleton for process
+
+-> jc : Task EnsureStarted(JobsMonitor<T> monitor)
+
+note over jm: PrintMonitor base class is JobMonitor<T>
+
+activate jc
+loop while running
+    jc -> jr : Task<JobState<T>[]> GetDeadJobs()
+
+    note over jr
+    getting dead jobs means marking the job not dead while reading it.
+    dead job is defined as a job that has not been read in N seconds.
+    end note
+
+    loop for each dead job
+        jc -> jm : Task EnsureMonitoring(JobState<T> jobState)
+        jm -> jm : object _lock
+        group lock(_lock)
+            jm -> jr : Task Upsert(JobState<T> state)
+            alt if _groups does not contain the job group name
+                jm --> JobsGroup : JobsGroup(string name, Func<JobState<T>, Task<bool>> callback, Action finishedCallback)
+
+                note over JobsGroup: callback is a pointer to Task<bool> Process(JobState<T> jobState)
+
+                note over JobsGroup : _finishedCallback is pointer to void JobGroupFinished(JobsGroup jobGroup)
+
+                jm -> jm : Dictionary<string, JobsGroup> _groups
+
+                note over jm : add to groups
+
+            end
+            jm -> JobsGroup : void AddJobState(JobState<T> jobState)
+            JobsGroup -> JobsGroup : object _lock
+            group lock (_lock)
+                JobsGroup -> Runner : void AddJob(JobState<T> job)
+
+                note over Runner: JobsGroup Add job to list
+
+                JobsGroup -> Runner : void Start()
+                Runner -> Runner : object _lock
+                group lock(_lock)
+
+                    note over Runner : ensure thread is running and Proc is the thread handler
+
+                end
+            end
+        end
+        group thread is running
+            Runner -> Runner : void Proc()
+            activate Runner
+            loop while _jobs has records
+                alt if job is finsihed
+                    group continue
+                    end
+                end
+                group try
+                    Runner -> js : bool IsProcessing
+                    Runner -> js : DateTimeOffset LastRead
+
+                    note over js: set to true and update last read
+
+                    Runner -> jr : Task Upsert(JobState<T> state)
+                    group catch
+                        group continue
+                        end
+                    end
+                    group try
+                        Runner -> Runner : Func<JobState<T>, Task<bool>> _callback
+                        alt if returned true for finished
+                            Runner -> js : bool IsProcessed
+
+                            note over js: set to true
+
+                        end
+                        group catch
+                            group continue
+                            end
+                        end
+                        group finally
+                            Runner -> js : bool IsProcessing
+                            Runner -> js : DateTimeOffset LastRead
+
+                            note over js: set to false and update last read
+
+                            Runner -> jr : Task Upsert(JobState<T> state)
+                            alt if job IsFinished
+                                Runner -> Runner : List<JobState<T>> _jobs
+
+                                note over jm: remove job
+
+                            end
+                        end
+                    end
+                end
+            end
+            Runner -> Runner : object _lock
+            group lock(_lock)
+                Runner -> Runner : Action _finishedCallback
+                Runner -> JobsGroup : void RunnerFinished()
+
+                note over Runner: _finishedCallback is pointer to void RunnerFinished()
+
+                JobsGroup -> JobsGroup : object _lock
+                group lock (_lock)
+                    JobsGroup -> JobsGroup : Runner _runner
+
+                    note over JobsGroup : null it and clean up
+
+                    JobsGroup -> JobsGroup : Action _finishedCallback
+                    JobsGroup -> jm : void JobGroupFinished(JobsGroup jobGroup)
+                    jm -> jm : object _lock
+                    group lock(_lock)
+
+                        note over JobsGroup: _finishedCallback is pointer to void JobGroupFinished(JobsGroup jobGroup)
+
+                        jm -> jm : Dictionary<string, JobsGroup> _groups
+
+                        note over jm : remove group
+
+                    end
+                end
+            end
+            deactivate Runner
+        end
+        group sleep 1 second
+        end
+    end
+end
+deactivate jc
+@enduml
