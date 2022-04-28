@@ -13,6 +13,7 @@ component Browser
 actor Designer
 
 [laa] -> [aaaa] : test
+note top of [aaaa] : hmmm
 [laa] --> SourceSpriteStrip : test
 Designer - SourceSpriteStrip : Create master source strip
 Designer .. SourceSpriteStrip : Create master source strip

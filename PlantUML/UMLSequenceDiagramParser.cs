@@ -120,7 +120,7 @@ namespace PlantUML
             int lineNumber = 0;
             UMLSequenceConnection? previous = null;
 
-            bool swallowingNotes = false;
+            CommonParsings cp = new CommonParsings(CommonParsings.ParseFlags.All);
 
             while ((line = await sr.ReadLineAsync()) != null)
             {
@@ -131,28 +131,13 @@ namespace PlantUML
                 {
                     return null;
                 }
-                if (line.StartsWith("@startuml", StringComparison.Ordinal))
+
+                if (cp.ParseStart(line, (str) =>
                 {
-                    if (line.Length > 9)
-                    {
-                        d.Title = line[9..].Trim();
-                    }
+                    d.Title = line[9..].Trim();
+                }))
+                {
                     started = true;
-                    continue;
-                }
-
-                if (line.StartsWith("!", StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                if (line == "'@@novalidate")
-                {
-                    d.ValidateAgainstClasses = false;
-                    continue;
-                }
-                if (line.StartsWith("'", StringComparison.Ordinal))
-                {
                     continue;
                 }
                 if (!started)
@@ -160,41 +145,41 @@ namespace PlantUML
                     continue;
                 }
 
+                if (cp.ParseTitle(line, (str) =>
+                 {
+                     d.Title = str;
+
+                 }))
+                {
+                    continue;
+                }
+
+
+
+
+
+
+                if (line == "'@@novalidate")
+                {
+                    d.ValidateAgainstClasses = false;
+                    continue;
+                }
+
+
+
                 if (line.StartsWith("==", StringComparison.Ordinal) && line.EndsWith("==", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                if (notes.IsMatch(line))
-                {
-                    Match? m = notes.Match(line);
-                    if (!m.Groups["sl"].Success)
-                    {
-                        swallowingNotes = true;
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-
-                if (line.StartsWith("end note", StringComparison.Ordinal))
-                {
-                    swallowingNotes = false;
-                    continue;
-                }
-
-                if (swallowingNotes)
+                if (cp.CommonParsing(line, (s) => { }, (s) => { }))
                 {
                     continue;
                 }
 
 
-                if (line.StartsWith("title", StringComparison.Ordinal))
-                {
-                    d.Title = line[5..].Trim();
-                    continue;
-                }
+
+
 
                 if (TryParseLifeline(line, types, lineNumber, out UMLSequenceLifeline? lifeline))
                 {

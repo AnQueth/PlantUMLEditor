@@ -33,7 +33,6 @@ namespace PlantUML
 
         private static readonly Regex composition = new("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\|\\<]*[\\-\\.]+[\\*o\\|\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)", RegexOptions.Compiled);
 
-        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>]+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\\\"(?<text>[\\w\\W]+)\\\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>[\\\"\\w\\,\\s\\<\\>]+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static string Clean(string name)
         {
@@ -100,14 +99,14 @@ namespace PlantUML
 
             Dictionary<string, UMLDataType> aliases = new();
 
-            bool swallowingNotes = false;
+
             bool swallowingComments = false;
 
             Stack<string> brackets = new();
             Regex removeGenerics = new("\\w+");
             Stack<UMLPackage> packagesStack = new();
 
-
+            CommonParsings cp = new(CommonParsings.ParseFlags.Note);
             packagesStack.Push(defaultPackage);
             UMLPackage? currentPackage = defaultPackage;
             int lineNumber = 0;
@@ -117,10 +116,49 @@ namespace PlantUML
 
                 line = line.Trim();
 
-                if (line == "@startuml")
+                if (cp.ParseStart(line, (str) =>
+                {
+                    d.Title = line[9..].Trim();
+                }))
                 {
                     started = true;
+                    continue;
                 }
+                if (!started)
+                {
+                    continue;
+                }
+
+                if (cp.ParseTitle(line, (str) =>
+                {
+                    d.Title = str;
+
+                }))
+                {
+                    continue;
+                }
+
+                if (cp.CommonParsing(line, (str) =>
+                {
+                    currentPackage.Children.Add(new UMLNote(line));
+                }, (str) =>
+                {
+                    if (currentPackage.Children.Last() is UMLNote n)
+                    {
+                        n.Text += "\r\n" + line;
+                    }
+
+                }, (str) =>
+                {
+                    if (currentPackage.Children.Last() is UMLNote n)
+                    {
+                        n.Text += "\r\nend note";
+                    }
+                }))
+                {
+                    continue;
+                }
+
 
                 if (!started)
                 {
@@ -129,6 +167,7 @@ namespace PlantUML
 
                 if (line.StartsWith("!", StringComparison.Ordinal))
                 {
+                    currentPackage.Children.Add(new UMLOther(line));
                     continue;
                 }
 
@@ -167,39 +206,7 @@ namespace PlantUML
                     }
                     continue;
                 }
-                if (notes.IsMatch(line))
-                {
-                    Match? m = notes.Match(line);
-                    if (!m.Groups["sl"].Success)
-                    {
-                        swallowingNotes = true;
-                    }
-                    else
-                    {
-                        swallowingNotes = false;
-                    }
 
-                    currentPackage.Children.Add(new UMLNote(line));
-                    continue;
-                }
-
-                if (line.StartsWith("end note", StringComparison.Ordinal))
-                {
-                    if (currentPackage.Children.Last() is UMLNote n)
-                    {
-                        n.Text += "\r\nend note";
-                    }
-                    swallowingNotes = false;
-                    continue;
-                }
-                if (swallowingNotes)
-                {
-                    if (currentPackage.Children.Last() is UMLNote n)
-                    {
-                        n.Text += "\r\n" + line;
-                    }
-                    continue;
-                }
                 if (line.StartsWith("participant", StringComparison.Ordinal)
                     || line.StartsWith("actor", StringComparison.Ordinal))
                 {

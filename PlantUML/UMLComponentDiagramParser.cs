@@ -19,7 +19,7 @@ namespace PlantUML
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +\""*(?<name>[\w\W ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\.\#]+(?<direction>[\w]+)*[\->\(\)o\[\]\.\#]*) *(?<rightbracket>\[*)(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
 
-        private static readonly Regex notes = new(@"note *((?<sl>(?<placement>\w+) of (?<target>\w+) *: *(?<text>.*))|(?<sl>(?<placement>\w+) *: *(?<text>.*))|(?<sl>\""(?<text>[\w\W]+)\"" as (?<alias>\w+))|(?<placement>\w+) of (?<target>\w+)| as (?<alias>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
 
         private static string Clean(string name)
         {
@@ -55,7 +55,7 @@ namespace PlantUML
 
             Dictionary<string, UMLDataType> aliases = new();
 
-            bool swallowingNotes = false;
+
 
             Stack<string> brackets = new();
             Regex removeGenerics = new("\\w+");
@@ -67,6 +67,7 @@ namespace PlantUML
             packagesStack.Push(defaultPackage);
             UMLPackage? currentPackage = defaultPackage;
 
+            CommonParsings cp = new CommonParsings(CommonParsings.ParseFlags.All);
             int linenumber = 0;
 
             while ((line = await sr.ReadLineAsync()) != null)
@@ -77,59 +78,45 @@ namespace PlantUML
                 try
                 {
 
-                    if (line == "@startuml")
+
+
+                    if (cp.ParseStart(line, (str) =>
+                    {
+                        d.Title = line[9..].Trim();
+                    }))
                     {
                         started = true;
+                        continue;
                     }
-
                     if (!started)
                     {
                         continue;
                     }
 
-                    if (line == "left to right direction")
+                    if (cp.ParseTitle(line, (str) =>
+                    {
+                        d.Title = str;
+
+                    }))
                     {
                         continue;
                     }
 
-                    if (line.StartsWith("!", StringComparison.Ordinal))
+                    if (cp.CommonParsing(line, (str) =>
                     {
-                        continue;
-                    }
-
-                    if (notes.IsMatch(line))
-                    {
-                        Match? m = notes.Match(line);
-                        if (!m.Groups["sl"].Success)
-                        {
-                            swallowingNotes = true;
-                        }
-                        else
-                        {
-                            swallowingNotes = false;
-                        }
-
-                        currentPackage.Children.Add(new UMLNote(line));
-                        if (!swallowingNotes)
-                        {
-                            continue;
-                        }
-                    }
-
-                    if (line.StartsWith("end note", StringComparison.Ordinal))
-                    {
-                        swallowingNotes = false;
-                        continue;
-                    }
-
-                    if (swallowingNotes)
+                        currentPackage.Children.Add(new UMLNote(str));
+                    }, (str) =>
                     {
                         if (d.Entities.Last() is UMLNote n)
                         {
                             n.Text += "\r\n" + line;
                         }
+
+                    }))
+                    {
                         continue;
                     }
+
                     if (line.StartsWith("participant", StringComparison.Ordinal))
                     {
                         return null;
@@ -145,16 +132,8 @@ namespace PlantUML
                         currentPackage = packagesStack.First();
                     }
 
-                    if (line.StartsWith("title", StringComparison.Ordinal))
-                    {
-                        if (line.Length > 6)
-                        {
-                            d.Title = line[6..];
-                        }
 
-                        continue;
-                    }
-                    else if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex.IsMatch(line))
+                    if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex.IsMatch(line))
                     {
                         Match? s = _packageRegex.Match(line);
 
