@@ -1,7 +1,7 @@
 @startuml
 
 title test.seq
-
+participant A
 participant	C1 
 participant C2
 alt if dead
@@ -10,6 +10,7 @@ alt if dead
         C2 -> C1 : int test()
     else
         C2 -> C1 : C2 la()
+        C2 -> C1 : C2 la2()
     end
 end
 C2 -> C1 : int test()
@@ -17,4 +18,5 @@ C2 -> C1: C2 la()
 C2-> C1: int test()
 C1 -> C1: C2 la()
 C1 ..> C2 :la
+C1 ..> A : void start(int timeout)
 @enduml

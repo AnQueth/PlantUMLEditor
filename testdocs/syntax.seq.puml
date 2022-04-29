@@ -1,0 +1,80 @@
+@startuml
+skinparam responseMessageBelowArrow true
+title syntax.seq
+entity Bob #red
+box "testing box" #green
+entity jane
+end box
+entity Alice  << (C,#ADD1B2) Testable >>
+entity "I have a really\nlong name" as L #99FF99
+/' You can also declare:
+   entity L as "I have a really\nlong name"  #99FF99
+  '/
+autonumber 
+aa -> aa : should be error if comment worked
+Bob ->x Alice
+note left of Alice #aqua
+This is displayed
+left of Alice.
+end note
+alt aaa 
+Bob -> Alice: aaa
+
+alt#Gold #LightBlue Successful case
+    Bob -> Alice: Authentication Accepted
+else #Pink Failure
+    Bob -> Alice: Authentication Rejected
+end
+Bob -> Alice
+Alice -> Bob
+ 
+note over Alice : test
+/ note over Bob: asdada
+
+Bob ->> Alice
+'aaaaa
+/'dwwdw'/ 
+Bob ->> Alice2
+'expect error abovedsfs  fdsffsfsfsfsssfdfsdfsdfs
+Bob -[#red]\ Alice
+note left
+  This is **bold**
+  This is //italics//
+  This is ""monospaced""
+  This is --stroked--
+  This is __underlined__
+  This is ~~waved~~
+end note
+== separator ==
+Bob \\- Alice
+hnote over Bob, Alice
+test
+asdasasa
+adada
+
+endhnote
+Bob //-- Alice
+[-> Alice : lalll
+note over Alice, Bob #FFAAAA: This is displayed\n over Bob and Alice.
+Bob ->> Alice2
+'expect error above
+...
+Bob ->o Alice
+group My own label [My own label 2]
+    Alice -> L : Log attack start
+    loop 1000 times
+        Alice -> Bob: DNS Attack
+    end
+    Alice -> L : Log attack end
+end
+hnote across : Note across all \n part.
+Bob o\\-- Alice
+Bob ->> Alice2
+'expect error above
+alt test
+    Bob <-> Alice
+    Bob <->o Alice
+else aaa
+    Alice -> Bob : test
+end
+@enduml

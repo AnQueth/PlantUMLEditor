@@ -1,21 +1,27 @@
 @startuml
+
 title defaults.class
+
 class int {
 }
+
 class void {
 }
+
 class G {
 }
+
 class string {
 }
+
+
 note top of string
 aaa
 end note
 
-
 'aaaa fgggg
- 
 
+class h {
+}
 
 @enduml
-

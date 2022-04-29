@@ -1109,8 +1109,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         public void DrawText(DrawingContext col)
         {
-            //Debug.WriteLine("DrawText");
-            Stopwatch? sw = Stopwatch.StartNew();
+
 
             int cf = _lastKnownFirstCharacterIndex;
             int cl = _lastKnownLastCharacterIndex;
@@ -1267,8 +1266,8 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
             col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), _lineHeight));
 
-            sw.Stop();
-            Debug.WriteLine($"sw = {sw.ElapsedMilliseconds}");
+
+
         }
 
         public void GotoLine(int lineNumber, string? findText)

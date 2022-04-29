@@ -83,7 +83,19 @@ namespace PlantUML
                     foreach (UMLProperty? prop in item.Properties.Where(z => !dataTypes.Any(p => p == z.ObjectType)))
                     {
                         writer.Write(GetVisibility(prop.Visibility));
+                        if (prop.IsStatic)
+                        {
+                            writer.Write(" {static}");
+                        }
+
+                        if (prop.IsAbstract)
+                        {
+                            writer.Write(" {abstract}");
+                        }
+
                         writer.Write(" ");
+
+
 
                         if (prop.ListType == ListTypes.None)
                         {
@@ -113,6 +125,16 @@ namespace PlantUML
                     foreach (UMLMethod? me in item.Methods)
                     {
                         writer.Write(GetVisibility(me.Visibility));
+                        if (me.IsStatic)
+                        {
+                            writer.Write(" {static}");
+                        }
+
+                        if (me.IsAbstract)
+                        {
+                            writer.Write(" {abstract}");
+                        }
+
                         writer.Write(' ');
                         writer.Write(me.ReturnType.Name);
                         writer.Write(' ');

@@ -23,11 +23,11 @@ namespace PlantUML
 
         private static readonly Regex _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
 
-        private static readonly Regex _classLine = new("((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
+        private static readonly Regex _classLine = new("(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
         private static readonly Regex _packageRegex = new("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"* *\\{", RegexOptions.Compiled);
 
-        private static readonly Regex _propertyLine = new("^\\s*(?<visibility>[\\+\\-\\~\\#])*\\s*(?<type>[\\w\\<\\>\\,\\[\\] \\?]+)\\s+(?<name>[\\w_]+)\\s*$", RegexOptions.Compiled);
+        private static readonly Regex _propertyLine = new(@"^\s*(?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+)\s*$", RegexOptions.Compiled);
 
         private static readonly Regex baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
@@ -100,13 +100,12 @@ namespace PlantUML
             Dictionary<string, UMLDataType> aliases = new();
 
 
-            bool swallowingComments = false;
 
             Stack<string> brackets = new();
             Regex removeGenerics = new("\\w+");
             Stack<UMLPackage> packagesStack = new();
 
-            CommonParsings cp = new(CommonParsings.ParseFlags.Note);
+            CommonParsings cp = new(CommonParsings.ParseFlags.All);
             packagesStack.Push(defaultPackage);
             UMLPackage? currentPackage = defaultPackage;
             int lineNumber = 0;
@@ -140,21 +139,25 @@ namespace PlantUML
 
                 if (cp.CommonParsing(line, (str) =>
                 {
-                    currentPackage.Children.Add(new UMLNote(line));
-                }, (str) =>
+                    currentPackage.Children.Add(new UMLOther(str));
+                },
+                (str) =>
                 {
-                    if (currentPackage.Children.Last() is UMLNote n)
-                    {
-                        n.Text += "\r\n" + line;
-                    }
-
-                }, (str) =>
+                    currentPackage.Children.Add(new UMLNote(str));
+                },
+                (str) =>
                 {
-                    if (currentPackage.Children.Last() is UMLNote n)
-                    {
-                        n.Text += "\r\nend note";
-                    }
-                }))
+                    currentPackage.Children.Add(new UMLOther(str));
+                },
+                (str) =>
+                {
+                    currentPackage.Children.Add(new UMLComment(str));
+                },
+                (str) =>
+                {
+                    currentPackage.Children.Add(new UMLOther(str));
+                }
+                ))
                 {
                     continue;
                 }
@@ -165,47 +168,11 @@ namespace PlantUML
                     continue;
                 }
 
-                if (line.StartsWith("!", StringComparison.Ordinal))
-                {
-                    currentPackage.Children.Add(new UMLOther(line));
-                    continue;
-                }
 
-                if (line == "left to right direction")
-                {
-                    currentPackage.Children.Add(new UMLOther(line));
-                    continue;
-                }
 
-                if (line.StartsWith("'", StringComparison.Ordinal))
-                {
-                    currentPackage.Children.Add(new UMLComment(line));
-                    continue;
-                }
 
-                if (line.StartsWith("/'", StringComparison.Ordinal))
-                {
-                    string comment = line;
-                    swallowingComments = true;
-                }
 
-                if (line.Contains("'/", StringComparison.Ordinal) && swallowingComments)
-                {
-                    if (currentPackage.Children.Last() is UMLComment n)
-                    {
-                        n.Text += "\r\n" + line;
-                    }
-                    swallowingComments = false;
-                    continue;
-                }
-                if (swallowingComments)
-                {
-                    if (currentPackage.Children.Last() is UMLComment n)
-                    {
-                        n.Text += "\r\n" + line;
-                    }
-                    continue;
-                }
+
 
                 if (line.StartsWith("participant", StringComparison.Ordinal)
                     || line.StartsWith("actor", StringComparison.Ordinal))
@@ -379,7 +346,7 @@ namespace PlantUML
                                     }
                                 }
 
-                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l));
+                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l, false, false));
                             }
                         }
                         continue;
@@ -577,7 +544,9 @@ namespace PlantUML
 
                 dataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
                 {
-                    IsStatic = modifier == "static"
+                    IsStatic = modifier == "static",
+                    IsAbstract = modifier == "abstract"
+
                 });
             }
             else if (_propertyLine.IsMatch(line))
@@ -585,6 +554,8 @@ namespace PlantUML
                 Match? g = _propertyLine.Match(line);
 
                 UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
+
+                string modifier = g.Groups["modifier"].Value;
 
                 CollectionRecord? p = CreateFrom(g.Groups["type"].Value);
 
@@ -600,12 +571,12 @@ namespace PlantUML
                     aliases.Add(p.Word, c);
                 }
 
-                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType));
+                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType, modifier == "{static}", modifier == "{abstract}"));
             }
             else
             {
                 dataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty),
-                    UMLVisibility.None, ListTypes.None));
+                    UMLVisibility.None, ListTypes.None, false, false));
             }
         }
     }

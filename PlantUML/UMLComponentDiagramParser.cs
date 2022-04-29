@@ -104,18 +104,29 @@ namespace PlantUML
 
                     if (cp.CommonParsing(line, (str) =>
                     {
-                        currentPackage.Children.Add(new UMLNote(str));
-                    }, (str) =>
-                    {
-                        if (d.Entities.Last() is UMLNote n)
-                        {
-                            n.Text += "\r\n" + line;
-                        }
-
-                    }))
+                        currentPackage.Children.Add(new UMLOther(line));
+                    },
+           (str) =>
+           {
+               currentPackage.Children.Add(new UMLNote(line));
+           },
+           (str) =>
+           {
+               currentPackage.Children.Add(new UMLOther(line));
+           },
+           (str) =>
+           {
+               currentPackage.Children.Add(new UMLComment(line));
+           },
+           (str) =>
+           {
+               currentPackage.Children.Add(new UMLOther(line));
+           }
+           ))
                     {
                         continue;
                     }
+
 
                     if (line.StartsWith("participant", StringComparison.Ordinal))
                     {

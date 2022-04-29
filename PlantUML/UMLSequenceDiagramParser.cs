@@ -13,11 +13,10 @@ namespace PlantUML
 {
     public class UMLSequenceDiagramParser : IPlantUMLParser
     {
-        private static readonly Regex _lifeLineRegex = new(@"^(?<type>participant|actor|control|component|database|boundary|entity|collections)\s+\""*(?<name>[\w \.]+?(\s*\<((?<generics>[\s\w]+)\,*)*\>)*)\""*(\s+as (?<alias>[\w]+))*$", RegexOptions.Compiled);
+        private static readonly Regex _lifeLineRegex = new(@"^(?<type>participant|actor|control|component|database|boundary|entity|collections)\s+\""*(?<name>[\w\\ \.]+?(\s*\<((?<generics>[\s\w]+)\,*)*\>)*)\""*(\s+as (?<alias>[\w]+))*? *([\#\<]+.*)*$", RegexOptions.Compiled);
         private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.*)");
 
-        private static readonly Regex lineConnectionRegex = new("^([a-zA-Z0-9\\>\\<\\,]+|[\\-<>\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><\\\\/\\]\\[\\#]+)\\s*([a-zA-Z0-9\\-><]*)\\s*\\:*\\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
-        private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+)(\\s+of)* (?<target>\\w+) *: *(?<text>.*))|(?<placement>\\w+)(\\s+of)*\\s+(?<target>\\w+)|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+)(\\s+of)*  (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
+        private static readonly Regex lineConnectionRegex = new(@"^([a-zA-Z0-9\>\<\,]+|[\-<>\]\[\#]+)\s*([a-zA-Z0-9\-\.\>\<\\\/\]\[\#]+)\s*([a-zA-Z0-9\-><]*)\s*\:*\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
 
         private static readonly Regex other = new("^(activate|deactivate)\\w*", RegexOptions.Compiled);
 
@@ -166,20 +165,86 @@ namespace PlantUML
                 }
 
 
+                if (line.StartsWith("...", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
+                if (line.StartsWith("||", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (line.StartsWith("autoactivate", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (line.StartsWith("return", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                if (line.StartsWith("hide", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                if (line.StartsWith("box", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+                if (line.StartsWith("end box", StringComparison.Ordinal))
+                {
+                    continue;
+                }
                 if (line.StartsWith("==", StringComparison.Ordinal) && line.EndsWith("==", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                if (cp.CommonParsing(line, (s) => { }, (s) => { }))
+                if (cp.CommonParsing(line, (str) =>
+                {
+
+                },
+               (str) =>
+               {
+
+               },
+               (str) =>
+               {
+
+               },
+               (str) =>
+               {
+
+               },
+               (str) =>
+               {
+
+               }
+               ))
                 {
                     continue;
                 }
 
+                if (line.StartsWith("autonumber", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
+                if (line.StartsWith("header", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
+                if (line.StartsWith("footer", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
+                if (line.StartsWith("newpage", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 if (TryParseLifeline(line, types, lineNumber, out UMLSequenceLifeline? lifeline))
                 {
@@ -193,22 +258,8 @@ namespace PlantUML
                 {
 
 
-                    if (TryParseAllConnections(line, d, types, previous, lineNumber, out UMLSequenceConnection? connection))
-                    {
 
-
-                        if (activeBlocks.Count == 0)
-                        {
-                            d.Entities.Add(connection);
-                        }
-                        else
-                        {
-                            activeBlocks.Peek().Entities.Add(connection);
-                        }
-
-                        previous = connection;
-                    }
-                    else if (TryParseUMLSequenceBlockSection(line, lineNumber, out UMLSequenceBlockSection? sectionBlock))
+                    if (TryParseUMLSequenceBlockSection(line, lineNumber, out UMLSequenceBlockSection? sectionBlock))
                     {
 
 
@@ -248,6 +299,21 @@ namespace PlantUML
                         {
                             activeBlocks.Peek().Entities.Add(uMLSequenceOther);
                         }
+                    }
+                    else if (TryParseAllConnections(line, d, types, previous, lineNumber, out UMLSequenceConnection? connection))
+                    {
+
+
+                        if (activeBlocks.Count == 0)
+                        {
+                            d.Entities.Add(connection);
+                        }
+                        else
+                        {
+                            activeBlocks.Peek().Entities.Add(connection);
+                        }
+
+                        previous = connection;
                     }
                     else
                     {
@@ -308,6 +374,10 @@ namespace PlantUML
                     case "group":
                         block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Group, lineNumber);
                         return true;
+
+                    case "critical":
+                        block = new UMLSequenceBlockSection(text, UMLSequenceBlockSection.SectionTypes.Critical, lineNumber);
+                        return true;
                 }
             }
             block = null;
@@ -320,10 +390,7 @@ namespace PlantUML
         {
             connection = null;
 
-            if (!arrow.Contains("->", StringComparison.Ordinal))
-            {
-                return false;
-            }
+
 
             UMLSequenceLifeline? from = d.LifeLines.Find(p => p.Alias == fromAlias);
 

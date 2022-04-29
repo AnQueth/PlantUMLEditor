@@ -3,12 +3,6 @@ using System.Text;
 
 namespace UMLModels
 {
-    public enum Overridability
-    {
-        None,
-        Virtual,
-        Abstract
-    }
 
     public class UMLMethod : UMLSignature
     {
@@ -42,7 +36,7 @@ namespace UMLModels
             get; init;
         }
 
-        public Overridability OverridableType
+        public bool IsAbstract
         {
             get; init;
         }
