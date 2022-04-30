@@ -4,15 +4,22 @@ namespace UMLModels
 {
     public class UMLClass : UMLDataType
     {
-        public UMLClass(string @namespace, bool isAbstract,
+        public UMLClass(string stereoType, string @namespace, bool isAbstract,
             string name, IEnumerable<UMLDataType> baseClasses, params UMLInterface[] interfaces) : base(name, @namespace, interfaces)
         {
+            StereoType = stereoType;
             if (baseClasses is not null)
             {
                 Bases.AddRange(baseClasses);
             }
 
             IsAbstract = isAbstract;
+        }
+
+
+        public string StereoType
+        {
+            get; set;
         }
 
         public bool IsAbstract

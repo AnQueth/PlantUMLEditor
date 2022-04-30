@@ -67,7 +67,7 @@ namespace PlantUML
             packagesStack.Push(defaultPackage);
             UMLPackage? currentPackage = defaultPackage;
 
-            CommonParsings cp = new CommonParsings(CommonParsings.ParseFlags.All);
+            CommonParsings cp = new CommonParsings();
             int linenumber = 0;
 
             while ((line = await sr.ReadLineAsync()) != null)
@@ -106,9 +106,9 @@ namespace PlantUML
                     {
                         currentPackage.Children.Add(new UMLOther(line));
                     },
-           (str) =>
+           (str, alias) =>
            {
-               currentPackage.Children.Add(new UMLNote(line));
+               currentPackage.Children.Add(new UMLNote(line, alias));
            },
            (str) =>
            {

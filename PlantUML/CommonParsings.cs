@@ -5,32 +5,22 @@ namespace PlantUML
 {
     public class CommonParsings
     {
-        [Flags]
-        public enum ParseFlags
-        {
-            Tite = 1,
-            Note = 2,
-            Direction = 4,
-            SkinParam = 8,
-            PreProcessor = 16,
-            Comment = 32,
-            All = Tite | Note | Direction | SkinParam | PreProcessor | Comment
 
-        }
 
 
         private bool _swallowingNotes;
         private bool _swallowingSkinParams;
         private bool _swallowingComment;
-        private readonly ParseFlags _parseFlag;
+        private string? _currentNotesAlias;
+
         private readonly StringBuilder _sbReader = new();
 
-        public CommonParsings(ParseFlags parseFlag)
+        public CommonParsings()
         {
-            _parseFlag = parseFlag;
+
         }
 
-        internal bool CommonParsing(string line, Action<string> otherCB, Action<string> noteCB,
+        internal bool CommonParsing(string line, Action<string> otherCB, Action<string, string?> noteCB,
             Action<string> skinParamsCB, Action<string> commentCB, Action<string> precompilerCB)
         {
             if (string.IsNullOrWhiteSpace(line))
@@ -38,136 +28,173 @@ namespace PlantUML
                 return true;
             }
 
-            if ((_parseFlag & ParseFlags.Direction) == ParseFlags.Direction)
+            if (line == "@enduml")
             {
-
-                if (line == "left to right direction")
-                {
-                    otherCB(line);
-                    return true;
-                }
+                return true;
             }
-            if ((_parseFlag & ParseFlags.Comment) == ParseFlags.Comment)
+
+
+
+            if (line == "left to right direction")
             {
-                if (line.StartsWith("'", StringComparison.Ordinal) && !line.StartsWith("'/", StringComparison.Ordinal))
-                {
-                    commentCB(line);
-                    return true;
-                }
-                else if (line.StartsWith("/'", StringComparison.Ordinal) && line.EndsWith("'/", StringComparison.Ordinal))
-                {
-                    commentCB(line);
-                    return true;
-                }
-                else if (line.StartsWith("/'", StringComparison.Ordinal))
+                otherCB(line);
+                return true;
+            }
+            if (line.StartsWith("show", StringComparison.Ordinal))
+            {
+                otherCB(line);
+                return true;
+            }
+            if (line.StartsWith("remove", StringComparison.Ordinal))
+            {
+                otherCB(line);
+                return true;
+            }
+            if (line.StartsWith("hide", StringComparison.Ordinal))
+            {
+                otherCB(line);
+                return true;
+            }
+
+            if (line.StartsWith("scale", StringComparison.Ordinal))
+            {
+                otherCB(line);
+                return true;
+            }
+
+            if (line.StartsWith("'", StringComparison.Ordinal) && !line.StartsWith("'/", StringComparison.Ordinal))
+            {
+                commentCB(line);
+                return true;
+            }
+            else if (line.StartsWith("/'", StringComparison.Ordinal) && line.EndsWith("'/", StringComparison.Ordinal))
+            {
+                commentCB(line);
+                return true;
+            }
+            else if (line.StartsWith("/'", StringComparison.Ordinal))
+            {
+                _sbReader.Clear();
+                _sbReader.AppendLine(line);
+                _swallowingComment = true;
+                return true;
+            }
+
+            else if (_swallowingComment && line.StartsWith("'/", StringComparison.Ordinal))
+            {
+                _sbReader.AppendLine(line);
+                commentCB(_sbReader.ToString());
+                _swallowingComment = false;
+                return true;
+            }
+            else if (_swallowingComment)
+            {
+                _sbReader.AppendLine(line);
+                return true;
+            }
+
+            if (line.StartsWith("!", StringComparison.Ordinal))
+            {
+                precompilerCB(line);
+                return true;
+            }
+
+            if (line.StartsWith("skinparam", StringComparison.Ordinal))
+            {
+                if (line.EndsWith("{", StringComparison.Ordinal))
                 {
                     _sbReader.Clear();
                     _sbReader.AppendLine(line);
-                    _swallowingComment = true;
-                    return true;
+                    _swallowingSkinParams = true;
                 }
-
-                else if (_swallowingComment && line.StartsWith("'/", StringComparison.Ordinal))
+                else
                 {
-                    _sbReader.AppendLine(line);
-                    commentCB(_sbReader.ToString());
-                    _swallowingComment = false;
-                    return true;
-                }
-                else if (_swallowingComment)
-                {
-                    _sbReader.AppendLine(line);
-                    return true;
-                }
-            }
-            if ((_parseFlag & ParseFlags.PreProcessor) == ParseFlags.PreProcessor)
-            {
-                if (line.StartsWith("!", StringComparison.Ordinal))
-                {
-                    precompilerCB(line);
-                    return true;
-                }
-            }
-            if ((_parseFlag & ParseFlags.SkinParam) == ParseFlags.SkinParam)
-            {
-                if (line.StartsWith("skinparam", StringComparison.Ordinal))
-                {
-                    if (line.EndsWith("{", StringComparison.Ordinal))
-                    {
-                        _sbReader.Clear();
-                        _sbReader.AppendLine(line);
-                        _swallowingSkinParams = true;
-                    }
-                    else
-                    {
-                        skinParamsCB(line);
-                        _swallowingSkinParams = false;
-                    }
-                    return true;
-
-                }
-
-                if (_swallowingSkinParams && line == "}")
-                {
-
-                    _sbReader.AppendLine(line);
-                    skinParamsCB(_sbReader.ToString());
+                    skinParamsCB(line);
                     _swallowingSkinParams = false;
-                    return true;
                 }
+                return true;
 
-                if (_swallowingSkinParams)
-                {
-                    _sbReader.AppendLine(line);
-                    return true;
-                }
             }
-            if ((_parseFlag & ParseFlags.Note) == ParseFlags.Note)
+
+            if (_swallowingSkinParams && line == "}")
             {
-                if ((line.StartsWith("/", StringComparison.Ordinal) && line.Contains("note", StringComparison.Ordinal) && !line.Contains("end", StringComparison.Ordinal)) ||
-                    line.StartsWith("note", StringComparison.Ordinal) ||
-                    line.StartsWith("hnote", StringComparison.Ordinal) ||
-                    line.StartsWith("rnote", StringComparison.Ordinal))
+
+                _sbReader.AppendLine(line);
+                skinParamsCB(_sbReader.ToString());
+                _swallowingSkinParams = false;
+                return true;
+            }
+
+            if (_swallowingSkinParams)
+            {
+                _sbReader.AppendLine(line);
+                return true;
+            }
+
+            if ((line.StartsWith("/", StringComparison.Ordinal) && line.Contains("note", StringComparison.Ordinal) && !line.Contains("end", StringComparison.Ordinal)) ||
+                line.StartsWith("note", StringComparison.Ordinal) ||
+                line.StartsWith("hnote", StringComparison.Ordinal) ||
+                line.StartsWith("rnote", StringComparison.Ordinal))
+            {
+                string[] items = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (items.Length > 2)
                 {
-
-                    if (line.Contains(":", StringComparison.Ordinal) && !line.Contains("::", StringComparison.Ordinal))
+                    if (items[^2] == "as")
                     {
-                        noteCB(line);
-                        _swallowingNotes = false;
-                        return true;
+                        _currentNotesAlias = items[^1];
                     }
-                    else
-                    {
-                        _sbReader.Clear();
-                        _sbReader.AppendLine(line);
-                        _swallowingNotes = true;
-                        return true;
-                    }
-
-
-
 
                 }
-
-                if (line.StartsWith("end note", StringComparison.Ordinal) ||
-                    line.StartsWith("endhnote", StringComparison.Ordinal) ||
-                    line.StartsWith("endrnote", StringComparison.Ordinal))
+                else
+                {
+                    _currentNotesAlias = null;
+                }
+                if (line.Contains("\"", StringComparison.Ordinal) && line.Contains(" as ", StringComparison.Ordinal) && !line.Contains(":", StringComparison.Ordinal))
                 {
 
-                    _sbReader.AppendLine(line);
-                    noteCB(_sbReader.ToString());
+
+                    noteCB(line, _currentNotesAlias);
                     _swallowingNotes = false;
                     return true;
                 }
-
-                if (_swallowingNotes)
+                if (line.Contains(":", StringComparison.Ordinal) && !line.Contains("::", StringComparison.Ordinal))
                 {
-
-                    _sbReader.AppendLine(line);
-
+                    noteCB(line, null);
+                    _swallowingNotes = false;
                     return true;
                 }
+                else
+                {
+                    _sbReader.Clear();
+                    _sbReader.AppendLine(line);
+                    _swallowingNotes = true;
+                    return true;
+                }
+
+
+
+
             }
+
+            if (line.StartsWith("end note", StringComparison.Ordinal) ||
+                line.StartsWith("endhnote", StringComparison.Ordinal) ||
+                line.StartsWith("endrnote", StringComparison.Ordinal))
+            {
+
+                _sbReader.AppendLine(line);
+                noteCB(_sbReader.ToString(), _currentNotesAlias);
+                _swallowingNotes = false;
+                return true;
+            }
+
+            if (_swallowingNotes)
+            {
+
+                _sbReader.AppendLine(line);
+
+                return true;
+            }
+
             return false;
         }
 

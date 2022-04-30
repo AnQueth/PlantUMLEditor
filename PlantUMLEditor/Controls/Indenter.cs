@@ -13,7 +13,7 @@ namespace PlantUMLEditor.Controls
         private static readonly Regex reg = new("\n");
         private static readonly Regex removeSpaces = new(" {2,}", RegexOptions.Compiled);
         private static readonly Regex tab = new(@"^(alt|opt|loop|try|group|catch|break|par)\s+", RegexOptions.Compiled);
-        private static readonly Regex tab2 = new(@"^\s*(abstract|class|interface|package|enum|together|component|database|rectangle|queue|node|folder|cloud).+\{", RegexOptions.Compiled);
+        private static readonly Regex tab2 = new(@"^\s*(abstract|class|interface|package|enum|together|component|database|rectangle|queue|node|folder|cloud|skinparam).+\{", RegexOptions.Compiled);
         private static readonly Regex tab3 = new(@"^\s*(if\s+\(.*|repeat(?!\s*while).*|fork(?!\s*again))$", RegexOptions.Compiled);
         private static readonly Regex tabReset = new(@"^(else\s?.*|fork\s+again)", RegexOptions.Compiled);
         private static readonly Regex tabStop = new(@"^(\}|end(?! note)|endif|repeat\s+while.*)", RegexOptions.Compiled);
@@ -24,15 +24,6 @@ namespace PlantUMLEditor.Controls
             {
                 return indentLevel;
             }
-
-            //if (notes.IsMatch(line))
-            //{
-            //    sb.AppendLine();
-            //    sb.AppendLine(line);
-            //    sb.AppendLine();
-
-            //    return indentLevel;
-            //}
 
             line = removeSpaces.Replace(line, " ");
 
@@ -140,10 +131,10 @@ namespace PlantUMLEditor.Controls
                     sb.AppendLine();
                 }
 
-                if ((!processedTitle && oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase)) || oldLine.StartsWith("@startuml",
-                    StringComparison.InvariantCultureIgnoreCase) || (oldLine == "}" && lines[x].Trim() != "}"))
+                if ((!processedTitle && oldLine.StartsWith("title", StringComparison.Ordinal)) || oldLine.StartsWith("@startuml",
+                    StringComparison.Ordinal) || (oldLine == "}" && lines[x].Trim() != "}"))
                 {
-                    if (oldLine.StartsWith("title", StringComparison.InvariantCultureIgnoreCase))
+                    if (oldLine.StartsWith("title", StringComparison.Ordinal))
                     {
                         processedTitle = true;
                     }

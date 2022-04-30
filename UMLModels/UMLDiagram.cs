@@ -4,6 +4,8 @@ namespace UMLModels
 {
     public abstract class UMLDiagram
     {
+        private readonly List<UMLNoteConnection> _noteConnections = new();
+        public IReadOnlyCollection<UMLNoteConnection> NoteConnections => _noteConnections;
         public UMLDiagram(string title, string fileName)
         {
             Title = title;
@@ -18,7 +20,10 @@ namespace UMLModels
         {
             get; set;
         }
-
+        public void AddNoteConnection(UMLNoteConnection uMLNoteConnection)
+        {
+            _noteConnections.Add(uMLNoteConnection);
+        }
         public void AddLineError(string text, int lineNumber)
         {
             if (string.IsNullOrEmpty(text) || text == "}" || text == "@startuml" || text == "@enduml")

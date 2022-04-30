@@ -5,13 +5,12 @@ title test.class
 !$f = true
 skinparam lalaa aaa
 skinparam class {
-color green
+    color green
 }
 
 abstract class A {
     /'
     alalal
-
     '/
 
     {static} int counter
@@ -20,8 +19,8 @@ abstract class A {
 
 package La{
     class C1 {
-        C2 la()
         int test()
+        C2 la()
         C2 la2()
     }
 }
@@ -53,4 +52,7 @@ This method is now explained in a UML note
 end note
 
 C3 --* C1 : aa
+
+note on link: lalaala
+
 @enduml

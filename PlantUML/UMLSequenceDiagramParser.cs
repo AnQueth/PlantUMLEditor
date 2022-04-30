@@ -119,7 +119,7 @@ namespace PlantUML
             int lineNumber = 0;
             UMLSequenceConnection? previous = null;
 
-            CommonParsings cp = new CommonParsings(CommonParsings.ParseFlags.All);
+            CommonParsings cp = new CommonParsings();
 
             while ((line = await sr.ReadLineAsync()) != null)
             {
@@ -184,10 +184,7 @@ namespace PlantUML
                 {
                     continue;
                 }
-                if (line.StartsWith("hide", StringComparison.Ordinal))
-                {
-                    continue;
-                }
+
                 if (line.StartsWith("box", StringComparison.Ordinal))
                 {
                     continue;
@@ -205,7 +202,7 @@ namespace PlantUML
                 {
 
                 },
-               (str) =>
+               (str, alias) =>
                {
 
                },

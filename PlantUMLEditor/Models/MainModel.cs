@@ -1104,7 +1104,7 @@ namespace PlantUMLEditor.Models
                 UMLClassDiagram? f = Documents.ClassDocuments.FirstOrDefault(p => string.CompareOrdinal(p.Title, DEFAULTSCLASS) == 0);
                 if (f != null)
                 {
-                    f.Package.Children.Add(new UMLClass("default", false, missingDataTypeMessage.MissingDataTypeName, new List<UMLDataType>()));
+                    f.Package.Children.Add(new UMLClass("", "default", false, missingDataTypeMessage.MissingDataTypeName, new List<UMLDataType>()));
 
                     string? wf = GetWorkingFolder(true);
                     if (wf == null)

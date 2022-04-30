@@ -25,13 +25,13 @@ namespace PlantUML
 
         private static readonly Regex _classLine = new("(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
-        private static readonly Regex _packageRegex = new("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"* *\\{", RegexOptions.Compiled);
+        private static readonly Regex _packageRegex = new("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"*[\\w\\W]*\\{", RegexOptions.Compiled);
 
         private static readonly Regex _propertyLine = new(@"^\s*(?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+)\s*$", RegexOptions.Compiled);
 
-        private static readonly Regex baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
+        private static readonly Regex _baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
-        private static readonly Regex composition = new("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\|\\<]*[\\-\\.]+[\\*o\\|\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)", RegexOptions.Compiled);
+        private static readonly Regex _composition = new("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\|\\<]*[\\-\\.]+[\\*o\\|\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)", RegexOptions.Compiled);
 
 
         private static string Clean(string name)
@@ -105,7 +105,7 @@ namespace PlantUML
             Regex removeGenerics = new("\\w+");
             Stack<UMLPackage> packagesStack = new();
 
-            CommonParsings cp = new(CommonParsings.ParseFlags.All);
+            CommonParsings cp = new();
             packagesStack.Push(defaultPackage);
             UMLPackage? currentPackage = defaultPackage;
             int lineNumber = 0;
@@ -141,9 +141,9 @@ namespace PlantUML
                 {
                     currentPackage.Children.Add(new UMLOther(str));
                 },
-                (str) =>
+                (str, alias) =>
                 {
-                    currentPackage.Children.Add(new UMLNote(str));
+                    currentPackage.Children.Add(new UMLNote(str, alias));
                 },
                 (str) =>
                 {
@@ -180,7 +180,7 @@ namespace PlantUML
                     return null;
                 }
 
-                UMLDataType? DataType = null;
+                UMLDataType? currentDataType = null;
 
                 if (line == "}" && brackets.Count > 0 && brackets.Peek() == PACKAGE)
                 {
@@ -236,9 +236,21 @@ namespace PlantUML
                     }
 
                     string package = GetPackage(packages);
+                    string name = Clean(g.Groups["name"].Value);
+                    string stereotype = string.Empty;
+                    var ix = name.IndexOf(" <<", StringComparison.Ordinal);
+                    if (ix != -1)
+                    {
 
-                    DataType = new UMLClass(package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
-                        , Clean(g.Groups["name"].Value), new List<UMLDataType>());
+                        var eix = name.IndexOf(">>", ix, StringComparison.Ordinal);
+                        if (eix != -1)
+                        {
+                            stereotype = name[(ix + 3)..eix];
+                            name = name[..ix].Trim();
+                        }
+                    }
+                    currentDataType = new UMLClass(stereotype, package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
+                        , name, new List<UMLDataType>());
 
                     if (line.EndsWith("{", StringComparison.Ordinal))
                     {
@@ -250,7 +262,7 @@ namespace PlantUML
                     string package = GetPackage(packages);
                     if (line.Length > 4)
                     {
-                        DataType = new UMLEnum(package, Clean(line[5..]));
+                        currentDataType = new UMLEnum(package, Clean(line[5..]));
                     }
 
                     if (line.EndsWith("{", StringComparison.Ordinal))
@@ -277,13 +289,13 @@ namespace PlantUML
                             name = Clean(line[9..]).Replace("\"", string.Empty);
                         }
 
-                        DataType = new UMLInterface(package, name
+                        currentDataType = new UMLInterface(package, name
                           ,
                             new List<UMLDataType>());
 
                         if (alias != null)
                         {
-                            aliases.Add(alias, DataType);
+                            aliases.Add(alias, currentDataType);
                         }
                     }
                     if (line.EndsWith("{", StringComparison.Ordinal))
@@ -291,36 +303,49 @@ namespace PlantUML
                         brackets.Push("interface");
                     }
                 }
-                else if (baseClass.IsMatch(line))
+                else if (_baseClass.IsMatch(line))
                 {
-                    Match? m = baseClass.Match(line);
-                    UMLDataType? cl = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["first"].Value);
-                    if (cl == null)
+                    Match? m = _baseClass.Match(line);
+
+                    string first = m.Groups["first"].Value;
+                    string second = m.Groups["second"].Value;
+                    UMLDataType? cl = d.DataTypes.FirstOrDefault(p => p.Name == first);
+
+                    if (cl == null && d.Notes.FirstOrDefault(z => z.Alias == first) == null)
                     {
-                        d.Errors.Add(new UMLError("Could not find parent type", m.Groups["first"].Value, lineNumber));
+                        d.Errors.Add(new UMLError("Could not find parent type", first, lineNumber));
+                        continue;
                     }
-                    UMLDataType? i = d.DataTypes.FirstOrDefault(p => p.Name == m.Groups["second"].Value
-                || removeGenerics.Match(p.Name).Value == m.Groups["second"].Value);
-                    if (i == null)
+
+                    UMLDataType? i = d.DataTypes.FirstOrDefault(p => p.Name == second || removeGenerics.Match(p.Name).Value == second);
+
+                    if (i == null && d.Notes.FirstOrDefault(z => z.Alias == second) == null)
                     {
                         if (!aliases.TryGetValue(m.Groups["second"].Value, out i))
                         {
-                            d.Errors.Add(new UMLError("Could not find base type", m.Groups["second"].Value, lineNumber));
+                            d.Errors.Add(new UMLError("Could not find base type", second, lineNumber));
+                            continue;
                         }
                     }
                     if (cl != null && i != null)
                     {
                         cl.Bases.Add(i);
                     }
+                    else
+                    {
+                        d.AddNoteConnection(new UMLNoteConnection(first, m.Groups["arrow"].Value, second));
+                    }
                     continue;
                 }
-                else if (composition.IsMatch(line))
+                else if (_composition.IsMatch(line))
                 {
-                    Match? m = composition.Match(line);
+                    Match? m = _composition.Match(line);
 
                     if (m.Groups["text"].Success)
                     {
-                        UMLDataType? propType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["second"].Value);
+                        string second = m.Groups["second"].Value;
+
+                        UMLDataType? propType = d.DataTypes.Find(p => p.NonGenericName == second);
                         if (propType == null)
                         {
                             d.AddLineError(line, lineNumber);
@@ -330,9 +355,13 @@ namespace PlantUML
                         else
                         {
 
-                            UMLDataType? fromType = d.DataTypes.Find(p => p.NonGenericName == m.Groups["first"].Value);
+                            string first = m.Groups["first"].Value.Trim();
 
-                            if (fromType != null && !fromType.Properties.Any(p => p.Name == m.Groups["text"].Value.Trim()))
+                            UMLDataType? fromType = d.DataTypes.Find(p => p.NonGenericName == first);
+
+
+
+                            if (fromType != null && !fromType.Properties.Any(p => p.Name == first))
                             {
                                 ListTypes l = ListTypes.None;
                                 if (m.Groups["fm"].Success)
@@ -353,20 +382,20 @@ namespace PlantUML
                     }
                 }
 
-                if (DataType != null && line.EndsWith("{", StringComparison.Ordinal))
+                if (currentDataType != null && line.EndsWith("{", StringComparison.Ordinal))
                 {
-                    if (aliases.TryGetValue(DataType.Name, out UMLDataType? newType))
+                    if (aliases.TryGetValue(currentDataType.Name, out UMLDataType? newType))
                     {
-                        newType.Namespace = DataType.Namespace;
+                        newType.Namespace = currentDataType.Namespace;
                     }
                     else
                     {
-                        aliases.Add(DataType.Name, DataType);
+                        aliases.Add(currentDataType.Name, currentDataType);
                     }
 
 
-                    DataType.LineNumber = lineNumber;
-                    currentPackage.Children.Add(DataType);
+                    currentDataType.LineNumber = lineNumber;
+                    currentPackage.Children.Add(currentDataType);
                     while ((line = await sr.ReadLineAsync()) != null)
                     {
                         lineNumber++;
@@ -386,7 +415,7 @@ namespace PlantUML
                             break;
                         }
 
-                        TryParseLineForDataType(line, aliases, DataType);
+                        TryParseLineForDataType(line, aliases, currentDataType);
                     }
                 }
                 else
@@ -414,6 +443,10 @@ namespace PlantUML
             else if (item == "+")
             {
                 return UMLVisibility.Public;
+            }
+            else if (item == "~")
+            {
+                return UMLVisibility.Internal;
             }
 
             return UMLVisibility.None;

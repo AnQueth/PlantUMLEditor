@@ -20,7 +20,7 @@ namespace PlantUMLEditor.Controls
             },
 
             {
-                new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|interface|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|show|remove|skinparam|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|interface|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                 (Colors.Blue, 1)
             },
             {
@@ -53,13 +53,15 @@ namespace PlantUMLEditor.Controls
 
         private static readonly Regex brackets = new(@"(\{|\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex notes = new(@"^\s*\/*\s*(note|hnote|rnote)((?:.+\:\s+.+?)$|((?:[.\W\w]+?)(end note|endrnote|endhnote)))", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex notes2 = new(@"^\s*\/*\s*(note|hnote|rnote).+?as\s+[\w]+", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         private static readonly Regex parenthesies = new(@"(\(|\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex comments = new Regex(@"/'[\w\W]*?'/|'.+", RegexOptions.Multiline | RegexOptions.Compiled);
 
         public List<FormatResult> FormatText(string text)
         {
             List<FormatResult> list = new();
-            MatchCollection? mn = notes.Matches(text);
+
 
             foreach (KeyValuePair<Regex, (Color, bool)> item in _mcolorCodes)
             {
@@ -106,7 +108,13 @@ namespace PlantUMLEditor.Controls
 
             }
 
-            foreach (Match m in mn)
+            foreach (Match m in notes.Matches(text))
+            {
+                list.Add(new FormatResult(Brushes.Gray, m.Index, m.Length, FontWeights.Normal, m.Value));
+
+            }
+
+            foreach (Match m in notes2.Matches(text))
             {
                 list.Add(new FormatResult(Brushes.Gray, m.Index, m.Length, FontWeights.Normal, m.Value));
 

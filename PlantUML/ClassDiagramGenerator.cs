@@ -18,6 +18,17 @@ namespace PlantUML
 
             Write(classDiagram.Package.Children, writer, postWriter, classDiagram.DataTypes);
             writer.Write(postWriter.ToString());
+            writer.WriteLine();
+
+            foreach (var nc in classDiagram.NoteConnections)
+            {
+
+                writer.Write(nc.First);
+                writer.Write(' ');
+                writer.Write(nc.Connector);
+                writer.Write(' ');
+                writer.WriteLine(nc.Second);
+            }
             writer.WriteLine("@enduml");
         }
         private static void Write(List<UMLDataType> children, TextWriter writer, StringBuilder postWrites,
@@ -65,6 +76,8 @@ namespace PlantUML
                         }
 
                         writer.Write("class ");
+
+
                     }
 
                     if (item.Name.Contains(" ") || item.Name.Contains("?"))
@@ -76,6 +89,15 @@ namespace PlantUML
                     if (item.Name.Contains(" ") || item.Name.Contains("?"))
                     {
                         writer.Write("\"");
+                    }
+                    if (item is UMLClass cl2)
+                    {
+                        if (!string.IsNullOrEmpty(cl2.StereoType))
+                        {
+                            writer.Write(" <<");
+                            writer.Write(cl2.StereoType);
+                            writer.Write(">> ");
+                        }
                     }
 
                     writer.WriteLine(" { ");
@@ -206,11 +228,21 @@ namespace PlantUML
                         }
 
                         postWrites.Append(prop.ObjectType.NonGenericName);
-                        postWrites.Append(" : ");
-                        postWrites.AppendLine(prop.Name);
+                        if (!string.IsNullOrEmpty(prop.Name))
+                        {
+
+                            postWrites.Append(" : ");
+                            postWrites.AppendLine(prop.Name);
+                        }
+                        else
+                        {
+                            postWrites.AppendLine();
+                        }
                     }
                 }
             }
+
+
         }
 
 
@@ -221,6 +253,7 @@ namespace PlantUML
                 UMLVisibility.Private => '-',
                 UMLVisibility.Protected => '#',
                 UMLVisibility.Public => '+',
+                UMLVisibility.Internal => '~',
                 _ => ' ',
             };
         }
