@@ -13,10 +13,10 @@ namespace PlantUMLEditor.Controls
         private static readonly Regex reg = new("\n");
         private static readonly Regex removeSpaces = new(" {2,}", RegexOptions.Compiled);
         private static readonly Regex tab = new(@"^(alt|opt|loop|try|group|catch|break|par)\s+", RegexOptions.Compiled);
-        private static readonly Regex tab2 = new(@"^\s*(abstract|class|interface|package|enum|together|component|database|rectangle|queue|node|folder|cloud|skinparam).+\{", RegexOptions.Compiled);
+        private static readonly Regex tab2 = new(@"(\{|\[)\s*$", RegexOptions.Compiled);
         private static readonly Regex tab3 = new(@"^\s*(if\s+\(.*|repeat(?!\s*while).*|fork(?!\s*again))$", RegexOptions.Compiled);
         private static readonly Regex tabReset = new(@"^(else\s?.*|fork\s+again)", RegexOptions.Compiled);
-        private static readonly Regex tabStop = new(@"^(\}|end(?! note)|endif|repeat\s+while.*)", RegexOptions.Compiled);
+        private static readonly Regex tabStop = new(@"^(\}|\]|end(?! note)|endif|repeat\s+while.*)", RegexOptions.Compiled);
 
         private static int ProcessLine(StringBuilder? sb, string line, ref int indentLevel)
         {

@@ -86,6 +86,7 @@ namespace PlantUMLEditor.Models
             folder = new FolderTreeViewModel(null, Path.GetTempPath(), true);
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<BaseDocumentModel>();
+            CreateNewJSONDocumentCommand = new DelegateCommand(NewJsonDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
 
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
@@ -321,7 +322,10 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
+        public DelegateCommand CreateNewJSONDocumentCommand
+        {
+            get;
+        }
         public DelegateCommand OpenExplorerCommand
         {
             get;
@@ -1455,22 +1459,36 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        private async void NewJsonDiagramHandler()
+        {
+            string? nf = GetNewFile(".json.puml");
+
+            if (!string.IsNullOrEmpty(nf))
+            {
+                string title = Path.GetFileNameWithoutExtension(nf);
+                await NewUnknownUMLDiagram(nf, title, $"@startjson\r\ntitle {title}\r\n\r\n@endjson\r\n");
+
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+            }
+        }
+
         private async void NewUnknownDiagramHandler()
         {
             string? nf = GetNewFile(".puml");
 
             if (!string.IsNullOrEmpty(nf))
             {
-                await NewUnknownUMLDiagram(nf, Path.GetFileNameWithoutExtension(nf));
+                string title = Path.GetFileNameWithoutExtension(nf);
+                await NewUnknownUMLDiagram(nf, title, $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n");
 
                 _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
             }
         }
 
-        private async Task NewUnknownUMLDiagram(string fileName, string title)
+        private async Task NewUnknownUMLDiagram(string fileName, string title, string content)
         {
             UMLUnknownDiagram? model = new UMLModels.UMLUnknownDiagram(title, fileName);
-            string content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n";
+
             UnknownDocumentModel? d = new UnknownDocumentModel((old, @new) =>
             {
             },

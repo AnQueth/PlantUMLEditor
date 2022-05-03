@@ -6,7 +6,7 @@ namespace Parsers
     public class QuoteParser
     {
 
-        public static void Parse(string line, Action<string> wordReader, char quoteChar = '\"')
+        public static void Parse(ReadOnlySpan<char> line, Action<string, int, int> wordReader, char quoteChar = '\"')
         {
             StringBuilder sb = new StringBuilder();
 
@@ -32,7 +32,7 @@ namespace Parsers
                         string s = sb.ToString();
                         sb.Clear();
 
-                        wordReader(s);
+                        wordReader(s, x, line.Length);
                         continue;
                     }
                     else if (c is ' ')
@@ -48,7 +48,7 @@ namespace Parsers
             {
                 string s = sb.ToString();
 
-                wordReader(s);
+                wordReader(s, line.Length, line.Length);
             }
         }
     }

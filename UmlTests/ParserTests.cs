@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Parsers;
+using System.IO;
 
 namespace UmlTests
 {
@@ -9,7 +10,7 @@ namespace UmlTests
         public void QuoteTest()
         {
             string a = null, b = null, c = null;
-            QuoteParser.Parse("\"a b\" -> \"b aaa  fff'\" : la", (s) =>
+            QuoteParser.Parse("\"a b\" -> \"b aaa  fff'\" : la", (s, pos, len) =>
             {
                 if (a is null)
                 {
@@ -36,7 +37,7 @@ namespace UmlTests
         {
             KeyWordStartingParser k = new("class", "abstract");
 
-            QuoteParser.Parse("class Test {", (s) =>
+            QuoteParser.Parse("class Test {", (s, pos, len) =>
             {
                 k.Parse(s);
             });
@@ -47,7 +48,7 @@ namespace UmlTests
 
             k = new("class", "abstract");
 
-            QuoteParser.Parse("abstract class \"Test la\" as a {", (s) =>
+            QuoteParser.Parse("abstract class \"Test la\" as a {", (s, pos, len) =>
             {
                 k.Parse(s);
             });
@@ -59,7 +60,7 @@ namespace UmlTests
 
             k = new("note", "top", "bottom", "over", "of", "right", ":");
 
-            QuoteParser.Parse("note over a : test", (s) =>
+            QuoteParser.Parse("note over a : test", (s, pos, len) =>
             {
                 k.Parse(s);
             });
@@ -68,6 +69,52 @@ namespace UmlTests
             Assert.AreEqual("over", k.MatchedKeywords[1]);
             Assert.AreEqual("a : test", k.LeftOverToString());
 
+
+            k = new("note", "top", "bottom", "over", "of", "right", ":");
+
+            QuoteParser.Parse("note \"over a\" as test", (s, pos, len) =>
+            {
+                k.Parse(s);
+            });
+
+            Assert.AreEqual("note", k.MatchedKeywords[0]);
+            Assert.AreEqual("over", k.MatchedKeywords[1]);
+            Assert.AreEqual("a : test", k.LeftOverToString());
+        }
+
+        [Test]
+        public void ReadSkinParams()
+        {
+            string test1 = "skinparam color blue";
+            string test2 = @"skinparam class {
+    color blue
+    background red
+}
+";
+
+
+            SkinParamParser skp = new();
+
+            StringReader sr = new StringReader(test1);
+            string line;
+            while ((line = sr.ReadLine()) is not null)
+            {
+                if (!skp.ReadLine(line))
+                {
+                    Assert.AreSame(test1, skp.ReadLines);
+                }
+            }
+            skp = new();
+
+            sr = new StringReader(test2);
+
+            while ((line = sr.ReadLine()) is not null)
+            {
+                if (!skp.ReadLine(line))
+                {
+                    Assert.AreSame(test2, skp.ReadLines);
+                }
+            }
         }
 
         [Test]
@@ -75,7 +122,7 @@ namespace UmlTests
         {
 
             LinePointerParser lp = new();
-            QuoteParser.Parse("\"a b\" -> b : la", (s) =>
+            QuoteParser.Parse("\"a b\" -> b : la", (s, pos, len) =>
             {
                 lp.Parse(s);
 
@@ -86,7 +133,7 @@ namespace UmlTests
             Assert.AreEqual(lp.Text, "la");
 
             lp = new();
-            QuoteParser.Parse("a --> b : la test", (s) =>
+            QuoteParser.Parse("a --> b : la test", (s, pos, len) =>
             {
 
                 lp.Parse(s);
@@ -99,7 +146,7 @@ namespace UmlTests
 
 
             lp = new();
-            QuoteParser.Parse("\"a b\" ..> \"b aaaa\" : la other words", (s) =>
+            QuoteParser.Parse("\"a b\" ..> \"b aaaa\" : la other words", (s, pos, len) =>
             {
                 lp.Parse(s);
             });
@@ -111,7 +158,7 @@ namespace UmlTests
 
 
             lp = new();
-            QuoteParser.Parse(" --> \"b aaaa\" : la", (s) =>
+            QuoteParser.Parse(" --> \"b aaaa\" : la", (s, pos, len) =>
             {
                 lp.Parse(s);
             });
@@ -121,7 +168,7 @@ namespace UmlTests
             Assert.AreEqual(lp.Text, "la");
 
             lp = new();
-            QuoteParser.Parse(" <-- \"b aaaa\" : la", (s) =>
+            QuoteParser.Parse(" <-- \"b aaaa\" : la", (s, pos, len) =>
             {
                 lp.Parse(s);
             });

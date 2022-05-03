@@ -1,24 +1,78 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace Parsers
 {
+    public class SkinParamParser : MultiLineParser
+    {
+        private readonly StringBuilder _readInformation = new();
+
+        protected override bool Read(ReadOnlySpan<char> word, int pos, int len)
+        {
+            bool needMore = false;
+            if (pos == len)
+            {
+                if (word[0] is '{')
+                {
+                    needMore = true;
+                }
+            }
+
+            _readInformation.Append(word);
+            if (pos == len)
+            {
+                _readInformation.AppendLine();
+            }
+            else
+            {
+                _readInformation.Append(' ');
+            }
+
+            return needMore;
+        }
+
+        public string ReadLines => _readInformation.ToString();
+
+    }
+
+    public abstract class MultiLineParser
+    {
+        public bool ReadLine(ReadOnlySpan<char> line)
+        {
+
+            bool needsMoreReading = false;
+
+            QuoteParser.Parse(line, (word, pos, len) =>
+            {
+                var readMore = Read(word, pos, len);
+                if (readMore)
+                {
+                    needsMoreReading = true;
+                }
+            });
+
+            return needsMoreReading;
+        }
+
+        protected abstract bool Read(ReadOnlySpan<char> word, int pos, int len);
+    }
 
     public class LinePointerParser
     {
 
-        public string LeftSide
+        public string? LeftSide
         {
             get; private set;
         }
-        public string RightSide
+        public string? RightSide
         {
             get; private set;
         }
-        public string Connector
+        public string? Connector
         {
             get; private set;
         }
-        private string _textHolder;
+        private string? _textHolder;
         private readonly StringBuilder _textSb = new();
         public string Text
         {
@@ -35,7 +89,7 @@ namespace Parsers
 
         public void Parse(string word)
         {
-            if (word[0] is '-' or '<' or '>' or '.')
+            if (word[0] is '-' or '<' or '>' or '.' or '[' or ']')
             {
                 Connector = word;
             }

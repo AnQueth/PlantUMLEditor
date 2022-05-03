@@ -49,7 +49,7 @@ namespace PlantUMLEditor.Models
         protected override async void ContentChanged(string text)
         {
             UMLDiagramTypeDiscovery discovery = new();
-            (UMLClassDiagram cd, UMLSequenceDiagram sd, UMLUnknownDiagram ud) = await UMLDiagramTypeDiscovery.TryCreateDiagram(Diagrams, text);
+            (UMLClassDiagram? cd, UMLSequenceDiagram? sd, UMLUnknownDiagram? ud) = await UMLDiagramTypeDiscovery.TryCreateDiagram(Diagrams, text);
             if (cd != null)
             {
                 ChangedCallback(Diagram, cd);
