@@ -296,10 +296,11 @@ namespace PlantUML
 
         private static UMLPackage AddPackage(Stack<string> packages, Dictionary<string, UMLDataType> aliases, Stack<string> brackets, Stack<UMLPackage> packagesStack, UMLComponentDiagram d, UMLPackage currentPackage, Match s)
         {
-            packages.Push(Clean(s.Groups["name"].Value));
+            string name = Clean(s.Groups["name"].Value);
+            packages.Push(name);
             brackets.Push("name");
 
-            UMLPackage? c = new UMLPackage(Clean(s.Groups["name"].Value),
+            UMLPackage? c = new UMLPackage(name,
                 s.Groups["type"].Value, s.Groups["alias"].Value);
 
             currentPackage.Children.Add(c);
@@ -307,7 +308,7 @@ namespace PlantUML
             d.ContainedPackages.Add(c);
 
             currentPackage = c;
-            _ = aliases.TryAdd(Clean(s.Groups["name"].Value), c);
+            _ = aliases.TryAdd(string.IsNullOrWhiteSpace(s.Groups["alias"].Value) ? name : s.Groups["alias"].Value, c);
             packagesStack.Push(c);
             return currentPackage;
         }
