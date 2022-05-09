@@ -312,7 +312,7 @@ namespace PlantUMLEditor.Models
 
             selection = AppendAutoComplete(selection);
 
-            _textEditor?.InsertTextAt(selection, autoCompleteParameters.Where, autoCompleteParameters.TypedLength);
+            _textEditor?.InsertTextAt(selection, autoCompleteParameters.IndexInText, autoCompleteParameters.TypedLength);
         }
 
         public void SetActive()

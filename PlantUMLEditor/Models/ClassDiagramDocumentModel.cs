@@ -126,10 +126,10 @@ namespace PlantUMLEditor.Models
 
             lock (_locker)
             {
-                if (!string.IsNullOrEmpty(autoCompleteParameters.WordStart)
-                    && !autoCompleteParameters.WordStart.EndsWith("<", StringComparison.Ordinal))
+                if (!string.IsNullOrEmpty(autoCompleteParameters.TypedWord)
+                    && !autoCompleteParameters.TypedWord.EndsWith("<", StringComparison.Ordinal))
                 {
-                    foreach (string? item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
+                    foreach (string? item in _autoCompleteItems.Where(p => p.StartsWith(autoCompleteParameters.TypedWord, StringComparison.InvariantCultureIgnoreCase)))
                     {
                         base.MatchingAutoCompletes.Add(item);
                     }

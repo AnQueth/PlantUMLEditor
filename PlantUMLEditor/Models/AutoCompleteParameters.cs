@@ -1,27 +1,9 @@
 ﻿namespace PlantUMLEditor.Models
 {
-    public class AutoCompleteParameters
+    public record AutoCompleteParameters(string LineText, int LineNumber,
+        string TypedWord, int IndexInText, int TypedLength, int PositionInLine)
     {
-        public int Where;
-        public int LineNumber;
 
-        public int PositionInLine;
-        public string Text;
-        public int TypedLength;
-
-        public string WordStart;
-
-        public AutoCompleteParameters(string text, int line, string word, int where, int typedLength, int positionInLine)
-        {
-
-            Text = text;
-            LineNumber = line;
-            WordStart = word;
-            Where = where;
-            TypedLength = typedLength;
-
-            PositionInLine = positionInLine;
-        }
 
 
     }

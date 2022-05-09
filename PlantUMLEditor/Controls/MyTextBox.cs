@@ -77,7 +77,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             Background = Brushes.Transparent;
             FindCommand = new DelegateCommand(FindHandler);
             ReplaceCommand = new DelegateCommand(ReplaceHandler);
-            ClearCommand = new DelegateCommand(ClearHandler);
+            ClearCommand = new DelegateCommand(ClearFindResults);
             _autoComplete = this;
         }
 
@@ -247,7 +247,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             // Debug.WriteLine($"{_lastKnownFirstCharacterIndex} {_lastKnownLastCharacterIndex} {Text.Length}");
         }
 
-        private void ClearHandler()
+        private void ClearFindResults()
         {
             FindResults.Clear();
             FindText = "";
@@ -720,6 +720,13 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             if (e.Key == Key.Up)
             {
                 index--;
+                if (index < 0 && _autoCompleteParameters is not null)
+                {
+                    this.InsertTextAt(_autoCompleteParameters.TypedWord, _autoCompleteParameters.IndexInText,
+                        _autoCompleteParameters.TypedLength);
+
+                    return;
+                }
             }
             else if (e.Key == Key.Down)
             {
@@ -803,6 +810,10 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
+            if (e.ClickCount == 2)
+            {
+                this.ClearFindResults();
+            }
             base.OnMouseDown(e);
 
             _autoComplete.CloseAutoComplete();

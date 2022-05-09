@@ -96,7 +96,7 @@ namespace PlantUMLEditor.Models
         {
             _autoCompleteAppend = string.Empty;
 
-            string? text = autoCompleteParameters.Text.Trim();
+            string? text = autoCompleteParameters.LineText.Trim();
 
 
             MatchingAutoCompletes.Clear();
@@ -114,7 +114,7 @@ namespace PlantUMLEditor.Models
                 {
                     foreach (IGrouping<string, UMLDataType>? item in types)
                     {
-                        if (string.IsNullOrEmpty(autoCompleteParameters.WordStart) || item.Key.Contains(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase))
+                        if (string.IsNullOrEmpty(autoCompleteParameters.TypedWord) || item.Key.Contains(autoCompleteParameters.TypedWord, StringComparison.InvariantCultureIgnoreCase))
                         {
                             MatchingAutoCompletes.Add(item.Key);
                         }
@@ -151,7 +151,7 @@ namespace PlantUMLEditor.Models
                         {
                             foreach (UMLDataType? t in types[connection.To.DataTypeId])
                             {
-                                AddAll(t, MatchingAutoCompletes, autoCompleteParameters.WordStart);
+                                AddAll(t, MatchingAutoCompletes, autoCompleteParameters.TypedWord);
 
 
                             }
@@ -166,7 +166,7 @@ namespace PlantUMLEditor.Models
 
                     if (text.EndsWith("return", StringComparison.InvariantCulture))
                     {
-                        foreach (string? item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Text.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
+                        foreach (string? item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.TypedWord) || p.Text.StartsWith(autoCompleteParameters.TypedWord, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Text))
                         {
                             MatchingAutoCompletes.Add(item);
                         }
@@ -179,7 +179,7 @@ namespace PlantUMLEditor.Models
                         return;
                     }
 
-                    foreach (string? item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.Alias.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
+                    foreach (string? item in diagram.LifeLines.Where(p => string.IsNullOrEmpty(autoCompleteParameters.TypedWord) || p.Alias.StartsWith(autoCompleteParameters.TypedWord, StringComparison.InvariantCultureIgnoreCase)).Select(p => p.Alias))
                     {
                         MatchingAutoCompletes.Add(item);
                     }
@@ -187,7 +187,7 @@ namespace PlantUMLEditor.Models
             }
             if (!MatchingAutoCompletes.Any())
             {
-                foreach (string? item in DEFAULTAUTOCOMPLETES.Where(p => string.IsNullOrEmpty(autoCompleteParameters.WordStart) || p.StartsWith(autoCompleteParameters.WordStart, StringComparison.InvariantCultureIgnoreCase)))
+                foreach (string? item in DEFAULTAUTOCOMPLETES.Where(p => string.IsNullOrEmpty(autoCompleteParameters.TypedWord) || p.StartsWith(autoCompleteParameters.TypedWord, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     MatchingAutoCompletes.Add(item);
                 }

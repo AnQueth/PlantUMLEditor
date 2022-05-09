@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Media;
@@ -90,8 +89,7 @@ namespace PlantUMLEditor.Controls
                 foreach (Match m in item.Key.Matches(text))
                 {
                     Group? g = m.Groups[item.Value.Item2];
-                    Debug.WriteLine(item.Value);
-                    Debug.WriteLine(g.Value);
+
                     list.Add(new FormatResult(new SolidColorBrush(item.Value.Item1), g.Index, g.Length, FontWeights.Normal, g.Value));
 
                 }
