@@ -41,7 +41,7 @@ namespace PlantUMLEditor.Controls
         private static readonly Dictionary<Regex, (Color, bool)> _mcolorCodes = new()
         {
             {
-                new Regex(@"((?<!\b(component|folder|package)\b.+)\:.+)", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+                new Regex(@"(?<!\b(component|folder|package)\b.+)\s*\:(?(\s*\[\s*\n)()|(.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase),
                 (Colors.Firebrick, false)
             }
             //,
@@ -67,8 +67,9 @@ namespace PlantUMLEditor.Controls
             {
                 foreach (Match m in item.Key.Matches(text))
                 {
+                    var g = m.Groups[3];
 
-                    list.Add(new FormatResult(new SolidColorBrush(item.Value.Item1), m.Index, m.Length, FontWeights.Normal, m.Value));
+                    list.Add(new FormatResult(new SolidColorBrush(item.Value.Item1), g.Index, g.Length, FontWeights.Normal, g.Value));
 
                 }
             }
