@@ -7,5 +7,12 @@
     xmlns:localControls="clr-namespace:PlantUMLEditor.Controls" xmlns:System="clr-namespace:System;assembly=System.Runtime"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
+        
+            <ResourceDictionary>
+                <ResourceDictionary.MergedDictionaries>
+                    <ResourceDictionary Source="Styles.xaml" />
+                </ResourceDictionary.MergedDictionaries>
+            </ResourceDictionary>
+        
     </Application.Resources>
 </Application>

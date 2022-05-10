@@ -17,6 +17,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
     Top="{Binding WindowTop, Mode=TwoWay}"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/PlantUMLEditor;component/Images/uml.png">
 
+   
     <b:Interaction.Triggers>
 
         <b:EventTrigger EventName="SizeChanged">
@@ -25,8 +26,9 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         </b:EventTrigger>
 
     </b:Interaction.Triggers>
-
+    
     <Window.Resources>
+      
         <SolidColorBrush x:Key="CustomColor" Color="#FF4D8DEA"></SolidColorBrush>
         <Style TargetType="GridSplitter">
             <Setter Property="Background" Value="DarkGray"></Setter>
@@ -185,14 +187,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                                     <RowDefinition></RowDefinition>
                                 </Grid.RowDefinitions>
 
-                                <!--<Button Grid.Column="1">
-                                <Button.Content>Close</Button.Content>
-                                <b:Interaction.Triggers>
-                                    <b:EventTrigger EventName="Click">
-                                        <b:ChangePropertyAction TargetName="FindReplace" PropertyName="IsOpen" Value="false"></b:ChangePropertyAction>
-                                    </b:EventTrigger>
-                                </b:Interaction.Triggers>
-                            </Button>-->
+                           
                                 <TextBox Grid.Row="0" Margin="{DynamicResource TabHeaderMargin}" VerticalContentAlignment="Center"  Text="{Binding FindText, Mode=TwoWay, ElementName=Editor}">
                                     <b:Interaction.Triggers>
                                         <b:KeyTrigger Key="Return">
@@ -562,46 +557,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FFBEE6FD" />
-        <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF3C7FB1" />
-        <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FFC4E5F6" />
-        <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF2C628B" />
-        <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
-        <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
-        <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="5,2,5,2"></Setter>
-            <Setter Property="BorderThickness" Value="2"></Setter>
-            <Setter Property="BorderBrush"  Value="#FF500050"></Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate  TargetType="{x:Type ButtonBase}">
-                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}"
-                    CornerRadius="5" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="true">
-                            <ContentPresenter x:Name="contentPresenter" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="Button.IsDefaulted" Value="true">
-                                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}" />
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="true">
-                                <Setter Property="Background" TargetName="border" Value="{StaticResource Button.MouseOver.Background}" />
-                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.MouseOver.Border}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="true">
-                                <Setter Property="Background" TargetName="border" Value="{StaticResource Button.Pressed.Background}" />
-                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Pressed.Border}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Background" TargetName="border" Value="{StaticResource Button.Disabled.Background}" />
-                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Disabled.Border}" />
-                                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{StaticResource Button.Disabled.Foreground}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+       
         <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
         <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
         <DataTemplate x:Key="TextDocumentTabHeader">
@@ -677,8 +633,25 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                                 </Grid>
                             </Button.Content>
                         </Button>
-                        <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}"  Grid.Column="4"  CommandParameter="{Binding}"  FontWeight="ExtraBold" VerticalAlignment="Center"   Content="{Binding Title}" Margin="{DynamicResource TabHeaderMargin}"></Button>
-                    </Grid>
+                    <Label 
+                            Grid.Column="4" 
+                           IsHitTestVisible="True"
+                            FontWeight="ExtraBold"
+                            VerticalAlignment="Center"  
+                            Content="{Binding Title}"
+                            Margin="{DynamicResource TabHeaderMargin}">
+                        <b:Interaction.Triggers>
+
+                            <b:EventTrigger EventName="MouseDown">
+                                <b:InvokeCommandAction Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" 
+                            CommandParameter="{Binding}"/>
+
+                            </b:EventTrigger>
+
+                        </b:Interaction.Triggers>
+
+                    </Label>
+                </Grid>
                 </Border>
             
         </DataTemplate>
@@ -718,14 +691,25 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             </Grid>
                         </Button.Content>
                     </Button>
-                   
-                    <Button Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" 
+                    
+                    <Label 
                             Grid.Column="1" 
-                            CommandParameter="{Binding}"
+                           IsHitTestVisible="True"
                             FontWeight="ExtraBold"
                             VerticalAlignment="Center"  
                             Content="{Binding Title}"
-                            Margin="{DynamicResource TabHeaderMargin}"></Button>
+                            Margin="{DynamicResource TabHeaderMargin}">
+                        <b:Interaction.Triggers>
+
+                            <b:EventTrigger EventName="MouseDown">
+                                <b:InvokeCommandAction Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" 
+                            CommandParameter="{Binding}"/>
+
+                            </b:EventTrigger>
+
+                        </b:Interaction.Triggers>
+
+                    </Label>
                 </Grid>
             </Border>
 
@@ -767,9 +751,9 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="50"></ColumnDefinition>
+                                <ColumnDefinition Width="25"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding}" VerticalAlignment="Center"> </TextBlock>
+                            <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="0,0,20,0"> </TextBlock>
                             <Button Grid.Column="1" Margin="1" Command="{Binding  Path=DataContext.DeleteMRUCommand,  RelativeSource={RelativeSource FindAncestor,
 AncestorType={x:Type Window}}}" CommandParameter="{Binding}">
                                 <Button.Content>X</Button.Content>

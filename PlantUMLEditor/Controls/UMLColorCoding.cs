@@ -55,7 +55,7 @@ namespace PlantUMLEditor.Controls
         private static readonly Regex notes2 = new(@"^\s*\/*\s*(note|hnote|rnote).+?as\s+[\w]+", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         private static readonly Regex parenthesies = new(@"(\(|\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex comments = new Regex(@"/'[\w\W]*?'/|'.+", RegexOptions.Multiline | RegexOptions.Compiled);
+        private static readonly Regex comments = new Regex(@"^\s*((?:/'[\w\W]*?'/)|(?:'.+))", RegexOptions.Multiline | RegexOptions.Compiled);
 
         public List<FormatResult> FormatText(string text)
         {

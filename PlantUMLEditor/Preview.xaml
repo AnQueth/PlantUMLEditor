@@ -16,7 +16,7 @@
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Content="Print" Command="{Binding PrintImageCommand}" Margin="{DynamicResource Margin}" ToolTip="Print the image"></Button>
             <Button Content="Copy" Command="{Binding CopyImage}" Margin="{DynamicResource Margin}" ToolTip="Copy the image for pasting"></Button>
             <Button Content="Save" Command="{Binding SaveImageCommand}" Margin="{DynamicResource Margin}" ToolTip="Save image" />
