@@ -34,8 +34,8 @@ namespace PlantUMLEditor.Models
         }
         private static string[] GetCleanTypes(List<DataTypeRecord> dataTypes, string name)
         {
-            return GetCleanTypes(dataTypes.Select(z => z.DataType), name)
-                .Where(z => !dataTypes.Any(x => string.CompareOrdinal(x.DataType.NonGenericName, z) == 0)).ToArray();
+            return GetCleanTypes(dataTypes.Select(z => z.DataType), name);
+            //           .Where(z => !dataTypes.Any(x => string.CompareOrdinal(x.DataType.NonGenericName, z) == 0)).ToArray();
 
 
 

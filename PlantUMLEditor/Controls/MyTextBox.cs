@@ -442,7 +442,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
             for (int c = CaretIndex; c >= 0; c--)
             {
-                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',')
+                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
                 {
                     break;
                 }
@@ -451,7 +451,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
             for (int c = CaretIndex + 1; c <= tp.Length; c++)
             {
-                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',')
+                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
                 {
                     break;
                 }

@@ -102,8 +102,10 @@ namespace PlantUML
 
                     writer.WriteLine(" { ");
 
-                    foreach (UMLProperty? prop in item.Properties.Where(z => !dataTypes.Any(p => p == z.ObjectType)))
+                    foreach (UMLProperty? prop in item.Properties.Where(z => !z.DrawnWithLine))
                     {
+
+
                         writer.Write(GetVisibility(prop.Visibility));
                         if (prop.IsStatic)
                         {
@@ -215,8 +217,10 @@ namespace PlantUML
                         _ = postWrites.Append(" --* ");
                         _ = postWrites.AppendLine(i.NonGenericName);
                     }
-                    foreach (UMLProperty? prop in item.Properties.Where(z => dataTypes.Any(p => p == z.ObjectType)))
+                    foreach (UMLProperty? prop in item.Properties.Where(z => z.DrawnWithLine && dataTypes.Any(p => p == z.ObjectType)))
                     {
+
+
                         postWrites.Append(item.NonGenericName);
                         if (prop.ListType != ListTypes.None)
                         {
@@ -238,6 +242,7 @@ namespace PlantUML
                         {
                             postWrites.AppendLine();
                         }
+
                     }
                 }
             }

@@ -4,17 +4,24 @@
     {
 
 
-        public UMLProperty(string name, UMLDataType type, UMLVisibility visibility, ListTypes listType, bool isStatic, bool isAbstract) : base(name, type, listType)
+        public UMLProperty(string name, UMLDataType type, UMLVisibility visibility,
+            ListTypes listType, bool isStatic, bool isAbstract, bool drawnWithLine) : base(name, type, listType)
         {
             Visibility = visibility;
             IsStatic = isStatic;
             IsAbstract = isAbstract;
+            DrawnWithLine = drawnWithLine;
         }
 
         public bool IsAbstract
         {
             get; set;
 
+        }
+        public bool DrawnWithLine
+        {
+            get;
+            private set;
         }
         public bool IsStatic
         {

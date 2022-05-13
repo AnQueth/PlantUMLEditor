@@ -201,9 +201,26 @@ namespace PlantUMLEditor.Models
             }
         }
 
+
+
+
         public override async Task<UMLDiagram?> GetEditedDiagram()
         {
+
+
+
+            if (Content is null)
+            {
+                return null;
+            }
+
             return await PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, false);
+
+
+
         }
+
+
+
     }
 }

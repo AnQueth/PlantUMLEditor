@@ -381,6 +381,8 @@ namespace PlantUMLEditor.Models
                 {
                     AttemptOpeningFile(value.FileName, value.LineNumber).ConfigureAwait(false);
                 }
+
+
             }
         }
 

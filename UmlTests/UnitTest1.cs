@@ -28,7 +28,7 @@ namespace UmlTests
             UMLInterface i1 = new("", "i1", new List<UMLDataType>());
             UMLClass class2 = new("", "ns", true, "c1", null, i1);
 
-            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false));
+            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false, false));
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
             class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
@@ -47,7 +47,7 @@ namespace UmlTests
             UMLInterface i1 = new("", "i1", new List<UMLDataType>());
             UMLClass class2 = new("", "ns", true, "c1", null, i1);
 
-            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false));
+            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false, false));
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType()),
                  new UMLParameter("parm2", new BoolDataType()),

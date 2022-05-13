@@ -375,7 +375,7 @@ namespace PlantUML
                                     }
                                 }
 
-                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l, false, false));
+                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l, false, false, true));
                             }
                         }
                         continue;
@@ -462,6 +462,8 @@ namespace PlantUML
 
         public static async Task<UMLClassDiagram?> ReadString(string s)
         {
+
+
             using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
             using StreamReader sr = new(ms);
             UMLClassDiagram? c = await ReadClassDiagram(sr, "");
@@ -604,12 +606,12 @@ namespace PlantUML
                     aliases.Add(p.Word, c);
                 }
 
-                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType, modifier == "{static}", modifier == "{abstract}"));
+                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType, modifier == "{static}", modifier == "{abstract}", false));
             }
             else
             {
                 dataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty),
-                    UMLVisibility.None, ListTypes.None, false, false));
+                    UMLVisibility.None, ListTypes.None, false, false, false));
             }
         }
     }

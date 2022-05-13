@@ -50,12 +50,9 @@ namespace PlantUMLEditor.Models
 
                      if (IsDirty)
                      {
-                         string text = Application.Current.Dispatcher.Invoke((() =>
-                         {
-                             return TextEditor?.TextRead();
-                         })) ?? string.Empty;
 
-                         UMLComponentDiagram? z = await PlantUML.UMLComponentDiagramParser.ReadString(text);
+
+                         UMLComponentDiagram? z = (await GetEditedDiagram()) as UMLComponentDiagram;
                          if (z != null)
                          {
                              lock (_locker)
@@ -135,9 +132,24 @@ namespace PlantUMLEditor.Models
             }
         }
 
+
+
+
         public override async Task<UMLDiagram?> GetEditedDiagram()
         {
-            return await UMLComponentDiagramParser.ReadString(Content);
+
+
+
+            if (Content is null)
+            {
+                return null;
+            }
+
+            return await PlantUML.UMLComponentDiagramParser.ReadString(Content);
+
+
+
+
         }
     }
 }

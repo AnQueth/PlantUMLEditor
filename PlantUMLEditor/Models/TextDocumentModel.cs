@@ -16,6 +16,7 @@ namespace PlantUMLEditor.Models
     {
         protected readonly IIOService _ioService;
         protected readonly string _jarLocation;
+        private bool _binding;
 
         private IAutoComplete? _autoComplete;
 
@@ -32,7 +33,7 @@ namespace PlantUMLEditor.Models
         private IPreviewModel? imageModel;
 
         private Window? previewWindow;
-        private readonly Visibility visible;
+
 
         protected Action? _bindedAction;
 
@@ -46,7 +47,7 @@ namespace PlantUMLEditor.Models
 
 
 
-            Content = content;
+            _textValue = content;
 
             _ioService = openDirectoryService;
             _jarLocation = configuration.JarLocation;
@@ -60,7 +61,7 @@ namespace PlantUMLEditor.Models
             string? tmpContent = _temporarySave.ReadIfExists();
             if (tmpContent != null)
             {
-                Content = tmpContent;
+                _textValue = tmpContent;
                 IsDirty = true;
             }
 
@@ -110,7 +111,7 @@ namespace PlantUMLEditor.Models
         internal void InsertAtCursor(string imageMD)
         {
 
-            _textEditor.InsertTextAtCursor(imageMD);
+            _textEditor?.InsertTextAtCursor(imageMD);
         }
 
         protected abstract (IPreviewModel? model, Window? window) GetPreviewView();
@@ -213,9 +214,12 @@ namespace PlantUMLEditor.Models
         {
             _textEditor = textEditor;
             _autoComplete = (IAutoComplete)textEditor;
+            _binding = true;
 
             _textEditor.TextWrite(_textValue, false, GetColorCodingProvider());
 
+
+            _binding = false;
             _bindedAction?.Invoke();
 
             TextEditor?.GotoLine(_lineNumber, _findText);
@@ -322,11 +326,13 @@ namespace PlantUMLEditor.Models
 
         public void TextChanged(string text)
         {
-            if (_textValue != text)
+            if (_binding)
             {
-                _textValue = text;
-                ContentChanged(text);
+                return;
             }
+
+            ContentChanged(text);
+
         }
 
     }

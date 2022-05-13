@@ -323,6 +323,7 @@ namespace PlantUML
 
         public static async Task<UMLComponentDiagram?> ReadString(string s)
         {
+
             using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
             using StreamReader sr = new(ms);
             UMLComponentDiagram? c = await ReadComponentDiagram(sr, "");
