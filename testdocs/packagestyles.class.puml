@@ -11,6 +11,7 @@ package foo1 <<Node>> {
 package foo2 <<Rectangle>> {
     class Class2 <<stereotype>> {
         Class3 la
+        Class33 aa
     }
 }
 

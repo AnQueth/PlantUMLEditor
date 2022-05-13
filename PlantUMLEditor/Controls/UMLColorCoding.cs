@@ -10,20 +10,25 @@ namespace PlantUMLEditor.Controls
         private static readonly Dictionary<Regex, (Color, int)> _colorCodes = new()
         {
             {
-                new Regex("(@start\\w+|@end\\w+)", RegexOptions.Compiled),
+                new Regex("(@start\\w+|@end\\w+)",
+                    RegexOptions.Compiled),
                 (Colors.Coral, 0)
-            },
-            {
-                new Regex(@"^\s*['!].+", RegexOptions.Multiline),
-                (Colors.Gray, 0)
             },
 
             {
-                new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|show|remove|skinparam|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|interface|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                new Regex(@"^left +to +right +direction\s*$",
+                    RegexOptions.Compiled | RegexOptions.Multiline),
+                (Colors.MediumPurple, 0)
+            },
+
+            {
+                new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|show|remove|skinparam|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|interface|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?",
+                    RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                 (Colors.Blue, 1)
             },
             {
-                new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork)\s+?",
+                    RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                 (Colors.Blue, 1)
             }
 
@@ -32,7 +37,8 @@ namespace PlantUMLEditor.Controls
         private static readonly Dictionary<Regex, Color[]> _groupedCodes = new()
         {
             {
-                new Regex(@"^\s*(?<k>package|rectangle|usecase|folder|participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:.+?)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                new Regex(@"^\s*(?<k>package|rectangle|usecase|folder|participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:.+?)$",
+                    RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                 new Color[] { Colors.Blue, Colors.Green }
             }
         };
@@ -40,22 +46,24 @@ namespace PlantUMLEditor.Controls
         private static readonly Dictionary<Regex, (Color, bool)> _mcolorCodes = new()
         {
             {
-                new Regex(@"(?<!\b(component|folder|package)\b.+)\s*\:(?(\s*\[\s*\n)()|(.+))", RegexOptions.Compiled | RegexOptions.IgnoreCase),
+                new Regex(@"(?<!\b(component|folder|package)\b.+)\s*\:(?(\s*\[\s*\n)()|(.+))",
+                    RegexOptions.Compiled | RegexOptions.IgnoreCase),
                 (Colors.Firebrick, false)
             }
-            //,
-            //{
-            //    new Regex(@"^\s*(?:alt|opt|loop|try|group|catch|break|par|end|else) +?(.+)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
-            //    (Colors.Firebrick, false)
-            //}
+
         };
 
-        private static readonly Regex brackets = new(@"(\{|\})", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex notes = new(@"^\s*\/*\s*(note|hnote|rnote)((?:.+\:\s+.+?)$|((?:[.\W\w]+?)(end note|endrnote|endhnote)))", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex notes2 = new(@"^\s*\/*\s*(note|hnote|rnote).+?as\s+[\w]+", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex brackets = new(@"(\{|\})",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex notes = new(@"^\s*\/*\s*(note|hnote|rnote)((?:.+\:\s+.+?)$|((?:[.\W\w]+?)(end note|endrnote|endhnote)))",
+            RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex notes2 = new(@"^\s*\/*\s*(note|hnote|rnote).+?as\s+[\w]+",
+            RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        private static readonly Regex parenthesies = new(@"(\(|\))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex comments = new Regex(@"^\s*((?:/'[\w\W]*?'/)|(?:'.+))", RegexOptions.Multiline | RegexOptions.Compiled);
+        private static readonly Regex parenthesies = new(@"(\(|\))",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex comments = new Regex(@"^\s*((?:/'[\w\W]*?'/)|(?:'.+))",
+            RegexOptions.Multiline | RegexOptions.Compiled);
 
         public List<FormatResult> FormatText(string text)
         {
@@ -121,7 +129,7 @@ namespace PlantUMLEditor.Controls
 
             foreach (Match m in comments.Matches(text))
             {
-                list.Add(new FormatResult(Brushes.Gray, m.Index, m.Length, FontWeights.Normal, m.Value));
+                list.Add(new FormatResult(Brushes.DarkGreen, m.Index, m.Length, FontWeights.Normal, m.Value));
 
             }
 

@@ -1110,15 +1110,10 @@ namespace PlantUMLEditor.Models
                 {
                     f.Package.Children.Add(new UMLClass("", "default", false, missingDataTypeMessage.MissingDataTypeName, new List<UMLDataType>()));
 
-                    string? wf = GetWorkingFolder(true);
-                    if (wf == null)
-                    {
-                        return;
-                    }
 
-                    string d = Path.Combine(wf, "defaults.class.puml");
 
-                    ClassDiagramDocumentModel? od = dm.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == d);
+
+                    ClassDiagramDocumentModel? od = dm.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == f.FileName);
                     if (od != null)
                     {
                         CurrentDocument = od;
@@ -1126,9 +1121,17 @@ namespace PlantUMLEditor.Models
                     }
                     else
                     {
+                        string? wf = GetWorkingFolder(true);
+                        if (wf == null)
+                        {
+                            return;
+                        }
+
+                        string d = Path.Combine(wf, "defaults.class.puml");
+
                         await OpenClassDiagram(d, f, 0, null);
 
-                        od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == d);
+                        od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == f.FileName);
                         if (od != null)
                         {
                             od.UpdateDiagram(f);
@@ -1287,36 +1290,36 @@ namespace PlantUMLEditor.Models
 
 
             foreach (var item in Documents.ClassDocuments.Where(z =>
-         z.DataTypes.Any(v => string.CompareOrdinal(v.Name, text) == 0)).Select(p => new
+         z.DataTypes.Any(v => string.CompareOrdinal(v.NonGenericName, text) == 0)).Select(p => new
          {
              FN = p.FileName,
              D = p,
-             DT = p.DataTypes.First(z => z.Name == text)
+             DT = p.DataTypes.First(z => z.NonGenericName == text)
          }))
             {
                 FindReferenceResults.Add(new GlobalFindResult(item.FN, item.DT.LineNumber, item.DT.Name, text));
 
 
                 foreach (GlobalFindResult? ln in Documents.ClassDocuments.SelectMany(z => z.DataTypes.SelectMany(x => x.Properties.Where(g =>
-                DocumentMessageGenerator.GetCleanName(dataTypes, g.ObjectType.Name).Contains(item.DT.Id))
+                DocumentMessageGenerator.GetCleanTypes(dataTypes, g.ObjectType.Name).Contains(item.DT.NonGenericName))
                 .Select(g => new GlobalFindResult(z.FileName, x.LineNumber, g.Signature, text)))))
                 {
                     FindReferenceResults.Add(ln);
                 }
                 foreach (GlobalFindResult? ln in Documents.ClassDocuments.SelectMany(z => z.DataTypes.SelectMany(x => x.Methods.SelectMany(k => k.Parameters.Where(g =>
-                  DocumentMessageGenerator.GetCleanName(dataTypes, g.ObjectType.Name).Contains(item.DT.Id))
+                  DocumentMessageGenerator.GetCleanTypes(dataTypes, g.ObjectType.Name).Contains(item.DT.NonGenericName))
               .Select(g => new GlobalFindResult(z.FileName, x.LineNumber, k.Signature, text))))))
                 {
                     FindReferenceResults.Add(ln);
                 }
                 foreach (GlobalFindResult? ln in Documents.ClassDocuments.SelectMany(z => z.DataTypes.SelectMany(x => x.Methods.Where(k =>
-                DocumentMessageGenerator.GetCleanName(dataTypes, k.ReturnType.Name).Contains(item.DT.Id))
+                DocumentMessageGenerator.GetCleanTypes(dataTypes, k.ReturnType.Name).Contains(item.DT.NonGenericName))
            .Select(g => new GlobalFindResult(z.FileName, x.LineNumber, g.Signature, text)))))
                 {
                     FindReferenceResults.Add(ln);
                 }
 
-                foreach (GlobalFindResult? ln in Documents.SequenceDiagrams.SelectMany(z => z.LifeLines.Where(x => x.DataTypeId == item.DT.Id).Select(c =>
+                foreach (GlobalFindResult? ln in Documents.SequenceDiagrams.SelectMany(z => z.LifeLines.Where(x => x.DataTypeId == item.DT.NonGenericName).Select(c =>
                 new GlobalFindResult(z.FileName, c.LineNumber, c.Text, text))))
 
                 {
@@ -1335,11 +1338,11 @@ namespace PlantUMLEditor.Models
         private async void GotoDefinitionInvoked(string text)
         {
             foreach (var item in Documents.ClassDocuments.Where(z =>
-            z.DataTypes.Any(v => string.CompareOrdinal(v.Name, text) == 0)).Select(p => new
+            z.DataTypes.Any(v => string.CompareOrdinal(v.NonGenericName, text) == 0)).Select(p => new
             {
                 FN = p.FileName,
                 D = p,
-                DT = p.DataTypes.First(z => z.Name == text)
+                DT = p.DataTypes.First(z => z.NonGenericName == text)
             }))
             {
                 await AttemptOpeningFile(item.FN, item.DT.LineNumber, null);

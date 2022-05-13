@@ -442,7 +442,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
             for (int c = CaretIndex; c >= 0; c--)
             {
-                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']')
+                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',')
                 {
                     break;
                 }
@@ -451,7 +451,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
             for (int c = CaretIndex + 1; c <= tp.Length; c++)
             {
-                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']')
+                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',')
                 {
                     break;
                 }
@@ -918,6 +918,10 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 GoToDefinition();
             }
+            else if (e.Key == Key.F3)
+            {
+                StartFindTimer(GetWordFromCursor());
+            }
             else if (e.Key == Key.F11)
             {
                 FindAllReferences();
@@ -1064,6 +1068,11 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         protected override void OnSelectionChanged(RoutedEventArgs e)
         {
             base.OnSelectionChanged(e);
+            SelectAndFind();
+        }
+
+        private void SelectAndFind()
+        {
 
             //remove spaces from end of selection
             while (SelectedText.EndsWith(" ", StringComparison.InvariantCulture))
@@ -1078,18 +1087,23 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
             if (!string.IsNullOrWhiteSpace(SelectedText) && !SelectedText.Contains("\r\n", StringComparison.InvariantCulture))
             {
-                //timer used to select text after text selection has calmed down
-                if (_timerForSelection != null)
-                {
-                    _timerForSelection.Dispose();
-                }
-                _timerForSelection = new Timer((o) =>
-                {
-                    Dispatcher.BeginInvoke((Action)(() => { RunFind(SelectedText.Trim(), true); }));
-                }, null, 250, Timeout.Infinite);
-
-                FindText = SelectedText;
+                StartFindTimer(SelectedText);
             }
+        }
+
+        private void StartFindTimer(string text)
+        {
+            //timer used to select text after text selection has calmed down
+            if (_timerForSelection != null)
+            {
+                _timerForSelection.Dispose();
+            }
+            _timerForSelection = new Timer((o) =>
+            {
+                Dispatcher.BeginInvoke((Action)(() => { RunFind(text.Trim(), true); }));
+            }, null, 250, Timeout.Infinite);
+
+            FindText = text;
         }
 
         protected override void OnTextChanged(TextChangedEventArgs e)

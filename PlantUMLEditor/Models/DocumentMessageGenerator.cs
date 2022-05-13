@@ -20,38 +20,22 @@ namespace PlantUMLEditor.Models
 
 
         }
-        public static List<string> GetCleanName(IEnumerable<UMLDataType> dataTypes, string name)
+
+        private static readonly char[] GENERICSPLITS = new char[] { '<', '>', ',', '[', ']', '?' };
+
+        public static string[] GetCleanTypes(IEnumerable<UMLDataType> dataTypes, string name)
         {
-            List<string> types = new();
-            foreach (UMLDataType? type in dataTypes)
-            {
-                if (name.IndexOf(type.Name, StringComparison.Ordinal) >= 0)
-                {
-                    types.Add(type.Name);
+            var types = name.Split(GENERICSPLITS, StringSplitOptions.RemoveEmptyEntries).Select(z => z.Trim())
 
-                    name = name.Replace(type.Name, string.Empty);
-                }
-            }
-
-            string[] parts = name.Split(seperators);
-
-
-            foreach (string? p in parts)
-            {
-                if (string.IsNullOrEmpty(p) || knownwords.Contains(p, StringComparer.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                types.Add(p);
-
-            }
-
+                .ToArray();
             return types;
+
+
         }
-        private static List<string> GetCleanName(List<DataTypeRecord> dataTypes, string name)
+        private static string[] GetCleanTypes(List<DataTypeRecord> dataTypes, string name)
         {
-            return GetCleanName(dataTypes.Select(z => z.DataType), name);
+            return GetCleanTypes(dataTypes.Select(z => z.DataType), name)
+                .Where(z => !dataTypes.Any(x => string.CompareOrdinal(x.DataType.NonGenericName, z) == 0)).ToArray();
 
 
 
@@ -209,7 +193,7 @@ namespace PlantUMLEditor.Models
                 {
 
 
-                    List<string>? parsedTypes = GetCleanName(dataTypes, m.ObjectType.Name);
+                    string[] parsedTypes = GetCleanTypes(dataTypes, m.ObjectType.Name);
                     foreach (string? r in parsedTypes)
                     {
                         DataTypeRecord? pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
@@ -230,7 +214,7 @@ namespace PlantUMLEditor.Models
                     foreach (UMLParameter? p in m.Parameters)
                     {
 
-                        List<string>? parsedTypes = GetCleanName(dataTypes, p.ObjectType.Name);
+                        string[] parsedTypes = GetCleanTypes(dataTypes, p.ObjectType.Name);
                         foreach (string? r in parsedTypes)
                         {
                             DataTypeRecord? pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
@@ -250,11 +234,11 @@ namespace PlantUMLEditor.Models
                     if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
                     {
 
-                        List<string>? parsedTypes = GetCleanName(dataTypes, m.ReturnType.Name);
+                        string[] parsedTypes = GetCleanTypes(dataTypes, m.ReturnType.Name);
                         foreach (string? r in parsedTypes)
                         {
                             DataTypeRecord? pdt = dataTypes
-                                .FirstOrDefault(z => GetCleanName(dataTypes, z.DataType.Name).Contains(r));
+                                .FirstOrDefault(z => GetCleanTypes(dataTypes, z.DataType.Name).Contains(r));
                             if (pdt == default)
                             {
                                 newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),

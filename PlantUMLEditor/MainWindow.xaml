@@ -932,9 +932,11 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                 <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Cyan"/>
                             </DataGrid.Resources>
                             <DataGrid.Columns>
-                                <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
-                                <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
                                 <DataGridTextColumn IsReadOnly="true" Header="Text" Binding="{Binding Text}"></DataGridTextColumn>
+                                <DataGridTextColumn IsReadOnly="true" Header="LineNumber" Binding="{Binding LineNumber}"></DataGridTextColumn>
+
+                                <DataGridTextColumn IsReadOnly="true" Header="File" Binding="{Binding FileName}"></DataGridTextColumn>
+                                   
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
