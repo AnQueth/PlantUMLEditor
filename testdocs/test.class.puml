@@ -11,6 +11,7 @@ skinparam class {
 abstract class A {
     /'
     alalal
+
     '/
 
     {static} int counter
@@ -51,8 +52,7 @@ note right of A::start
 This method is now explained in a UML note
 end note
 
-C3 --* C1 : aa
-
 note on link: lalaala
 
+C3 --* C1 : aa
 @enduml

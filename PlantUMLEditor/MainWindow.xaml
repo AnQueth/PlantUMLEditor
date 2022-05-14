@@ -438,7 +438,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         </Style>
         <Style   TargetType="{x:Type TreeViewItem}">
             <Setter Property="HorizontalContentAlignment" Value="Left"></Setter>
-            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay, FallbackValue=False}"></Setter>
+           
            
 
             <Setter Property="Background" Value="Transparent" />
@@ -522,6 +522,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                 <DataTrigger Binding="{Binding IsFile}" Value="false">
                     <Setter Property="ContextMenu" Value="{StaticResource FolderMenu}">
                     </Setter>
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay, FallbackValue=False}"></Setter>
                 </DataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>

@@ -66,6 +66,8 @@ namespace PlantUMLEditor.Models
 
         private DocumentMessage? selectedMessage;
 
+        private readonly AutoResetEvent _messageCheckerTrigger = new(true);
+
         public MainModel(IIOService openDirectoryService, IUMLDocumentCollectionSerialization documentCollectionSerialization, MainWindow mainWindow)
         {
             _window = mainWindow;
@@ -77,7 +79,7 @@ namespace PlantUMLEditor.Models
             _gotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
             _findAllReferencesCommand = new DelegateCommand<string>(FindAllReferencesInvoked);
             documents = new UMLModels.UMLDocumentCollection();
-            _messageChecker = new Timer(CheckMessages, null, Timeout.Infinite, Timeout.Infinite);
+
             _ioService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(() => _ = OpenDirectoryHandler());
             DeleteMRUCommand = new DelegateCommand<string>((s) => DeleteMRUCommandHandler(s));
@@ -110,6 +112,8 @@ namespace PlantUMLEditor.Models
             Configuration = new AppConfiguration("plantuml.jar");
 
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
+
+            _ = Task.Run(CheckMessages);
 
             _gridSettingLoader = new Lazy<GridSettings>(() =>
             {
@@ -252,6 +256,8 @@ namespace PlantUMLEditor.Models
                 {
                     value.Visible = Visibility.Visible;
                 }
+
+                _messageCheckerTrigger.Set();
             }
         }
 
@@ -453,6 +459,8 @@ namespace PlantUMLEditor.Models
                     await AttemptOpeningFile(file);
                 }
             }
+
+            _messageCheckerTrigger.Set();
         }
 
         public void TextDragEnter(object sender, DragEventArgs e)
@@ -858,126 +866,136 @@ namespace PlantUMLEditor.Models
             return true;
         }
 
-        private async void CheckMessages(object? state)
+        private async void CheckMessages()
         {
-            await _checkMessagesRunning.WaitAsync();
-            try
+            while (true)
             {
-                if (string.IsNullOrEmpty(_metaDataFile) || string.IsNullOrEmpty(_folderBase))
-                {
-                    _messageChecker.Change(2000, Timeout.Infinite);
-                    return;
-                }
+                await Task.Delay(500);
 
-                if (Application.Current == null)
-                {
-                    return;
-                }
+                _messageCheckerTrigger.WaitOne();
 
-                List<UMLDiagram> diagrams = new();
-                try
-                {
-                    await UpdateDiagramDependencies();
-                }
-                catch
-                {
-                }
+                await _checkMessagesRunning.WaitAsync();
+
 
                 try
                 {
-                    TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
-
-                    foreach (TextDocumentModel? doc in dm)
+                    if (string.IsNullOrEmpty(_metaDataFile) || string.IsNullOrEmpty(_folderBase))
                     {
-                        UMLDiagram? d = await doc.GetEditedDiagram();
-                        if (d != null)
-                        {
-                            d.FileName = doc.FileName;
-                            diagrams.Add(d);
-                        }
+
+                        continue;
                     }
 
-                    foreach (UMLClassDiagram? doc in Documents.ClassDocuments)
+                    if (Application.Current == null)
                     {
-                        if (!dm.Any(p => p.FileName == doc.FileName))
-                        {
-                            diagrams.Add(doc);
-                        }
-                    }
-                    foreach (UMLComponentDiagram? doc in Documents.ComponentDiagrams)
-                    {
-                        if (!dm.Any(p => p.FileName == doc.FileName))
-                        {
-                            diagrams.Add(doc);
-                        }
-                    }
-                    foreach (UMLSequenceDiagram? doc in Documents.SequenceDiagrams)
-                    {
-                        if (!dm.Any(p => p.FileName == doc.FileName))
-                        {
-                            diagrams.Add(doc);
-                        }
-                    }
-                }
-                catch
-                {
-                    _messageChecker.Change(2000, Timeout.Infinite);
-                    return;
-                }
-
-                DocumentMessageGenerator documentMessageGenerator = new(diagrams);
-                List<DocumentMessage>? newMessages = documentMessageGenerator.Generate(_folderBase);
-
-                Application.Current?.Dispatcher.Invoke(() =>
-                {
-                    List<DocumentMessage> removals = new();
-                    foreach (DocumentMessage? item in Messages)
-                    {
-                        if (!newMessages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
-                        string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
-                        {
-                            removals.Add(item);
-                        }
+                        continue;
                     }
 
-                    removals.ForEach(p => Messages.Remove(p));
-
-                    foreach (DocumentMessage? item in newMessages)
+                    List<UMLDiagram> diagrams = new();
+                    try
                     {
-                        if (!Messages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
-                       string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
-                        {
-                            Messages.Add(item);
-                        }
+                        await UpdateDiagramDependencies();
+                    }
+                    catch
+                    {
                     }
 
-                    foreach (DocumentMessage? d in Messages)
+                    try
                     {
-                        if ((d is MissingMethodDocumentMessage || d is MissingDataTypeMessage) && d.FixingCommand is null)
-                        {
-                            d.FixingCommand = new DelegateCommand<DocumentMessage>(FixingCommandHandler);
-                        }
+                        TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
 
-                        lock (_docLock)
+                        foreach (TextDocumentModel? doc in dm)
                         {
-                            IEnumerable<BaseDocumentModel>? docs = OpenDocuments.Where(p => string.Equals(p.FileName, d.FileName, StringComparison.Ordinal));
-                            foreach (BaseDocumentModel? doc in docs)
+                            UMLDiagram? d = await doc.GetEditedDiagram();
+                            if (d != null)
                             {
-                                if (CurrentDocument == doc && doc is TextDocumentModel textDoc)
-                                {
-                                    textDoc.ReportMessage(d);
-                                }
+                                d.FileName = doc.FileName;
+                                diagrams.Add(d);
+                            }
+                        }
+
+                        foreach (UMLClassDiagram? doc in Documents.ClassDocuments)
+                        {
+                            if (!dm.Any(p => p.FileName == doc.FileName))
+                            {
+                                diagrams.Add(doc);
+                            }
+                        }
+                        foreach (UMLComponentDiagram? doc in Documents.ComponentDiagrams)
+                        {
+                            if (!dm.Any(p => p.FileName == doc.FileName))
+                            {
+                                diagrams.Add(doc);
+                            }
+                        }
+                        foreach (UMLSequenceDiagram? doc in Documents.SequenceDiagrams)
+                        {
+                            if (!dm.Any(p => p.FileName == doc.FileName))
+                            {
+                                diagrams.Add(doc);
                             }
                         }
                     }
+                    catch
+                    {
+                        continue;
+                    }
 
-                    _messageChecker.Change(2000, Timeout.Infinite);
-                });
+                    DocumentMessageGenerator documentMessageGenerator = new(diagrams);
+                    List<DocumentMessage>? newMessages = documentMessageGenerator.Generate(_folderBase);
+
+                    Application.Current?.Dispatcher.Invoke(() =>
+                    {
+                        List<DocumentMessage> removals = new();
+                        foreach (DocumentMessage? item in Messages)
+                        {
+                            if (!newMessages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
+                            string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
+                            {
+                                removals.Add(item);
+                            }
+                        }
+
+                        removals.ForEach(p => Messages.Remove(p));
+
+                        foreach (DocumentMessage? item in newMessages)
+                        {
+                            if (!Messages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
+                           string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
+                            {
+                                Messages.Add(item);
+                            }
+                        }
+
+                        foreach (DocumentMessage? d in Messages)
+                        {
+                            if ((d is MissingMethodDocumentMessage || d is MissingDataTypeMessage) && d.FixingCommand is null)
+                            {
+                                d.FixingCommand = new DelegateCommand<DocumentMessage>(FixingCommandHandler);
+                            }
+
+                            lock (_docLock)
+                            {
+                                IEnumerable<BaseDocumentModel>? docs = OpenDocuments.Where(p => string.Equals(p.FileName, d.FileName, StringComparison.Ordinal));
+                                foreach (BaseDocumentModel? doc in docs)
+                                {
+                                    if (CurrentDocument == doc && doc is TextDocumentModel textDoc)
+                                    {
+                                        textDoc.ReportMessage(d);
+                                    }
+                                }
+                            }
+                        }
+
+
+                    });
+                }
+                finally
+                {
+                    _checkMessagesRunning.Release();
+                }
+
             }
-            finally
-            {
-                _checkMessagesRunning.Release();
-            }
+
         }
 
         private void Close(BaseDocumentModel doc)
@@ -1073,77 +1091,91 @@ namespace PlantUMLEditor.Models
 
         private async void FixingCommandHandler(DocumentMessage sender)
         {
-            TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
+            TextDocumentModel[] textDocumentModels = GetTextDocumentModelReadingArray();
 
-            if (sender is MissingMethodDocumentMessage missingMethodMessage)
+            switch (sender)
             {
-                foreach (UMLClassDiagram? doc in Documents.ClassDocuments)
+                case MissingMethodDocumentMessage missingMethodMessage:
+                    await AddMissingAttributeToClass(textDocumentModels, missingMethodMessage);
+                    break;
+                case MissingDataTypeMessage missingDataTypeMessage:
+                    await AddDefaultDataType(textDocumentModels, missingDataTypeMessage);
+                    break;
+
+            }
+
+
+        }
+
+        private async Task AddMissingAttributeToClass(TextDocumentModel[] textDocumentModels, MissingMethodDocumentMessage missingMethodMessage)
+        {
+            foreach (UMLClassDiagram? doc in Documents.ClassDocuments)
+            {
+                UMLDataType? d = doc.DataTypes.FirstOrDefault(p => p.Id == missingMethodMessage.MissingMethodDataTypeId);
+                if (d == null)
                 {
-                    UMLDataType? d = doc.DataTypes.FirstOrDefault(p => p.Id == missingMethodMessage.MissingMethodDataTypeId);
-                    if (d == null)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    if (missingMethodMessage.MissingMethodText == null)
-                    {
-                        continue;
-                    }
+                if (missingMethodMessage.MissingMethodText == null)
+                {
+                    continue;
+                }
 
-                    UMLClassDiagramParser.TryParseLineForDataType(missingMethodMessage.MissingMethodText.Trim(),
-                        new Dictionary<string, UMLDataType>(), d);
+                UMLClassDiagramParser.TryParseLineForDataType(missingMethodMessage.MissingMethodText.Trim(),
+                    new Dictionary<string, UMLDataType>(), d);
 
-                    ClassDiagramDocumentModel? od = dm.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => string.CompareOrdinal(p.FileName, doc.FileName) == 0);
-                    if (od != null)
+                ClassDiagramDocumentModel? od = textDocumentModels.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => string.CompareOrdinal(p.FileName, doc.FileName) == 0);
+                if (od != null)
+                {
+                    CurrentDocument = od;
+                    od.UpdateDiagram(doc);
+                }
+                else
+                {
+                    od = await OpenClassDiagram(doc.FileName, doc, 0, null) as ClassDiagramDocumentModel;
+                    if (od is not null)
                     {
+
                         CurrentDocument = od;
                         od.UpdateDiagram(doc);
                     }
-                    else
-                    {
-                        await OpenClassDiagram(doc.FileName, doc, 0, null);
-                    }
                 }
             }
-            else if (sender is MissingDataTypeMessage missingDataTypeMessage)
+        }
+
+        private async Task AddDefaultDataType(TextDocumentModel[] textDocumentModels, MissingDataTypeMessage missingDataTypeMessage)
+        {
+            UMLClassDiagram? f = Documents.ClassDocuments.FirstOrDefault(p => string.CompareOrdinal(p.Title, DEFAULTSCLASS) == 0);
+            if (f != null)
             {
-                UMLClassDiagram? f = Documents.ClassDocuments.FirstOrDefault(p => string.CompareOrdinal(p.Title, DEFAULTSCLASS) == 0);
-                if (f != null)
+                f.Package.Children.Add(new UMLClass("", "default", false, missingDataTypeMessage.MissingDataTypeName, new List<UMLDataType>()));
+
+
+
+
+                ClassDiagramDocumentModel? od = textDocumentModels.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == f.FileName);
+                if (od != null)
                 {
-                    f.Package.Children.Add(new UMLClass("", "default", false, missingDataTypeMessage.MissingDataTypeName, new List<UMLDataType>()));
+                    CurrentDocument = od;
+                    od.UpdateDiagram(f);
+                }
+                else
+                {
+
+                    od = await OpenClassDiagram(f.FileName, f, 0, null) as ClassDiagramDocumentModel;
 
 
-
-
-                    ClassDiagramDocumentModel? od = dm.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == f.FileName);
                     if (od != null)
                     {
                         CurrentDocument = od;
                         od.UpdateDiagram(f);
                     }
-                    else
-                    {
-                        string? wf = GetWorkingFolder(true);
-                        if (wf == null)
-                        {
-                            return;
-                        }
-
-                        string d = Path.Combine(wf, "defaults.class.puml");
-
-                        await OpenClassDiagram(d, f, 0, null);
-
-                        od = OpenDocuments.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => p.FileName == f.FileName);
-                        if (od != null)
-                        {
-                            od.UpdateDiagram(f);
-                        }
-                    }
                 }
-                else
-                {
-                    MessageBox.Show("Create a defaults.class document in the root of the work folder first.");
-                }
+            }
+            else
+            {
+                MessageBox.Show("Create a defaults.class document in the root of the work folder first.");
             }
         }
 
@@ -1374,7 +1406,7 @@ namespace PlantUMLEditor.Models
             UMLClassDiagram? model = new UMLModels.UMLClassDiagram(title, fileName, null);
             string content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n";
             ClassDiagramDocumentModel? d = new ClassDiagramDocumentModel(
-                Configuration, _ioService, model, Documents.ClassDocuments, fileName, title, content);
+                Configuration, _ioService, model, Documents.ClassDocuments, fileName, title, content, _messageCheckerTrigger);
 
             Documents.ClassDocuments.Add(model);
 
@@ -1403,7 +1435,8 @@ namespace PlantUMLEditor.Models
             UMLComponentDiagram? model = new UMLModels.UMLComponentDiagram(title, fileName, null);
 
             string content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n";
-            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration, _ioService, model, fileName, title, content);
+            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration,
+                _ioService, model, fileName, title, content, _messageCheckerTrigger);
 
             Documents.ComponentDiagrams.Add(model);
             await AfterCreate(d);
@@ -1424,7 +1457,7 @@ namespace PlantUMLEditor.Models
         private async Task NewMarkDownDocument(string filePath, string fileName)
         {
             MDDocumentModel? d = new MDDocumentModel(
-            Configuration, _ioService, filePath, fileName, string.Empty);
+            Configuration, _ioService, filePath, fileName, string.Empty, _messageCheckerTrigger);
 
             await AfterCreate(d);
         }
@@ -1446,7 +1479,8 @@ namespace PlantUMLEditor.Models
             UMLSequenceDiagram? model = new UMLModels.UMLSequenceDiagram(title, fileName);
             string content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n";
 
-            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel(Configuration, _ioService, model, Documents.ClassDocuments, fileName, title, content);
+            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel(Configuration,
+                _ioService, model, Documents.ClassDocuments, fileName, title, content, _messageCheckerTrigger);
 
             Documents.SequenceDiagrams.Add(model);
             await AfterCreate(d);
@@ -1497,7 +1531,7 @@ namespace PlantUMLEditor.Models
             UnknownDocumentModel? d = new UnknownDocumentModel((old, @new) =>
             {
             },
-            Configuration, _ioService, model, Documents, fileName, title, content);
+            Configuration, _ioService, model, Documents, fileName, title, content, _messageCheckerTrigger);
 
             await AfterCreate(d);
         }
@@ -1505,7 +1539,7 @@ namespace PlantUMLEditor.Models
         private async Task NewYAMLDocument(string filePath, string fileName)
         {
             YMLDocumentModel? d = new YMLDocumentModel(
-            Configuration, _ioService, filePath, fileName, string.Empty);
+            Configuration, _ioService, filePath, fileName, string.Empty, _messageCheckerTrigger);
 
             await AfterCreate(d);
         }
@@ -1527,7 +1561,7 @@ namespace PlantUMLEditor.Models
         {
             string? content = await File.ReadAllTextAsync(fileName);
             ClassDiagramDocumentModel? d = new ClassDiagramDocumentModel(Configuration,
-                _ioService, diagram, Documents.ClassDocuments, fileName, diagram.Title, content);
+                _ioService, diagram, Documents.ClassDocuments, fileName, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
             {
@@ -1545,7 +1579,8 @@ namespace PlantUMLEditor.Models
             int lineNumber, string? searchText)
         {
             string content = await File.ReadAllTextAsync(fileName);
-            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration, _ioService, diagram, fileName, diagram.Title, content);
+            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration,
+                _ioService, diagram, fileName, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
             {
@@ -1635,7 +1670,9 @@ namespace PlantUMLEditor.Models
                 _checkMessagesRunning.Release();
             }
 
-            _messageChecker.Change(1000, Timeout.Infinite);
+            _messageCheckerTrigger.Set();
+
+
         }
 
         private void SaveMRU()
@@ -1717,7 +1754,7 @@ namespace PlantUMLEditor.Models
             MDDocumentModel? d = new MDDocumentModel(Configuration, _ioService,
                 fullPath,
                 Path.GetFileName(fullPath)
-                , content);
+                , content, _messageCheckerTrigger);
 
             lock (_docLock)
             {
@@ -1732,7 +1769,8 @@ namespace PlantUMLEditor.Models
         {
             string content = await File.ReadAllTextAsync(fileName);
 
-            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel(Configuration, _ioService, diagram, Documents.ClassDocuments, fileName, diagram.Title, content);
+            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel(Configuration,
+                _ioService, diagram, Documents.ClassDocuments, fileName, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
             {
@@ -1782,7 +1820,7 @@ namespace PlantUMLEditor.Models
             string content = await File.ReadAllTextAsync(fullPath);
             UnknownDocumentModel? d = new UnknownDocumentModel((old, @new) =>
             {
-            }, Configuration, _ioService, diagram, Documents, fullPath, diagram.Title, content);
+            }, Configuration, _ioService, diagram, Documents, fullPath, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
             {
@@ -1798,7 +1836,7 @@ namespace PlantUMLEditor.Models
             YMLDocumentModel? d = new YMLDocumentModel(Configuration, _ioService,
                 fullPath,
                 Path.GetFileName(fullPath)
-                , content);
+                , content, _messageCheckerTrigger);
 
             lock (_docLock)
             {

@@ -1,4 +1,5 @@
 ﻿using PlantUMLEditor.Controls;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -8,8 +9,8 @@ namespace PlantUMLEditor.Models
     internal class YMLDocumentModel : TextDocumentModel
     {
         public YMLDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
-           string fileName, string title, string content) :
-            base(configuration, openDirectoryService, fileName, title, content)
+           string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
+            base(configuration, openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
 
         }

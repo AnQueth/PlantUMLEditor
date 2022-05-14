@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -27,7 +28,7 @@ namespace PlantUMLEditor.Models
 
         private int _lineNumber;
         private ITextEditor? _textEditor;
-
+        private readonly AutoResetEvent _messageCheckerTrigger;
         private string _textValue = string.Empty;
 
         private IPreviewModel? imageModel;
@@ -41,12 +42,12 @@ namespace PlantUMLEditor.Models
 
 
         public TextDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
-            string fileName, string title, string content) : base(fileName, title)
+            string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) : base(fileName, title)
         {
 
 
 
-
+            _messageCheckerTrigger = messageCheckerTrigger;
             _textValue = content;
 
             _ioService = openDirectoryService;
@@ -159,6 +160,7 @@ namespace PlantUMLEditor.Models
         {
             IsDirty = true;
             _textValue = text;
+            _messageCheckerTrigger.Set();
 
             //_mostUsedWords.Clear();
             //foreach (Match m in words.Matches(text))
@@ -223,6 +225,8 @@ namespace PlantUMLEditor.Models
             _bindedAction?.Invoke();
 
             TextEditor?.GotoLine(_lineNumber, _findText);
+
+            _messageCheckerTrigger.Set();
         }
 
         internal void CloseAutoComplete()

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -11,6 +12,7 @@ namespace PlantUMLEditor.Models
     internal class SequenceDiagramDocumentModel : TextDocumentModel
     {
         private string _autoCompleteAppend = string.Empty;
+        private bool _dataTypesUpdated = false;
 
         private static readonly string[] DEFAULTAUTOCOMPLETES = new string[] { "participant", "actor", "database", "queue", "entity" };
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
@@ -32,7 +34,8 @@ namespace PlantUMLEditor.Models
 
         public SequenceDiagramDocumentModel(IConfiguration configuration,
                         IIOService openDirectoryService, UMLSequenceDiagram diagram, LockedList<UMLClassDiagram> dataTypes,
-                        string fileName, string title, string content) : base(configuration, openDirectoryService, fileName, title, content)
+                        string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
+            base(configuration, openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
             Diagram = diagram;
             DataTypes = dataTypes;
@@ -90,6 +93,7 @@ namespace PlantUMLEditor.Models
         internal void UpdateDiagram(LockedList<UMLClassDiagram> classDocuments)
         {
             DataTypes = classDocuments;
+            _dataTypesUpdated = true;
         }
 
         internal override async void AutoComplete(AutoCompleteParameters autoCompleteParameters)
@@ -202,19 +206,27 @@ namespace PlantUMLEditor.Models
         }
 
 
-
+        private UMLDiagram? _diagram;
 
         public override async Task<UMLDiagram?> GetEditedDiagram()
         {
-
-
-
-            if (Content is null)
+            if (IsDirty || _diagram is null || _dataTypesUpdated)
             {
-                return null;
-            }
 
-            return await PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, false);
+
+                if (Content is null)
+                {
+                    return null;
+                }
+
+                _diagram = await PlantUML.UMLSequenceDiagramParser.ReadString(Content, DataTypes, false);
+
+                if (_dataTypesUpdated)
+                {
+                    _dataTypesUpdated = false;
+                }
+            }
+            return _diagram;
 
 
 

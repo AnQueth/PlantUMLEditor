@@ -21,7 +21,7 @@ C2 -> C1 : int test()
 C2 -> C1: C2 la()
 C2-> C1: int test()
 C1 -> C1: C2 la()
-C1 -> ArrayList : void countit() 
-C1 ..> C2 :la
+C1 -> ArrayList : void countit()  
+C1 ..> C2 : string la 
 C1 ..> A : void start(int timeout)
 @enduml

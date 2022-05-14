@@ -3,6 +3,7 @@ using PlantUMLEditor.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -35,8 +36,9 @@ namespace PlantUMLEditor.Models
 
         public ComponentDiagramDocumentModel(IConfiguration configuration,
                  IIOService openDirectoryService,
-                 UMLComponentDiagram diagram, string filename, string title, string content) : base(configuration, openDirectoryService,
-                      filename, title, content)
+                 UMLComponentDiagram diagram, string filename, string title, string content, AutoResetEvent messageCheckerTrigger) :
+            base(configuration, openDirectoryService,
+                      filename, title, content, messageCheckerTrigger)
         {
             Diagram = diagram;
 
@@ -133,20 +135,23 @@ namespace PlantUMLEditor.Models
         }
 
 
-
+        private UMLDiagram? _diagram;
 
         public override async Task<UMLDiagram?> GetEditedDiagram()
         {
 
 
-
-            if (Content is null)
+            if (IsDirty || _diagram is null)
             {
-                return null;
+
+                if (Content is null)
+                {
+                    return null;
+                }
+
+                _diagram = await PlantUML.UMLComponentDiagramParser.ReadString(Content);
             }
-
-            return await PlantUML.UMLComponentDiagramParser.ReadString(Content);
-
+            return _diagram;
 
 
 

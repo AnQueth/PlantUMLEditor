@@ -3,6 +3,7 @@ using PlantUMLEditor.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -41,8 +42,8 @@ namespace PlantUMLEditor.Models
             LockedList<UMLClassDiagram> otherClassDiagrams,
             string fileName,
             string title,
-            string content) : base(configuration, openDirectoryService,
-                fileName, title, content)
+            string content, AutoResetEvent messageCheckerTrigger) : base(configuration, openDirectoryService,
+                fileName, title, content, messageCheckerTrigger)
         {
             Diagram = diagram;
 
@@ -102,14 +103,17 @@ namespace PlantUMLEditor.Models
                 {
                     if (TextEditor != null)
                     {
-                        TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
+                        Content = PlantUMLGenerator.Create(doc);
+                        //TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
                     }
                 };
             }
             else
             {
-                TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
+                Content = PlantUMLGenerator.Create(doc);
+                // TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
             }
+            IsDirty = true;
         }
 
         internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)
@@ -149,20 +153,24 @@ namespace PlantUMLEditor.Models
         }
 
 
-
+        private UMLDiagram? _diagram;
 
         public override async Task<UMLDiagram?> GetEditedDiagram()
         {
 
 
 
-            if (Content is null)
+            if (IsDirty || _diagram is null)
             {
-                return null;
+
+                if (Content is null)
+                {
+                    return null;
+                }
+
+                _diagram = await PlantUML.UMLClassDiagramParser.ReadString(Content);
             }
-
-            return await PlantUML.UMLClassDiagramParser.ReadString(Content);
-
+            return _diagram;
 
 
         }
