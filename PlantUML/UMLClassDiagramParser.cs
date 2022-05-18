@@ -359,9 +359,14 @@ namespace PlantUML
 
                             UMLDataType? fromType = d.DataTypes.Find(p => p.NonGenericName == first);
 
+                            if (fromType is null)
+                            {
+                                d.AddLineError(line, lineNumber);
+
+                            }
 
 
-                            if (fromType != null && !fromType.Properties.Any(p => p.Name == first))
+                            else if (!fromType.Properties.Any(p => p.Name == first))
                             {
                                 ListTypes l = ListTypes.None;
                                 if (m.Groups["fm"].Success)
