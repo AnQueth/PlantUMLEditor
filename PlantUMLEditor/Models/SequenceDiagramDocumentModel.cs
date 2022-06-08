@@ -210,7 +210,7 @@ namespace PlantUMLEditor.Models
 
         public override async Task<UMLDiagram?> GetEditedDiagram()
         {
-            if (IsDirty || _diagram is null || _dataTypesUpdated)
+            if (DocGeneratorDirty || _diagram is null || _dataTypesUpdated)
             {
 
 
@@ -225,6 +225,7 @@ namespace PlantUMLEditor.Models
                 {
                     _dataTypesUpdated = false;
                 }
+                DocGeneratorDirty = false;
             }
             return _diagram;
 

@@ -31,10 +31,20 @@ namespace PlantUMLEditor.Models
 
         }
 
+        protected bool DocGeneratorDirty
+        {
+            get; set;
+        }
+
         public bool IsDirty
         {
             get => _isDirty;
-            set => SetValue(ref _isDirty, value);
+            set
+            {
+                SetValue(ref _isDirty, value);
+                DocGeneratorDirty = true;
+            }
+
         }
     }
 }

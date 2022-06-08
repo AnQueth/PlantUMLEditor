@@ -141,7 +141,7 @@ namespace PlantUMLEditor.Models
         {
 
 
-            if (IsDirty || _diagram is null)
+            if (DocGeneratorDirty || _diagram is null)
             {
 
                 if (Content is null)
@@ -150,6 +150,7 @@ namespace PlantUMLEditor.Models
                 }
 
                 _diagram = await PlantUML.UMLComponentDiagramParser.ReadString(Content);
+                DocGeneratorDirty = false;
             }
             return _diagram;
 
