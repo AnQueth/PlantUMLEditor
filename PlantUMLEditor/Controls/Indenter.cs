@@ -36,8 +36,9 @@ namespace PlantUMLEditor.Controls
             for (int x = 0; x < r.Length; x++)
             {
                 char d = r[x];
+                char peekNext = x + 1 < r.Length ? r[x + 1] : char.MinValue;
 
-                if (d == '<' && x != 0)
+                if (d is '<' && x is not 0 && peekNext is not '-' or '#')
                 {
                     starts++;
                 }
@@ -48,6 +49,7 @@ namespace PlantUMLEditor.Controls
 
                 if (starts > 0 && d == ' ' && oldd != ',')
                 {
+
                 }
                 else
                 {
