@@ -33,7 +33,11 @@ namespace PlantUML
                 return true;
             }
 
-
+            if (line.Contains("[hidden]"))
+            {
+                otherCB(line);
+                return true;
+            }
 
             if (line == "left to right direction")
             {
