@@ -657,7 +657,7 @@ namespace PlantUMLEditor.Models
             {
                 if (fe.DataContext is TreeViewModel tvm)
                 {
-                    if (tvm.IsFile)
+                    if (tvm.IsFile && !tvm.IsRenaming)
                     {
                         DragDrop.DoDragDrop(fe, tvm.FullPath, DragDropEffects.Link | DragDropEffects.Move);
                     }
