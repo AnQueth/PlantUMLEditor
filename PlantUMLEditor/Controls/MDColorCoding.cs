@@ -11,7 +11,7 @@ namespace PlantUMLEditor.Controls
         private static readonly Regex _hs = new Regex("^[#\\*]+", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex _bolds = new Regex("[\\*]{2}\\w+[\\*]{2}", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex _italics = new Regex("(?<!\\*)[\\*]{1}\\w+(?<!\\*)[\\*]{1}|[_]{1}\\w+[_]{1}", RegexOptions.Compiled | RegexOptions.Multiline);
-        private static readonly Regex _lists = new Regex("^ *[#\\*\\-\\d]", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex _lists = new Regex("^ *([#\\*\\-]|[\\d]+)", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex _links = new Regex("\\[.+\\)", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex _code = new Regex("`{3}[.\\w\\W]*?`{3}", RegexOptions.Compiled | RegexOptions.Multiline);
 
