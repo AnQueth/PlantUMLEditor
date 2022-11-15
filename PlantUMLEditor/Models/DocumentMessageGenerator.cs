@@ -85,7 +85,7 @@ namespace PlantUMLEditor.Models
 
 
             List<BadDataTypeAndNS>? namespaceReferences = FindBadDataTypes(folderBase, newMessages,
-                dataTypes.OrderByDescending(p => p.DataType.Name.Length).ToList());
+                dataTypes.OrderBy(p => p.DataType.Name.Length).ToList());
 
 
             FindCircularReferences(folderBase, newMessages, namespaceReferences);

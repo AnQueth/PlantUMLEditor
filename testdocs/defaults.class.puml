@@ -15,6 +15,13 @@ end note
 'aaaa fgggg
 class h { 
  } 
- 
+class bool { 
+ } 
+class DateTimeOffset { 
+ } 
+class Task { 
+ } 
+class IEnumerable { 
+ } 
 
 @enduml
