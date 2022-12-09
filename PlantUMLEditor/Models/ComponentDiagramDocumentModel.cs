@@ -64,7 +64,7 @@ namespace PlantUMLEditor.Models
                                      z.Entities.OfType<UMLInterface>().Select(p => p.Name)
                                      )
 
-                                .Union(z.ContainedPackages.Select(p => string.IsNullOrEmpty(p.Alias) ? p.Name : p.Alias))
+                                .Union(z.ContainedPackages.Select(p => string.IsNullOrEmpty(p.Alias) ? p.Text : p.Alias))
                                  .Union(
                                      z.Entities.OfType<UMLComponent>().Select(p => p.Namespace)
                                      )
