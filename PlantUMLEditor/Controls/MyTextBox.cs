@@ -545,27 +545,37 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         {
             if (ActualHeight > 0)
             {
+                int start = GetFirstVisibleLineIndex();
                 int lines = GetLastVisibleLineIndex();
+
+
                 double p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 
                 Typeface tf = new(FontFamily, FontStyle, FontWeight, FontStretch);
                 DrawingVisual dv = new();
                 DrawingContext? context = dv.RenderOpen();
-                Point pt = new(0, 0);
+
+                FormattedText measuredtext = new("100", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, FontSize, Brushes.Black, p);
+                var y = VerticalOffset - (measuredtext.Height * start);
+                var maxwidth = measuredtext.Width;
+
+                Point pt = new(0, VerticalOffset - y);
 
                 context.PushTransform(new TranslateTransform(0, -VerticalOffset));
 
-                for (int x = 0; x <= lines; x++)
+
+                for (int x = start; x <= lines; x++)
                 {
                     FormattedText ft = new((x + 1).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
                         FlowDirection.LeftToRight, tf, FontSize, Brushes.Black, p);
                     context.DrawText(ft, pt);
                     pt.Y += ft.Height;
+                    maxwidth = Math.Max(ft.Width, maxwidth);
                 }
 
                 context.Close();
 
-                RenderTargetBitmap rtb = new(25, (int)ActualHeight, 96, 96, PixelFormats.Pbgra32);
+                RenderTargetBitmap rtb = new((int)maxwidth, (int)ActualHeight, 96, 96, PixelFormats.Pbgra32);
                 rtb.Render(dv);
                 rtb.Freeze();
                 LineNumbers = rtb;

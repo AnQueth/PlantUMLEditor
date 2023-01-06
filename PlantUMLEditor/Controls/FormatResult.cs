@@ -56,7 +56,7 @@ namespace PlantUMLEditor.Controls
             if (start - begin < 0)
             {
                 startShave = start - begin;
-                Debug.WriteLine($"SS {startShave}");
+
                 len = length + startShave;
             }
 
