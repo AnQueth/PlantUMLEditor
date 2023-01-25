@@ -35,6 +35,7 @@ namespace PlantUMLEditor.Models
             Diagram = model;
             Diagrams = diagrams;
             colorCodingProvider = new UMLColorCoding();
+            indenter = new Indenter();
         }
 
         public UMLUnknownDiagram Diagram
@@ -45,6 +46,8 @@ namespace PlantUMLEditor.Models
         {
             get; internal set;
         }
+
+        private readonly Indenter indenter;
 
         private readonly UMLColorCoding colorCodingProvider;
 
@@ -62,6 +65,11 @@ namespace PlantUMLEditor.Models
             }
 
             base.ContentChanged(text);
+        }
+
+        protected override IIndenter GetIndenter()
+        {
+            return indenter;
         }
 
         protected override IColorCodingProvider? GetColorCodingProvider()

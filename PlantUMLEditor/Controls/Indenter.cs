@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace PlantUMLEditor.Controls
 {
-    internal class Indenter
+    internal class Indenter : IIndenter
     {
         private static readonly Regex newLineAfter = new(@"^(note.+:|end +note|\'.+|.+\'\/|left to right direction)", RegexOptions.Compiled);
         private static readonly Regex newLineBefore = new(@"^(note.+|\'.+|\/\'.+|left to right direction)", RegexOptions.Compiled);
@@ -97,7 +97,7 @@ namespace PlantUMLEditor.Controls
             return indentLevel;
         }
 
-        public static int GetIndentLevelForLine(string text, int line)
+        public int GetIndentLevelForLine(string text, int line)
         {
             string[] lines = reg.Split(text);
 
@@ -111,7 +111,7 @@ namespace PlantUMLEditor.Controls
             return indentLevel;
         }
 
-        public static string Process(string text, bool removeLines)
+        public string Process(string text, bool removeLines)
         {
             string[] lines = reg.Split(text);
 

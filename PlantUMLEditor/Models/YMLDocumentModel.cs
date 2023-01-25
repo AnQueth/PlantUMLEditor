@@ -30,6 +30,11 @@ namespace PlantUMLEditor.Models
             return null;
         }
 
+        protected override IIndenter GetIndenter()
+        {
+            return new NullIndenter();
+        }
+
         internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)
         {
 

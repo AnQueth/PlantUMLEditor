@@ -76,7 +76,7 @@ namespace PlantUMLEditor.Models
             set
             {
                 _textValue = value;
-                _textEditor?.TextWrite(value, false, GetColorCodingProvider());
+                _textEditor?.TextWrite(value, false, GetColorCodingProvider(), GetIndenter());
             }
         }
 
@@ -210,6 +210,8 @@ namespace PlantUMLEditor.Models
             _autoComplete?.ShowAutoComplete(this);
         }
 
+        protected abstract IIndenter GetIndenter();
+
         protected abstract IColorCodingProvider? GetColorCodingProvider();
 
         internal void Binded(ITextEditor textEditor)
@@ -218,7 +220,7 @@ namespace PlantUMLEditor.Models
             _autoComplete = (IAutoComplete)textEditor;
             _binding = true;
 
-            _textEditor.TextWrite(_textValue, false, GetColorCodingProvider());
+            _textEditor.TextWrite(_textValue, false, GetColorCodingProvider(), GetIndenter());
 
 
             _binding = false;

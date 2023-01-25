@@ -9,11 +9,14 @@ namespace PlantUMLEditor.Models
 {
     internal class MDDocumentModel : TextDocumentModel
     {
+        private readonly MDColorCoding _colorCoding;
+        private readonly IIndenter _indenter;
         public MDDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
           string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
             base(configuration, openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
-
+            _colorCoding = new MDColorCoding();
+            _indenter = new NullIndenter();
         }
 
         public override void Close()
@@ -46,7 +49,12 @@ namespace PlantUMLEditor.Models
 
         protected override IColorCodingProvider? GetColorCodingProvider()
         {
-            return new MDColorCoding();
+            return _colorCoding;
+        }
+
+        protected override IIndenter GetIndenter()
+        {
+            return _indenter;
         }
 
         internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)

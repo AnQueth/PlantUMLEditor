@@ -41,9 +41,13 @@ namespace PlantUMLEditor.Models
             DataTypes = dataTypes;
 
             colorCodingProvider = new UMLColorCoding();
+            indenter = new Indenter();
         }
 
-
+        protected override IIndenter GetIndenter()
+        {
+            return indenter;
+        }
 
         public LockedList<UMLClassDiagram> DataTypes
         {
@@ -51,6 +55,7 @@ namespace PlantUMLEditor.Models
         }
 
         private readonly UMLColorCoding colorCodingProvider;
+        private readonly Indenter indenter;
 
         public UMLSequenceDiagram Diagram
         {

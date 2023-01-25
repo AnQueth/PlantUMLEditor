@@ -77,6 +77,12 @@ namespace PlantUMLEditor.Models
                     }
                 }
             });
+            indenter = new Indenter();
+        }
+
+        protected override IIndenter GetIndenter()
+        {
+            return indenter;
         }
 
         public UMLClassDiagram Diagram
@@ -85,12 +91,13 @@ namespace PlantUMLEditor.Models
         }
 
         private readonly UMLColorCoding colorCodingProvider;
+        private readonly Indenter indenter;
 
         protected override void RegenDocumentHandler()
         {
             string t = PlantUMLGenerator.Create(Diagram);
 
-            TextEditor?.TextWrite(t, true, GetColorCodingProvider());
+            TextEditor?.TextWrite(t, true, GetColorCodingProvider(), GetIndenter());
 
             base.RegenDocumentHandler();
         }

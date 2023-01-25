@@ -75,6 +75,12 @@ namespace PlantUMLEditor.Models
                      }
                  }
              });
+            indenter = new Indenter();
+        }
+
+        protected override IIndenter GetIndenter()
+        {
+            return indenter;
         }
 
         public override void Close()
@@ -89,19 +95,20 @@ namespace PlantUMLEditor.Models
         }
 
         private readonly UMLColorCoding colorCodingProvider;
+        private readonly Indenter indenter;
 
         protected override void RegenDocumentHandler()
         {
             string t = PlantUMLGenerator.Create(Diagram);
 
-            TextEditor?.TextWrite(t, true, GetColorCodingProvider());
+            TextEditor?.TextWrite(t, true, GetColorCodingProvider(), GetIndenter());
 
             base.RegenDocumentHandler();
         }
 
         internal void UpdateDiagram(UMLComponentDiagram doc)
         {
-            TextEditor?.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
+            TextEditor?.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider(), GetIndenter());
         }
 
         internal override void AutoComplete(AutoCompleteParameters autoCompleteParameters)

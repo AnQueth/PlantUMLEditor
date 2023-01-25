@@ -407,6 +407,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         private double _textTransformOffset = 0;
         private IColorCodingProvider? _colorCodingProvider;
+        private IIndenter _indenter;
 
         private void GetStartAndEndLines(out int startLine, out int endLine)
         {
@@ -853,7 +854,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 int pos = CaretIndex;
 
-                Text = Indenter.Process(TextRead(), false);
+                Text = _indenter.Process(TextRead(), false);
                 CaretIndex = pos;
                 _autoComplete.CloseAutoComplete();
 
@@ -864,7 +865,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 int pos = CaretIndex;
 
-                Text = Indenter.Process(TextRead(), true);
+                Text = _indenter.Process(TextRead(), true);
                 CaretIndex = pos;
                 _autoComplete.CloseAutoComplete();
 
@@ -908,7 +909,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
             else if (e.Key is Key.Enter)
             {
-                int indent = Indenter.GetIndentLevelForLine(Text, GetLineIndexFromCharacterIndex(CaretIndex));
+                int indent = _indenter.GetIndentLevelForLine(Text, GetLineIndexFromCharacterIndex(CaretIndex));
                 string line = "\r\n" + new string(' ', indent * 4);
                 int index = CaretIndex + line.Length;
                 Text = Text.Insert(CaretIndex, line);
@@ -1434,8 +1435,9 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             return Dispatcher.Invoke<string>(() => { return Text; });
         }
 
-        public void TextWrite(string text, bool format, IColorCodingProvider? colorCodingProvider)
+        public void TextWrite(string text, bool format, IColorCodingProvider? colorCodingProvider, IIndenter indenter)
         {
+            _indenter = indenter;
             _colorCodingProvider = colorCodingProvider;
             Text = text;
             FindReplaceVisible = false;
@@ -1448,7 +1450,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
             if (format)
             {
-                Text = Indenter.Process(text, false);
+                Text = _indenter.Process(text, false);
             }
         }
 
