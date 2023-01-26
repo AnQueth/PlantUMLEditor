@@ -29,6 +29,15 @@ namespace PlantUMLEditor.Controls
         private record FindItem(int Start, int Length);
         public record FindResult(int Index, string Line, int LineNumber, string ReplacePreview);
 
+        public static readonly DependencyProperty FindAllReferencesCommandProperty =
+DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
+
+        public static readonly DependencyProperty GotoDefinitionCommandProperty =
+            DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
+
+        public static readonly DependencyProperty PopupControlProperty =
+                    DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
+
         private readonly List<Error> _errors = new();
 
         private readonly List<FindItem> _found = new();
@@ -40,9 +49,11 @@ namespace PlantUMLEditor.Controls
         private (int selectionStart, int match) _braces;
         private DrawingVisual? _cachedDrawing;
         private ListBox? _cb;
+        private IColorCodingProvider? _colorCodingProvider;
         private List<FormatResult> _colorCodings = new();
         private IAutoCompleteCallback? _currentCallback = null;
         private string _findText = string.Empty;
+        private IIndenter _indenter;
         private int _lastKnownFirstCharacterIndex = 0;
         private int _lastKnownLastCharacterIndex = 0;
         private double _lineHeight = 0;
@@ -51,21 +62,11 @@ namespace PlantUMLEditor.Controls
         private string _replaceText = string.Empty;
         private double _scrollOffset;
         private FindResult? _selectedFindResult = null;
+        private double _textTransformOffset = 0;
         private Timer? _timerForAutoComplete = null;
         private Timer? _timerForSelection = null;
         private bool _useRegex;
         private bool findReplaceVisible;
-
-
-        public static readonly DependencyProperty FindAllReferencesCommandProperty =
-DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
-
-
-        public static readonly DependencyProperty GotoDefinitionCommandProperty =
-            DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
-
-        public static readonly DependencyProperty PopupControlProperty =
-                    DependencyProperty.Register("PopupControl", typeof(Popup), typeof(MyTextBox));
 
         public MyTextBox()
         {
@@ -86,6 +87,13 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         public DelegateCommand ClearCommand
         {
             get;
+        }
+
+        public DelegateCommand<string> FindAllReferencesCommand
+        {
+            get => (DelegateCommand<string>)GetValue(FindAllReferencesCommandProperty);
+
+            set => SetValue(FindAllReferencesCommandProperty, value);
         }
 
         public DelegateCommand FindCommand
@@ -114,13 +122,6 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                 _findText = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FindText)));
             }
-        }
-
-        public DelegateCommand<string> FindAllReferencesCommand
-        {
-            get => (DelegateCommand<string>)GetValue(FindAllReferencesCommandProperty);
-
-            set => SetValue(FindAllReferencesCommandProperty, value);
         }
 
         public DelegateCommand<string> GotoDefinitionCommand
@@ -189,574 +190,325 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
         }
 
-        private static T? FindDescendant<T>(DependencyObject obj) where T : DependencyObject
+        public void CloseAutoComplete()
         {
-            if (obj == null)
+            PopupControl.IsOpen = false;
+        }
+
+        public void Destroy()
+        {
+            this._bindedDocument = null;
+            this._cachedDrawing = null;
+            this.DataContext = null;
+        }
+
+        public void DrawText(DrawingContext col)
+        {
+            int cf = _lastKnownFirstCharacterIndex;
+            int cl = _lastKnownLastCharacterIndex;
+
+            while (cl > Text.Length)
             {
-                return default;
+                cl--;
             }
 
-            int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
-            if (numberChildren == 0)
+            if (Text.Length > 0)
             {
-                return default;
-            }
-
-            for (int i = 0; i < numberChildren; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                if (child is T)
+                if (cl == -1)
                 {
-                    return (T)(object)child;
-                }
-            }
-
-            for (int i = 0; i < numberChildren; i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
-                T? potentialMatch = FindDescendant<T>(child);
-                if (potentialMatch != default(T))
-                {
-                    return potentialMatch;
-                }
-            }
-
-            return default;
-        }
-
-        private void AutoCompleteItemSelected(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count > 0)
-            {
-                string? currentSelected = (string?)e.AddedItems[0];
-
-                if (_autoCompleteParameters != null && _currentCallback != null && !string.IsNullOrEmpty(currentSelected))
-                {
-                    _currentCallback.Selection(currentSelected, _autoCompleteParameters);
-                }
-            }
-        }
-
-        private void CalculateFirstAndLastCharacters()
-        {
-            (int cf, int ce) = GetStartAndEndCharacters();
-
-            _lastKnownFirstCharacterIndex = cf;
-            _lastKnownLastCharacterIndex = ce;
-
-            // Debug.WriteLine($"{_lastKnownFirstCharacterIndex} {_lastKnownLastCharacterIndex} {Text.Length}");
-        }
-
-        private void ClearFindResults()
-        {
-            FindResults.Clear();
-            FindText = "";
-            ReplaceText = "";
-            lock (_found)
-            {
-                _found.Clear();
-            }
-
-            ForceDraw();
-        }
-
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
-            FindReplaceVisible = false;
-            lock (_found)
-            {
-                _found.Clear();
-            }
-        }
-
-        private int CountLines()
-        {
-            int lineCount = Text.Count(c => c == '\n');
-            return lineCount;
-        }
-
-        private void FindHandler()
-        {
-            RunFind(FindText, true);
-        }
-
-        private void FindMatchingBackwards(ReadOnlySpan<char> text, int selectionStart, char inc, char matchChar)
-        {
-            int ends = 1;
-            int match = 0;
-            for (int c = selectionStart - 1; ends != 0 && c >= 0; c--)
-            {
-                if (text[c] == inc)
-                {
-                    ends++;
-                }
-                if (text[c] == matchChar)
-                {
-                    ends--;
+                    cl = Text.Length;
                 }
 
-                match = c;
-            }
-
-            _braces = (selectionStart, match);
-
-            ForceDraw();
-        }
-
-        private void ForceDraw()
-        {
-            _renderText = true;
-            InvalidateVisual();
-        }
-
-        private void FindMatchingForward(ReadOnlySpan<char> text, int selectionStart, char inc, char matchChar)
-        {
-            int ends = 1;
-            int match = 0;
-            for (int c = selectionStart + 1; ends != 0 && c < text.Length - 1; c++)
-            {
-                if (text[c] == inc)
+                if (cf >= Text.Length)
                 {
-                    ends++;
-                }
-                if (text[c] == matchChar)
-                {
-                    ends--;
+                    cf = 0;
                 }
 
-                match = c;
-            }
-
-            _braces = (selectionStart, match);
-
-            ForceDraw();
-        }
-
-        private int GetCharaceterFromLine(int line)
-        {
-            int z = 0;
-            int m = 0;
-            for (int x = 0; x < Text.Length && m != line; x++)
-            {
-                if (Text[x] == '\n')
+                if (cf + (cl - cf) > Text.Length || (cl - cf) < 0)
                 {
-                    m++;
-                }
-                if (m == line)
-                {
-                    return z;
+                    Debug.WriteLine("TEXT OUT OF RANGE");
+
+                    return;
                 }
 
-                z++;
-            }
-            return z;
-        }
+                string t = Text[cf..cl];
+                FormattedText? formattedText = new FormattedText(t
+    ,
+    CultureInfo.GetCultureInfo("en-us"),
+    FlowDirection.LeftToRight,
+    new Typeface(FontFamily.Source),
+    FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
 
-        /// <summary>
-        /// stolen from ms source code
-        /// </summary>
-        /// <returns></returns>
-        private double GetLineHeight()
-        {
-            FontFamily fontFamily = (FontFamily)this.GetValue(FontFamilyProperty);
-            double fontSize = (double)this.GetValue(TextElement.FontSizeProperty);
-
-            double lineHeight = 0;
-
-            if (TextOptions.GetTextFormattingMode(this) == TextFormattingMode.Ideal)
-            {
-                lineHeight = fontFamily.LineSpacing * fontSize;
-            }
-
-            return lineHeight;
-        }
-
-        private int GetLineNumberDuringRender(int caretIndex)
-        {
-            ReadOnlySpan<char> text = Text.AsSpan();
-
-            int linestart = 0;
-
-            for (int i = 0; i <= caretIndex && i < text.Length; i++)
-            {
-                if (text[i] == '\n')
+                // Debug.WriteLine($"{cf} {cl} {Text.Length} {t.Length}");
+                foreach (FormatResult? c in _colorCodings.Where(z => z.Intersects(cf, cl)))
                 {
-                    linestart++;
-                }
-            }
-
-            return linestart;
-        }
-
-
-
-        private (int, int) GetStartAndEndCharacters()
-        {
-            if (_lineHeight == 0)
-            {
-                _lineHeight = GetLineHeight();
-            }
-
-            GetStartAndEndLines(out int startLine, out int endLine);
-
-            int sc = GetCharaceterFromLine(startLine);
-            int ec = GetCharaceterFromLine(endLine);
-
-            return (sc, ec);
-        }
-
-        private double _textTransformOffset = 0;
-        private IColorCodingProvider? _colorCodingProvider;
-        private IIndenter _indenter;
-
-        private void GetStartAndEndLines(out int startLine, out int endLine)
-        {
-
-            startLine = (int)Math.Floor((VerticalOffset / _lineHeight) + 0.0001);
-
-            _textTransformOffset = _scrollOffset + (startLine == 0 ? 0 : _lineHeight);
-
-            //Debug.WriteLine($"{VerticalOffset} {_lineHeight} {(VerticalOffset / _lineHeight) + 0.0001} {_scrollOffset} {startLine}");
-
-            endLine = (int)Math.Ceiling((VerticalOffset + ActualHeight) / _lineHeight);
-            ++endLine;
-        }
-
-        private void FindAllReferences()
-        {
-            string found = GetWordFromCursor();
-
-            FindAllReferencesCommand?.Execute(found.Trim());
-        }
-
-        private void GoToDefinition()
-        {
-            string found = GetWordFromCursor();
-
-            GotoDefinitionCommand?.Execute(found.Trim());
-        }
-
-        private string GetWordFromCursor()
-        {
-            StringBuilder sb = new(20);
-            ReadOnlySpan<char> tp = Text.AsSpan();
-
-            for (int c = CaretIndex; c >= 0; c--)
-            {
-                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
-                {
-                    break;
+                    try
+                    {
+                        formattedText.SetForegroundBrush(c.Brush, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
+                        if (c.FontWeight != FontWeights.Normal)
+                        {
+                            formattedText.SetFontWeight(c.FontWeight, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
+                        }
+                        if (c.Italic)
+                        {
+                            formattedText.SetFontStyle(FontStyles.Italic, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("colors");
+                        Debug.WriteLine($"{c}");
+                        Debug.WriteLine(ex);
+                    }
                 }
 
-                sb.Insert(0, tp[c]);
-            }
-            for (int c = CaretIndex + 1; c <= tp.Length; c++)
-            {
-                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
+                lock (_found)
+                {//highlight found words
+                    foreach (FindItem? item in _found)
+                    {
+                        try
+                        {
+                            if (FormatResult.Intersects(cf, cl, item.Start, item.Start + item.Length))
+                            {
+                                int start = FormatResult.AdjustedStart(cf, item.Start);
+                                int len = FormatResult.AdjustedLength(cf, cl, item.Start, item.Length, item.Start + item.Length);
+
+                                TextDecoration td = new(TextDecorationLocation.Underline,
+                              new System.Windows.Media.Pen(Brushes.DarkBlue, 5), 0, TextDecorationUnit.FontRecommended,
+                               TextDecorationUnit.FontRecommended);
+
+                                TextDecorationCollection textDecorations = new()
+                                {
+                                    td
+                                };
+
+                                formattedText.SetTextDecorations(textDecorations, start, len);
+
+                                //var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
+
+                                //col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine("Finds");
+                            Debug.WriteLine($"{ex}");
+                        }
+                    }
+                }
+                if (_braces.selectionStart != 0 && _braces.match != 0)
                 {
-                    break;
+                    try
+                    {
+                        if (FormatResult.Intersects(cf, cl, _braces.selectionStart, _braces.selectionStart + 1))
+                        {
+                            Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.selectionStart), 1);
+                            col.DrawGeometry(Brushes.LightBlue, null, g);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("braces Selection");
+                        Debug.WriteLine($"{ex}");
+                    }
+                    try
+                    {
+                        if (FormatResult.Intersects(cf, cl, _braces.match, _braces.match + 1))
+                        {
+                            Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.match), 1);
+                            col.DrawGeometry(Brushes.LightBlue, null, g);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("braces match");
+                        Debug.WriteLine($"{ex}");
+                    }
                 }
 
-                sb.Append(tp[c]);
-            }
-
-            string found = sb.ToString();
-            return found;
-        }
-
-        private void MyTextBox_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            if (e.NewValue is not TextDocumentModel)
-            {
-                return;
-            }
-
-            CaretIndex = 0;
-
-            _bindedDocument = (TextDocumentModel)e.NewValue;
-            _autoComplete = this;
-            _bindedDocument?.Binded(this);
-        }
-
-        private void ProcessAutoComplete(object? state)
-        {
-            if (state == null)
-            {
-                return;
-            }
-
-            int k = (int)(Key)state;
-
-            Dispatcher.Invoke(() =>
-           {
-               Rect rec = GetRectFromCharacterIndex(CaretIndex);
-
-               int line = GetLineIndexFromCharacterIndex(CaretIndex);
-
-               string text = GetLineText(line);
-
-               int c = GetCharacterIndexFromLineIndex(line);
-
-               int where = CaretIndex;
-               string word = "";
-               int typedLength = 0;
-               if (text.Length != 0)
-               {
-                   if (text.Length > CaretIndex + 1)
-                   {
-                       if (!char.IsWhiteSpace(text[CaretIndex + 1]))
-                       {
-                           return;
-                       }
-                   }
-
-                   Stack<char> chars = new();
-                   for (int x = CaretIndex - c - 1; x >= 0; x--)
-                   {
-                       while (x > text.Length - 1 && x > 0)
-                       {
-                           x--;
-                       }
-
-                       if (text[x] is ' ' or '<' or '>' or '(' or ')')
-                       {
-                           break;
-                       }
-
-                       chars.Push(text[x]);
-                   }
-
-                   where -= chars.Count;
-                   typedLength = chars.Count;
-
-                   while (chars.Count > 0)
-                   {
-                       word += chars.Pop();
-                   }
-               }
-               _autoCompleteRect = rec;
-               _autoCompleteParameters = new AutoCompleteParameters(text, line, word,
-                   where, typedLength, CaretIndex - c);
-
-               _bindedDocument?.AutoComplete(_autoCompleteParameters);
-           });
-        }
-
-        private void RenderLineNumbers()
-        {
-            if (ActualHeight > 0)
-            {
-                int start = GetFirstVisibleLineIndex();
-                int lines = GetLastVisibleLineIndex();
-
-
-                double p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-
-                Typeface tf = new(FontFamily, FontStyle, FontWeight, FontStretch);
-                DrawingVisual dv = new();
-                DrawingContext? context = dv.RenderOpen();
-
-                FormattedText measuredtext = new("100", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, FontSize, Brushes.Black, p);
-                var y = VerticalOffset - (measuredtext.Height * start);
-                var maxwidth = measuredtext.Width;
-
-                Point pt = new(0, VerticalOffset - y);
-
-                context.PushTransform(new TranslateTransform(0, -VerticalOffset));
-
-
-                for (int x = start; x <= lines; x++)
+                foreach ((int line, int character) in _errors)
                 {
-                    FormattedText ft = new((x + 1).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
-                        FlowDirection.LeftToRight, tf, FontSize, Brushes.Black, p);
-                    context.DrawText(ft, pt);
-                    pt.Y += ft.Height;
-                    maxwidth = Math.Max(ft.Width, maxwidth);
+                    try
+                    {
+                        int l = GetCharacterIndexFromLineIndex(line - 1);
+                        int len = GetLineLength(line - 1);
+                        if (l >= cf && l <= cl)
+                        {
+                            TextDecoration td = new(TextDecorationLocation.Underline,
+                                new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
+                                 TextDecorationUnit.FontRecommended);
+
+                            TextDecorationCollection textDecorations = new()
+                            {
+                                td
+                            };
+
+                            formattedText.SetTextDecorations(textDecorations, l - cf, len);
+                        }
+                    }
+                    catch
+                    {
+                        Debug.WriteLine("errors");
+                    }
                 }
 
-                context.Close();
-
-                RenderTargetBitmap rtb = new((int)maxwidth, (int)ActualHeight, 96, 96, PixelFormats.Pbgra32);
-                rtb.Render(dv);
-                rtb.Freeze();
-                LineNumbers = rtb;
+                col.DrawText(formattedText, new Point(4, 0));
             }
+
+            double top = (GetLineNumberDuringRender(CaretIndex) * _lineHeight) - VerticalOffset + _textTransformOffset;
+
+            col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), _lineHeight));
         }
 
-        private void ReplaceHandler()
+        public void GotoLine(int lineNumber, string? findText)
         {
-            if (string.IsNullOrEmpty(FindText))
+            if (lineNumber == 0)
             {
-                return;
-            }
-
-            if (_useRegex)
-            {
-                Regex r = new(FindText);
-                Text = r.Replace(Text, ReplaceText);
-            }
-            else
-            {
-                Text = Text.Replace(FindText, ReplaceText);
-            }
-
-            lock (_found)
-            {
-                _found.Clear();
-            }
-
-            ForceDraw();
-        }
-
-        private void RunFind(string search, bool invalidate)
-        {
-            lock (_found)
-            {
-                _found.Clear();
-            }
-
-            if (_autoComplete.IsPopupVisible)
-            {
-                return;
-            }
-
-            if (string.IsNullOrEmpty(search))
-            {
-                return;
+                lineNumber = 1;
             }
 
             try
             {
-                FindResults.Clear();
-                if (_useRegex)
+                Dispatcher.InvokeAsync(() =>
                 {
-                    if (!search.StartsWith("(", StringComparison.InvariantCulture))
+                    lineNumber--;
+                    int c = GetCharaceterFromLine(lineNumber);// GetCharacterIndexFromLineIndex(lineNumber - 1);
+                    if (c >= 0)
                     {
-                        search = "(" + search;
+                        CaretIndex = c;
                     }
 
-                    if (!search.EndsWith(")", StringComparison.InvariantCulture))
+                    if (!string.IsNullOrEmpty(findText))
                     {
-                        search += ")";
+                        FindText = findText;
+                        FindHandler();
                     }
 
-                    Regex r = new(search, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
-                    MatchCollection? m = r.Matches(Text);
+                    GetStartAndEndLines(out int startLine, out int endLine);
 
-                    foreach (Group item in m)
+                    if (startLine <= lineNumber && endLine >= lineNumber)
                     {
-                        lock (_found)
-                        {
-                            _found.Add(new FindItem(item.Index, item.Length));
-                        }
-
-                        int l = GetLineIndexFromCharacterIndex(item.Index);
-
-                        string line = GetLineText(l);
-                        string reps = "";
-                        if (!string.IsNullOrEmpty(ReplaceText))
-                        {
-                            reps = r.Replace(line, ReplaceText).Trim();
-                        }
-
-                        FindResults.Add(new FindResult(item.Index, line.Trim(), l + 1, reps));
+                        CalculateFirstAndLastCharacters();
+                        ForceDraw();
                     }
-                }
-                else
-                {
-
-
-                    int p = Text.IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
-                    while (p != -1)
+                    else
                     {
-                        _found.Add(new FindItem(p, search.Length));
-                        int l = GetLineIndexFromCharacterIndex(p);
-
-                        string line = GetLineText(l);
-
-
-                        if (line is not null)
-                        {
-                            string reps = "";
-                            if (!string.IsNullOrEmpty(ReplaceText))
-                            {
-                                reps = line.Replace(search, ReplaceText, StringComparison.InvariantCultureIgnoreCase).Trim();
-                            }
-
-
-                            FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
-                        }
-
-                        p = Text.IndexOf(search, p + 1, StringComparison.InvariantCultureIgnoreCase);
+                        ScrollToLine(lineNumber < 5 ? 1 : lineNumber - 5);
                     }
-                }
+                });
             }
-            catch
+            catch { }
+            Keyboard.Focus(this);
+        }
+
+        public void InsertText(string text)
+        {
+            int c = CaretIndex;
+
+            Text = Text.Insert(c, text);
+
+            CaretIndex = c;
+        }
+
+        public void InsertTextAt(string text, int index, int typedLength)
+        {
+            SelectionStart = index;
+
+            if (typedLength > SelectionLength)
             {
+                SelectionLength = typedLength;
             }
-            if (invalidate)
+
+            if (!string.IsNullOrEmpty(SelectedText))
             {
+                SelectedText = "";
+            }
+
+            SelectionStart = index;
+
+            SelectedText = text;
+        }
+
+        public void InsertTextAtCursor(string text)
+        {
+            Text = Text.Insert(CaretIndex, text);
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+
+            ScrollViewer? sv = FindDescendant<ScrollViewer>(this);
+            if (sv != null)
+            {
+                sv.ScrollChanged += Sv_ScrollChanged;
+            }
+            _lineHeight = GetLineHeight();
+        }
+
+        public void ReportError(int line, int character)
+        {
+            Error? e = new Error(line, character);
+
+            if (!_errors.Contains(e))
+            {
+                _errors.Add(e);
                 ForceDraw();
             }
         }
 
-        private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        public void ShowAutoComplete(IAutoCompleteCallback autoCompleteCallback)
         {
-            //  this._autoComplete.CloseAutoComplete();
-            this._renderText = true;
-            _scrollOffset = e.VerticalOffset % _lineHeight;
-            CalculateFirstAndLastCharacters();
-            RenderLineNumbers();
-            ForceDraw();
-        }
-
-        /// <summary>
-        /// moves the autocomplete selected item up or down
-        /// </summary>
-        /// <param name="e"></param>
-        private void TrySelectingAutoCompleteItem(KeyEventArgs e)
-        {
-            if (_cb == null)
+            _currentCallback = autoCompleteCallback;
+            if (PopupControl.Parent == null)
             {
-                return;
-            }
-
-            if (e.Key == Key.Enter)
-            {
-                CloseAutoComplete();
-            }
-
-            int index = _cb.SelectedIndex;
-
-            if (e.Key == Key.Up)
-            {
-                index--;
-                if (index < 0 && _autoCompleteParameters is not null)
+                if (Parent is Grid gf)
                 {
-                    this.InsertTextAt(_autoCompleteParameters.TypedWord, _autoCompleteParameters.IndexInText,
-                        _autoCompleteParameters.TypedLength);
-
-                    return;
+                    gf.Children.Add(PopupControl);
                 }
             }
-            else if (e.Key == Key.Down)
+            Popup? g = PopupControl;
+
+            g.IsOpen = true;
+            g.Placement = PlacementMode.RelativePoint;
+            g.HorizontalOffset = _autoCompleteRect.Left;
+            g.VerticalOffset = _autoCompleteRect.Bottom;
+
+            g.Visibility = Visibility.Visible;
+
+            _cb = (ListBox)((Grid)g.Child).Children[0];
+
+            _cb.SelectionChanged -= AutoCompleteItemSelected;
+            _cb.SelectionChanged += AutoCompleteItemSelected;
+        }
+
+        public void TextClear()
+        {
+            Text = "";
+        }
+
+        public string TextRead()
+        {
+            return Dispatcher.Invoke<string>(() => { return Text; });
+        }
+
+        public void TextWrite(string text, bool format, IColorCodingProvider? colorCodingProvider, IIndenter indenter)
+        {
+            _indenter = indenter;
+            _colorCodingProvider = colorCodingProvider;
+            Text = text;
+            FindReplaceVisible = false;
+
+            _braces = default;
+            lock (_found)
             {
-                index++;
+                _found.Clear();
             }
 
-            if (index < 0)
+            if (format)
             {
-                index = 0;
+                Text = _indenter.Process(text, false);
             }
-
-            if (index > _cb.Items.Count - 1)
-            {
-                index = _cb.Items.Count - 1;
-            }
-
-            _cb.SelectedIndex = index;
-
-            _cb.ScrollIntoView(_cb.SelectedItem);
         }
 
         protected void BracesMatcher(int start, char c, out bool bracesWillTriggerRender)
@@ -918,7 +670,6 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                 CalculateFirstAndLastCharacters();
                 e.Handled = true;
             }
-
 
             base.OnPreviewKeyDown(e);
         }
@@ -1082,9 +833,527 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             SelectAndFind();
         }
 
+        protected override void OnTextChanged(TextChangedEventArgs e)
+        {
+            //notify documents that text has changed
+            _bindedDocument?.TextChanged(Text);
+
+            lock (_found)
+            {
+                _found.Clear();
+            }
+
+            _braces = default;
+            _errors.Clear();
+
+            _colorCodings = _colorCodingProvider?.FormatText(TextRead()) ?? new();
+
+            base.OnTextChanged(e);
+
+            CalculateFirstAndLastCharacters();
+            ForceDraw();
+        }
+
+        private static T? FindDescendant<T>(DependencyObject obj) where T : DependencyObject
+        {
+            if (obj == null)
+            {
+                return default;
+            }
+
+            int numberChildren = VisualTreeHelper.GetChildrenCount(obj);
+            if (numberChildren == 0)
+            {
+                return default;
+            }
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                if (child is T)
+                {
+                    return (T)(object)child;
+                }
+            }
+
+            for (int i = 0; i < numberChildren; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(obj, i);
+                T? potentialMatch = FindDescendant<T>(child);
+                if (potentialMatch != default(T))
+                {
+                    return potentialMatch;
+                }
+            }
+
+            return default;
+        }
+
+        private void AutoCompleteItemSelected(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                string? currentSelected = (string?)e.AddedItems[0];
+
+                if (_autoCompleteParameters != null && _currentCallback != null && !string.IsNullOrEmpty(currentSelected))
+                {
+                    _currentCallback.Selection(currentSelected, _autoCompleteParameters);
+                }
+            }
+        }
+
+        private void CalculateFirstAndLastCharacters()
+        {
+            (int cf, int ce) = GetStartAndEndCharacters();
+
+            _lastKnownFirstCharacterIndex = cf;
+            _lastKnownLastCharacterIndex = ce;
+
+            // Debug.WriteLine($"{_lastKnownFirstCharacterIndex} {_lastKnownLastCharacterIndex} {Text.Length}");
+        }
+
+        private void ClearFindResults()
+        {
+            FindResults.Clear();
+            FindText = "";
+            ReplaceText = "";
+            lock (_found)
+            {
+                _found.Clear();
+            }
+
+            ForceDraw();
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            FindReplaceVisible = false;
+            lock (_found)
+            {
+                _found.Clear();
+            }
+        }
+
+        private int CountLines()
+        {
+            int lineCount = Text.Count(c => c == '\n');
+            return lineCount;
+        }
+
+        private void FindAllReferences()
+        {
+            string found = GetWordFromCursor();
+
+            FindAllReferencesCommand?.Execute(found.Trim());
+        }
+
+        private void FindHandler()
+        {
+            RunFind(FindText, true);
+        }
+
+        private void FindMatchingBackwards(ReadOnlySpan<char> text, int selectionStart, char inc, char matchChar)
+        {
+            int ends = 1;
+            int match = 0;
+            for (int c = selectionStart - 1; ends != 0 && c >= 0; c--)
+            {
+                if (text[c] == inc)
+                {
+                    ends++;
+                }
+                if (text[c] == matchChar)
+                {
+                    ends--;
+                }
+
+                match = c;
+            }
+
+            _braces = (selectionStart, match);
+
+            ForceDraw();
+        }
+
+        private void FindMatchingForward(ReadOnlySpan<char> text, int selectionStart, char inc, char matchChar)
+        {
+            int ends = 1;
+            int match = 0;
+            for (int c = selectionStart + 1; ends != 0 && c < text.Length - 1; c++)
+            {
+                if (text[c] == inc)
+                {
+                    ends++;
+                }
+                if (text[c] == matchChar)
+                {
+                    ends--;
+                }
+
+                match = c;
+            }
+
+            _braces = (selectionStart, match);
+
+            ForceDraw();
+        }
+
+        private void ForceDraw()
+        {
+            _renderText = true;
+            InvalidateVisual();
+        }
+
+        private int GetCharaceterFromLine(int line)
+        {
+            int z = 0;
+            int m = 0;
+            for (int x = 0; x < Text.Length && m != line; x++)
+            {
+                if (Text[x] == '\n')
+                {
+                    m++;
+                }
+                if (m == line)
+                {
+                    return z;
+                }
+
+                z++;
+            }
+            return z;
+        }
+
+        /// <summary>
+        /// stolen from ms source code
+        /// </summary>
+        /// <returns></returns>
+        private double GetLineHeight()
+        {
+            FontFamily fontFamily = (FontFamily)this.GetValue(FontFamilyProperty);
+            double fontSize = (double)this.GetValue(TextElement.FontSizeProperty);
+
+            double lineHeight = 0;
+
+            if (TextOptions.GetTextFormattingMode(this) == TextFormattingMode.Ideal)
+            {
+                lineHeight = fontFamily.LineSpacing * fontSize;
+            }
+
+            return lineHeight;
+        }
+
+        private int GetLineNumberDuringRender(int caretIndex)
+        {
+            ReadOnlySpan<char> text = Text.AsSpan();
+
+            int linestart = 0;
+
+            for (int i = 0; i <= caretIndex && i < text.Length; i++)
+            {
+                if (text[i] == '\n')
+                {
+                    linestart++;
+                }
+            }
+
+            return linestart;
+        }
+
+        private (int, int) GetStartAndEndCharacters()
+        {
+            if (_lineHeight == 0)
+            {
+                _lineHeight = GetLineHeight();
+            }
+
+            GetStartAndEndLines(out int startLine, out int endLine);
+
+            int sc = GetCharaceterFromLine(startLine);
+            int ec = GetCharaceterFromLine(endLine);
+
+            return (sc, ec);
+        }
+
+        private void GetStartAndEndLines(out int startLine, out int endLine)
+        {
+            startLine = (int)Math.Floor((VerticalOffset / _lineHeight) + 0.0001);
+
+            _textTransformOffset = _scrollOffset + (startLine == 0 ? 0 : _lineHeight);
+
+            //Debug.WriteLine($"{VerticalOffset} {_lineHeight} {(VerticalOffset / _lineHeight) + 0.0001} {_scrollOffset} {startLine}");
+
+            endLine = (int)Math.Ceiling((VerticalOffset + ActualHeight) / _lineHeight);
+            ++endLine;
+        }
+
+        private string GetWordFromCursor()
+        {
+            StringBuilder sb = new(20);
+            ReadOnlySpan<char> tp = Text.AsSpan();
+
+            for (int c = CaretIndex; c >= 0; c--)
+            {
+                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
+                {
+                    break;
+                }
+
+                sb.Insert(0, tp[c]);
+            }
+            for (int c = CaretIndex + 1; c <= tp.Length; c++)
+            {
+                if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
+                {
+                    break;
+                }
+
+                sb.Append(tp[c]);
+            }
+
+            string found = sb.ToString();
+            return found;
+        }
+
+        private void GoToDefinition()
+        {
+            string found = GetWordFromCursor();
+
+            GotoDefinitionCommand?.Execute(found.Trim());
+        }
+
+        private void MyTextBox_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is not TextDocumentModel)
+            {
+                return;
+            }
+
+            CaretIndex = 0;
+
+            _bindedDocument = (TextDocumentModel)e.NewValue;
+            _autoComplete = this;
+            _bindedDocument?.Binded(this);
+        }
+
+        private void ProcessAutoComplete(object? state)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            int k = (int)(Key)state;
+
+            Dispatcher.Invoke(() =>
+           {
+               Rect rec = GetRectFromCharacterIndex(CaretIndex);
+
+               int line = GetLineIndexFromCharacterIndex(CaretIndex);
+
+               string text = GetLineText(line);
+
+               int c = GetCharacterIndexFromLineIndex(line);
+
+               int where = CaretIndex;
+               string word = "";
+               int typedLength = 0;
+               if (text.Length != 0)
+               {
+                   if (text.Length > CaretIndex + 1)
+                   {
+                       if (!char.IsWhiteSpace(text[CaretIndex + 1]))
+                       {
+                           return;
+                       }
+                   }
+
+                   Stack<char> chars = new();
+                   for (int x = CaretIndex - c - 1; x >= 0; x--)
+                   {
+                       while (x > text.Length - 1 && x > 0)
+                       {
+                           x--;
+                       }
+
+                       if (text[x] is ' ' or '<' or '>' or '(' or ')')
+                       {
+                           break;
+                       }
+
+                       chars.Push(text[x]);
+                   }
+
+                   where -= chars.Count;
+                   typedLength = chars.Count;
+
+                   while (chars.Count > 0)
+                   {
+                       word += chars.Pop();
+                   }
+               }
+               _autoCompleteRect = rec;
+               _autoCompleteParameters = new AutoCompleteParameters(text, line, word,
+                   where, typedLength, CaretIndex - c);
+
+               _bindedDocument?.AutoComplete(_autoCompleteParameters);
+           });
+        }
+
+        private void RenderLineNumbers()
+        {
+            if (ActualHeight > 0)
+            {
+                int start = GetFirstVisibleLineIndex();
+                int lines = GetLastVisibleLineIndex();
+
+                double p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+
+                Typeface tf = new(FontFamily, FontStyle, FontWeight, FontStretch);
+                DrawingVisual dv = new();
+                DrawingContext? context = dv.RenderOpen();
+
+                FormattedText measuredtext = new("100", CultureInfo.InvariantCulture, FlowDirection.LeftToRight, tf, FontSize, Brushes.Black, p);
+                var y = VerticalOffset - (measuredtext.Height * start);
+                var maxwidth = measuredtext.Width;
+
+                Point pt = new(0, VerticalOffset - y);
+
+                context.PushTransform(new TranslateTransform(0, -VerticalOffset));
+
+                for (int x = start; x <= lines; x++)
+                {
+                    FormattedText ft = new((x + 1).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture,
+                        FlowDirection.LeftToRight, tf, FontSize, Brushes.Black, p);
+                    context.DrawText(ft, pt);
+                    pt.Y += ft.Height;
+                    maxwidth = Math.Max(ft.Width, maxwidth);
+                }
+
+                context.Close();
+
+                RenderTargetBitmap rtb = new((int)maxwidth, (int)ActualHeight, 96, 96, PixelFormats.Pbgra32);
+                rtb.Render(dv);
+                rtb.Freeze();
+                LineNumbers = rtb;
+            }
+        }
+
+        private void ReplaceHandler()
+        {
+            if (string.IsNullOrEmpty(FindText))
+            {
+                return;
+            }
+
+            if (_useRegex)
+            {
+                Regex r = new(FindText);
+                Text = r.Replace(Text, ReplaceText);
+            }
+            else
+            {
+                Text = Text.Replace(FindText, ReplaceText);
+            }
+
+            lock (_found)
+            {
+                _found.Clear();
+            }
+
+            ForceDraw();
+        }
+
+        private void RunFind(string search, bool invalidate)
+        {
+            lock (_found)
+            {
+                _found.Clear();
+            }
+
+            if (_autoComplete.IsPopupVisible)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(search))
+            {
+                return;
+            }
+
+            try
+            {
+                FindResults.Clear();
+                if (_useRegex)
+                {
+                    if (!search.StartsWith("(", StringComparison.InvariantCulture))
+                    {
+                        search = "(" + search;
+                    }
+
+                    if (!search.EndsWith(")", StringComparison.InvariantCulture))
+                    {
+                        search += ")";
+                    }
+
+                    Regex r = new(search, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+                    MatchCollection? m = r.Matches(Text);
+
+                    foreach (Group item in m)
+                    {
+                        lock (_found)
+                        {
+                            _found.Add(new FindItem(item.Index, item.Length));
+                        }
+
+                        int l = GetLineIndexFromCharacterIndex(item.Index);
+
+                        string line = GetLineText(l);
+                        string reps = "";
+                        if (!string.IsNullOrEmpty(ReplaceText))
+                        {
+                            reps = r.Replace(line, ReplaceText).Trim();
+                        }
+
+                        FindResults.Add(new FindResult(item.Index, line.Trim(), l + 1, reps));
+                    }
+                }
+                else
+                {
+                    int p = Text.IndexOf(search, StringComparison.InvariantCultureIgnoreCase);
+                    while (p != -1)
+                    {
+                        _found.Add(new FindItem(p, search.Length));
+                        int l = GetLineIndexFromCharacterIndex(p);
+
+                        string line = GetLineText(l);
+
+                        if (line is not null)
+                        {
+                            string reps = "";
+                            if (!string.IsNullOrEmpty(ReplaceText))
+                            {
+                                reps = line.Replace(search, ReplaceText, StringComparison.InvariantCultureIgnoreCase).Trim();
+                            }
+
+                            FindResults.Add(new FindResult(p, line.Trim(), l + 1, reps));
+                        }
+
+                        p = Text.IndexOf(search, p + 1, StringComparison.InvariantCultureIgnoreCase);
+                    }
+                }
+            }
+            catch
+            {
+            }
+            if (invalidate)
+            {
+                ForceDraw();
+            }
+        }
+
         private void SelectAndFind()
         {
-
             //remove spaces from end of selection
             while (SelectedText.EndsWith(" ", StringComparison.InvariantCulture))
             {
@@ -1117,357 +1386,63 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             FindText = text;
         }
 
-        protected override void OnTextChanged(TextChangedEventArgs e)
+        private void Sv_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            //notify documents that text has changed
-            _bindedDocument?.TextChanged(Text);
-
-            lock (_found)
-            {
-                _found.Clear();
-            }
-
-            _braces = default;
-            _errors.Clear();
-
-            _colorCodings = _colorCodingProvider?.FormatText(TextRead()) ?? new();
-
-            base.OnTextChanged(e);
-
+            //  this._autoComplete.CloseAutoComplete();
+            this._renderText = true;
+            _scrollOffset = e.VerticalOffset % _lineHeight;
             CalculateFirstAndLastCharacters();
+            RenderLineNumbers();
             ForceDraw();
         }
 
-        public void CloseAutoComplete()
+        /// <summary>
+        /// moves the autocomplete selected item up or down
+        /// </summary>
+        /// <param name="e"></param>
+        private void TrySelectingAutoCompleteItem(KeyEventArgs e)
         {
-            PopupControl.IsOpen = false;
-        }
-
-        public void DrawText(DrawingContext col)
-        {
-
-
-            int cf = _lastKnownFirstCharacterIndex;
-            int cl = _lastKnownLastCharacterIndex;
-
-            while (cl > Text.Length)
+            if (_cb == null)
             {
-                cl--;
+                return;
             }
 
-            if (Text.Length > 0)
+            if (e.Key == Key.Enter)
             {
-                if (cl == -1)
-                {
-                    cl = Text.Length;
-                }
+                CloseAutoComplete();
+            }
 
-                if (cf >= Text.Length)
-                {
-                    cf = 0;
-                }
+            int index = _cb.SelectedIndex;
 
-                if (cf + (cl - cf) > Text.Length || (cl - cf) < 0)
+            if (e.Key == Key.Up)
+            {
+                index--;
+                if (index < 0 && _autoCompleteParameters is not null)
                 {
-                    Debug.WriteLine("TEXT OUT OF RANGE");
+                    this.InsertTextAt(_autoCompleteParameters.TypedWord, _autoCompleteParameters.IndexInText,
+                        _autoCompleteParameters.TypedLength);
 
                     return;
                 }
-
-                string t = Text[cf..cl];
-                FormattedText? formattedText = new FormattedText(t
-    ,
-    CultureInfo.GetCultureInfo("en-us"),
-    FlowDirection.LeftToRight,
-    new Typeface(FontFamily.Source),
-    FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
-
-                // Debug.WriteLine($"{cf} {cl} {Text.Length} {t.Length}");
-                foreach (FormatResult? c in _colorCodings.Where(z => z.Intersects(cf, cl)))
-                {
-                    try
-                    {
-                        formattedText.SetForegroundBrush(c.Brush, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
-                        if (c.FontWeight != FontWeights.Normal)
-                        {
-                            formattedText.SetFontWeight(c.FontWeight, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
-                        }
-                        if (c.Italic)
-                        {
-                            formattedText.SetFontStyle(FontStyles.Italic, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("colors");
-                        Debug.WriteLine($"{c}");
-                        Debug.WriteLine(ex);
-                    }
-                }
-
-                lock (_found)
-                {//highlight found words
-                    foreach (FindItem? item in _found)
-                    {
-                        try
-                        {
-                            if (FormatResult.Intersects(cf, cl, item.Start, item.Start + item.Length))
-                            {
-                                int start = FormatResult.AdjustedStart(cf, item.Start);
-                                int len = FormatResult.AdjustedLength(cf, cl, item.Start, item.Length, item.Start + item.Length);
-
-                                TextDecoration td = new(TextDecorationLocation.Underline,
-                              new System.Windows.Media.Pen(Brushes.DarkBlue, 5), 0, TextDecorationUnit.FontRecommended,
-                               TextDecorationUnit.FontRecommended);
-
-                                TextDecorationCollection textDecorations = new()
-                                {
-                                    td
-                                };
-
-                                formattedText.SetTextDecorations(textDecorations, start, len);
-
-                                //var g = formattedText.BuildHighlightGeometry(new Point(4, 0), item.start, item.length);
-
-                                //col.DrawGeometry(Brushes.LightBlue, new Pen(Brushes.Black, 1), g);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine("Finds");
-                            Debug.WriteLine($"{ex}");
-                        }
-                    }
-                }
-                if (_braces.selectionStart != 0 && _braces.match != 0)
-                {
-                    try
-                    {
-                        if (FormatResult.Intersects(cf, cl, _braces.selectionStart, _braces.selectionStart + 1))
-                        {
-                            Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.selectionStart), 1);
-                            col.DrawGeometry(Brushes.LightBlue, null, g);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("braces Selection");
-                        Debug.WriteLine($"{ex}");
-                    }
-                    try
-                    {
-                        if (FormatResult.Intersects(cf, cl, _braces.match, _braces.match + 1))
-                        {
-                            Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.match), 1);
-                            col.DrawGeometry(Brushes.LightBlue, null, g);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("braces match");
-                        Debug.WriteLine($"{ex}");
-                    }
-                }
-
-                foreach ((int line, int character) in _errors)
-                {
-                    try
-                    {
-                        int l = GetCharacterIndexFromLineIndex(line - 1);
-                        int len = GetLineLength(line - 1);
-                        if (l >= cf && l <= cl)
-                        {
-                            TextDecoration td = new(TextDecorationLocation.Underline,
-                                new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
-                                 TextDecorationUnit.FontRecommended);
-
-                            TextDecorationCollection textDecorations = new()
-                            {
-                                td
-                            };
-
-                            formattedText.SetTextDecorations(textDecorations, l - cf, len);
-                        }
-                    }
-                    catch
-                    {
-                        Debug.WriteLine("errors");
-                    }
-                }
-
-                col.DrawText(formattedText, new Point(4, 0));
             }
-
-            double top = (GetLineNumberDuringRender(CaretIndex) * _lineHeight) - VerticalOffset + _textTransformOffset;
-
-            col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), _lineHeight));
-
-
-
-        }
-
-        public void GotoLine(int lineNumber, string? findText)
-        {
-            if (lineNumber == 0)
+            else if (e.Key == Key.Down)
             {
-                lineNumber = 1;
+                index++;
             }
 
-            try
+            if (index < 0)
             {
-                Dispatcher.InvokeAsync(() =>
-                {
-                    lineNumber--;
-                    int c = GetCharaceterFromLine(lineNumber);// GetCharacterIndexFromLineIndex(lineNumber - 1);
-                    if (c >= 0)
-                    {
-                        CaretIndex = c;
-                    }
-
-                    if (!string.IsNullOrEmpty(findText))
-                    {
-                        FindText = findText;
-                        FindHandler();
-                    }
-
-                    GetStartAndEndLines(out int startLine, out int endLine);
-
-                    if (startLine <= lineNumber && endLine >= lineNumber)
-                    {
-                        CalculateFirstAndLastCharacters();
-                        ForceDraw();
-                    }
-                    else
-                    {
-                        ScrollToLine(lineNumber < 5 ? 1 : lineNumber - 5);
-                    }
-                });
+                index = 0;
             }
-            catch { }
-            Keyboard.Focus(this);
-        }
 
-        public void InsertText(string text)
-        {
-            int c = CaretIndex;
-
-            Text = Text.Insert(c, text);
-
-            CaretIndex = c;
-        }
-
-        public void InsertTextAt(string text, int index, int typedLength)
-        {
-            SelectionStart = index;
-
-            if (typedLength > SelectionLength)
+            if (index > _cb.Items.Count - 1)
             {
-                SelectionLength = typedLength;
+                index = _cb.Items.Count - 1;
             }
 
-            if (!string.IsNullOrEmpty(SelectedText))
-            {
-                SelectedText = "";
-            }
+            _cb.SelectedIndex = index;
 
-            SelectionStart = index;
-
-            SelectedText = text;
-        }
-
-        public override void OnApplyTemplate()
-        {
-            base.OnApplyTemplate();
-
-            ScrollViewer? sv = FindDescendant<ScrollViewer>(this);
-            if (sv != null)
-            {
-                sv.ScrollChanged += Sv_ScrollChanged;
-            }
-            _lineHeight = GetLineHeight();
-        }
-
-        public void ReportError(int line, int character)
-        {
-            Error? e = new Error(line, character);
-
-            if (!_errors.Contains(e))
-            {
-
-
-                _errors.Add(e);
-                ForceDraw();
-            }
-        }
-
-        public void ShowAutoComplete(IAutoCompleteCallback autoCompleteCallback)
-        {
-            _currentCallback = autoCompleteCallback;
-            if (PopupControl.Parent == null)
-            {
-                if (Parent is Grid gf)
-                {
-                    gf.Children.Add(PopupControl);
-                }
-            }
-            Popup? g = PopupControl;
-
-            g.IsOpen = true;
-            g.Placement = PlacementMode.RelativePoint;
-            g.HorizontalOffset = _autoCompleteRect.Left;
-            g.VerticalOffset = _autoCompleteRect.Bottom;
-
-            g.Visibility = Visibility.Visible;
-
-            _cb = (ListBox)((Grid)g.Child).Children[0];
-
-            _cb.SelectionChanged -= AutoCompleteItemSelected;
-            _cb.SelectionChanged += AutoCompleteItemSelected;
-        }
-
-        public void TextClear()
-        {
-            Text = "";
-        }
-
-        public string TextRead()
-        {
-            return Dispatcher.Invoke<string>(() => { return Text; });
-        }
-
-        public void TextWrite(string text, bool format, IColorCodingProvider? colorCodingProvider, IIndenter indenter)
-        {
-            _indenter = indenter;
-            _colorCodingProvider = colorCodingProvider;
-            Text = text;
-            FindReplaceVisible = false;
-
-            _braces = default;
-            lock (_found)
-            {
-                _found.Clear();
-            }
-
-            if (format)
-            {
-                Text = _indenter.Process(text, false);
-            }
-        }
-
-        public void InsertTextAtCursor(string text)
-        {
-
-
-            Text = Text.Insert(CaretIndex, text);
-
-        }
-
-        public void Destroy()
-        {
-            this._bindedDocument = null;
-            this._cachedDrawing = null;
-            this.DataContext = null;
-
+            _cb.ScrollIntoView(_cb.SelectedItem);
         }
     }
 }
