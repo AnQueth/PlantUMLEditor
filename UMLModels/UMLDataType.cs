@@ -33,10 +33,11 @@ namespace UMLModels
     public class UMLDataType
     {
 
-        public UMLDataType(string name, string @namespace = "", params UMLInterface[] interfaces)
+        public UMLDataType(string name, string @namespace = "", string? alias = null, params UMLInterface[] interfaces)
         {
             Namespace = @namespace;
             Name = name;
+            Alias = alias;
 
             int ix = name.IndexOf('<');
             if (ix > 0)
@@ -67,6 +68,10 @@ namespace UMLModels
         }
         public List<UMLMethod> Methods { get; } = new();
         public string Name
+        {
+            get; set;
+        }
+        public string? Alias
         {
             get; set;
         }

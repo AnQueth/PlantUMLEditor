@@ -191,7 +191,7 @@ namespace PlantUML
                         string package = GetPackage(packages);
                         if (line.Length > 8)
                         {
-                            DataType = new UMLInterface(package, Clean(g.Groups["name"].Value),
+                            DataType = new UMLInterface(package, Clean(g.Groups["name"].Value), g.Groups["alias"].Value,
                                 new List<UMLDataType>());
                             _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
                         }

@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using UMLModels;
 
@@ -80,13 +82,13 @@ namespace PlantUML
 
                     }
 
-                    if (item.Name.Contains(" ") || item.Name.Contains("?"))
+                    if (item.Name.Contains(" ") || item.Name.Contains("?") || !string.IsNullOrWhiteSpace(item.Alias))
                     {
                         writer.Write("\"");
                     }
 
                     writer.Write(item.Name);
-                    if (item.Name.Contains(" ") || item.Name.Contains("?"))
+                    if (item.Name.Contains(" ") || item.Name.Contains("?") || !string.IsNullOrWhiteSpace(item.Alias))
                     {
                         writer.Write("\"");
                     }
@@ -98,6 +100,12 @@ namespace PlantUML
                             writer.Write(cl2.StereoType);
                             writer.Write(">> ");
                         }
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(item.Alias))
+                    {
+                        writer.Write(" as ");
+                        writer.Write(item.Alias);
                     }
 
                     writer.WriteLine(" { ");
@@ -205,17 +213,17 @@ namespace PlantUML
                     {
                         foreach (UMLDataType? b in item.Bases)
                         {
-                            _ = postWrites.Append(item.NonGenericName);
+                            _ = postWrites.Append(OrAlias(item.NonGenericName, item.Alias));
                             _ = postWrites.Append(" -- ");
-                            _ = postWrites.AppendLine(b.NonGenericName);
+                            _ = postWrites.AppendLine(OrAlias(b.NonGenericName, b.Alias));
                         }
                     }
 
                     foreach (UMLInterface? i in item.Interfaces)
                     {
-                        _ = postWrites.Append(item.NonGenericName);
+                        _ = postWrites.Append(OrAlias(item.NonGenericName, item.Alias));
                         _ = postWrites.Append(" --* ");
-                        _ = postWrites.AppendLine(i.NonGenericName);
+                        _ = postWrites.AppendLine(OrAlias(i.NonGenericName, i.Alias));
                     }
                     foreach (UMLProperty? prop in item.Properties.Where(z => z.DrawnWithLine && dataTypes.Any(p => p == z.ObjectType)))
                     {
@@ -250,6 +258,14 @@ namespace PlantUML
 
         }
 
+        private static string OrAlias(string nonGenericName, string? alias)
+        {
+            if (string.IsNullOrWhiteSpace(alias))
+                return nonGenericName;
+
+
+            return alias;
+        }
 
         private static char GetVisibility(UMLVisibility vis)
         {

@@ -21,7 +21,7 @@ namespace PlantUML
 
         private const string PACKAGE = "package";
 
-        private static readonly Regex _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*\\s+{", RegexOptions.Compiled);
+        private static readonly Regex _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*(\\s+{|\\s+as\\s+(?<alias>\\w+)\\s+{)", RegexOptions.Compiled);
 
         private static readonly Regex _classLine = new("(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
 
@@ -249,8 +249,16 @@ namespace PlantUML
                             name = name[..ix].Trim();
                         }
                     }
-                    currentDataType = new UMLClass(stereotype, package, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
+                    string? alias = g.Groups["alias"].Length > 0 ? g.Groups["alias"].Value : null;
+
+                    currentDataType = new UMLClass(stereotype, package, alias, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
                         , name, new List<UMLDataType>());
+
+
+                    if (alias != null)
+                    {
+                        aliases.Add(alias, currentDataType);
+                    }
 
                     if (line.EndsWith("{", StringComparison.Ordinal))
                     {
@@ -289,7 +297,7 @@ namespace PlantUML
                             name = Clean(line[9..]).Replace("\"", string.Empty);
                         }
 
-                        currentDataType = new UMLInterface(package, name
+                        currentDataType = new UMLInterface(package, name, alias
                           ,
                             new List<UMLDataType>());
 
@@ -313,8 +321,11 @@ namespace PlantUML
 
                     if (cl == null && d.Notes.FirstOrDefault(z => z.Alias == first) == null)
                     {
-                        d.Errors.Add(new UMLError("Could not find parent type", first, lineNumber));
-                        continue;
+                        if (!aliases.TryGetValue(m.Groups["first"].Value, out cl))
+                        {
+                            d.Errors.Add(new UMLError("Could not find parent type", first, lineNumber));
+                            continue;
+                        }
                     }
 
                     UMLDataType? i = d.DataTypes.FirstOrDefault(p => p.Name == second || removeGenerics.Match(p.Name).Value == second);

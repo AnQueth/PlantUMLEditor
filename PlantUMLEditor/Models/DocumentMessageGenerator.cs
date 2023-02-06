@@ -196,7 +196,7 @@ namespace PlantUMLEditor.Models
                     string[] parsedTypes = GetCleanTypes(dataTypes, m.ObjectType.Name);
                     foreach (string? r in parsedTypes)
                     {
-                        DataTypeRecord? pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.Name, r) == 0);
+                        DataTypeRecord? pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.NonGenericName, r) == 0);
                         if (pdt == default)
                         {
                             newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
