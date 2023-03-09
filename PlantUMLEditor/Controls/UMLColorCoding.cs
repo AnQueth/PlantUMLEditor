@@ -27,7 +27,7 @@ namespace PlantUMLEditor.Controls
                 (Colors.Blue, 1)
             },
             {
-                new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork)\s+?",
+                new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork|while.*|endwhile.*)\s+?",
                     RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                 (Colors.Blue, 1)
             }
