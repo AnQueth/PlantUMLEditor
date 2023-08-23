@@ -1,9 +1,11 @@
 ﻿using Prism.Commands;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using MessageBox = System.Windows.MessageBox;
 
 namespace PlantUMLEditor.Models
@@ -11,8 +13,8 @@ namespace PlantUMLEditor.Models
     public class FolderTreeViewModel : TreeViewModel
     {
         private bool _isExpanded;
-        public FolderTreeViewModel(TreeViewModel? parent, string path, bool isExpanded) :
-            base(parent, path, "pack://application:,,,/PlantUMLEditor;component/images/FolderClosed_16x.png")
+        public FolderTreeViewModel(TreeViewModel? parent, string path, bool isExpanded, BitmapSource icon) :
+            base(parent, path, icon)
         {
             IsFile = false;
             IsExpanded = isExpanded;
@@ -60,7 +62,7 @@ namespace PlantUMLEditor.Models
                 Directory.CreateDirectory(nf);
             }
 
-            Children.Add(new FolderTreeViewModel(this, nf, true)
+            Children.Add(new FolderTreeViewModel(this, nf, true, Statics.GetClosedFolderIcon())
             {
                 IsRenaming = true,
                 Rename = "New Folder"
@@ -97,7 +99,7 @@ namespace PlantUMLEditor.Models
         private string _name;
         private string _rename = string.Empty;
 
-        public TreeViewModel(TreeViewModel? parent, string path, string? icon)
+        public TreeViewModel(TreeViewModel? parent, string path, BitmapSource? icon)
         {
             Parent = parent;
             FullPath = path;
@@ -116,6 +118,7 @@ namespace PlantUMLEditor.Models
             Children.CollectionChanged += Children_CollectionChanged;
             StartRenameCommand = new DelegateCommand(StartRenameHandler);
             DoRenameCommand = new DelegateCommand(RenameCommandHandler);
+            OpenInNativeCommand = new DelegateCommand(OpenInNativeCommandHandler);
             DeleteCommand = new DelegateCommand(DeleteCommandHandler, () => IsFile || (!IsFile && Directory.GetFiles(FullPath).Length == 0));
 
         }
@@ -140,12 +143,17 @@ namespace PlantUMLEditor.Models
             get;
         }
 
+        public DelegateCommand OpenInNativeCommand
+        {
+            get;
+        }
+
         public string FullPath
         {
             get; set;
         }
 
-        public string? Icon
+        public BitmapSource? Icon
         {
             get; private set;
         }
@@ -199,6 +207,16 @@ namespace PlantUMLEditor.Models
             get;
         }
 
+        private void OpenInNativeCommandHandler()
+        {
+            ProcessStartInfo startInfo = new(FullPath);
+            startInfo.UseShellExecute = true;
+            startInfo.WorkingDirectory = Path.GetDirectoryName(FullPath);
+
+             Process.Start(startInfo) ;
+           
+
+        }
         private void DeleteCommandHandler()
         {
             if (!IsFile)

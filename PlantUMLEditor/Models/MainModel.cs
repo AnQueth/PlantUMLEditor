@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,7 +14,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -85,7 +88,7 @@ namespace PlantUMLEditor.Models
             DeleteMRUCommand = new DelegateCommand<string>((s) => DeleteMRUCommandHandler(s));
 
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
-            folder = new FolderTreeViewModel(null, Path.GetTempPath(), true);
+            folder = new FolderTreeViewModel(null, Path.GetTempPath(), true, Statics.GetClosedFolderIcon());
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<BaseDocumentModel>();
             CreateNewJSONDocumentCommand = new DelegateCommand(NewJsonDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
@@ -133,6 +136,8 @@ namespace PlantUMLEditor.Models
 
             _ = new Timer(MRULoader, null, 10, Timeout.Infinite);
         }
+
+  
 
         private void DeleteMRUCommandHandler(string mru)
         {
@@ -738,16 +743,9 @@ namespace PlantUMLEditor.Models
 
             foreach (string? file in Directory.EnumerateFiles(dir))
             {
-                //string p = Path.GetExtension(file);
-                //if (FileExtension.MD.Compare(p) ||
-                //    FileExtension.JPG.Compare(p) ||
-                //    FileExtension.PNG.Compare(p) ||
-                //    FileExtension.PUML.Compare(p) ||
-                //    FileExtension.YML.Compare(p)
-                //    )
-                //{
-                    model.Children.Add(new TreeViewModel(model, file, GetIcon(file)));
-               // }
+       
+                model.Children.Add(new TreeViewModel(model, file, Statics.GetIcon(file)));
+       
             }
 
             FoldersStatusPersistance? fp = new FoldersStatusPersistance();
@@ -766,7 +764,7 @@ namespace PlantUMLEditor.Models
                     isExpanded = false;
                 }
 
-                FolderTreeViewModel? fm = new FolderTreeViewModel(model, item, isExpanded);
+                FolderTreeViewModel? fm = new FolderTreeViewModel(model, item, isExpanded, Statics.GetClosedFolderIcon());
                 model.Children.Add(fm);
 
                 await AddFolderItems(item, fm);
@@ -842,7 +840,7 @@ namespace PlantUMLEditor.Models
             }
             else
             {
-                await OpenTextFile(fullPath, lineNumber , searchText);
+                await OpenTextFile(fullPath, lineNumber, searchText);
             }
         }
 
@@ -1064,7 +1062,7 @@ namespace PlantUMLEditor.Models
                 int ix = folder.Children.IndexOf(file);
                 if (!folder.Children.Any(z => z.FullPath == res.fileName))
                 {
-                    folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, GetIcon(res.fileName)));
+                    folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, Statics.GetIcon(res.fileName)));
                 }
             }
         }
@@ -1183,39 +1181,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private string? GetIcon(string file)
-        {
-            string ext = Path.GetExtension(file);
-            if (file.Contains(".component.puml", StringComparison.OrdinalIgnoreCase))
-            {
-                return @"pack://application:,,,/PlantUMLEditor;component/images/com.png";
-            }
-            else if (file.Contains(".class.puml", StringComparison.OrdinalIgnoreCase))
-            {
-                return @"pack://application:,,,/PlantUMLEditor;component/images/class.png";
-            }
-            else if (file.Contains(".seq.puml", StringComparison.OrdinalIgnoreCase))
-            {
-                return @"pack://application:,,,/PlantUMLEditor;component/images/sequence.png";
-            }
-            else if (FileExtension.MD.Compare(ext))
-            {
-                return @"pack://application:,,,/PlantUMLEditor;component/images/md.png";
-            }
-            else if (FileExtension.YML.Compare(ext))
-            {
-                return @"pack://application:,,,/PlantUMLEditor;component/images/yml.png";
-            }
-            else if ((FileExtension.PNG.Compare(ext)) || (FileExtension.JPG.Compare(ext)))
-            {
-                return @"pack://application:,,,/PlantUMLEditor;component/images/emblem_512.png";
-            }
-            else if (FileExtension.PUML.Compare(ext))
-            {
-                return @"pack://application:,,,/PlantUMLEditor;component/images/uml.png";
-            }
-            return null;
-        }
+     
 
         private string? GetNewFile(string fileExtension)
         {
@@ -1430,7 +1396,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewClassDiagram(nf, Path.GetFileNameWithoutExtension(nf));
 
-                _selectedFolder.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+                _selectedFolder.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
         }
 
@@ -1454,7 +1420,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewComponentDiagram(nf, Path.GetFileNameWithoutExtension(nf));
 
-                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
         }
 
@@ -1474,7 +1440,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewMarkDownDocument(nf, Path.GetFileNameWithoutExtension(nf));
 
-                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
         }
 
@@ -1498,7 +1464,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewSequenceDiagram(nf, Path.GetFileNameWithoutExtension(nf));
 
-                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
         }
 
@@ -1511,7 +1477,7 @@ namespace PlantUMLEditor.Models
                 string title = Path.GetFileNameWithoutExtension(nf);
                 await NewUnknownUMLDiagram(nf, title, $"@startjson\r\ntitle {title}\r\n\r\n@endjson\r\n");
 
-                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
         }
 
@@ -1524,7 +1490,7 @@ namespace PlantUMLEditor.Models
                 string title = Path.GetFileNameWithoutExtension(nf);
                 await NewUnknownUMLDiagram(nf, title, $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n");
 
-                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
         }
 
@@ -1556,7 +1522,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewYAMLDocument(nf, Path.GetFileNameWithoutExtension(nf));
 
-                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, GetIcon(nf)));
+                _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
         }
 
@@ -1986,7 +1952,7 @@ namespace PlantUMLEditor.Models
 
             Folder.Children.Clear();
 
-            FolderTreeViewModel? start = new FolderTreeViewModel(Folder, dir, true);
+            FolderTreeViewModel? start = new FolderTreeViewModel(Folder, dir, true, Statics.GetClosedFolderIcon());
 
             Folder.Children.Add(start);
 

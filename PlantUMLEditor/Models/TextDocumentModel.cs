@@ -92,13 +92,13 @@ namespace PlantUMLEditor.Models
 
 
 
-        public DelegateCommand RegenDocument
+        public DelegateCommand? RegenDocument
         {
             get;
             private set;
         }
 
-        public DelegateCommand ShowPreviewCommand
+        public DelegateCommand? ShowPreviewCommand
         {
             get;
             private set;
