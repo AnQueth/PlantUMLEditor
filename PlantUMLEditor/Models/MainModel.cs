@@ -111,6 +111,7 @@ namespace PlantUMLEditor.Models
             ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
             OpenTerminalCommand = new DelegateCommand(OpenTerminalHandler);
             OpenExplorerCommand = new DelegateCommand(OpenExplorerHandler);
+            DocFXServeCommand = new DelegateCommand(DocFXServeCommandHandler, ()=> this._selectedFolder is not null && File.Exists(AppSettings.Default.DocFXEXE));
 
             Configuration = new AppConfiguration("plantuml.jar");
 
@@ -138,7 +139,26 @@ namespace PlantUMLEditor.Models
         }
 
   
+        private void DocFXServeCommandHandler()
+        {
+            ProcessStartInfo psi = new ProcessStartInfo(AppSettings.Default.DocFXEXE);
+            psi.UseShellExecute = false;
+            psi.ArgumentList.Add("--serve");
+            psi.WorkingDirectory = this._selectedFolder.FullPath;
+            Process.Start(psi);
 
+        }
+        public string DocFXExe
+        {
+            get => AppSettings.Default.DocFXEXE;
+            set
+            {
+                AppSettings.Default.DocFXEXE = value;
+                AppSettings.Default.Save();
+
+                DocFXServeCommand.RaiseCanExecuteChanged();
+            }
+        }
         private void DeleteMRUCommandHandler(string mru)
         {
             MRUFolders.Remove(mru);
@@ -341,7 +361,7 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
+        public DelegateCommand DocFXServeCommand { get; }
         public DelegateCommand OpenTerminalCommand
         {
             get;
@@ -645,7 +665,7 @@ namespace PlantUMLEditor.Models
                     {
                         _selectedFolder = model;
                     }
-
+                    DocFXServeCommand.RaiseCanExecuteChanged();
                     CreateUMLImage.RaiseCanExecuteChanged();
                 }
             }

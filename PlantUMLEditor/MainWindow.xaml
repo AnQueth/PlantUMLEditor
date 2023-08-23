@@ -771,6 +771,10 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}">
             <Button Content="Open Explorer" Command="{Binding OpenExplorerCommand}"></Button>
             <Separator></Separator>
             <Button Content="Quick GIT Commit and Sync" Command="{Binding GitCommitAndSyncCommand}"></Button>
+            <Separator></Separator>
+            <Label VerticalAlignment="Center" Content="Path To DocFX:"></Label>
+            <TextBox Text="{Binding DocFXExe, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" Width="200" ></TextBox>
+            <Button Content="Run DOCFx Serve" Command="{Binding DocFXServeCommand}"></Button>
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
