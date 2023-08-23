@@ -738,16 +738,16 @@ namespace PlantUMLEditor.Models
 
             foreach (string? file in Directory.EnumerateFiles(dir))
             {
-                string p = Path.GetExtension(file);
-                if (FileExtension.MD.Compare(p) ||
-                    FileExtension.JPG.Compare(p) ||
-                    FileExtension.PNG.Compare(p) ||
-                    FileExtension.PUML.Compare(p) ||
-                    FileExtension.YML.Compare(p)
-                    )
-                {
+                //string p = Path.GetExtension(file);
+                //if (FileExtension.MD.Compare(p) ||
+                //    FileExtension.JPG.Compare(p) ||
+                //    FileExtension.PNG.Compare(p) ||
+                //    FileExtension.PUML.Compare(p) ||
+                //    FileExtension.YML.Compare(p)
+                //    )
+                //{
                     model.Children.Add(new TreeViewModel(model, file, GetIcon(file)));
-                }
+               // }
             }
 
             FoldersStatusPersistance? fp = new FoldersStatusPersistance();
@@ -839,6 +839,10 @@ namespace PlantUMLEditor.Models
             else if (FileExtension.JPG.Compare(ext) || FileExtension.PNG.Compare(ext))
             {
                 await OpenImageFile(fullPath);
+            }
+            else
+            {
+                await OpenTextFile(fullPath, lineNumber , searchText);
             }
         }
 
@@ -1829,6 +1833,23 @@ namespace PlantUMLEditor.Models
 
             CurrentDocument = d;
         }
+
+        private async Task OpenTextFile(string fullPath, int lineNumber, string? searchText)
+        {
+            string content = await File.ReadAllTextAsync(fullPath);
+            TextFileDocumentModel? d = new TextFileDocumentModel(Configuration, _ioService,
+                fullPath,
+                Path.GetFileName(fullPath)
+                , content, _messageCheckerTrigger);
+
+            lock (_docLock)
+            {
+                OpenDocuments.Add(d);
+            }
+            d.GotoLineNumber(lineNumber, searchText);
+            CurrentDocument = d;
+        }
+
 
         private async Task OpenYMLFile(string fullPath, int lineNumber, string? searchText)
         {
