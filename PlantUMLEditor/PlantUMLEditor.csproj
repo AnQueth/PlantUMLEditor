@@ -8,7 +8,7 @@
     <Configurations>Debug;Release</Configurations>
     <ApplicationIcon>Images\uml.ico</ApplicationIcon>
     <Nullable>enable</Nullable>
-    <AnalysisLevel>5.0</AnalysisLevel>
+    <AnalysisLevel>latest</AnalysisLevel>
   </PropertyGroup>
 
   <ItemGroup>
