@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.DirectoryServices;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -99,7 +100,21 @@ namespace PlantUMLEditor.Models
         {
             if (Image != null)
             {
-                Clipboard.SetImage(Image.Clone());
+                int tries = 0;
+                while (tries < 5)
+                {
+                    try
+                    {
+                        Clipboard.SetImage(Image.Clone());
+                        return;
+                    }
+                    catch (Exception)
+                    {
+                        Thread.Sleep(100);
+                    }
+                    tries++;
+
+                }
             }
         }
 

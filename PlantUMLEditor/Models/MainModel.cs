@@ -1255,10 +1255,12 @@ namespace PlantUMLEditor.Models
                 _folderBase = dir;
             }
 
-            if (_folderBase == null)
+            if (_folderBase == null || !Directory.Exists(_folderBase))
             {
                 return null;
             }
+
+            
 
             _metaDataDirectory = Path.Combine(_folderBase, ".umlmetadata");
 
