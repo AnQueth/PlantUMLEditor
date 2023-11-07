@@ -21,16 +21,23 @@ namespace PlantUMLEditor.Models
             protected override void Write(Markdig.Renderers.WpfRenderer renderer,
                 Markdig.Syntax.Inlines.LinkInline link)
             {
-                if (link?.IsImage ?? throw new ArgumentNullException(nameof(link)))
+                try
                 {
-                    if (!new Uri(link.Url, UriKind.RelativeOrAbsolute).IsAbsoluteUri)
+                    if (link?.IsImage ?? throw new ArgumentNullException(nameof(link)))
                     {
-                        Uri u = new Uri(_linkpath, link.Url);
-                        link.Url = u.AbsoluteUri;
+                        if (!new Uri(link.Url, UriKind.RelativeOrAbsolute).IsAbsoluteUri)
+                        {
+                            Uri u = new Uri(_linkpath, link.Url);
+                            link.Url = u.AbsoluteUri;
+                        }
                     }
-                }
 
-                base.Write(renderer, link);
+                    base.Write(renderer, link);
+                }
+                catch(FileNotFoundException fe)
+                {
+
+                }
             }
         }
 
