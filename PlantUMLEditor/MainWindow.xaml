@@ -783,7 +783,10 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}">
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="{Binding GridSettings.DataTypesHeight, Mode=TwoWay}"></RowDefinition>
             </Grid.RowDefinitions>
-            <TreeView Style="{DynamicResource TreeViewStyle1}"  AllowDrop="True"  Grid.Row="0" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
+            <TreeView Style="{DynamicResource TreeViewStyle1}"  AllowDrop="True"
+                        VirtualizingStackPanel.IsVirtualizing="True"
+            VirtualizingStackPanel.VirtualizationMode="Recycling"
+                      Grid.Row="0" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
              
             </TreeView>
             <GridSplitter Grid.Row="1" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" ></GridSplitter>
