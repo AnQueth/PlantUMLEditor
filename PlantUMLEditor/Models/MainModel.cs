@@ -111,7 +111,13 @@ namespace PlantUMLEditor.Models
             ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
             OpenTerminalCommand = new DelegateCommand(OpenTerminalHandler);
             OpenExplorerCommand = new DelegateCommand(OpenExplorerHandler);
-            DocFXServeCommand = new DelegateCommand(DocFXServeCommandHandler, ()=> this._selectedFolder is not null && File.Exists(AppSettings.Default.DocFXEXE));
+            DocFXServeCommand = new DelegateCommand(DocFXServeCommandHandler, () => {
+
+                return this._folderBase is not null && 
+                FindDocFXConfig(this._folderBase) != null && 
+                File.Exists(AppSettings.Default.DocFXEXE);
+                
+            });
 
             Configuration = new AppConfiguration("plantuml.jar");
 
@@ -138,16 +144,42 @@ namespace PlantUMLEditor.Models
             _ = new Timer(MRULoader, null, 10, Timeout.Infinite);
         }
 
-  
+
         private void DocFXServeCommandHandler()
         {
+            
+            string? folderWithDocFXConfig = FindDocFXConfig(this._folderBase);
+
+
             ProcessStartInfo psi = new ProcessStartInfo(AppSettings.Default.DocFXEXE);
             psi.UseShellExecute = false;
             psi.ArgumentList.Add("--serve");
-            psi.WorkingDirectory = this._selectedFolder.FullPath;
+            psi.WorkingDirectory = folderWithDocFXConfig;
             Process.Start(psi);
 
         }
+
+        private string? FindDocFXConfig(string folder)
+        {
+            foreach (var file in Directory.EnumerateFiles(folder, "docfx.json"))
+            {
+              
+                    return folder;
+                
+            }
+
+            foreach (string dir in Directory.EnumerateDirectories(folder))
+            {
+                string? found = FindDocFXConfig(dir);
+                if (!string.IsNullOrWhiteSpace(found))
+                {
+                    return found;
+                }
+            }
+
+            return null;
+        }
+
         public string DocFXExe
         {
             get => AppSettings.Default.DocFXEXE;
@@ -485,6 +517,8 @@ namespace PlantUMLEditor.Models
                 }
             }
 
+            DocFXServeCommand.RaiseCanExecuteChanged();
+
             _messageCheckerTrigger.Set();
         }
 
@@ -763,9 +797,9 @@ namespace PlantUMLEditor.Models
 
             foreach (string? file in Directory.EnumerateFiles(dir))
             {
-       
+
                 model.Children.Add(new TreeViewModel(model, file, Statics.GetIcon(file)));
-       
+
             }
 
             FoldersStatusPersistance? fp = new FoldersStatusPersistance();
@@ -1201,7 +1235,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-     
+
 
         private string? GetNewFile(string fileExtension)
         {
@@ -1260,7 +1294,7 @@ namespace PlantUMLEditor.Models
                 return null;
             }
 
-            
+
 
             _metaDataDirectory = Path.Combine(_folderBase, ".umlmetadata");
 
