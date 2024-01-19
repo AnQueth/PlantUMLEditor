@@ -676,7 +676,7 @@ namespace PlantUMLEditor.Models
             if (e.Source is FrameworkElement frameworkElement)
             {
                 TreeViewModel? model = frameworkElement.DataContext as TreeViewModel;
-                if (model is not null)
+                if (model is not null and not FolderTreeViewModel)
                 {
                     await AttemptOpeningFile(model.FullPath);
                 }
