@@ -151,12 +151,18 @@ namespace PlantUMLEditor.Models
             string? folderWithDocFXConfig = FindDocFXConfig(this._folderBase);
 
 
-            ProcessStartInfo psi = new ProcessStartInfo(AppSettings.Default.DocFXEXE);
+            ProcessStartInfo psi = new ProcessStartInfo();
+            psi.FileName = "CMD.EXE";
+        
+
             psi.UseShellExecute = false;
+            psi.ArgumentList.Add("/K");
+            psi.ArgumentList.Add( AppSettings.Default.DocFXEXE);
             psi.ArgumentList.Add("--serve");
             psi.WorkingDirectory = folderWithDocFXConfig;
-            Process.Start(psi);
-
+            
+            var p = Process.Start(psi);
+           
         }
 
         private string? FindDocFXConfig(string folder)
