@@ -18,7 +18,7 @@ namespace PlantUML
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +\""*(?<name>[\w\W ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\.\#]+(?<direction>[\w]+)*[\->\(\)o\[\]\.\#]*) *(?<rightbracket>\[*)(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-
+        private static readonly Regex _ports = new (@"^\s*(port|portin|portout).*", RegexOptions.Compiled);
 
 
         private static string Clean(string name)
@@ -127,6 +127,10 @@ namespace PlantUML
                         continue;
                     }
 
+                    if(_ports.IsMatch(line))
+                    {
+                        continue;
+                    }
 
                     if (line.StartsWith("participant", StringComparison.Ordinal))
                     {

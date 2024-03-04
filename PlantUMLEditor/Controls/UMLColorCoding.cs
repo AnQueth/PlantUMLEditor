@@ -26,6 +26,11 @@ namespace PlantUMLEditor.Controls
                     RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                 (Colors.Blue, 1)
             },
+                {
+                new Regex(@"^[\s\+\-\#]*(port|portin|portout)\s+?",
+                    RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                (Colors.Chocolate, 1)
+            },
             {
                 new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork|while.*|endwhile.*)\s+?",
                     RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
