@@ -11,14 +11,14 @@ namespace PlantUML
 {
     public class UMLComponentDiagramParser
     {
-
-
+        private const string CLASSNAME = "class";
+        private const string PACKAGENAME = "name";
         private static readonly Regex _component = new(@"^(?:(?:component |database |queue |actor ) *(?:(?<name>[\w]+)|(?:(?:\[|\"")(?<name>[^\""]+)(?:\]|\"")))) *(?:\[(?<description>[\s\w]+)\])*(?: *as +(?<alias>[\w]+))* *(?<color>#[\w]+)*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +\""*(?<name>[\w\W ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\.\#]+(?<direction>[\w]+)*[\->\(\)o\[\]\.\#]*) *(?<rightbracket>\[*)(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex _ports = new (@"^\s*(port|portin|portout).*", RegexOptions.Compiled);
+        private static readonly Regex _ports = new(@"^\s*(port |portin |portout )(?<name>.*)", RegexOptions.Compiled);
 
 
         private static string Clean(string name)
@@ -60,6 +60,8 @@ namespace PlantUML
             Stack<string> brackets = new();
             Regex removeGenerics = new("\\w+");
             Stack<UMLPackage> packagesStack = new();
+            Stack<UMLComponent> components = new();
+            UMLComponent? currentComponent = null;
 
             UMLPackage defaultPackage = new("");
 
@@ -127,8 +129,24 @@ namespace PlantUML
                         continue;
                     }
 
-                    if(_ports.IsMatch(line))
+                    if (_ports.IsMatch(line))
                     {
+                        Match? m = _ports.Match(line);
+                        if (currentComponent is not null)
+                        {
+                            if (m.Groups[1].Value == "port ")
+                            {
+                                currentComponent.Ports.Add(m.Groups["name"].Value);
+                            }
+                            else if (m.Groups[1].Value == "portin ")
+                            {
+                                currentComponent.PortsIn.Add(m.Groups["name"].Value);
+                            }
+                            else if (m.Groups[1].Value == "portout ")
+                            {
+                                currentComponent.PortsOut.Add(m.Groups["name"].Value);
+                            }
+                        }
                         continue;
                     }
 
@@ -139,14 +157,23 @@ namespace PlantUML
 
                     UMLDataType? DataType = null;
 
-                    if (line == "}" && brackets.Count > 0 && brackets.Peek() == "name")
+                    if (line == "}" && brackets.Count > 0 && brackets.Peek() == PACKAGENAME)
                     {
                         _ = brackets.Pop();
                         _ = packages.Pop();
                         _ = packagesStack.Pop();
                         currentPackage = packagesStack.First();
+                        continue;
                     }
 
+
+                    if (line == "}" && brackets.Count > 0 && brackets.Peek() == CLASSNAME)
+                    {
+                        _ = brackets.Pop();
+                        _ = components.Pop();
+                        currentComponent = components.FirstOrDefault();
+                        continue;
+                    }
 
                     if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex.IsMatch(line))
                     {
@@ -172,21 +199,28 @@ namespace PlantUML
                     else if (_component.IsMatch(line))
                     {
                         Match? g = _component.Match(line);
-                        if (string.IsNullOrEmpty(g.Groups["name"].Value))
+                        if (string.IsNullOrEmpty(g.Groups[PACKAGENAME].Value))
                         {
                             continue;
                         }
 
                         string package = GetPackage(packages);
 
-                        DataType = new UMLComponent(package, Clean(g.Groups["name"].Value),
+                        DataType = new UMLComponent(package, Clean(g.Groups[PACKAGENAME].Value),
                             g.Groups["alias"].Value);
 
                         _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
 
+                        if (currentComponent is not null)
+                        {
+                            currentComponent.Children.Add(DataType);
+                        }
+
                         if (line.EndsWith("{", StringComparison.Ordinal))
                         {
-                            brackets.Push("class");
+                            brackets.Push(CLASSNAME);
+                            components.Push((UMLComponent)DataType);
+                            currentComponent = (UMLComponent)DataType;
                         }
                     }
                     else if (_interface.IsMatch(line))
@@ -195,7 +229,7 @@ namespace PlantUML
                         string package = GetPackage(packages);
                         if (line.Length > 8)
                         {
-                            DataType = new UMLInterface(package, Clean(g.Groups["name"].Value), g.Groups["alias"].Value,
+                            DataType = new UMLInterface(package, Clean(g.Groups[PACKAGENAME].Value), g.Groups["alias"].Value,
                                 new List<UMLDataType>());
                             _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
                         }
@@ -270,7 +304,7 @@ namespace PlantUML
 
         private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, Dictionary<string, UMLDataType> aliases, bool bracketExists)
         {
-            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left && string.IsNullOrEmpty( p.Alias))
+            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left && string.IsNullOrEmpty(p.Alias))
                               ?? d.ContainedPackages.Find(p => p.Name == left);
             if (leftComponent == null)
             {
@@ -288,8 +322,17 @@ namespace PlantUML
                         leftComponent = new UMLComponent(package, Clean(left), left);
                         _ = aliases.TryAdd(left, leftComponent);
                     }
+                    else if (left is not null && !bracketExists)
+                    {
+                        leftComponent = d.Entities.OfType<UMLComponent>().FirstOrDefault(z => z.PortsIn.Contains(left)
+                          || z.PortsOut.Contains(left) || z.Ports.Contains(left));
+
+
+                    }
                     else
                     {
+
+
                         leftComponent = null;
                     }
                 }
@@ -300,9 +343,9 @@ namespace PlantUML
 
         private static UMLPackage AddPackage(Stack<string> packages, Dictionary<string, UMLDataType> aliases, Stack<string> brackets, Stack<UMLPackage> packagesStack, UMLComponentDiagram d, UMLPackage currentPackage, Match s)
         {
-            string name = Clean(s.Groups["name"].Value);
+            string name = Clean(s.Groups[PACKAGENAME].Value);
             packages.Push(name);
-            brackets.Push("name");
+            brackets.Push(PACKAGENAME);
 
             UMLPackage? c = new UMLPackage(name,
                 s.Groups["type"].Value, s.Groups["alias"].Value);
