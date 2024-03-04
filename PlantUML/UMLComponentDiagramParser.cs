@@ -270,7 +270,7 @@ namespace PlantUML
 
         private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, Dictionary<string, UMLDataType> aliases, bool bracketExists)
         {
-            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left)
+            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left && string.IsNullOrEmpty( p.Alias))
                               ?? d.ContainedPackages.Find(p => p.Name == left);
             if (leftComponent == null)
             {

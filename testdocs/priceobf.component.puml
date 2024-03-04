@@ -1,26 +1,35 @@
 @startuml
 
 title priceobf.component
-!theme sketchy-outline
 
+!theme sketchy-outline
 component SourceSpriteStrip #red
 component Randomizer #green
 component RandomizedImage
 component Map
 component ServerMap
-component WebServer   
-component Browser
-actor Designer
+component WebServer as ws <<ffff>>
+component Browser <<bro>> {
+    
+     
+    port test
+    portout test2
+    portin test3
+}
 
+actor Designer
 [laa] -> [aaaa] : test
-note top of [aaaa] : hmmm
+
+note top of [aaaa] : hmmm 
+ 
 [laa] --> SourceSpriteStrip : test
 Designer - SourceSpriteStrip : Create master source strip
 Designer .. SourceSpriteStrip : Create master source strip
 Randomizer <-- SourceSpriteStrip : read master
-WebServer -- Randomizer : Create Random Strip , Map, and Server Map
+ws -- Randomizer : aaa
+ws -- Randomizer : Create Random Strip , Map, and Server Map
 Randomizer -- RandomizedImage : Create From SourceSpriteStrip
 Randomizer -- Map : Create map for client side
 Randomizer -- ServerMap : Create map for server to see numbers
-Browser <-- WebServer : Serve either server rendered, or js powered number obfuscation
+Browser <-- ws : Serve either server rendered, or js powered number obfuscation
 @enduml
