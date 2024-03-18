@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xaml.Behaviors.Media;
+using System;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -6,6 +7,8 @@ namespace PlantUMLEditor.Controls
 {
     internal class Indenter : IIndenter
     {
+        private const string INDENT = "  ";
+
         private static readonly Regex newLineAfter = new(@"^(note.+:|end +note|\'.+|.+\'\/|left to right direction)", RegexOptions.Compiled);
         private static readonly Regex newLineBefore = new(@"^(note.+|\'.+|\/\'.+|left to right direction)", RegexOptions.Compiled);
         // private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
@@ -75,7 +78,7 @@ namespace PlantUMLEditor.Controls
             {
                 for (int indent = 0; indent < indentLevel; indent++)
                 {
-                    sb.Append("    ");
+                    sb.Append(INDENT);
                 }
 
                 sb.AppendLine(line);

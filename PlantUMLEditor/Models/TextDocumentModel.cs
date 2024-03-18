@@ -156,7 +156,7 @@ namespace PlantUMLEditor.Models
             return selection;
         }
 
-        protected virtual async void ContentChanged(string text)
+        protected virtual async Task ContentChanged(string text)
         {
             IsDirty = true;
             _textValue = text;
@@ -337,7 +337,7 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            ContentChanged(text);
+            ContentChanged(text).ConfigureAwait(false);
 
         }
 

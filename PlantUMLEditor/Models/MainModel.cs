@@ -883,6 +883,16 @@ namespace PlantUMLEditor.Models
                 }
                 else if (ud != null)
                 {
+                    foreach(var line in File.ReadLines(fullPath))
+                    {
+                        if(line == "@startjson")
+                        {
+                            await OpenJsonFile(fullPath, ud, lineNumber, searchText);
+                            return;
+                        }
+                    }
+                  
+
                     await OpenUnknownDiagram(fullPath, ud);
                 }
             }
@@ -1537,10 +1547,22 @@ namespace PlantUMLEditor.Models
             if (!string.IsNullOrEmpty(nf))
             {
                 string title = Path.GetFileNameWithoutExtension(nf);
-                await NewUnknownUMLDiagram(nf, title, $"@startjson\r\ntitle {title}\r\n\r\n@endjson\r\n");
+                await NewJsonUMLDiagram(nf, title, $"@startjson\r\ntitle {title}\r\n\r\n@endjson\r\n");
 
                 _selectedFolder?.Children.Insert(0, new TreeViewModel(_selectedFolder, nf, Statics.GetIcon(nf)));
             }
+        }
+
+        private async Task NewJsonUMLDiagram(string fileName, string title, string content)
+        {
+            UMLUnknownDiagram? model = new UMLModels.UMLUnknownDiagram(title, fileName);
+
+            JsonDocumentModel? d = new JsonDocumentModel((old, @new) =>
+            {
+            },
+            Configuration, _ioService, model, Documents, fileName, title, content, _messageCheckerTrigger);
+
+            await AfterCreate(d);
         }
 
         private async void NewUnknownDiagramHandler()
@@ -1607,20 +1629,19 @@ namespace PlantUMLEditor.Models
             return d;
         }
 
-        private async Task OpenComponentDiagram(string fileName, UMLComponentDiagram diagram,
+        private async Task OpenJsonFile (string fullPath, UMLUnknownDiagram diagram,
             int lineNumber, string? searchText)
         {
-            string content = await File.ReadAllTextAsync(fileName);
-            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration,
-                _ioService, diagram, fileName, diagram.Title, content, _messageCheckerTrigger);
+            string content = await File.ReadAllTextAsync(fullPath);
+            JsonDocumentModel? d = new JsonDocumentModel((old, newdoc)=> {
+            },Configuration, _ioService, diagram,
+                Documents, fullPath, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
             {
                 OpenDocuments.Add(d);
             }
-
             d.GotoLineNumber(lineNumber, searchText);
-
             CurrentDocument = d;
         }
 
@@ -1795,7 +1816,22 @@ namespace PlantUMLEditor.Models
             d.GotoLineNumber(lineNumber, searchText);
             CurrentDocument = d;
         }
+        private async Task OpenComponentDiagram(string fileName, UMLComponentDiagram diagram,
+    int lineNumber, string? searchText)
+        {
+            string content = await File.ReadAllTextAsync(fileName);
+            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration,
+                _ioService, diagram, fileName, diagram.Title, content, _messageCheckerTrigger);
 
+            lock (_docLock)
+            {
+                OpenDocuments.Add(d);
+            }
+
+            d.GotoLineNumber(lineNumber, searchText);
+
+            CurrentDocument = d;
+        }
         private async Task OpenSequenceDiagram(string fileName, UMLSequenceDiagram diagram,
             int lineNumber, string? searchText)
         {

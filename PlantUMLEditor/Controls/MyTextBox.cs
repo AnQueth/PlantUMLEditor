@@ -537,6 +537,18 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                 bracesWillTriggerRender = true;
                 return;
             }
+            else if (c == '[')
+            {
+                FindMatchingForward(Text.AsSpan(), start, c, ']');
+                bracesWillTriggerRender = true;
+                return;
+            }
+            else if (c == ']')
+            {
+                FindMatchingBackwards(Text.AsSpan(), start, c, '[');
+                bracesWillTriggerRender = true;
+                return;
+            }
             else if (c == '<')
             {
                 FindMatchingForward(Text.AsSpan(), start, c, '>');
@@ -587,7 +599,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             if (!_autoComplete.IsPopupVisible && e.Key is Key.Tab)
             {
                 e.Handled = true;
-                InsertText("    ");
+                InsertText("  ");
                 CaretIndex += 4;
                 e.Handled = true;
                 return;
@@ -662,7 +674,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             else if (e.Key is Key.Enter)
             {
                 int indent = _indenter.GetIndentLevelForLine(Text, GetLineIndexFromCharacterIndex(CaretIndex));
-                string line = "\r\n" + new string(' ', indent * 4);
+                string line = "\r\n" + new string(' ', indent * 2);
                 int index = CaretIndex + line.Length;
                 Text = Text.Insert(CaretIndex, line);
                 CaretIndex = index;

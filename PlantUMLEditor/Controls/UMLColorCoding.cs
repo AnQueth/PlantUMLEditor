@@ -58,7 +58,7 @@ namespace PlantUMLEditor.Controls
 
         };
 
-        private static readonly Regex brackets = new(@"(\{|\})",
+        private static readonly Regex brackets = new(@"(\{|\}|\[|\])",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex notes = new(@"^\s*\/*\s*(note|hnote|rnote)((?:.+\:\s+.+?)$|((?:[.\W\w]+?)(end note|endrnote|endhnote)))",
             RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.IgnoreCase);
