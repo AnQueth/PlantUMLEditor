@@ -13,7 +13,7 @@ namespace PlantUMLEditor.Controls
         private static readonly Regex reg = new("\n");
         private static readonly Regex removeSpaces = new(" {2,}", RegexOptions.Compiled);
         private static readonly Regex tab = new(@"^(alt|opt|loop|try|group|catch|break|par)\s+", RegexOptions.Compiled);
-        private static readonly Regex tab2 = new(@"(\{|\[)\s*$", RegexOptions.Compiled);
+        private static readonly Regex tab2 = new(@".*?(\{|\[)\s*$", RegexOptions.Compiled);
         private static readonly Regex tab3 = new(@"^\s*(if\s+\(.*|repeat(?!\s*while).*|while.*|fork(?!\s*again))$", RegexOptions.Compiled);
         private static readonly Regex tabReset = new(@"^(else\s?.*|fork\s+again)", RegexOptions.Compiled);
         private static readonly Regex tabStop = new(@"^(\}|\]|end(?! note)|endif|endwhile.*|repeat\s+while.*)", RegexOptions.Compiled);
