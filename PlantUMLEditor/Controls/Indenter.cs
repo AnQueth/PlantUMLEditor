@@ -9,8 +9,8 @@ namespace PlantUMLEditor.Controls
     {
         private const string INDENT = "  ";
 
-        private static readonly Regex newLineAfter = new(@"^(note.+:|end +note|\'.+|.+\'\/|left to right direction)", RegexOptions.Compiled);
-        private static readonly Regex newLineBefore = new(@"^(note.+|\'.+|\/\'.+|left to right direction)", RegexOptions.Compiled);
+        private static readonly Regex newLineAfter = new(@"^(note.+:|end +note|\'.+|.+\'\/|left to right direction|endlegend)", RegexOptions.Compiled);
+        private static readonly Regex newLineBefore = new(@"^(note.+|\'.+|\/\'.+|left to right direction|legend.*)", RegexOptions.Compiled);
         // private static readonly Regex notes = new("note *((?<sl>(?<placement>\\w+) of (?<target>\\w+) *: *(?<text>.*))|(?<sl>(?<placement>\\w+) *: *(?<text>.*))|(?<sl>\\\"(?<text>[\\w\\W]+)\\\" as (?<alias>\\w+))|(?<placement>\\w+) of (?<target>\\w+)| as (?<alias>\\w+))", RegexOptions.Compiled);
 
         private static readonly Regex reg = new("\n");

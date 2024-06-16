@@ -10,6 +10,7 @@ namespace PlantUML
 
         private bool _swallowingNotes;
         private bool _swallowingSkinParams;
+        private bool _swallowingLegend;
         private bool _swallowingComment;
         private string? _currentNotesAlias;
 
@@ -130,6 +131,32 @@ namespace PlantUML
             }
 
             if (_swallowingSkinParams)
+            {
+                _sbReader.AppendLine(line);
+                return true;
+            }
+
+            if (line.StartsWith("legend", StringComparison.Ordinal))
+            {
+                
+           
+                    _sbReader.AppendLine(line);
+                    _swallowingLegend = true;
+          
+                return true;
+
+            }
+
+            if (_swallowingLegend && line == "endlegend")
+            {
+
+                _sbReader.AppendLine(line);
+       
+                _swallowingLegend = false;
+                return true;
+            }
+
+            if (_swallowingLegend)
             {
                 _sbReader.AppendLine(line);
                 return true;
