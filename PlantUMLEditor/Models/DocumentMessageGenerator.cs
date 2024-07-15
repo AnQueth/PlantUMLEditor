@@ -84,7 +84,7 @@ namespace PlantUMLEditor.Models
 
 
 
-            List<BadDataTypeAndNS>? namespaceReferences = FindBadDataTypes(folderBase, newMessages,
+            List<DataTypeToNamespaceMapping>? namespaceReferences = FindBadDataTypes(folderBase, newMessages,
                 dataTypes.OrderBy(p => p.DataType.Name.Length).ToList());
 
 
@@ -155,32 +155,34 @@ namespace PlantUMLEditor.Models
         }
 
         private static void FindCircularReferences(string folderBase, List<DocumentMessage> newMessages,
-            List<BadDataTypeAndNS> namespaceReferences)
+            List<DataTypeToNamespaceMapping> namespaceReferences)
         {
-            foreach (BadDataTypeAndNS? n in namespaceReferences)
+     
+
+            foreach (DataTypeToNamespaceMapping? n in namespaceReferences)
             {
-                if (namespaceReferences.Any(p => string.CompareOrdinal(p.BadDataType.NS1, n.NS2) == 0 &&
-                string.CompareOrdinal(p.NS2, n.BadDataType.NS1) == 0 &&
-                string.CompareOrdinal(p.BadDataType.NS1, p.NS2) != 0 &&
-                !string.IsNullOrEmpty(p.BadDataType.NS1)
+                if (namespaceReferences.Any(p => string.CompareOrdinal(p.DataTypePointer.NS1, n.NS2) == 0 &&
+                string.CompareOrdinal(p.NS2, n.DataTypePointer.NS1) == 0 &&
+                string.CompareOrdinal(p.DataTypePointer.NS1, p.NS2) != 0 &&
+                !string.IsNullOrEmpty(p.DataTypePointer.NS1)
                 && !string.IsNullOrEmpty(p.NS2)))
                 {
-                    string text = "Circular reference " + n.BadDataType.NS1 + " and " + n.NS2 + " type = " + n.BadDataType.DataType + " offender " + n.BadDataType.Name;
+                    string text = "Circular reference " + n.DataTypePointer.NS1 + " and " + n.NS2 + " type = " + n.DataTypePointer.DataType + " offender " + n.DataTypePointer.Name;
 
-                    newMessages.Add(new DocumentMessage(n.BadDataType.FileName, GetRelativeName(folderBase, n.BadDataType.FileName), n.BadDataType.LineNumber, text));
+                    newMessages.Add(new DocumentMessage(n.DataTypePointer.FileName, GetRelativeName(folderBase, n.DataTypePointer.FileName), n.DataTypePointer.LineNumber, text));
 
                 }
             }
         }
 
-        private record BadDataType(string FileName, int LineNumber, string NS1, string DataType, string Name);
-        private record BadDataTypeAndNS(BadDataType BadDataType, string NS2);
+        private record DataTypeReference(string FileName, int LineNumber, string NS1, string DataType, string Name);
+        private record DataTypeToNamespaceMapping(DataTypeReference DataTypePointer, string NS2);
 
-        private static List<BadDataTypeAndNS>
+        private static List<DataTypeToNamespaceMapping>
             FindBadDataTypes(string folderBase, List<DocumentMessage> newMessages,
              List<DataTypeRecord> dataTypes)
         {
-            List<BadDataTypeAndNS> namespaceReferences = new();
+            List<DataTypeToNamespaceMapping> namespaceReferences = new();
 
             foreach (DataTypeRecord? dt in dataTypes)
             {
@@ -197,16 +199,7 @@ namespace PlantUMLEditor.Models
                     foreach (string? r in parsedTypes)
                     {
                         DataTypeRecord? pdt = dataTypes.FirstOrDefault(z => string.CompareOrdinal(z.DataType.NonGenericName, r) == 0);
-                        if (pdt == default)
-                        {
-                            newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
-                                dt.DataType.LineNumber, r + " used by " + m.Name, true, r, true));
-
-                        }
-                        else
-                        {
-                            namespaceReferences.Add(new(new(dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
-                        }
+                        ProcessPDT(folderBase, newMessages, namespaceReferences, dt, m.Name, r, pdt);
                     }
                 }
                 foreach (UMLMethod? m in dt.DataType.Methods)
@@ -219,17 +212,7 @@ namespace PlantUMLEditor.Models
                         {
                             DataTypeRecord? pdt = dataTypes
                                  .FirstOrDefault(z => GetCleanTypes(dataTypes, z.DataType.Name).Contains(r));
-                            if (pdt == default)
-                            {
-                                newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
-                                   dt.DataType.LineNumber, r + " used by " + m.Name, true, r, true));
-
-                            }
-                            else
-                            {
-                                namespaceReferences.Add(new(new(dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
-
-                            }
+                            ProcessPDT(folderBase, newMessages, namespaceReferences, dt, m.Name, r, pdt);
                         }
                     }
                     if (!string.IsNullOrWhiteSpace(m.ReturnType.Name))
@@ -240,24 +223,31 @@ namespace PlantUMLEditor.Models
                         {
                             DataTypeRecord? pdt = dataTypes
                                 .FirstOrDefault(z => GetCleanTypes(dataTypes, z.DataType.Name).Contains(r));
-                            if (pdt == default)
-                            {
-                                newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
-                                dt.DataType.LineNumber, r + " used by " + m.Name, true, r, true));
-
-
-                            }
-                            else
-                            {
-                                namespaceReferences.Add(new(new(dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, r, m.Name), pdt.DataType.Namespace));
-
-                            }
+                            ProcessPDT(folderBase, newMessages, namespaceReferences, dt, m.Name, r, pdt);
                         }
                     }
                 }
             }
 
             return namespaceReferences;
+
+            static void ProcessPDT(string folderBase, List<DocumentMessage> newMessages, List<DataTypeToNamespaceMapping> namespaceReferences,
+                DataTypeRecord dt, string name, string dataType, DataTypeRecord? pdt)
+            {
+                if (pdt == default)
+                {
+                    newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
+                    dt.DataType.LineNumber, dataType + " used by " + name, true, dataType, true));
+
+
+                }
+                else
+                {
+                    if(!string.IsNullOrEmpty(pdt.DataType.Namespace))
+                        namespaceReferences.Add(new(new(dt.FileName, dt.DataType.LineNumber, dt.DataType.Namespace, dataType, name), pdt.DataType.Namespace));
+
+                }
+            }
         }
 
         private static string GetRelativeName(string folderBase, string fullPath)
@@ -265,4 +255,6 @@ namespace PlantUMLEditor.Models
             return fullPath[(folderBase.Length + 1)..];
         }
     }
+    
+
 }
