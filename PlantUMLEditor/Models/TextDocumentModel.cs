@@ -119,6 +119,14 @@ namespace PlantUMLEditor.Models
 
         private async void ShowPreviewCommandHandler()
         {
+            if(previewWindow is not null && imageModel is not null)  
+            {
+                imageModel.Stop();
+                previewWindow.Close();
+                
+                
+            }
+
             (IPreviewModel? model, Window? window) res = GetPreviewView();
             imageModel = res.model;
             previewWindow = res.window;
