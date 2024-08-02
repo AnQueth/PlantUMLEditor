@@ -1308,7 +1308,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                         search += ")";
                     }
 
-                    Regex r = new(search, RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(100));
+                    Regex r = new(search, RegexOptions.None, TimeSpan.FromMilliseconds(100));
                     MatchCollection? m = r.Matches(Text);
 
                     foreach (Group item in m)
