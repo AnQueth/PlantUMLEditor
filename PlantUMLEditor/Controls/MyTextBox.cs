@@ -599,8 +599,8 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             if (!_autoComplete.IsPopupVisible && e.Key is Key.Tab)
             {
                 e.Handled = true;
-                InsertText("    ");
-                CaretIndex += 4;
+                InsertText("  ");
+                CaretIndex += 2;
                 e.Handled = true;
                 return;
             }
