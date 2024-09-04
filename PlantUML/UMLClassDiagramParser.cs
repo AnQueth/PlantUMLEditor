@@ -340,6 +340,11 @@ namespace PlantUML
                     }
                     if (cl != null && i != null)
                     {
+                        if(cl.Name == i.Name)
+                        {
+                            d.Errors.Add(new UMLError("Base class cannot be the same as the derived class", second, lineNumber));
+                            continue;
+                        }
                         cl.Bases.Add(i);
                     }
                     else
