@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Parsers;
 using System.IO;
 
@@ -26,9 +27,9 @@ namespace UmlTests
                 }
             });
 
-            Assert.AreEqual(a, "a b");
-            Assert.AreEqual(b, "->");
-            Assert.AreEqual(c, "b aaa  fff'");
+            ClassicAssert.AreEqual(a, "a b");
+            ClassicAssert.AreEqual(b, "->");
+            ClassicAssert.AreEqual(c, "b aaa  fff'");
         }
 
 
@@ -42,9 +43,9 @@ namespace UmlTests
                 k.Parse(s);
             });
 
-            Assert.AreEqual("class", k.MatchedKeywords[0]);
-            Assert.AreEqual("Test", k.LeftOvers[0]);
-            Assert.AreEqual("Test {", k.LeftOverToString());
+            ClassicAssert.AreEqual("class", k.MatchedKeywords[0]);
+            ClassicAssert.AreEqual("Test", k.LeftOvers[0]);
+            ClassicAssert.AreEqual("Test {", k.LeftOverToString());
 
             k = new("class", "abstract");
 
@@ -53,10 +54,10 @@ namespace UmlTests
                 k.Parse(s);
             });
 
-            Assert.AreEqual("abstract", k.MatchedKeywords[0]);
-            Assert.AreEqual("class", k.MatchedKeywords[1]);
-            Assert.AreEqual("Test la", k.LeftOvers[0]);
-            Assert.AreEqual("Test la as a {", k.LeftOverToString());
+            ClassicAssert.AreEqual("abstract", k.MatchedKeywords[0]);
+            ClassicAssert.AreEqual("class", k.MatchedKeywords[1]);
+            ClassicAssert.AreEqual("Test la", k.LeftOvers[0]);
+            ClassicAssert.AreEqual("Test la as a {", k.LeftOverToString());
 
             k = new("note", "top", "bottom", "over", "of", "right", ":");
 
@@ -65,9 +66,9 @@ namespace UmlTests
                 k.Parse(s);
             });
 
-            Assert.AreEqual("note", k.MatchedKeywords[0]);
-            Assert.AreEqual("over", k.MatchedKeywords[1]);
-            Assert.AreEqual("a : test", k.LeftOverToString());
+            ClassicAssert.AreEqual("note", k.MatchedKeywords[0]);
+            ClassicAssert.AreEqual("over", k.MatchedKeywords[1]);
+            ClassicAssert.AreEqual("a : test", k.LeftOverToString());
 
 
             k = new("note", "top", "bottom", "over", "of", "right", ":");
@@ -77,9 +78,9 @@ namespace UmlTests
                 k.Parse(s);
             });
 
-            Assert.AreEqual("note", k.MatchedKeywords[0]);
-            Assert.AreEqual("over", k.MatchedKeywords[1]);
-            Assert.AreEqual("a : test", k.LeftOverToString());
+            ClassicAssert.AreEqual("note", k.MatchedKeywords[0]);
+            ClassicAssert.AreEqual("over", k.MatchedKeywords[1]);
+            ClassicAssert.AreEqual("a : test", k.LeftOverToString());
         }
 
         [Test]
@@ -101,7 +102,7 @@ namespace UmlTests
             {
                 if (!skp.ReadLine(line))
                 {
-                    Assert.AreSame(test1, skp.ReadLines);
+                    ClassicAssert.AreSame(test1, skp.ReadLines);
                 }
             }
             skp = new();
@@ -112,7 +113,7 @@ namespace UmlTests
             {
                 if (!skp.ReadLine(line))
                 {
-                    Assert.AreSame(test2, skp.ReadLines);
+                     ClassicAssert.AreSame(test2, skp.ReadLines);
                 }
             }
         }
@@ -127,10 +128,10 @@ namespace UmlTests
                 lp.Parse(s);
 
             });
-            Assert.AreEqual(lp.LeftSide, "a b");
-            Assert.AreEqual(lp.RightSide, "b");
-            Assert.AreEqual(lp.Connector, "->");
-            Assert.AreEqual(lp.Text, "la");
+            ClassicAssert.AreEqual(lp.LeftSide, "a b");
+            ClassicAssert.AreEqual(lp.RightSide, "b");
+            ClassicAssert.AreEqual(lp.Connector, "->");
+            ClassicAssert.AreEqual(lp.Text, "la");
 
             lp = new();
             QuoteParser.Parse("a --> b : la test", (s, pos, len) =>
@@ -139,10 +140,10 @@ namespace UmlTests
                 lp.Parse(s);
 
             });
-            Assert.AreEqual(lp.LeftSide, "a");
-            Assert.AreEqual(lp.RightSide, "b");
-            Assert.AreEqual(lp.Connector, "-->");
-            Assert.AreEqual(lp.Text, "la test");
+            ClassicAssert.AreEqual(lp.LeftSide, "a");
+            ClassicAssert.AreEqual(lp.RightSide, "b");
+            ClassicAssert.AreEqual(lp.Connector, "-->");
+            ClassicAssert.AreEqual(lp.Text, "la test");
 
 
             lp = new();
@@ -151,10 +152,10 @@ namespace UmlTests
                 lp.Parse(s);
             });
 
-            Assert.AreEqual(lp.LeftSide, "a b");
-            Assert.AreEqual(lp.RightSide, "b aaaa");
-            Assert.AreEqual(lp.Connector, "..>");
-            Assert.AreEqual(lp.Text, "la other words");
+            ClassicAssert.AreEqual(lp.LeftSide, "a b");
+            ClassicAssert.AreEqual(lp.RightSide, "b aaaa");
+            ClassicAssert.AreEqual(lp.Connector, "..>");
+            ClassicAssert.AreEqual(lp.Text, "la other words");
 
 
             lp = new();
@@ -162,20 +163,20 @@ namespace UmlTests
             {
                 lp.Parse(s);
             });
-            Assert.AreEqual(lp.LeftSide, null);
-            Assert.AreEqual(lp.RightSide, "b aaaa");
-            Assert.AreEqual(lp.Connector, "-->");
-            Assert.AreEqual(lp.Text, "la");
+            ClassicAssert.AreEqual(lp.LeftSide, null);
+            ClassicAssert.AreEqual(lp.RightSide, "b aaaa");
+            ClassicAssert.AreEqual(lp.Connector, "-->");
+            ClassicAssert.AreEqual(lp.Text, "la");
 
             lp = new();
             QuoteParser.Parse(" <-- \"b aaaa\" : la", (s, pos, len) =>
             {
                 lp.Parse(s);
             });
-            Assert.AreEqual(lp.LeftSide, null);
-            Assert.AreEqual(lp.RightSide, "b aaaa");
-            Assert.AreEqual(lp.Connector, "<--");
-            Assert.AreEqual(lp.Text, "la");
+            ClassicAssert.AreEqual(lp.LeftSide, null);
+            ClassicAssert.AreEqual(lp.RightSide, "b aaaa");
+            ClassicAssert.AreEqual(lp.Connector, "<--");
+            ClassicAssert.AreEqual(lp.Text, "la");
         }
     }
 }
