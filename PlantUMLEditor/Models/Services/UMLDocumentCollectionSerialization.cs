@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using UMLModels;
 
-namespace PlantUMLEditor.Services
+namespace PlantUMLEditor.Models.Services
 {
     internal class UMLDocumentCollectionSerialization : IUMLDocumentCollectionSerialization
     {
@@ -26,7 +26,7 @@ namespace PlantUMLEditor.Services
 
                 string s = await File.ReadAllTextAsync(fileName);
 
-                return JsonConvert.DeserializeObject<UMLModels.UMLDocumentCollection>(s, GetOptions());
+                return JsonConvert.DeserializeObject<UMLDocumentCollection>(s, GetOptions());
             }
             return new UMLDocumentCollection();
         }

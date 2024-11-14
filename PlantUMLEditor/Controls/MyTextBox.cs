@@ -585,10 +585,9 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
-            if (e.ClickCount == 2)
-            {
+          
                 this.ClearFindResults();
-            }
+            
             base.OnMouseDown(e);
 
             _autoComplete.CloseAutoComplete();

@@ -11,9 +11,9 @@ namespace PlantUMLEditor.Models
     {
         private readonly MDColorCoding _colorCoding;
         private readonly IIndenter _indenter;
-        public MDDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
+        public MDDocumentModel(  IIOService openDirectoryService,
           string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
-            base(configuration, openDirectoryService, fileName, title, content, messageCheckerTrigger)
+            base( openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
             _colorCoding = new MDColorCoding();
             _indenter = new NullIndenter();
@@ -35,7 +35,7 @@ namespace PlantUMLEditor.Models
             }
 
             MDPreviewModel? m = new MDPreviewModel(base.Title, path);
-            MDPreview? p = new MDPreview
+            MDPreviewWindow? p = new MDPreviewWindow
             {
                 DataContext = m
             };

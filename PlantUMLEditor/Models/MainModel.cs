@@ -86,7 +86,7 @@ namespace PlantUMLEditor.Models
             _ioService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(() => _ = OpenDirectoryHandler());
             DeleteMRUCommand = new DelegateCommand<string>((s) => DeleteMRUCommandHandler(s));
-
+            OpenHelpCommand = new DelegateCommand(OpenHelpCommandHandler);
             SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
             folder = new FolderTreeViewModel(null, Path.GetTempPath(), true, Statics.GetClosedFolderIcon());
             _documentCollectionSerialization = documentCollectionSerialization;
@@ -101,7 +101,7 @@ namespace PlantUMLEditor.Models
             CreateYAMLDocument = new DelegateCommand(NewYAMLDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => _selectedFile is not null);
             GitCommitAndSyncCommand = new DelegateCommand(GitCommitAndSyncCommandHandler, () => !string.IsNullOrEmpty(_folderBase));
-
+            OpenSettingsCommand = new DelegateCommand(OpenSettingsCommandHandler);
             CloseDocument = new DelegateCommand<BaseDocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<BaseDocumentModel>(CloseDocumentAndSaveHandler);
             SaveCommand = new DelegateCommand<BaseDocumentModel>(SaveCommandHandler);
@@ -119,7 +119,7 @@ namespace PlantUMLEditor.Models
                 
             });
 
-            Configuration = new AppConfiguration("plantuml.jar");
+         
 
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
 
@@ -144,6 +144,17 @@ namespace PlantUMLEditor.Models
             _ = new Timer(MRULoader, null, 10, Timeout.Infinite);
         }
 
+        private void OpenSettingsCommandHandler()
+        {
+            SettingsWindow settings = new();
+            settings.ShowDialog();
+        }
+
+        private void OpenHelpCommandHandler()
+        {
+            HelpWindow help = new();
+            help.ShowDialog();
+        }
 
         private void DocFXServeCommandHandler()
         {
@@ -218,6 +229,13 @@ namespace PlantUMLEditor.Models
         {
             get;
             private set;
+        }
+
+        private bool _spellCheck;
+        public bool SpellCheck
+        {
+            get => _spellCheck;
+            set => SetValue(ref _spellCheck, value);
         }
 
         public DelegateCommand<BaseDocumentModel> CloseDocument
@@ -342,7 +360,7 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
+        public DelegateCommand OpenSettingsCommand { get; }
         public string? GitMessages
 
         {
@@ -366,12 +384,7 @@ namespace PlantUMLEditor.Models
 
         public GridSettings GridSettings => _gridSettingLoader.Value;
 
-        public string JarLocation
-        {
-            get => Configuration.JarLocation;
-            set => Configuration.JarLocation = value;
-        }
-
+ 
         public ObservableCollection<DocumentMessage> Messages
         {
             get;
@@ -387,6 +400,7 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
+        public DelegateCommand OpenHelpCommand { get; }
         public ObservableCollection<BaseDocumentModel> OpenDocuments
         {
             get;
@@ -488,11 +502,7 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
-        private AppConfiguration Configuration
-        {
-            get;
-        }
-
+  
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0)
@@ -1118,7 +1128,7 @@ namespace PlantUMLEditor.Models
 
 
 
-            PlantUMLImageGenerator generator = new PlantUMLImageGenerator(Configuration.JarLocation,
+            PlantUMLImageGenerator generator = new PlantUMLImageGenerator(AppSettings.Default.JARLocation,
                 _selectedFile.FullPath, dir);
 
             TreeViewModel? folder = FindFolderContaining(Folder, _selectedFile.FullPath);
@@ -1332,7 +1342,11 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            GitMessages = await gs.CommitAndSync(_folderBase);
+           (var reload,  GitMessages) = await gs.CommitAndSync(_folderBase);
+            if (reload)
+            {
+                await ScanAllFilesHandler();
+            }
         }
 
         private async void GlobalSearchHandler(string obj)
@@ -1448,7 +1462,7 @@ namespace PlantUMLEditor.Models
             UMLClassDiagram? model = new UMLModels.UMLClassDiagram(title, fileName, null);
             string content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n";
             ClassDiagramDocumentModel? d = new ClassDiagramDocumentModel(
-                Configuration, _ioService, model, Documents.ClassDocuments, fileName, title, content, _messageCheckerTrigger);
+                  _ioService, model, Documents.ClassDocuments, fileName, title, content, _messageCheckerTrigger);
 
             Documents.ClassDocuments.Add(model);
 
@@ -1477,7 +1491,7 @@ namespace PlantUMLEditor.Models
             UMLComponentDiagram? model = new UMLModels.UMLComponentDiagram(title, fileName, null);
 
             string content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n";
-            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration,
+            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel( 
                 _ioService, model, fileName, title, content, _messageCheckerTrigger);
 
             Documents.ComponentDiagrams.Add(model);
@@ -1499,7 +1513,7 @@ namespace PlantUMLEditor.Models
         private async Task NewMarkDownDocument(string filePath, string fileName)
         {
             MDDocumentModel? d = new MDDocumentModel(
-            Configuration, _ioService, filePath, fileName, string.Empty, _messageCheckerTrigger);
+              _ioService, filePath, fileName, string.Empty, _messageCheckerTrigger);
 
             await AfterCreate(d);
         }
@@ -1521,7 +1535,7 @@ namespace PlantUMLEditor.Models
             UMLSequenceDiagram? model = new UMLModels.UMLSequenceDiagram(title, fileName);
             string content = $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n";
 
-            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel(Configuration,
+            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel( 
                 _ioService, model, Documents.ClassDocuments, fileName, title, content, _messageCheckerTrigger);
 
             Documents.SequenceDiagrams.Add(model);
@@ -1560,7 +1574,7 @@ namespace PlantUMLEditor.Models
             JsonDocumentModel? d = new JsonDocumentModel((old, @new) =>
             {
             },
-            Configuration, _ioService, model, Documents, fileName, title, content, _messageCheckerTrigger);
+             _ioService, model, Documents, fileName, title, content, _messageCheckerTrigger);
 
             await AfterCreate(d);
         }
@@ -1585,7 +1599,7 @@ namespace PlantUMLEditor.Models
             UnknownDocumentModel? d = new UnknownDocumentModel((old, @new) =>
             {
             },
-            Configuration, _ioService, model, Documents, fileName, title, content, _messageCheckerTrigger);
+              _ioService, model, Documents, fileName, title, content, _messageCheckerTrigger);
 
             await AfterCreate(d);
         }
@@ -1593,7 +1607,7 @@ namespace PlantUMLEditor.Models
         private async Task NewYAMLDocument(string filePath, string fileName)
         {
             YMLDocumentModel? d = new YMLDocumentModel(
-            Configuration, _ioService, filePath, fileName, string.Empty, _messageCheckerTrigger);
+             _ioService, filePath, fileName, string.Empty, _messageCheckerTrigger);
 
             await AfterCreate(d);
         }
@@ -1614,7 +1628,7 @@ namespace PlantUMLEditor.Models
             UMLClassDiagram diagram, int lineNumber, string? searchText = null)
         {
             string? content = await File.ReadAllTextAsync(fileName);
-            ClassDiagramDocumentModel? d = new ClassDiagramDocumentModel(Configuration,
+            ClassDiagramDocumentModel? d = new ClassDiagramDocumentModel( 
                 _ioService, diagram, Documents.ClassDocuments, fileName, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
@@ -1634,7 +1648,7 @@ namespace PlantUMLEditor.Models
         {
             string content = await File.ReadAllTextAsync(fullPath);
             JsonDocumentModel? d = new JsonDocumentModel((old, newdoc)=> {
-            },Configuration, _ioService, diagram,
+            }, _ioService, diagram,
                 Documents, fullPath, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
@@ -1804,7 +1818,7 @@ namespace PlantUMLEditor.Models
         private async Task OpenMarkDownFile(string fullPath, int lineNumber, string? searchText)
         {
             string content = await File.ReadAllTextAsync(fullPath);
-            MDDocumentModel? d = new MDDocumentModel(Configuration, _ioService,
+            MDDocumentModel? d = new MDDocumentModel(  _ioService,
                 fullPath,
                 Path.GetFileName(fullPath)
                 , content, _messageCheckerTrigger);
@@ -1820,7 +1834,7 @@ namespace PlantUMLEditor.Models
     int lineNumber, string? searchText)
         {
             string content = await File.ReadAllTextAsync(fileName);
-            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(Configuration,
+            ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel( 
                 _ioService, diagram, fileName, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
@@ -1837,7 +1851,7 @@ namespace PlantUMLEditor.Models
         {
             string content = await File.ReadAllTextAsync(fileName);
 
-            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel(Configuration,
+            SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel( 
                 _ioService, diagram, Documents.ClassDocuments, fileName, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
@@ -1888,7 +1902,7 @@ namespace PlantUMLEditor.Models
             string content = await File.ReadAllTextAsync(fullPath);
             UnknownDocumentModel? d = new UnknownDocumentModel((old, @new) =>
             {
-            }, Configuration, _ioService, diagram, Documents, fullPath, diagram.Title, content, _messageCheckerTrigger);
+            },   _ioService, diagram, Documents, fullPath, diagram.Title, content, _messageCheckerTrigger);
 
             lock (_docLock)
             {
@@ -1901,7 +1915,7 @@ namespace PlantUMLEditor.Models
         private async Task OpenTextFile(string fullPath, int lineNumber, string? searchText)
         {
             string content = await File.ReadAllTextAsync(fullPath);
-            TextFileDocumentModel? d = new TextFileDocumentModel(Configuration, _ioService,
+            TextFileDocumentModel? d = new TextFileDocumentModel( _ioService,
                 fullPath,
                 Path.GetFileName(fullPath)
                 , content, _messageCheckerTrigger);
@@ -1918,7 +1932,7 @@ namespace PlantUMLEditor.Models
         private async Task OpenYMLFile(string fullPath, int lineNumber, string? searchText)
         {
             string content = await File.ReadAllTextAsync(fullPath);
-            YMLDocumentModel? d = new YMLDocumentModel(Configuration, _ioService,
+            YMLDocumentModel? d = new YMLDocumentModel(  _ioService,
                 fullPath,
                 Path.GetFileName(fullPath)
                 , content, _messageCheckerTrigger);

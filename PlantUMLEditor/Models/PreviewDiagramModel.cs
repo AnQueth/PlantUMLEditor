@@ -32,9 +32,9 @@ namespace PlantUMLEditor.Models
         private readonly string _jarLocation;
         private string _name;
 
-        public PreviewDiagramModel(IIOService ioService, string jarLocation, string title)
+        public PreviewDiagramModel(IIOService ioService,   string title)
         {
-            _jarLocation = jarLocation;
+            _jarLocation = AppSettings.Default.JARLocation;
             _name = title;
             _ioService = ioService;
             PrintImageCommand = new DelegateCommand(PrintImageHandler);

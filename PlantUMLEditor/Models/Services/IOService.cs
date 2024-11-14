@@ -3,7 +3,7 @@ using System.IO;
 using System.Windows.Forms;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
-namespace PlantUMLEditor.Services
+namespace PlantUMLEditor.Models.Services
 {
     internal class IOService : IIOService
     {

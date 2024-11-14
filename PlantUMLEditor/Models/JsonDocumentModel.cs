@@ -15,9 +15,9 @@ namespace PlantUMLEditor.Models
 
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
+            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService,  Title);
 
-            Preview? previewWindow = new Preview
+            PreviewWindow? previewWindow = new PreviewWindow
             {
                 DataContext = imageModel
             };
@@ -26,11 +26,11 @@ namespace PlantUMLEditor.Models
 
         }
 
-        public JsonDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback, IConfiguration configuration,
+        public JsonDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback,
                         IIOService openDirectoryService,
                         UMLUnknownDiagram model, UMLDocumentCollection diagrams, string fileName, string title, string content,
                          AutoResetEvent messageCheckerTrigger
-                        ) : base(configuration, openDirectoryService, fileName, title, content, messageCheckerTrigger)
+                        ) : base(openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
             ChangedCallback = changedCallback;
             Diagram = model;

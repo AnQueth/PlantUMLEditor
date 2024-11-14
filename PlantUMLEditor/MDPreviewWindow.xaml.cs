@@ -5,9 +5,9 @@ namespace PlantUMLEditor
     /// <summary>
     /// Interaction logic for Preview.xaml
     /// </summary>
-    public partial class MDPreview : Window
+    public partial class MDPreviewWindow : Window
     {
-        public MDPreview()
+        public MDPreviewWindow()
         {
             InitializeComponent();
         }

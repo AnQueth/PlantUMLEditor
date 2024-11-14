@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows7.0</TargetFramework>
+    <TargetFramework>net9.0-windows7.0</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
     <Configurations>Debug;Release</Configurations>
@@ -79,8 +79,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="LibGit2Sharp" Version="0.30.0" />
     <PackageReference Include="Markdig.Wpf" Version="0.5.0.1" />
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.122" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Prism.Core" Version="9.0.537" />
   </ItemGroup>
@@ -113,7 +114,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>AppSettings.settings</DependentUpon>
     </Compile>
-    <Compile Update="MDPreview.xaml.cs">
+    <Compile Update="MDPreviewWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -129,7 +130,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Page Update="MDPreview.xaml">
+    <Page Update="MDPreviewWindow.xaml">
       <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
       <SubType>Designer</SubType>
     </Page>

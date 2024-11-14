@@ -8,9 +8,9 @@ namespace PlantUMLEditor.Models
 {
     internal class YMLDocumentModel : TextDocumentModel
     {
-        public YMLDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
+        public YMLDocumentModel(  IIOService openDirectoryService,
            string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
-            base(configuration, openDirectoryService, fileName, title, content, messageCheckerTrigger)
+            base(  openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
 
         }

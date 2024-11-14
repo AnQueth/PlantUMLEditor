@@ -19,9 +19,9 @@ namespace PlantUMLEditor.Models
         private static readonly string[] STATICWORDS = new[] { "component", "folder", "cloud", "package" };
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
+            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService , Title);
 
-            Preview? previewWindow = new Preview
+            PreviewWindow? previewWindow = new PreviewWindow
             {
                 DataContext = imageModel
             };
@@ -34,10 +34,10 @@ namespace PlantUMLEditor.Models
             return colorCodingProvider;
         }
 
-        public ComponentDiagramDocumentModel(IConfiguration configuration,
+        public ComponentDiagramDocumentModel( 
                  IIOService openDirectoryService,
                  UMLComponentDiagram diagram, string filename, string title, string content, AutoResetEvent messageCheckerTrigger) :
-            base(configuration, openDirectoryService,
+            base( openDirectoryService,
                       filename, title, content, messageCheckerTrigger)
         {
             Diagram = diagram;

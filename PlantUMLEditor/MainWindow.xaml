@@ -217,7 +217,141 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                 </Border>
             </Grid>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type models:MDDocumentModel}">
+            <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+                <Border BorderThickness="3" CornerRadius="2">
 
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDirty}" Value="true">
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="BorderBrush" Value="#FFAA0000">
+                                        </Setter>
+
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsDirty}" Value="false">
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="BorderBrush" Value="Green">
+                                        </Setter>
+
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+
+                            <RowDefinition Height="*"></RowDefinition>
+                            <RowDefinition Height="5">
+                            </RowDefinition>
+                            <RowDefinition Height="50" ></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
+                        <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True" AllowDrop="True"
+                                             UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
+                                           DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
+                                            SpellCheck.IsEnabled="{Binding DataContext.SpellCheck,  RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+                                                CaretBrush="Green"
+                           AcceptsReturn="True"  AcceptsTab="True"
+                                                FindAllReferencesCommand="{Binding DataContext.FindAllReferencesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+                                                GotoDefinitionCommand="{Binding DataContext.GotoDefinitionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+                              FontFamily="Cascadia Code" FontSize="14">
+                            <b:Interaction.Triggers>
+                                <b:EventTrigger EventName="PreviewDrop">
+                                    <b:CallMethodAction MethodName="TextDrop" TargetObject="{Binding DataContext,
+                                       RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"></b:CallMethodAction>
+                                </b:EventTrigger>
+                                <b:EventTrigger EventName="PreviewDragOver">
+                                    <b:CallMethodAction MethodName="TextDragOver" TargetObject="{Binding DataContext,
+                                       RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"></b:CallMethodAction>
+                                </b:EventTrigger>
+                            </b:Interaction.Triggers>
+                            <localControls:MyTextBox.PopupControl>
+                                <Popup>
+
+                                    <Grid x:Name="AutoCompleteGrid">
+                                        <Grid.RowDefinitions>
+
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                            <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                        </Grid.ColumnDefinitions>
+
+                                        <ListBox x:Name="AutoCompleteBox" Grid.Row="2" Grid.ColumnSpan="2"
+                            MaxHeight="100"
+                          ItemsSource="{Binding SortedMatchingAutoCompletes}">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding}"></TextBlock>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </Grid>
+                                </Popup>
+                            </localControls:MyTextBox.PopupControl>
+                        </localControls:MyTextBox>
+
+                        <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
+
+                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black"
+                               Width="{Binding Width, ElementName=Editor}">
+
+                            <Grid Width="{Binding ActualWidth, ElementName=Editor}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="200" ></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="200" ></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"></RowDefinition>
+                                    <RowDefinition></RowDefinition>
+                                </Grid.RowDefinitions>
+
+
+                                <TextBox Grid.Row="0" Margin="{DynamicResource TabHeaderMargin}" VerticalContentAlignment="Center"  Text="{Binding FindText, Mode=TwoWay, ElementName=Editor}">
+                                    <b:Interaction.Triggers>
+                                        <b:KeyTrigger Key="Return">
+                                            <b:InvokeCommandAction Command="{Binding FindCommand, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></b:InvokeCommandAction>
+                                        </b:KeyTrigger>
+                                    </b:Interaction.Triggers>
+                                </TextBox>
+                                <Button Grid.Column="1" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding FindCommand, ElementName=Editor}" Content="Find" ></Button>
+                                <CheckBox Grid.Column="2" VerticalAlignment="Center"   Margin="{DynamicResource TabHeaderMargin}" IsChecked="{Binding UseRegex, ElementName=Editor}">Use Regex</CheckBox>
+                                <TextBox Grid.Row="0" VerticalContentAlignment="Center" Margin="{DynamicResource TabHeaderMargin}"   Grid.Column="3" Text="{Binding ReplaceText, Mode=TwoWay, ElementName=Editor, UpdateSourceTrigger=PropertyChanged}"></TextBox>
+                                <Button Grid.Column="4"  Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ReplaceCommand, ElementName=Editor}" Content="Replace"  ></Button>
+                                <Button Grid.Column="5" Margin="{DynamicResource TabHeaderMargin}" Command="{Binding ClearCommand, ElementName=Editor}" Content="Clear"  ></Button>
+
+                                <DataGrid CanUserAddRows="false"  ItemsSource="{Binding FindResults, ElementName=Editor}" Grid.Row="1" Grid.ColumnSpan="7" MaxHeight="300"
+                                AutoGenerateColumns="False" VerticalContentAlignment="Center"     SelectedItem="{Binding SelectedFindResult, Mode=TwoWay, ElementName=Editor}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Line"  IsReadOnly="true"  Binding="{Binding LineNumber}" ></DataGridTextColumn>
+                                        <DataGridTextColumn Header="Match" IsReadOnly="true"  Binding="{Binding Line}" ></DataGridTextColumn>
+                                        <DataGridTextColumn Header="Replace" IsReadOnly="true" Binding="{Binding ReplacePreview}" ></DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+        </DataTemplate>
         <HierarchicalDataTemplate  DataType="{x:Type  models:TreeViewModel}" ItemsSource="{Binding Children}">
 
             <StackPanel Orientation="Horizontal">
@@ -740,10 +874,10 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <Button    Command="{Binding SaveAllCommand}"  ToolTip="Save All">
                 <Image Source="/PlantUMLEditor;component/Images/SaveAll_16x.png"></Image>
             </Button>
-            <Separator />
-            <Button Content="Scan Directory" Command="{Binding ScanAllFiles}"></Button>
+          
+        
             <Separator></Separator>
-            <ComboBox ItemsSource="{Binding MRUFolders}" SelectedItem="{Binding SelectedMRUFolder}">
+            <ComboBox ItemsSource="{Binding MRUFolders}" MinWidth="100" SelectedItem="{Binding SelectedMRUFolder}">
                 <ComboBox.ItemContainerStyle>
                     <Style TargetType="{x:Type ComboBoxItem}">
                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -758,23 +892,35 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="0,0,20,0"> </TextBlock>
                             <Button Grid.Column="1" Margin="1" Command="{Binding  Path=DataContext.DeleteMRUCommand,  RelativeSource={RelativeSource FindAncestor,
-AncestorType={x:Type Window}}}" CommandParameter="{Binding}">
+AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consolas">
                                 <Button.Content>X</Button.Content>
                             </Button>
                         </Grid>
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
+
+            <Menu HorizontalAlignment="Center" VerticalAlignment="Center">
+                <MenuItem Header="Tools"  Margin="0,0,0,0" FontFamily="Consolas Code">
+                    <MenuItem Header="Settings" Command="{Binding OpenSettingsCommand}"></MenuItem>
+                    <MenuItem Header="Scan Directory" Command="{Binding ScanAllFiles}"></MenuItem>
+                    <MenuItem Header="Open Terminal" Command="{Binding OpenTerminalCommand}"></MenuItem>
+
+                    <MenuItem Header="Open Explorer" Command="{Binding OpenExplorerCommand}"></MenuItem>
+
+                    <MenuItem Header="Run DOCFx Serve" Command="{Binding DocFXServeCommand}"></MenuItem>
+
+                    <MenuItem Header="Quick GIT Commit and Sync" Command="{Binding GitCommitAndSyncCommand}"></MenuItem>
+
+                </MenuItem>
+            </Menu>
+
             <Separator></Separator>
-            <Button Content="Open Terminal" Command="{Binding OpenTerminalCommand}"></Button>
+            <CheckBox IsChecked="{Binding SpellCheck}">Activate Spell Check </CheckBox>
             <Separator></Separator>
-            <Button Content="Open Explorer" Command="{Binding OpenExplorerCommand}"></Button>
-            <Separator></Separator>
-            <Button Content="Quick GIT Commit and Sync" Command="{Binding GitCommitAndSyncCommand}"></Button>
-            <Separator></Separator>
-            <Label VerticalAlignment="Center" Content="Path To DocFX:"></Label>
-            <TextBox Text="{Binding DocFXExe, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" Width="200" ></TextBox>
-            <Button Content="Run DOCFx Serve" Command="{Binding DocFXServeCommand}"></Button>
+            <Button Content="Help" Command="{Binding OpenHelpCommand}" />
+
+     
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>

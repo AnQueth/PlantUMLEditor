@@ -19,9 +19,9 @@ namespace PlantUMLEditor.Models
 
         protected override (IPreviewModel? model, Window? window) GetPreviewView()
         {
-            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService, base._jarLocation, Title);
+            PreviewDiagramModel? imageModel = new PreviewDiagramModel(base._ioService,  Title);
 
-            Preview? previewWindow = new Preview
+            PreviewWindow? previewWindow = new PreviewWindow
             {
                 DataContext = imageModel
             };
@@ -35,14 +35,14 @@ namespace PlantUMLEditor.Models
             return colorCodingProvider;
         }
 
-        public ClassDiagramDocumentModel(IConfiguration configuration,
+        public ClassDiagramDocumentModel( 
             IIOService openDirectoryService,
 
             UMLClassDiagram diagram,
             LockedList<UMLClassDiagram> otherClassDiagrams,
             string fileName,
             string title,
-            string content, AutoResetEvent messageCheckerTrigger) : base(configuration, openDirectoryService,
+            string content, AutoResetEvent messageCheckerTrigger) : base(  openDirectoryService,
                 fileName, title, content, messageCheckerTrigger)
         {
             Diagram = diagram;

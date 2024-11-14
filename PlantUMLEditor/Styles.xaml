@@ -7,7 +7,14 @@
     <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
     <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
     <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
+    <Style TargetType="Label">
+        <Setter Property="FontFamily" Value="Consolas Code"></Setter>
+    </Style>
+    <Style TargetType="MenuItem">
+        <Setter Property="FontFamily" Value="Consolas Code"></Setter>
+    </Style>
     <Style TargetType="Button">
+        <Setter Property="FontFamily" Value="Consolas Code"></Setter>
         <Setter Property="Padding" Value="5,2,5,2"></Setter>
         <Setter Property="BorderThickness" Value="2"></Setter>
         <Setter Property="BorderBrush"  Value="#DD0000FF"></Setter>

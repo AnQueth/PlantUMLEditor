@@ -12,9 +12,9 @@ namespace PlantUMLEditor.Models
 {
     internal class TextFileDocumentModel : TextDocumentModel
         {
-            public TextFileDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
+            public TextFileDocumentModel(IIOService openDirectoryService,
                string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
-                base(configuration, openDirectoryService, fileName, title, content, messageCheckerTrigger)
+                base( openDirectoryService, fileName, title, content, messageCheckerTrigger)
             {
 
             }

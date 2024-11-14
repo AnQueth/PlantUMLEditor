@@ -16,7 +16,7 @@ namespace PlantUMLEditor.Models
     internal abstract class TextDocumentModel : BaseDocumentModel, IAutoCompleteCallback
     {
         protected readonly IIOService _ioService;
-        protected readonly string _jarLocation;
+ 
         private bool _binding;
 
         private IAutoComplete? _autoComplete;
@@ -41,7 +41,7 @@ namespace PlantUMLEditor.Models
 
 
 
-        public TextDocumentModel(IConfiguration configuration, IIOService openDirectoryService,
+        public TextDocumentModel(  IIOService openDirectoryService,
             string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) : base(fileName, title)
         {
 
@@ -51,7 +51,7 @@ namespace PlantUMLEditor.Models
             _textValue = content;
 
             _ioService = openDirectoryService;
-            _jarLocation = configuration.JarLocation;
+            
 
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
             MatchingAutoCompletes = new List<string>();

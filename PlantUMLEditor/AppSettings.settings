@@ -29,5 +29,14 @@
     <Setting Name="DocFXEXE" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="GITUser" Type="System.String" Scope="User">
+      <Value Profile="(Default)">noone</Value>
+    </Setting>
+    <Setting Name="GITEmail" Type="System.String" Scope="User">
+      <Value Profile="(Default)">none@nowhere.com</Value>
+    </Setting>
+    <Setting Name="JARLocation" Type="System.String" Scope="User">
+      <Value Profile="(Default)">plantuml.jar</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
