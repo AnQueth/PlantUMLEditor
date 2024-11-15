@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PlantUMLEditor.Models
 {
-    public class GlobalSearch
+    public   class GlobalSearch
     {
         public static Task<List<GlobalFindResult>> Find(string rootDirectory, string text, string[] extensions)
         {

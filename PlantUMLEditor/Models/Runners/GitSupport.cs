@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using LibGit2Sharp;
  
 
-namespace PlantUMLEditor.Models
+namespace PlantUMLEditor.Models.Runners
 {
     internal class GitSupport
     {

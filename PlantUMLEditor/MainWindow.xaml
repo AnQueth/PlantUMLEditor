@@ -11,17 +11,17 @@
    
 
         mc:Ignorable="d"
-        Title="Aaron's Plant UML Editor" Height="{Binding WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding WindowWidth, Mode=TwoWay, FallbackValue=1000}"
+        Title="Aaron's Plant UML Editor" Height="{Binding UIModel.WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding UIModel.WindowWidth, Mode=TwoWay, FallbackValue=1000}"
 FontFamily="Consolas Code"  Loaded="Window_Loaded"
-    Left="{Binding WindowLeft, Mode=TwoWay}"
-    Top="{Binding WindowTop, Mode=TwoWay}"
+    Left="{Binding UIModel.WindowLeft, Mode=TwoWay}"
+    Top="{Binding UIModel.WindowTop, Mode=TwoWay}"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/PlantUMLEditor;component/Images/uml.png">
 
    
     <b:Interaction.Triggers>
 
         <b:EventTrigger EventName="SizeChanged">
-            <b:CallMethodAction MethodName="UISizeChanged" TargetObject="{Binding}"></b:CallMethodAction>
+            <b:CallMethodAction MethodName="UISizeChanged" TargetObject="{Binding UIModel}"></b:CallMethodAction>
 
         </b:EventTrigger>
 
@@ -856,7 +856,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
     <Grid  >
         <Grid.ColumnDefinitions>
-            <ColumnDefinition  Width="{Binding GridSettings.TreeWidth, Mode=TwoWay}" />
+            <ColumnDefinition  Width="{Binding UIModel.GridSettings.TreeWidth, Mode=TwoWay}" />
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
@@ -927,7 +927,7 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consola
                 <RowDefinition Height="*">
                 </RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="{Binding GridSettings.DataTypesHeight, Mode=TwoWay}"></RowDefinition>
+                <RowDefinition Height="{Binding UIModel.GridSettings.DataTypesHeight, Mode=TwoWay}"></RowDefinition>
             </Grid.RowDefinitions>
             <TreeView Style="{DynamicResource TreeViewStyle1}"  AllowDrop="True"
                         VirtualizingStackPanel.IsVirtualizing="True"
@@ -960,7 +960,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition   Height="{Binding GridSettings.DocumentsWell, Mode=TwoWay}"></RowDefinition>
+                <RowDefinition   Height="{Binding UIModel.GridSettings.DocumentsWell, Mode=TwoWay}"></RowDefinition>
             </Grid.RowDefinitions>
             <Grid>
                 <Grid.RowDefinitions>
@@ -1143,7 +1143,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             <b:Interaction.Triggers>
                                 <b:EventTrigger EventName="Click">
 
-                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinue" Value="true"></b:ChangePropertyAction>
+                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinueClosing" Value="true"></b:ChangePropertyAction>
                                     <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="ConfirmOpen" Value="false"></b:ChangePropertyAction>
                                 </b:EventTrigger>
                             </b:Interaction.Triggers>
@@ -1154,7 +1154,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             <b:Interaction.Triggers>
                                 <b:EventTrigger EventName="Click">
 
-                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinue" Value="false"></b:ChangePropertyAction>
+                                    <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="AllowContinueClosing" Value="false"></b:ChangePropertyAction>
                                     <b:ChangePropertyAction TargetObject="{Binding}" PropertyName="ConfirmOpen" Value="false"></b:ChangePropertyAction>
                                 </b:EventTrigger>
                             </b:Interaction.Triggers>

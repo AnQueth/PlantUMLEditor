@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace PlantUMLEditor.Models
+namespace PlantUMLEditor.Models.Runners
 {
     internal class PlantUMLImageGenerator
     {
