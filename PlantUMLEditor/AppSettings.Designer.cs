@@ -166,5 +166,29 @@ namespace PlantUMLEditor {
                 this["JARLocation"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ColorSettings {
+            get {
+                return ((string)(this["ColorSettings"]));
+            }
+            set {
+                this["ColorSettings"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string MDColorSettings {
+            get {
+                return ((string)(this["MDColorSettings"]));
+            }
+            set {
+                this["MDColorSettings"] = value;
+            }
+        }
     }
 }

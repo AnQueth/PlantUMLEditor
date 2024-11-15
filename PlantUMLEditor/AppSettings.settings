@@ -38,5 +38,11 @@
     <Setting Name="JARLocation" Type="System.String" Scope="User">
       <Value Profile="(Default)">plantuml.jar</Value>
     </Setting>
+    <Setting Name="ColorSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MDColorSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
   </Settings>
 </SettingsFile>

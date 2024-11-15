@@ -1,0 +1,61 @@
+﻿<Window x:Class="PlantUMLEditor.UMLColorCodingConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:local="clr-namespace:PlantUMLEditor.Controls"
+        Title="UML Color Coding" Height="285" Width="800" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="Select Start/End Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="0" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.StartEndColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="Select Direction Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="0" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.DirectionColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="Select Keyword Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="1" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.KeywordColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="1" Grid.Column="2" Text="Select Port Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="1" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.PortColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="Select Control Flow Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="2" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.ControlFlowColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="2" Grid.Column="2" Text="Select Group Keyword Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="2" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.GroupKeywordColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="Select Single Group Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="3" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.SingleGroupColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="3" Grid.Column="2" Text="Select Bracket Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="3" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.BracketColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="Select Parenthesis Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="4" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.ParenthesisColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="4" Grid.Column="2" Text="Select Note Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="4" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.NoteColor), Mode=TwoWay}" Margin="10"/>
+
+            <TextBlock Grid.Row="5" Grid.Column="0" Text="Select Comment Color:" Margin="10"/>
+            <xctk:ColorPicker Grid.Row="5" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.CommentColor), Mode=TwoWay}" Margin="10"/>
+
+            <Button Grid.Row="5" Grid.Column="2" Content="Save" Click="SaveButton_Click" Margin="10"/>
+            <Button Grid.Row="5" Grid.Column="3" Content="Cancel" Click="CancelButton_Click" Margin="10"/>
+        </Grid>
+    </Grid>
+</Window>
+

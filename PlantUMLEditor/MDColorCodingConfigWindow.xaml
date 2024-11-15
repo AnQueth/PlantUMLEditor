@@ -1,0 +1,45 @@
+﻿<Window x:Class="PlantUMLEditor.MDColorCodingConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+        xmlns:local="clr-namespace:PlantUMLEditor.Controls"
+        Title="Markdown Color Coding" Height="285" Width="800" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Grid.Row="0" Grid.Column="0" Text="Select Heading Color:" Margin="10"/>
+        <xctk:ColorPicker Grid.Row="0" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.HeadingColor), Mode=TwoWay}" Margin="10"/>
+
+        <TextBlock Grid.Row="0" Grid.Column="2" Text="Select Bold Color:" Margin="10"/>
+        <xctk:ColorPicker Grid.Row="0" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.BoldColor), Mode=TwoWay}" Margin="10"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Select Italic Color:" Margin="10"/>
+        <xctk:ColorPicker Grid.Row="1" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.ItalicColor), Mode=TwoWay}" Margin="10"/>
+
+        <TextBlock Grid.Row="1" Grid.Column="2" Text="Select List Color:" Margin="10"/>
+        <xctk:ColorPicker Grid.Row="1" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.ListColor), Mode=TwoWay}" Margin="10"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Select Link Color:" Margin="10"/>
+        <xctk:ColorPicker Grid.Row="2" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.LinkColor), Mode=TwoWay}" Margin="10"/>
+
+        <TextBlock Grid.Row="2" Grid.Column="2" Text="Select Code Color:" Margin="10"/>
+        <xctk:ColorPicker Grid.Row="2" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.CodeColor), Mode=TwoWay}" Margin="10"/>
+
+        <Button Grid.Row="3" Grid.Column="2" Content="Save" Click="SaveButton_Click" Margin="10"/>
+        <Button Grid.Row="3" Grid.Column="3" Content="Cancel" Click="CancelButton_Click" Margin="10"/>
+    </Grid>
+</Window>

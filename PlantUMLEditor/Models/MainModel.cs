@@ -96,7 +96,8 @@ namespace PlantUMLEditor.Models
             OpenDocuments = new ObservableCollection<BaseDocumentModel>();
             CreateNewJSONDocumentCommand = new DelegateCommand(NewJsonDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
-
+            OpenUMLColorConfigCommand = new DelegateCommand(OpenUMLColorConfigHandler);
+            OpenMDColorConfigCommand = new DelegateCommand(OpenMDColorConfigHandler);
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
@@ -138,6 +139,18 @@ namespace PlantUMLEditor.Models
 
             _newFileManager = new NewFileManager(_ioService, AfterCreate,
                 Documents, _messageCheckerTrigger);
+        }
+
+        private void OpenMDColorConfigHandler()
+        {
+            var win = new MDColorCodingConfigWindow();
+            win.ShowDialog();
+        }
+
+        private void OpenUMLColorConfigHandler()
+        {
+            var uMLColorCodingConfig = new UMLColorCodingConfigWindow();
+            uMLColorCodingConfig.ShowDialog();
         }
 
         private void OpenExplorerHandler()
@@ -223,7 +236,9 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
+        public DelegateCommand OpenUMLColorConfigCommand { get; }
+        public DelegateCommand OpenMDColorConfigCommand { get; }
+        public DelegateCommand OpenUMLColorCodingCommand { get; }
         public DelegateCommand CreateUMLImage
         {
             get;

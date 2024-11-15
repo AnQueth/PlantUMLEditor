@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using PlantUMLEditor.Controls;
+using System.Windows;
 
 namespace PlantUMLEditor
 {
@@ -7,5 +8,11 @@ namespace PlantUMLEditor
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            UMLColorCodingConfig.LoadFromSettings();
+            MDColorCodingConfig.LoadFromSettings();
+            base.OnStartup(e);
+        }
     }
 }
