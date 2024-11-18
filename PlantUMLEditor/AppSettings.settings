@@ -44,5 +44,8 @@
     <Setting Name="MDColorSettings" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="TemplatePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\Templates</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -1,0 +1,38 @@
+﻿<Window x:Class="PlantUMLEditor.TemplateProcessorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PlantUMLEditor"
+        mc:Ignorable="d"
+        Title="TemplateProcessorWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ListView ItemsSource="{Binding Fields}" >
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="Auto"/>
+                    <GridViewColumn Header="Value">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBox Width="500" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
+
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                                </GridView>
+            </ListView.View>
+          
+              
+        
+            
+        </ListView>
+
+        <Button Grid.Row="1" Content="Process" HorizontalAlignment="Right" Margin="5"
+                Command="{Binding ProcessCommand}" 
+                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" />
+    </Grid>
+</Window>

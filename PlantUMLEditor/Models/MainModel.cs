@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PlantUML;
 using PlantUMLEditor.Models.Runners;
 using Prism.Commands;
@@ -18,6 +19,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.TextFormatting;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -68,10 +70,13 @@ namespace PlantUMLEditor.Models
 
 
         private readonly NewFileManager _newFileManager;
-
-
+        private readonly TemplateStorage _templateStorage;
         private DocumentMessage? selectedMessage;
  
+        public TemplateStorage TemplateStorage
+        {
+            get => _templateStorage;
+        } 
         public MainModel(IIOService openDirectoryService,
             IUMLDocumentCollectionSerialization documentCollectionSerialization,
             MainWindow mainWindow)
@@ -109,6 +114,7 @@ namespace PlantUMLEditor.Models
             CloseDocument = new DelegateCommand<BaseDocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<BaseDocumentModel>(CloseDocumentAndSaveHandler);
             SaveCommand = new DelegateCommand<BaseDocumentModel>(SaveCommandHandler);
+            EditTemplatesCommand = new DelegateCommand(EditTemplatesCommandHandler);
             Messages = new ObservableCollection<DocumentMessage>();
             SelectDocumentCommand = new DelegateCommand<BaseDocumentModel>(SelectDocumentHandler);
             GlobalSearchCommand = new DelegateCommand<string>(GlobalSearchHandler);
@@ -121,6 +127,9 @@ namespace PlantUMLEditor.Models
                 DOCFXRunner.FindDocFXConfig(this._folderBase) != null &&
                 File.Exists(AppSettings.Default.DocFXEXE);
             });
+            ApplyTemplateCommand = new DelegateCommand(ApplyTemplateCommandHandler,
+    () => SelectedTemplate != null && TemplatesEnabled);
+
 
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
 
@@ -139,6 +148,57 @@ namespace PlantUMLEditor.Models
 
             _newFileManager = new NewFileManager(_ioService, AfterCreate,
                 Documents, _messageCheckerTrigger);
+
+            _templateStorage = new TemplateStorage();
+            _ = _templateStorage.Load(AppSettings.Default.TemplatePath);
+
+
+        }
+
+        private void ApplyTemplateCommandHandler()
+        {
+            if (CurrentDocument is TextDocumentModel tdm)
+            {
+                TemplateProcessorModel tpm = new TemplateProcessorModel(SelectedTemplate);
+                TemplateProcessorWindow tpw = new(tpm);
+                if (tpw.ShowDialog().GetValueOrDefault())
+                {
+                    tdm.InsertAtCursor(tpm.ProcessedContent);
+                  
+                }
+
+                
+            }
+        }
+
+        private bool _templatesEnabled = false;
+        public bool TemplatesEnabled
+        {
+            get => _templatesEnabled;
+            set => SetValue(ref _templatesEnabled, value);
+        }
+
+        private TemplateItem? _selectedTemplate;
+
+        public  TemplateItem? SelectedTemplate
+        {
+            get => _selectedTemplate;
+            set
+            {
+                SetValue(ref _selectedTemplate, value);
+                ApplyTemplateCommand.RaiseCanExecuteChanged();
+
+
+            }
+        }
+
+        private void EditTemplatesCommandHandler()
+        {
+            var win = new TemplateEditorWindow();
+            TemplatesViewModel vm = new(_templateStorage);
+            win.DataContext = vm;
+            win.ShowDialog();
+
         }
 
         private void OpenMDColorConfigHandler()
@@ -278,14 +338,28 @@ namespace PlantUMLEditor.Models
                 if (_currentDocument != null)
                 {
                     _currentDocument.Visible = Visibility.Collapsed;
+                
                 }
+
+
 
                 SetValue(ref _currentDocument, value);
                 if (value != null)
                 {
                     value.Visible = Visibility.Visible;
+
+
                 }
 
+                if (_currentDocument is TextDocumentModel)
+                {
+                    TemplatesEnabled = true;
+                }
+                else
+                {
+                    TemplatesEnabled = false;
+                }
+                ApplyTemplateCommand.RaiseCanExecuteChanged();
                 _messageCheckerTrigger.Set();
             }
         }
@@ -401,7 +475,7 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
+        public DelegateCommand EditTemplatesCommand { get; }
         public DelegateCommand ScanAllFiles
         {
             get;
@@ -462,6 +536,7 @@ namespace PlantUMLEditor.Models
         private readonly OpenDocumentManager OpenDocumenntManager;
 
         public UISettingsModel UIModel { get; }
+        public DelegateCommand ApplyTemplateCommand { get; }
 
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)
         {

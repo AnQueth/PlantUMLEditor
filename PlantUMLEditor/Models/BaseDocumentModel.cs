@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace PlantUMLEditor.Models
 {
@@ -30,6 +31,8 @@ namespace PlantUMLEditor.Models
         {
 
         }
+
+    
 
         protected bool DocGeneratorDirty
         {

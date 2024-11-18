@@ -73,6 +73,11 @@ namespace PlantUMLEditor.Models
 
         private async Task<BaseDocumentModel> OpenTextFile(string fullPath, int lineNumber, string? searchText)
         {
+            if(!File.Exists(fullPath))
+            {
+                return null;
+            }
+
             string content = await File.ReadAllTextAsync(fullPath);
             TextFileDocumentModel? d = new TextFileDocumentModel(_ioService,
                 fullPath,

@@ -51,6 +51,16 @@ namespace PlantUMLEditor.Models
 
         }
 
+       public string TemplatesDirectory
+        {
+            get => AppSettings.Default.TemplatePath;
+            set
+            {
+                AppSettings.Default.TemplatePath = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TemplatesDirectory)));
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

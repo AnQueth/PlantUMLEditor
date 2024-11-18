@@ -190,6 +190,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
         }
 
+        
         public void CloseAutoComplete()
         {
             PopupControl.IsOpen = false;
@@ -824,10 +825,10 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 _cachedDrawing = new DrawingVisual();
 
-                DrawingContext? d = _cachedDrawing.RenderOpen();
-
-                DrawText(d);
-                d.Close();
+                using (DrawingContext d = _cachedDrawing.RenderOpen())
+                {
+                    DrawText(d);
+                }
 
                 _renderText = false;
             }

@@ -909,6 +909,10 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consola
                         <MenuItem Header="UML Color Config" Command="{Binding OpenUMLColorConfigCommand}"></MenuItem>
                         <MenuItem Header="Markdown Color Config" Command="{Binding OpenMDColorConfigCommand}"></MenuItem>
 
+                        <Separator>
+                            
+                        </Separator>
+                        <MenuItem Header="Edit Templates" Command="{Binding EditTemplatesCommand}"/>
 
 
 
@@ -930,7 +934,30 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consola
             <CheckBox IsChecked="{Binding SpellCheck}">Activate Spell Check</CheckBox>
             <Separator></Separator>
             <Button Content="Help" Command="{Binding OpenHelpCommand}" />
+            <Separator></Separator>
+            <Label Content="Templates:" HorizontalAlignment="Center"  VerticalAlignment="Center"></Label>
+            <ComboBox MinWidth="100" SelectedItem="{Binding SelectedTemplate}" IsEnabled="{Binding TemplatesEnabled}" >
+                <ComboBox.Resources>
+                    <DataTemplate DataType="{x:Type models:TemplateItem}">
+                        <TextBlock Text="{Binding Name}"></TextBlock>
+                    </DataTemplate>
+                    <DataTemplate DataType="System:String">
+                        <TextBlock Text="{Binding}"></TextBlock>
+                    </DataTemplate>
+                    <CollectionViewSource x:Key="ItemsSource" Source="{Binding TemplateStorage.Templates}" />
 
+                </ComboBox.Resources>
+        
+                <ComboBox.ItemsSource>
+                    <CompositeCollection>
+                     
+                        <CollectionContainer Collection="{Binding Source={StaticResource ItemsSource}}" />
+
+                    </CompositeCollection>
+                </ComboBox.ItemsSource>
+            </ComboBox>
+
+            <Button Command="{Binding ApplyTemplateCommand}" Content="Apply Template"></Button>
 
         </ToolBar>
         <Grid Grid.Row="1">

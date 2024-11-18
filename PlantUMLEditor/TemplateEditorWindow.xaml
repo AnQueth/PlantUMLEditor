@@ -1,0 +1,67 @@
+﻿<Window x:Class="PlantUMLEditor.TemplateEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PlantUMLEditor" xmlns:controls="clr-namespace:PlantUMLEditor.Controls"
+        mc:Ignorable="d"
+        Title="Templates" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+           
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Name" VerticalAlignment="Center"></TextBlock>
+                <TextBox x:Name="NameOfNew" Width="200" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"></TextBox>
+                <Button Content="Add" Command="{Binding AddCommand}"  Margin="5"></Button>
+                <Button Content="Delete" Command="{Binding DeleteCommand}" Margin="5"></Button>
+            </StackPanel>
+            <ListBox Grid.Row="1" SelectedItem="{Binding SelectedTemplate}" ItemsSource="{Binding Templates}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}"></TextBlock>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <GridSplitter Grid.Column="1" Width="5" ShowsPreview="True" HorizontalAlignment="Center" 
+              VerticalAlignment="Stretch" ></GridSplitter>
+        <Grid   Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBlock>
+                <Run Text="Use {{name of tag}} to add fields to add at runtime."></Run>
+                <LineBreak/>
+                <Run Text="Text will be inserted at the cursor of the open document."></Run>
+            </TextBlock>
+            <TextBox HorizontalAlignment="Stretch" Grid.Row="1"
+     FontFamily="Cascadia Code" FontSize="14" AcceptsReturn="True" AcceptsTab="True" IsReadOnlyCaretVisible="True"
+                                VerticalAlignment="Stretch" 
+                                Text="{Binding SelectedTemplate.Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="2"></TextBox>
+
+            <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
+                <Button Content="Save" Command="{Binding SaveCommand}" Margin="5"  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"></Button>
+                <Button Content="Cancel"   Margin="5" Click="Button_Click"></Button>
+
+            </StackPanel>
+            
+        </Grid>
+        
+    </Grid>
+</Window>

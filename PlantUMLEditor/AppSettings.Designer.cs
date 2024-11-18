@@ -190,5 +190,17 @@ namespace PlantUMLEditor {
                 this["MDColorSettings"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("\\Templates")]
+        public string TemplatePath {
+            get {
+                return ((string)(this["TemplatePath"]));
+            }
+            set {
+                this["TemplatePath"] = value;
+            }
+        }
     }
 }
