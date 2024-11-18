@@ -47,5 +47,8 @@
     <Setting Name="TemplatePath" Type="System.String" Scope="User">
       <Value Profile="(Default)">\Templates</Value>
     </Setting>
+    <Setting Name="EditorFontSize" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">14</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

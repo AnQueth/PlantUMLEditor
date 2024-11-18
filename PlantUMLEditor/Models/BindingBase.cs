@@ -10,6 +10,11 @@ namespace PlantUMLEditor.Models
         protected void SetValue<T>(ref T variable, T v, [CallerMemberName] string? name = null)
         {
             variable = v;
+            PropertyChangedInvoke(name);
+        }
+
+        protected void PropertyChangedInvoke([CallerMemberName] string? name = null)
+        {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }

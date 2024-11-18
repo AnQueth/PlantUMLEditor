@@ -20,6 +20,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
+using System.Xml.Linq;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -72,11 +73,11 @@ namespace PlantUMLEditor.Models
         private readonly NewFileManager _newFileManager;
         private readonly TemplateStorage _templateStorage;
         private DocumentMessage? selectedMessage;
- 
+
         public TemplateStorage TemplateStorage
         {
             get => _templateStorage;
-        } 
+        }
         public MainModel(IIOService openDirectoryService,
             IUMLDocumentCollectionSerialization documentCollectionSerialization,
             MainWindow mainWindow)
@@ -134,7 +135,7 @@ namespace PlantUMLEditor.Models
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
 
             OpenDocumenntManager = new OpenDocumentManager(OpenDocuments, Documents, _docLock,
-                _ioService, _messageCheckerTrigger );
+                _ioService, _messageCheckerTrigger);
 
             UIModel = new UISettingsModel();
 
@@ -152,7 +153,7 @@ namespace PlantUMLEditor.Models
             _templateStorage = new TemplateStorage();
             _ = _templateStorage.Load(AppSettings.Default.TemplatePath);
 
-
+            EditorFontSize = AppSettings.Default.EditorFontSize;
         }
 
         private void ApplyTemplateCommandHandler()
@@ -164,11 +165,28 @@ namespace PlantUMLEditor.Models
                 if (tpw.ShowDialog().GetValueOrDefault())
                 {
                     tdm.InsertAtCursor(tpm.ProcessedContent);
-                  
+
                 }
 
-                
+
             }
+        }
+
+
+        public double EditorFontSize
+        {
+            get => AppSettings.Default.EditorFontSize;
+            set
+            {
+                
+                AppSettings.Default.EditorFontSize = value;
+                AppSettings.Default.Save();
+
+                base.PropertyChangedInvoke();
+
+       
+            }
+
         }
 
         private bool _templatesEnabled = false;
@@ -179,8 +197,9 @@ namespace PlantUMLEditor.Models
         }
 
         private TemplateItem? _selectedTemplate;
+ 
 
-        public  TemplateItem? SelectedTemplate
+        public TemplateItem? SelectedTemplate
         {
             get => _selectedTemplate;
             set
@@ -338,7 +357,7 @@ namespace PlantUMLEditor.Models
                 if (_currentDocument != null)
                 {
                     _currentDocument.Visible = Visibility.Collapsed;
-                
+
                 }
 
 
@@ -891,15 +910,15 @@ namespace PlantUMLEditor.Models
             int lineNumber = 0, string? searchText = null)
         {
 
-            CurrentDocument =  await OpenDocumenntManager.TryOpen(fullPath, lineNumber, searchText);
-          
+            CurrentDocument = await OpenDocumenntManager.TryOpen(fullPath, lineNumber, searchText);
+
             lock (_docLock)
             {
-                if(CurrentDocument is not null && !OpenDocuments.Contains(CurrentDocument))
+                if (CurrentDocument is not null && !OpenDocuments.Contains(CurrentDocument))
                 {
                     OpenDocuments.Add(CurrentDocument);
                 }
-               
+
             }
         }
 
@@ -1127,21 +1146,21 @@ namespace PlantUMLEditor.Models
         {
             DOCFXRunner.Run(_folderBase);
 
-      
+
         }
 
         private void FindAllReferencesInvoked(string text)
         {
             FindReferenceResults.Clear();
 
-           foreach(var item in  DataTypeServices.FindAllReferences(Documents, text))
+            foreach (var item in DataTypeServices.FindAllReferences(Documents, text))
             {
                 FindReferenceResults.Add(item);
             }
 
         }
 
-  
+
 
         private TreeViewModel? FindFolderContaining(TreeViewModel root, string selectedFile)
         {
@@ -1289,9 +1308,9 @@ namespace PlantUMLEditor.Models
 
         private async void GotoDefinitionInvoked(string text)
         {
-          
-            
-            foreach (var item in  DataTypeServices.GotoDefinition(Documents, text))
+
+
+            foreach (var item in DataTypeServices.GotoDefinition(Documents, text))
             {
                 await AttemptOpeningFile(item.FileName, item.DataType.LineNumber, null);
             }
@@ -1377,9 +1396,9 @@ namespace PlantUMLEditor.Models
 
         }
 
-    
 
- 
+
+
 
         private async Task OpenDirectoryHandler(bool? useAppSettings = false, string? folder = null)
         {

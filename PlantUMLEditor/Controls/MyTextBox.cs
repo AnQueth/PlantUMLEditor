@@ -56,7 +56,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         private IIndenter _indenter;
         private int _lastKnownFirstCharacterIndex = 0;
         private int _lastKnownLastCharacterIndex = 0;
-        private double _lineHeight = 0;
+     
         private ImageSource? _lineNumbers;
         private bool _renderText;
         private string _replaceText = string.Empty;
@@ -356,9 +356,9 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                 col.DrawText(formattedText, new Point(4, 0));
             }
 
-            double top = (GetLineNumberDuringRender(CaretIndex) * _lineHeight) - VerticalOffset + _textTransformOffset;
+            double top = (GetLineNumberDuringRender(CaretIndex) * GetLineHeight()) - VerticalOffset + _textTransformOffset;
 
-            col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), _lineHeight));
+            col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), GetLineHeight()));
         }
 
         public void GotoLine(int lineNumber, string? findText)
@@ -444,7 +444,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 sv.ScrollChanged += Sv_ScrollChanged;
             }
-            _lineHeight = GetLineHeight();
+            
         }
 
         public void ReportError(int line, int character)
@@ -1074,10 +1074,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         private (int, int) GetStartAndEndCharacters()
         {
-            if (_lineHeight == 0)
-            {
-                _lineHeight = GetLineHeight();
-            }
+           
 
             GetStartAndEndLines(out int startLine, out int endLine);
 
@@ -1089,13 +1086,13 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         private void GetStartAndEndLines(out int startLine, out int endLine)
         {
-            startLine = (int)Math.Floor((VerticalOffset / _lineHeight) + 0.0001);
+            startLine = (int)Math.Floor((VerticalOffset / GetLineHeight()) + 0.0001);
 
-            _textTransformOffset = _scrollOffset + (startLine == 0 ? 0 : _lineHeight);
+            _textTransformOffset = _scrollOffset + (startLine == 0 ? 0 : GetLineHeight());
 
             //Debug.WriteLine($"{VerticalOffset} {_lineHeight} {(VerticalOffset / _lineHeight) + 0.0001} {_scrollOffset} {startLine}");
 
-            endLine = (int)Math.Ceiling((VerticalOffset + ActualHeight) / _lineHeight);
+            endLine = (int)Math.Ceiling((VerticalOffset + ActualHeight) / GetLineHeight());
             ++endLine;
         }
 
@@ -1402,7 +1399,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         {
             //  this._autoComplete.CloseAutoComplete();
             this._renderText = true;
-            _scrollOffset = e.VerticalOffset % _lineHeight;
+            _scrollOffset = e.VerticalOffset % GetLineHeight();
             CalculateFirstAndLastCharacters();
             RenderLineNumbers();
             ForceDraw();

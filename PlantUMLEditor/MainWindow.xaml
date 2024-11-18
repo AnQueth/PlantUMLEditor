@@ -127,9 +127,10 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                                                  CaretBrush="Green"
                             AcceptsReturn="True"  AcceptsTab="True"
+                                                
                                                  FindAllReferencesCommand="{Binding DataContext.FindAllReferencesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                                  GotoDefinitionCommand="{Binding DataContext.GotoDefinitionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
-                               FontFamily="Cascadia Code" FontSize="14">
+                               FontFamily="Cascadia Code" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"  >
                             <b:Interaction.Triggers>
                                 <b:EventTrigger EventName="PreviewDrop">
                                     <b:CallMethodAction MethodName="TextDrop" TargetObject="{Binding DataContext,
@@ -958,7 +959,10 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consola
             </ComboBox>
 
             <Button Command="{Binding ApplyTemplateCommand}" Content="Apply Template"></Button>
+            <Separator/>
+            <Label HorizontalAlignment="Center"  VerticalAlignment="Center" Content="Zoom"></Label>
 
+            <Slider VerticalAlignment="Center" Width="100" Value="{Binding EditorFontSize, UpdateSourceTrigger=PropertyChanged, FallbackValue=14}" Minimum="4" Maximum="32" ></Slider>
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
