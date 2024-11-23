@@ -1025,8 +1025,24 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                 </ItemsControl>
             </Grid>
             <GridSplitter Grid.Row="1" ShowsPreview="True"  Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
-            <TabControl Grid.Row="2">
-                <TabItem>
+            <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedToolTab, Mode=TwoWay}">
+                <TabItem >
+                
+                    <TabItem.Style>
+                        <Style TargetType="TabItem">
+
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Messages.Count}" Value="0">
+                                    <Setter Property="Foreground" Value="Green">
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                            <Style.Setters>
+                                <Setter Property="Foreground" Value="Red">
+                                </Setter>
+                            </Style.Setters>
+                        </Style>
+                    </TabItem.Style>
                     <TabItem.Header>Errors</TabItem.Header>
                     <DataGrid SelectionMode="Single" IsReadOnly="True"
                               Grid.Row="2"
@@ -1080,7 +1096,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                     </DataGrid>
                 </TabItem>
                 <TabItem>
-                    <TabItem.Header>Find</TabItem.Header>
+                    <TabItem.Header>Find In Files</TabItem.Header>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition></ColumnDefinition>

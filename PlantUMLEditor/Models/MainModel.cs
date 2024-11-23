@@ -156,6 +156,12 @@ namespace PlantUMLEditor.Models
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
 
+        private int _selectedTab;
+        public int SelectedToolTab
+        {
+            get => _selectedTab;
+            set => SetValue(ref _selectedTab, value);
+        }
         private void ApplyTemplateCommandHandler()
         {
             if (CurrentDocument is TextDocumentModel tdm)
@@ -1151,6 +1157,7 @@ namespace PlantUMLEditor.Models
 
         private void FindAllReferencesInvoked(string text)
         {
+            SelectedToolTab = 2;
             FindReferenceResults.Clear();
 
             foreach (var item in DataTypeServices.FindAllReferences(Documents, text))
@@ -1275,6 +1282,7 @@ namespace PlantUMLEditor.Models
 
         private async void GitCommitAndSyncCommandHandler()
         {
+        
             GitMessages = null;
             GitSupport gs = new GitSupport();
             if (string.IsNullOrEmpty(_folderBase))
@@ -1282,6 +1290,7 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
+            SelectedToolTab = 3;
             (var reload, GitMessages) = await gs.CommitAndSync(_folderBase);
             if (reload)
             {
