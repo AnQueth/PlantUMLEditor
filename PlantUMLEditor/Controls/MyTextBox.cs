@@ -67,6 +67,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         private Timer? _timerForSelection = null;
         private bool _useRegex;
         private bool findReplaceVisible;
+        private int _findHeight = 0;
 
         public MyTextBox()
         {
@@ -80,6 +81,16 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             ReplaceCommand = new DelegateCommand(ReplaceHandler);
             ClearCommand = new DelegateCommand(ClearFindResults);
             _autoComplete = this;
+        }
+
+        public int FindHeight
+        {
+            get => _findHeight;
+            set
+            {
+                _findHeight = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FindHeight)));
+            }
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -926,6 +937,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         private void ClearFindResults()
         {
+            FindHeight = 0;
             FindResults.Clear();
             FindText = "";
             ReplaceText = "";
@@ -1359,6 +1371,8 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 ForceDraw();
             }
+
+            FindHeight = 50 + Math.Min( FindResults.Count * 20, 200);
         }
 
         private void SelectAndFind()
