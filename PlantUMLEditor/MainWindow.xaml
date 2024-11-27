@@ -15,7 +15,7 @@
 FontFamily="Consolas Code"  Loaded="Window_Loaded"
     Left="{Binding UIModel.WindowLeft, Mode=TwoWay}"
     Top="{Binding UIModel.WindowTop, Mode=TwoWay}"
-    xmlns:System="clr-namespace:System;assembly=System.Runtime" Icon="/PlantUMLEditor;component/Images/uml.png">
+    xmlns:System="clr-namespace:System;assembly=System.Runtime" xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" Icon="/PlantUMLEditor;component/Images/uml.png">
 
 
     <b:Interaction.Triggers>
@@ -28,7 +28,15 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
     </b:Interaction.Triggers>
 
     <Window.Resources>
-
+        <CollectionViewSource x:Key="GroupedMessages" Source="{Binding Messages}">
+            <CollectionViewSource.GroupDescriptions>
+                <PropertyGroupDescription PropertyName="Warning"  />
+            </CollectionViewSource.GroupDescriptions>
+            <CollectionViewSource.SortDescriptions>
+                
+                <componentmodel:SortDescription PropertyName="Warning" Direction="Ascending" />
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
         <SolidColorBrush x:Key="CustomColor" Color="#FF4D8DEA"></SolidColorBrush>
         <Style TargetType="GridSplitter">
             <Setter Property="Background" Value="DarkGray"></Setter>
@@ -1046,13 +1054,24 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                     <TabItem.Header>Errors</TabItem.Header>
                     <DataGrid SelectionMode="Single" IsReadOnly="True"
                               Grid.Row="2"
-                              AutoGenerateColumns="False"  ItemsSource="{Binding Messages}" Margin="{DynamicResource TabHeaderMargin}"  
+                              AutoGenerateColumns="False"  ItemsSource="{Binding Source={StaticResource GroupedMessages}}" Margin="{DynamicResource TabHeaderMargin}"  
                            HorizontalContentAlignment="Stretch"
                               
                                  SelectedItem="{Binding SelectedMessage}">
                         <DataGrid.Resources>
+                    
+
                             <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Cyan"/>
                         </DataGrid.Resources>
+                        <DataGrid.GroupStyle>
+                            <GroupStyle>
+                                <GroupStyle.HeaderTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" />
+                                    </DataTemplate>
+                                </GroupStyle.HeaderTemplate>
+                            </GroupStyle>
+                        </DataGrid.GroupStyle>
                         <DataGrid.Columns>
                             <DataGridTemplateColumn>
                                 <DataGridTemplateColumn.CellTemplate>

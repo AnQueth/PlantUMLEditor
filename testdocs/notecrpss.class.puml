@@ -6,11 +6,24 @@ class LLL<T> {
 }
 
 class Object <<general>> {
-    ArrayList ALIST
+  ArrayList ALIST
 }
 
 class ArrayList {
-    void countit()
+  void countit()
+}
+
+package C1 {
+  class T1 {
+    
+  }
+  
+  package C1C2 {
+    class C4 {
+      T2 ddd
+      }
+    
+    }
 }
 
 

@@ -251,7 +251,8 @@ namespace PlantUML
                     }
                     string? alias = g.Groups["alias"].Length > 0 ? g.Groups["alias"].Value : null;
 
-                    currentDataType = new UMLClass(stereotype, package, alias, !string.IsNullOrEmpty(g.Groups["abstract"].Value)
+                    currentDataType = new UMLClass(stereotype, package, alias, 
+                        !string.IsNullOrEmpty(g.Groups["abstract"].Value)
                         , name, new List<UMLDataType>());
 
 
@@ -276,6 +277,38 @@ namespace PlantUML
                     if (line.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("interface");
+                    }
+                }
+                else if (line.StartsWith("struct", StringComparison.Ordinal))
+                {
+                    string package = GetPackage(packages);
+                    if (line.Length > 8)
+                    {
+                        string? alias = null;
+                        string? name = null;
+
+                        if (line.Contains(" as "))
+                        {
+                            line = line.Replace("\"", string.Empty);
+                            alias = line[(line.IndexOf(" as ", StringComparison.Ordinal) + 4)..].TrimEnd(' ', '{');
+                            name = Clean(line[6..line.IndexOf(" as ", StringComparison.Ordinal)]);
+                        }
+                        else
+                        {
+                            name = Clean(line[6..]).Replace("\"", string.Empty);
+                        }
+
+                        currentDataType = new UMLStruct(package, name, alias
+                          , new List<UMLDataType>());
+
+                        if (alias != null)
+                        {
+                            aliases.Add(alias, currentDataType);
+                        }
+                    }
+                    if (line.EndsWith("{", StringComparison.Ordinal))
+                    {
+                        brackets.Push("struct");
                     }
                 }
                 else if (line.StartsWith("interface", StringComparison.Ordinal))

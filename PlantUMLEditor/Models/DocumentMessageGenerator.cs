@@ -57,7 +57,8 @@ namespace PlantUMLEditor.Models
                 {
                     foreach ((string Line, int LineNumber, string message) in f.ExplainedErrors)
                     {
-                        newMessages.Add(new DocumentMessage(f.FileName, GetRelativeName(folderBase, f.FileName), LineNumber, Line + " " + message, false));
+                        newMessages.Add(new DocumentMessage(f.FileName, GetRelativeName(folderBase, f.FileName),
+                            LineNumber, Line + " " + message, false));
 
                     }
                 }
@@ -65,12 +66,40 @@ namespace PlantUMLEditor.Models
                 {
                     foreach (UMLDataType? fdt in f2.DataTypes)
                     {
+                        foreach(var d in dataTypes.Where(z=> 
+                        z.DataType.Namespace == fdt.Namespace &&
+                        z.DataType.NonGenericName == fdt.NonGenericName))
+                        {
+                            newMessages.Add(new DocumentMessage(f2.FileName, 
+                                GetRelativeName(folderBase, f2.FileName),
+                                fdt.LineNumber, "Duplicate type " + fdt.NonGenericName, false));
+
+                            newMessages.Add(new DocumentMessage(d.FileName,
+                                GetRelativeName(folderBase, d.FileName),
+                                d.DataType.LineNumber, "Duplicate type " + fdt.NonGenericName, false));
+                        }
+
+                        foreach (var d in dataTypes.Where(z =>           
+                  z.DataType.NonGenericName == fdt.NonGenericName))
+                        {
+                            newMessages.Add(new DocumentMessage(f2.FileName,
+                                GetRelativeName(folderBase, f2.FileName),
+                                fdt.LineNumber, "Same name " + fdt.NonGenericName, true));
+
+                            newMessages.Add(new DocumentMessage(d.FileName,
+                                GetRelativeName(folderBase, d.FileName),
+                                d.DataType.LineNumber, "Same name " + fdt.NonGenericName, true));
+                        }
+
+
                         dataTypes.Add(new(fdt, f2.FileName));
                     }
 
                     foreach (UMLError? e in f2.Errors)
                     {
-                        newMessages.Add(new DocumentMessage(f2.FileName, GetRelativeName(folderBase, f2.FileName), e.LineNumber, e.Value, false));
+                        newMessages.Add(new DocumentMessage(f2.FileName,
+                            GetRelativeName(folderBase, f2.FileName),
+                            e.LineNumber, e.Value, false));
 
                     }
                 }
@@ -99,12 +128,13 @@ namespace PlantUMLEditor.Models
             foreach (LineError? lineError in doc.LineErrors)
             {
                 newMessages.Add(new DocumentMessage(doc.FileName,
-                    GetRelativeName(folderBase, doc.FileName), lineError.LineNumber, lineError.Text, true));
+                    GetRelativeName(folderBase, doc.FileName), lineError.LineNumber, lineError.Text, false));
             }
         }
 
 
-        private void ValidateSequenceDiagram(string folderBase, List<DocumentMessage> newMessages, UMLDiagram doc, UMLSequenceDiagram o)
+        private void ValidateSequenceDiagram(string folderBase, List<DocumentMessage> newMessages,
+            UMLDiagram doc, UMLSequenceDiagram o)
         {
             if (o.ValidateAgainstClasses)
             {
@@ -119,7 +149,9 @@ namespace PlantUMLEditor.Models
                 foreach (var i in items)
                 {
 
-                    newMessages.Add(new DocumentMessage(i.o.FileName, GetRelativeName(folderBase, i.o.FileName), i.f.LineNumber, i.f.Warning ?? "NULL WARNING", true));
+                    newMessages.Add(new DocumentMessage(i.o.FileName, 
+                        GetRelativeName(folderBase, i.o.FileName), i.f.LineNumber, 
+                        i.f.Warning ?? "NULL WARNING", false));
 
                 }
 
@@ -138,12 +170,15 @@ namespace PlantUMLEditor.Models
                 {
                     if (c.Action is not null && c.To is not null && c.To.DataTypeId is not null && c.From is not null)
                     {
-                        newMessages.Add(new MissingMethodDocumentMessage(fileName, GetRelativeName(folderBase, fileName), g.LineNumber, g.Warning, true, c.Action.Signature,
+                        newMessages.Add(new MissingMethodDocumentMessage(fileName, 
+                            GetRelativeName(folderBase, fileName), g.LineNumber,
+                            g.Warning, false, c.Action.Signature,
                             c.To.DataTypeId, o, true));
                     }
                     else
                     {
-                        newMessages.Add(new DocumentMessage(fileName, GetRelativeName(folderBase, fileName), g.LineNumber, g.Warning, true));
+                        newMessages.Add(new DocumentMessage(fileName,
+                            GetRelativeName(folderBase, fileName), g.LineNumber, g.Warning, false));
                     }
                 }
 
@@ -161,7 +196,8 @@ namespace PlantUMLEditor.Models
 
             foreach (DataTypeToNamespaceMapping? n in namespaceReferences)
             {
-                if (namespaceReferences.Any(p => string.CompareOrdinal(p.DataTypePointer.NS1, n.NS2) == 0 &&
+                if (namespaceReferences.Any(p => 
+                string.CompareOrdinal(p.DataTypePointer.NS1, n.NS2) == 0 &&
                 string.CompareOrdinal(p.NS2, n.DataTypePointer.NS1) == 0 &&
                 string.CompareOrdinal(p.DataTypePointer.NS1, p.NS2) != 0 &&
                 !string.IsNullOrEmpty(p.DataTypePointer.NS1)
@@ -169,7 +205,9 @@ namespace PlantUMLEditor.Models
                 {
                     string text = "Circular reference " + n.DataTypePointer.NS1 + " and " + n.NS2 + " type = " + n.DataTypePointer.DataType + " offender " + n.DataTypePointer.Name;
 
-                    newMessages.Add(new DocumentMessage(n.DataTypePointer.FileName, GetRelativeName(folderBase, n.DataTypePointer.FileName), n.DataTypePointer.LineNumber, text));
+                    newMessages.Add(new DocumentMessage(n.DataTypePointer.FileName,
+                        GetRelativeName(folderBase, n.DataTypePointer.FileName), 
+                        n.DataTypePointer.LineNumber, text));
 
                 }
             }
@@ -237,7 +275,7 @@ namespace PlantUMLEditor.Models
                 if (pdt == default)
                 {
                     newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
-                    dt.DataType.LineNumber, dataType + " used by " + name, true, dataType, true));
+                    dt.DataType.LineNumber, dataType + " used by " + name, false, dataType, false));
 
 
                 }

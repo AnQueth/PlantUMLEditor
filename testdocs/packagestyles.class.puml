@@ -28,11 +28,18 @@ package foo4 <<Frame>> {
 package foo5 <<Cloud>> {
     class Class5 {
     }
-}
+} 
 
 package foo6 <<Database>> {
     class Class6 {
     }
 }
+
+
+package C2 {
+  class T2 {
+    void Something(T1 la)
+    }
+  }
 
 @enduml

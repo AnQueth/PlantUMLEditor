@@ -26,14 +26,14 @@ namespace PlantUMLEditor.Controls
                 {
                     (new Regex("(@start\\w+|@end\\w+)", RegexOptions.Compiled), new SolidColorBrush( UMLColorCodingConfig.StartEndColor), 0, FontWeights.Normal),
                     (new Regex(@"^left +to +right +direction\s*$", RegexOptions.Compiled | RegexOptions.Multiline), new SolidColorBrush( UMLColorCodingConfig.DirectionColor), 0, FontWeights.Normal),
-                    (new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|show|remove|skinparam|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|legend|endlegend|interface|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new SolidColorBrush( UMLColorCodingConfig.KeywordColor), 1, FontWeights.Normal),
+                    (new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|show|remove|skinparam|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|legend|endlegend|interface|struct|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new SolidColorBrush( UMLColorCodingConfig.KeywordColor), 1, FontWeights.Normal),
                     (new Regex(@"^[\s\+\-\#]*(port|portin|portout)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), new SolidColorBrush( UMLColorCodingConfig.PortColor), 1, FontWeights.Normal),
                     (new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork|while.*|endwhile.*)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),new SolidColorBrush(  UMLColorCodingConfig.ControlFlowColor), 1, FontWeights.Normal)
                  };
 
             _groupedCodes = new()
                 {
-                        (new Regex(@"^\s*(?<k>package|rectangle|usecase|folder|participant|cloud|folder|actor|database|queue|component|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:.+?)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                        (new Regex(@"^\s*(?<k>package|rectangle|usecase|folder|participant|cloud|folder|actor|database|queue|component|struct|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:.+?)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                         new Brush[] { new SolidColorBrush( UMLColorCodingConfig.KeywordColor), 
                           new SolidColorBrush(  UMLColorCodingConfig.GroupKeywordColor )})
                 };

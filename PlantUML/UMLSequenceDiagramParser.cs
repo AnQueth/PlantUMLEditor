@@ -108,7 +108,7 @@ namespace PlantUML
 
         private static async Task<UMLSequenceDiagram?> ReadDiagram(StreamReader sr, LockedList<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
         {
-            ILookup<string, UMLDataType>? types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass or UMLInterface).ToLookup(p => p.Name);
+            ILookup<string, UMLDataType>? types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass or UMLInterface or UMLStruct).ToLookup(p => p.Name);
 
             UMLSequenceDiagram d = new(string.Empty, fileName);
             bool started = false;

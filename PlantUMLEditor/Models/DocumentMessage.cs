@@ -45,7 +45,7 @@ namespace PlantUMLEditor.Models
             string text, bool warning, string missingDataTypeName, bool isMissingDataType) :
        base(fileName, relativeFileName, lineNumber, text, warning)
         {
-            Warning = warning;
+        
             MissingDataTypeName = missingDataTypeName;
             IsMissingDataType = isMissingDataType;
         }
@@ -72,7 +72,7 @@ namespace PlantUMLEditor.Models
             RelativeFileName = relativeFileName;
             LineNumber = lineNumber;
             Text = text;
-            Warning = warning;
+            Warning = warning ? "Warning" : "Error";
         }
 
 
@@ -112,7 +112,7 @@ namespace PlantUMLEditor.Models
             get; init;
         }
 
-        public bool Warning
+        public string Warning
         {
             get; init;
         }
