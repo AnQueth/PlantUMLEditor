@@ -6,6 +6,7 @@ using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -117,6 +118,7 @@ namespace PlantUMLEditor.Models
             SaveCommand = new DelegateCommand<BaseDocumentModel>(SaveCommandHandler);
             EditTemplatesCommand = new DelegateCommand(EditTemplatesCommandHandler);
             Messages = new ObservableCollection<DocumentMessage>();
+            Messages.CollectionChanged += Messages_CollectionChanged;
             SelectDocumentCommand = new DelegateCommand<BaseDocumentModel>(SelectDocumentHandler);
             GlobalSearchCommand = new DelegateCommand<string>(GlobalSearchHandler);
             ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
@@ -154,6 +156,11 @@ namespace PlantUMLEditor.Models
             _ = _templateStorage.Load(AppSettings.Default.TemplatePath);
 
             EditorFontSize = AppSettings.Default.EditorFontSize;
+        }
+
+        private void Messages_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            SelectedMessage = null;
         }
 
         private int _selectedTab;
