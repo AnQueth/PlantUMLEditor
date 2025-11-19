@@ -162,6 +162,54 @@ namespace PlantUMLEditor.Models
             return this.TextEditor.TextRead();
         }
 
+        [Description("search for a term in all documents")]
+        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text)
+        {
+
+            string WILDCARD = "*";
+            List<GlobalFindResult>? findresults = await GlobalSearch.Find(text, new string[]
+            {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
+            });
+
+            return findresults;
+
+        }
+
+        [Description("read a file by a path")]
+        public async Task<string> ReadFileByPath([Description("the full path to the file")] string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("path is null or empty", nameof(path));
+
+            if (string.IsNullOrEmpty(GlobalSearch.RootDirectory) || !Directory.Exists(GlobalSearch.RootDirectory))
+                throw new InvalidOperationException("Root directory is not set or does not exist.");
+
+            string root = System.IO.Path.GetFullPath(GlobalSearch.RootDirectory);
+            if (!root.EndsWith(System.IO.Path.DirectorySeparatorChar))
+            {
+                root += System.IO.Path.DirectorySeparatorChar;
+            }
+
+            string fullPath;
+            if (System.IO.Path.IsPathRooted(path))
+            {
+                fullPath = System.IO.Path.GetFullPath(path);
+            }
+            else
+            {
+                // resolve relative path against the root directory
+                fullPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(root, path));
+            }
+
+            // Normalize for comparison
+            if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Access to files outside the workspace root is not allowed.");
+            }
+
+            return await File.ReadAllTextAsync(fullPath);
+        }
+
         private async Task SendChat()
         {
             AIAgentFactory factory = new AIAgentFactory();
@@ -175,6 +223,7 @@ namespace PlantUMLEditor.Models
                 ReplaceText,
                 InsertTextAtPosition,
                 RewriteDocument,
+                SearchInDocuments,
                 ReadDocumentText
             });
 
@@ -371,6 +420,7 @@ namespace PlantUMLEditor.Models
             //    else
             //        _mostUsedWords.Add(s, 1);
             //}
+
 
             if (previewWindow != null)
             {

@@ -54,7 +54,17 @@ namespace PlantUMLEditor.Models
 
         private string? _currentActionExecuting;
 
-        private string? _folderBase;
+        private string? _rootFolder;
+
+        private string? FolderBase
+        {
+            get => _rootFolder;
+            set
+            {
+                SetValue(ref _rootFolder, value);
+                GlobalSearch.RootDirectory = value ?? string.Empty;
+            }
+        }
 
         private string? _gitMessages;
         private string _metaDataDirectory = "";
@@ -97,21 +107,21 @@ namespace PlantUMLEditor.Models
             OpenDirectoryCommand = new DelegateCommand(() => _ = OpenDirectoryHandler());
             DeleteMRUCommand = new DelegateCommand<string>((s) => DeleteMRUCommandHandler(s));
             OpenHelpCommand = new DelegateCommand(OpenHelpCommandHandler);
-            SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(_folderBase));
+            SaveAllCommand = new DelegateCommand(SaveAllHandler, () => !string.IsNullOrEmpty(FolderBase));
             Folder = new FolderTreeViewModel(null, Path.GetTempPath(), true, Statics.GetClosedFolderIcon());
             _documentCollectionSerialization = documentCollectionSerialization;
             OpenDocuments = new ObservableCollection<BaseDocumentModel>();
-            CreateNewJSONDocumentCommand = new DelegateCommand(NewJsonDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
-            CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
+            CreateNewJSONDocumentCommand = new DelegateCommand(NewJsonDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
+            CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
             OpenUMLColorConfigCommand = new DelegateCommand(OpenUMLColorConfigHandler);
             OpenMDColorConfigCommand = new DelegateCommand(OpenMDColorConfigHandler);
-            CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
-            CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
-            CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(_folderBase));
-            CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
-            CreateYAMLDocument = new DelegateCommand(NewYAMLDocumentHandler, () => !string.IsNullOrEmpty(_folderBase));
+            CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
+            CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
+            CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
+            CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(FolderBase));
+            CreateYAMLDocument = new DelegateCommand(NewYAMLDocumentHandler, () => !string.IsNullOrEmpty(FolderBase));
             CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => _selectedFile is not null);
-            GitCommitAndSyncCommand = new DelegateCommand(GitCommitAndSyncCommandHandler, () => !string.IsNullOrEmpty(_folderBase));
+            GitCommitAndSyncCommand = new DelegateCommand(GitCommitAndSyncCommandHandler, () => !string.IsNullOrEmpty(FolderBase));
             OpenSettingsCommand = new DelegateCommand(OpenSettingsCommandHandler);
             CloseDocument = new DelegateCommand<BaseDocumentModel>(CloseDocumentHandler);
             CloseDocumentAndSave = new DelegateCommand<BaseDocumentModel>(CloseDocumentAndSaveHandler);
@@ -121,13 +131,13 @@ namespace PlantUMLEditor.Models
             Messages.CollectionChanged += Messages_CollectionChanged;
             SelectDocumentCommand = new DelegateCommand<BaseDocumentModel>(SelectDocumentHandler);
             GlobalSearchCommand = new DelegateCommand<string>(GlobalSearchHandler);
-            ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(_folderBase));
+            ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(FolderBase));
             OpenTerminalCommand = new DelegateCommand(OpenTerminalHandler);
             OpenExplorerCommand = new DelegateCommand(OpenExplorerHandler);
             DocFXServeCommand = new DelegateCommand(DocFXServeCommandHandler, () =>
             {
-                return this._folderBase is not null &&
-                DOCFXRunner.FindDocFXConfig(this._folderBase) != null &&
+                return this.FolderBase is not null &&
+                DOCFXRunner.FindDocFXConfig(this.FolderBase) != null &&
                 File.Exists(AppSettings.Default.DocFXEXE);
             });
             ApplyTemplateCommand = new DelegateCommand(ApplyTemplateCommandHandler,
@@ -247,12 +257,12 @@ namespace PlantUMLEditor.Models
 
         private void OpenExplorerHandler()
         {
-            ExplorerRunner.Run(_folderBase);
+            ExplorerRunner.Run(FolderBase);
         }
 
         private void OpenTerminalHandler()
         {
-            TerminalRunner.Run(_folderBase);
+            TerminalRunner.Run(FolderBase);
         }
         public bool AllowContinueClosing
         {
@@ -552,7 +562,7 @@ namespace PlantUMLEditor.Models
             set
             {
                 SetValue(ref _selectedMRUFolder, value);
-                if (!string.IsNullOrEmpty(_selectedMRUFolder) && value != _folderBase)
+                if (!string.IsNullOrEmpty(_selectedMRUFolder) && value != FolderBase)
                 {
                     _ = OpenDirectoryHandler(false, _selectedMRUFolder);
                 }
@@ -690,7 +700,7 @@ namespace PlantUMLEditor.Models
                             File.Move(oldFile, newPath);
 
                             e.Handled = true;
-                            await ScanDirectory(this._folderBase);
+                            await ScanDirectory(this.FolderBase);
                         }
                         catch (Exception ex)
                         {
@@ -951,7 +961,7 @@ namespace PlantUMLEditor.Models
 
                 if (!AllowContinueClosing)
                 {
-                    SelectedMRUFolder = _folderBase;
+                    SelectedMRUFolder = FolderBase;
                     return false;
                 }
             }
@@ -970,7 +980,7 @@ namespace PlantUMLEditor.Models
 
                 try
                 {
-                    if (string.IsNullOrEmpty(_metaDataFile) || string.IsNullOrEmpty(_folderBase))
+                    if (string.IsNullOrEmpty(_metaDataFile) || string.IsNullOrEmpty(FolderBase))
                     {
                         continue;
                     }
@@ -1031,7 +1041,7 @@ namespace PlantUMLEditor.Models
                     }
 
                     DocumentMessageGenerator documentMessageGenerator = new(diagrams);
-                    List<DocumentMessage>? newMessages = documentMessageGenerator.Generate(_folderBase);
+                    List<DocumentMessage>? newMessages = documentMessageGenerator.Generate(FolderBase);
 
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
@@ -1157,7 +1167,7 @@ namespace PlantUMLEditor.Models
 
         private void DocFXServeCommandHandler()
         {
-            DOCFXRunner.Run(_folderBase);
+            DOCFXRunner.Run(FolderBase);
 
 
         }
@@ -1253,10 +1263,10 @@ namespace PlantUMLEditor.Models
         {
             if (useAppSettingIfFound)
             {
-                _folderBase = AppSettings.Default.WorkingDir;
+                FolderBase = AppSettings.Default.WorkingDir;
             }
 
-            if (string.IsNullOrEmpty(_folderBase))
+            if (string.IsNullOrEmpty(FolderBase))
             {
                 string? dir = folder;
                 if (folder == null)
@@ -1268,15 +1278,15 @@ namespace PlantUMLEditor.Models
                     }
                 }
 
-                _folderBase = dir;
+                FolderBase = dir;
             }
 
-            if (_folderBase == null || !Directory.Exists(_folderBase))
+            if (FolderBase == null || !Directory.Exists(FolderBase))
             {
                 return null;
             }
 
-            _metaDataDirectory = Path.Combine(_folderBase, ".umlmetadata");
+            _metaDataDirectory = Path.Combine(FolderBase, ".umlmetadata");
 
             if (!Directory.Exists(_metaDataDirectory))
             {
@@ -1284,7 +1294,7 @@ namespace PlantUMLEditor.Models
             }
 
             _metaDataFile = Path.Combine(_metaDataDirectory, DATAJSON);
-            return _folderBase;
+            return FolderBase;
         }
 
         private async void GitCommitAndSyncCommandHandler()
@@ -1292,13 +1302,13 @@ namespace PlantUMLEditor.Models
         
             GitMessages = null;
             GitSupport gs = new GitSupport();
-            if (string.IsNullOrEmpty(_folderBase))
+            if (string.IsNullOrEmpty(FolderBase))
             {
                 return;
             }
 
             SelectedToolTab = 3;
-            (var reload, GitMessages) = await gs.CommitAndSync(_folderBase);
+            (var reload, GitMessages) = await gs.CommitAndSync(FolderBase);
             if (reload)
             {
                 await ScanAllFilesHandler();
@@ -1307,12 +1317,14 @@ namespace PlantUMLEditor.Models
 
         private async void GlobalSearchHandler(string obj)
         {
-            if (string.IsNullOrEmpty(_folderBase))
+            if (string.IsNullOrEmpty(FolderBase))
             {
                 return;
             }
 
-            List<GlobalFindResult>? findresults = await GlobalSearch.Find(_folderBase, obj, new string[]
+
+
+            List<GlobalFindResult>? findresults = await GlobalSearch.Find( obj, new string[]
             {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
             });
             GlobalFindResults.Clear();
@@ -1359,7 +1371,7 @@ namespace PlantUMLEditor.Models
 
         private async void NewClassDiagramHandler()
         {
-            await _newFileManager.CreateNewClassDiagram(_selectedFolder, _folderBase);
+            await _newFileManager.CreateNewClassDiagram(_selectedFolder, FolderBase);
 
         }
 
@@ -1367,13 +1379,13 @@ namespace PlantUMLEditor.Models
 
         private async void NewComponentDiagramHandler()
         {
-            await _newFileManager.CreateNewComponentDiagram(_selectedFolder, _folderBase);
+            await _newFileManager.CreateNewComponentDiagram(_selectedFolder, FolderBase);
 
         }
 
         private async void NewJsonDiagramHandler()
         {
-            await _newFileManager.CreateNewJsonDiagram(_selectedFolder, _folderBase);
+            await _newFileManager.CreateNewJsonDiagram(_selectedFolder, FolderBase);
 
 
         }
@@ -1384,7 +1396,7 @@ namespace PlantUMLEditor.Models
 
         private async void NewMarkDownDocumentHandler()
         {
-            await _newFileManager.CreateNewMarkdownFile(_selectedFolder, _folderBase);
+            await _newFileManager.CreateNewMarkdownFile(_selectedFolder, FolderBase);
 
         }
 
@@ -1392,13 +1404,13 @@ namespace PlantUMLEditor.Models
 
         private async void NewSequenceDiagramHandler()
         {
-            await _newFileManager.CreateNewSequenceFile(_selectedFolder, _folderBase);
+            await _newFileManager.CreateNewSequenceFile(_selectedFolder, FolderBase);
 
         }
 
         private async void NewUnknownDiagramHandler()
         {
-            await _newFileManager.CreateNewUnknownDiagramFile(_selectedFolder, _folderBase);
+            await _newFileManager.CreateNewUnknownDiagramFile(_selectedFolder, FolderBase);
 
         }
 
@@ -1408,7 +1420,7 @@ namespace PlantUMLEditor.Models
 
         private async void NewYAMLDocumentHandler()
         {
-            await _newFileManager.CreateNewYamlFile(_selectedFolder, _folderBase);
+            await _newFileManager.CreateNewYamlFile(_selectedFolder, FolderBase);
 
         }
 
@@ -1426,9 +1438,9 @@ namespace PlantUMLEditor.Models
                     return;
                 }
 
-                string? oldFolder = _folderBase;
+                string? oldFolder = FolderBase;
 
-                _folderBase = null;
+                FolderBase = null;
                 string? dir;
                 if (folder == null)
                 {
@@ -1440,7 +1452,7 @@ namespace PlantUMLEditor.Models
                 }
                 if (string.IsNullOrEmpty(dir))
                 {
-                    _folderBase = oldFolder;
+                    FolderBase = oldFolder;
                     return;
                 }
 
