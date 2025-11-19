@@ -150,6 +150,8 @@ namespace PlantUMLEditor.Models
             ApplyTemplateCommand = new DelegateCommand(ApplyTemplateCommandHandler,
     () => SelectedTemplate != null && TemplatesEnabled);
 
+            NewChatCommand = new DelegateCommand(NewChatCommandHandler);
+
 
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
 
@@ -174,6 +176,7 @@ namespace PlantUMLEditor.Models
 
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
+
 
         private void Messages_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
@@ -1944,7 +1947,16 @@ namespace PlantUMLEditor.Models
             return await File.ReadAllTextAsync(fullPath);
         }
 
+
+        public ICommand NewChatCommand { get; init; }
         private TextDocumentModel _currentTdm;
+
+         private void NewChatCommandHandler()
+        {
+      
+            AIConversation.Clear();
+            _convThread = null;
+        }
 
         private async Task SendChat()
         {
@@ -2017,6 +2029,10 @@ namespace PlantUMLEditor.Models
             }
 
             cm.IsBusy = false;
+
+
+           
+
 
 
 

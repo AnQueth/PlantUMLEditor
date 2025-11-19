@@ -1198,15 +1198,18 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
 
             <Grid Grid.Column="3" Grid.RowSpan="3">
                 <Grid.ColumnDefinitions>
+                    
                     <ColumnDefinition Width="1*"></ColumnDefinition>
                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
+                <Button Content="New Chat" Grid.Column="1" Command="{Binding NewChatCommand}"></Button>
                 <ScrollViewer  
-                  Grid.ColumnSpan="2"
+                  Grid.ColumnSpan="2" Grid.Row="1"
 HorizontalScrollBarVisibility="Disabled"
 VerticalScrollBarVisibility="Auto" x:Name="ChatScroll"
 CanContentScroll="False">
@@ -1290,7 +1293,7 @@ CanContentScroll="False">
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <TextBox Grid.Row="1"  FontFamily="Cascadia Code"  AcceptsReturn="False" AcceptsTab="True" Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <TextBox Grid.Row="2"  FontFamily="Cascadia Code"  AcceptsReturn="False" AcceptsTab="True" Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <b:Interaction.Triggers>
                         <b:KeyTrigger Key="Return" ActiveOnFocus="True">
                             <b:InvokeCommandAction Command="{Binding SendChatCommand}" />
@@ -1298,7 +1301,7 @@ CanContentScroll="False">
                     </b:Interaction.Triggers>
 
                 </TextBox>
-                <Button Grid.Row="1" Grid.Column="1" Content="Send" Command="{Binding SendChatCommand}"></Button>
+                <Button Grid.Row="2" Grid.Column="1" Content="Send" Command="{Binding SendChatCommand}"></Button>
             </Grid>
         </Grid>
 
