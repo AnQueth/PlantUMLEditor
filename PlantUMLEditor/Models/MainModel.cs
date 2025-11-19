@@ -1,7 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using Markdig;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PlantUML;
 using PlantUMLEditor.Models.Runners;
+using PlantUMLEditorAI;
 using Prism.Commands;
 using System;
 using System.Collections.Generic;
@@ -12,10 +16,12 @@ using System.Diagnostics;
 
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.Arm;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -23,6 +29,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
 using System.Xml.Linq;
 using UMLModels;
+using Xceed.Wpf.AvalonDock.Converters;
 
 namespace PlantUMLEditor.Models
 {
@@ -102,7 +109,7 @@ namespace PlantUMLEditor.Models
             GotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
             FindAllReferencesCommand = new DelegateCommand<string>(FindAllReferencesInvoked);
             Documents = new UMLModels.UMLDocumentCollection();
-
+            SendChatCommand = new AsyncDelegateCommand(SendChat, () => ChatText.Length > 0);
             _ioService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(() => _ = OpenDirectoryHandler());
             DeleteMRUCommand = new DelegateCommand<string>((s) => DeleteMRUCommandHandler(s));
@@ -201,13 +208,13 @@ namespace PlantUMLEditor.Models
             get => AppSettings.Default.EditorFontSize;
             set
             {
-                
+
                 AppSettings.Default.EditorFontSize = value;
                 AppSettings.Default.Save();
 
                 base.PropertyChangedInvoke();
 
-       
+
             }
 
         }
@@ -220,7 +227,7 @@ namespace PlantUMLEditor.Models
         }
 
         private TemplateItem? _selectedTemplate;
- 
+
 
         public TemplateItem? SelectedTemplate
         {
@@ -1299,7 +1306,7 @@ namespace PlantUMLEditor.Models
 
         private async void GitCommitAndSyncCommandHandler()
         {
-        
+
             GitMessages = null;
             GitSupport gs = new GitSupport();
             if (string.IsNullOrEmpty(FolderBase))
@@ -1324,7 +1331,7 @@ namespace PlantUMLEditor.Models
 
 
 
-            List<GlobalFindResult>? findresults = await GlobalSearch.Find( obj, new string[]
+            List<GlobalFindResult>? findresults = await GlobalSearch.Find(obj, new string[]
             {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
             });
             GlobalFindResults.Clear();
@@ -1753,6 +1760,306 @@ namespace PlantUMLEditor.Models
             }
 
             await _documentCollectionSerialization.Save(Documents, _metaDataFile);
+        }
+
+
+        public class ChatMessage(bool isUser) : INotifyPropertyChanged
+        {
+
+            private bool _isBusy = true;
+            public bool IsBusy
+            {
+                get
+                {
+                    return _isBusy;
+                }
+                set
+                {
+                    _isBusy = value;
+                    OnPropertyChanged(nameof(IsBusy));
+                }
+            }
+
+            public class ToolCall
+            {
+                // allow nullable since some tool result objects may not have all fields
+                public string? Id { get; set; }
+                public string? ToolName { get; set; }
+                public string? Arguments { get; set; }
+                public string? Result { get; set; }
+
+            }
+
+            public bool IsUser { get; } = isUser;
+
+            public ObservableCollection<ToolCall> ToolCalls { get; } = new ObservableCollection<ToolCall>();
+
+            public FlowDocument Document
+            {
+                get
+                {
+                    MarkdownPipeline? pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+
+                    var doc =Markdig.Wpf.Markdown.ToFlowDocument(Message, pipeline);
+
+                    CompactFlowDocument(doc);
+
+                    return doc;
+
+                }
+            }
+
+
+            private string _message = string.Empty;
+            public string Message
+            {
+                get => _message;
+                set
+                {
+                    _message = value;
+                    OnPropertyChanged(nameof(Message));
+                    OnPropertyChanged(nameof(Document));
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+
+            private void OnPropertyChanged(string name)
+            {
+                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            }
+        }
+        public ObservableCollection<ChatMessage> AIConversation { get; } = new ObservableCollection<ChatMessage>();
+
+        private string _chatText = string.Empty;
+
+        public string ChatText
+        {
+            get
+            {
+                return _chatText;
+            }
+            set
+            {
+                _chatText = value;
+                (SendChatCommand as AsyncDelegateCommand)?.RaiseCanExecuteChanged();
+
+                PropertyChangedInvoke(nameof(ChatText));
+
+            }
+        }
+
+
+        public IAsyncCommand SendChatCommand { get; init; }
+
+        private ChatClientAgentThread _convThread = null;
+
+        [Description("Replaces all occurrences of 'text' with 'newText' in the document.")]
+        public void ReplaceText([Description("the text to find")] string text, [Description("the new text")] string newText)
+        {
+            if (_currentTdm != null)
+            {
+                var t = _currentTdm.Content;
+                t = t.Replace(text, newText);
+                _currentTdm.Content = t;
+            }
+        }
+
+        [Description("Inserts the specified text at the given position.")]
+        public void InsertTextAtPosition([Description("position in the original text to insert at")] int position, [Description("the text to insert")] string text)
+        {
+            if (_currentTdm != null)
+            {
+
+                _currentTdm.InsertTextAt(text, position, text.Length);
+            }
+        }
+
+        [Description("rewrite the complete document")]
+        public void RewriteDocument([Description("the new text for the document")] string text)
+        {
+            if (_currentTdm != null)
+            {
+                _currentTdm.Content = text;
+            }
+
+        }
+
+        [Description("reads the current text in the document.")]
+        public string ReadDocumentText()
+        {
+            if (_currentTdm != null)
+            {
+                return _currentTdm.Content;
+            }
+
+            return string.Empty;
+        }
+
+        [Description("search for a term in all documents")]
+        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text)
+        {
+
+            string WILDCARD = "*";
+            List<GlobalFindResult>? findresults = await GlobalSearch.Find(text, new string[]
+            {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
+            });
+
+            return findresults;
+
+        }
+
+        [Description("read a file by a path")]
+        public async Task<string> ReadFileByPath([Description("the full path to the file")] string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("path is null or empty", nameof(path));
+
+            if (string.IsNullOrEmpty(FolderBase) || !Directory.Exists(FolderBase))
+                throw new InvalidOperationException("Root directory is not set or does not exist.");
+
+            string root = System.IO.Path.GetFullPath(FolderBase);
+            if (!root.EndsWith(System.IO.Path.DirectorySeparatorChar))
+            {
+                root += System.IO.Path.DirectorySeparatorChar;
+            }
+
+            string fullPath;
+            if (System.IO.Path.IsPathRooted(path))
+            {
+                fullPath = System.IO.Path.GetFullPath(path);
+            }
+            else
+            {
+                // resolve relative path against the root directory
+                fullPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(root, path));
+            }
+
+            // Normalize for comparison
+            if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Access to files outside the workspace root is not allowed.");
+            }
+
+            return await File.ReadAllTextAsync(fullPath);
+        }
+
+        private TextDocumentModel _currentTdm;
+
+        private async Task SendChat()
+        {
+            AIAgentFactory factory = new AIAgentFactory();
+            var agent = factory.Create(new AISettings()
+            {
+                Deployment = AppSettings.Default.AzureAIDeployment,
+                Endpoint = AppSettings.Default.AzureAIEndpoint,
+                Key = AppSettings.Default.AzureAIKey,
+                SourceName = "PlantUML"
+            }, new Delegate[] {
+                ReplaceText,
+                InsertTextAtPosition,
+                RewriteDocument,
+                SearchInDocuments,
+                ReadDocumentText
+            });
+
+            if (_convThread == null)
+            {
+                _convThread = (ChatClientAgentThread)agent.GetNewThread();
+            }
+            AIConversation.Add(new ChatMessage(true)
+            {
+                Message = ChatText,
+                IsBusy = false
+
+            });
+            ChatMessage cm = new ChatMessage(false);
+
+            AIConversation.Add(cm);
+
+            var prompt = $"User input: \n{ChatText}";
+
+
+            ChatText = string.Empty;
+
+            _currentTdm = CurrentDocument as TextDocumentModel;
+            if (_currentTdm is null)
+            {
+                cm.Message = "No text document is currently open to interact with the AI.";
+                cm.IsBusy = false;
+                return;
+            }
+
+
+            try
+            {
+                await foreach (var item in agent.RunStreamingAsync(prompt, _convThread))
+                {
+                    foreach (var c in item.Contents)
+                    {
+                        if (c is FunctionCallContent fc)
+                        {
+                            cm.ToolCalls.Add(new ChatMessage.ToolCall
+                            {
+                                ToolName = fc.Name,
+                                Arguments = System.Text.Json.JsonSerializer.Serialize(fc.Arguments)
+                            });
+                        }
+                    }
+
+                    cm.Message += item;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                cm.Message += $"\n\nError: {ex.Message}";
+            }
+
+            cm.IsBusy = false;
+
+
+
+
+        }
+
+        static void CompactFlowDocument(System.Windows.Documents.FlowDocument doc)
+        {
+            doc.PagePadding = new System.Windows.Thickness(6);
+            doc.ColumnWidth = double.PositiveInfinity; // avoid column wrapping
+            foreach (var block in doc.Blocks.ToList())
+                CompactBlock(block);
+        }
+
+        static void CompactBlock(System.Windows.Documents.Block block)
+        {
+            switch (block)
+            {
+                case System.Windows.Documents.Paragraph p:
+                    p.Margin = new System.Windows.Thickness(0, 0, 0, 4);
+                    p.LineStackingStrategy = System.Windows.LineStackingStrategy.MaxHeight;
+                    p.LineHeight = p.FontSize * 1.15;
+                    break;
+
+                case System.Windows.Documents.List list:
+                    list.Margin = new System.Windows.Thickness(0, 0, 0, 4);
+                    list.MarkerOffset = 12;
+                    foreach (var li in list.ListItems)
+                    {
+                        li.Margin = new System.Windows.Thickness(0, 0, 0, 2);
+                        foreach (var inner in li.Blocks.ToList()) CompactBlock(inner);
+                    }
+                    break;
+
+                case System.Windows.Documents.Section s:
+                    s.Margin = new System.Windows.Thickness(0);
+                    foreach (var inner in s.Blocks.ToList()) CompactBlock(inner);
+                    break;
+
+                default:
+                    // handle other block types if needed
+                    break;
+            }
         }
     }
 }

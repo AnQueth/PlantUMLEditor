@@ -120,8 +120,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"></ColumnDefinition>
                             <ColumnDefinition Width="2*"></ColumnDefinition>
-                            <ColumnDefinition Width="Auto"></ColumnDefinition>
-                            <ColumnDefinition Width="*"></ColumnDefinition>
+           
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
 
@@ -180,113 +179,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                             </localControls:MyTextBox.PopupControl>
                         </localControls:MyTextBox>
 
-                        <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Column="2" Width="5" ShowsPreview="True" ResizeDirection="Columns" HorizontalAlignment="Center" 
-                                      VerticalAlignment="Stretch"  ></GridSplitter>
-
-                        <Grid Grid.Column="3" Grid.RowSpan="3">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1*"></ColumnDefinition>
-                                <ColumnDefinition Width="Auto"></ColumnDefinition>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"></RowDefinition>
-                                <RowDefinition Height="Auto"></RowDefinition>
-                            </Grid.RowDefinitions>
-                            <ScrollViewer  
-                                Grid.ColumnSpan="2"
-              HorizontalScrollBarVisibility="Disabled"
-              VerticalScrollBarVisibility="Auto" x:Name="ChatScroll"
-              CanContentScroll="False">
-                                <b:Interaction.Triggers>
-
-
-                                    <b:EventTrigger EventName="CollectionChanged" SourceObject="{Binding AIConversation}">
-                                        <b:CallMethodAction MethodName="ScrollToBottom" TargetObject="{Binding ElementName=ChatScroll}" />
-                                    </b:EventTrigger>
-                                </b:Interaction.Triggers>
-
-                                <ItemsControl ItemsSource="{Binding AIConversation}">
-                                    <ItemsControl.ItemTemplate>
-
-                                        <DataTemplate>
-                                            <Border BorderThickness="1" CornerRadius="5"  BorderBrush="Gray" Margin="5"   >
-                                                <Border.Style>
-                                                    <Style TargetType="Border">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsUser}" Value="True">
-                                                                <DataTrigger.Setters>
-                                                                    <Setter   Property="Background" Value="LightBlue">
-                                                                    </Setter>
-                                                                    <Setter   Property="HorizontalAlignment" Value="Right"/>
-                                                                </DataTrigger.Setters>
-                                                            </DataTrigger>
-                                                            <DataTrigger Binding="{Binding IsUser}" Value="False">
-                                                                <DataTrigger.Setters>
-                                                                    <Setter   Property="Background" Value="LightGray">
-                                                                    </Setter>
-                                                                </DataTrigger.Setters>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </Border.Style>
-                                                <StackPanel Orientation="Vertical">
-
-                                                    <Expander Header="Tool Calls" ExpandDirection="Down"  IsExpanded="False" >
-                                                        <Expander.Style>
-
-                                                            <Style TargetType="Expander">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding ToolCalls.Count}" Value="0">
-                                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </Expander.Style>
-                                                        <ListBox ItemsSource="{Binding ToolCalls}">
-                                                            <ListBox.ItemTemplate>
-                                                                <DataTemplate>
-                                                                    <StackPanel Orientation="Vertical">
-                                                                        <TextBlock Text="{Binding ToolName}" FontWeight="Bold"></TextBlock>
-                                                                        <TextBlock Text="{Binding Arguments}"></TextBlock>
-
-                                                                    </StackPanel>
-                                                                </DataTemplate>
-                                                            </ListBox.ItemTemplate>
-                                                        </ListBox>
-                                                    </Expander>
-                                                    <TextBlock Foreground="Green">
-                                                        <TextBlock.Style>
-                                                            <Style TargetType="TextBlock">
-                                                                <Setter Property="Visibility" Value="Visible" />
-                                                                <Style.Triggers>
-                                                                    <DataTrigger Binding="{Binding IsBusy}" Value="False">
-                                                                        <Setter Property="Visibility" Value="Hidden" />
-                                                                    </DataTrigger>
-                                                                </Style.Triggers>
-                                                            </Style>
-                                                        </TextBlock.Style>
-                                                        Running
-                                                    </TextBlock>
-
-                                                    <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" Padding="5" FontFamily="Cascadia Code" Document="{Binding Document}"  ></FlowDocumentScrollViewer>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </ScrollViewer>
-                            <TextBox Grid.Row="1"  FontFamily="Cascadia Code"  AcceptsReturn="False" AcceptsTab="True" Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                                <b:Interaction.Triggers>
-                                    <b:KeyTrigger Key="Return" ActiveOnFocus="True">
-                                        <b:InvokeCommandAction Command="{Binding SendChatCommand}" />
-                                    </b:KeyTrigger>
-                                </b:Interaction.Triggers>
-
-                            </TextBox>
-                            <Button Grid.Row="1" Grid.Column="1" Content="Send" Command="{Binding SendChatCommand}"></Button>
-                        </Grid>
+                        
 
                         <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
 
@@ -977,6 +870,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         <Grid.ColumnDefinitions>
             <ColumnDefinition  Width="{Binding UIModel.GridSettings.TreeWidth, Mode=TwoWay}" />
             <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="4*" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -984,7 +879,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ToolBar    Grid.ColumnSpan="3">
+        <ToolBar    Grid.ColumnSpan="5">
 
             <Button   Command="{Binding OpenDirectoryCommand}"  ToolTip="Open Directory">
                 <Image Source="/PlantUMLEditor;component/Images/OpenFolder_16x.png"></Image>
@@ -1296,7 +1191,118 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
             </TabControl>
         </Grid>
 
-        <StatusBar Grid.Row="2" Grid.ColumnSpan="3">
+        <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Column="3" Grid.Row="1" Width="5" ShowsPreview="True" ResizeDirection="Columns" HorizontalAlignment="Center" 
+                     VerticalAlignment="Stretch"  ></GridSplitter>
+        <Grid Grid.Column="4" Grid.Row="1" >
+   
+
+            <Grid Grid.Column="3" Grid.RowSpan="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
+                <ScrollViewer  
+                  Grid.ColumnSpan="2"
+HorizontalScrollBarVisibility="Disabled"
+VerticalScrollBarVisibility="Auto" x:Name="ChatScroll"
+CanContentScroll="False">
+                    <b:Interaction.Triggers>
+
+
+                        <b:EventTrigger EventName="CollectionChanged" SourceObject="{Binding AIConversation}">
+                            <b:CallMethodAction MethodName="ScrollToBottom" TargetObject="{Binding ElementName=ChatScroll}" />
+                        </b:EventTrigger>
+                    </b:Interaction.Triggers>
+
+                    <ItemsControl ItemsSource="{Binding AIConversation}">
+                        <ItemsControl.ItemTemplate>
+
+                            <DataTemplate>
+                                <Border BorderThickness="1" CornerRadius="5"  BorderBrush="Gray" Margin="5"   >
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsUser}" Value="True">
+                                                    <DataTrigger.Setters>
+                                                        <Setter   Property="Background" Value="LightBlue">
+                                                        </Setter>
+                                                        <Setter   Property="HorizontalAlignment" Value="Right"/>
+                                                    </DataTrigger.Setters>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsUser}" Value="False">
+                                                    <DataTrigger.Setters>
+                                                        <Setter   Property="Background" Value="LightGray">
+                                                        </Setter>
+                                                    </DataTrigger.Setters>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel Orientation="Vertical">
+
+                                        <Expander Header="Tool Calls" ExpandDirection="Down"  IsExpanded="False" >
+                                            <Expander.Style>
+
+                                                <Style TargetType="Expander">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ToolCalls.Count}" Value="0">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Expander.Style>
+                                            <ListBox ItemsSource="{Binding ToolCalls}">
+                                                <ListBox.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Vertical">
+                                                            <TextBlock Text="{Binding ToolName}" FontWeight="Bold"></TextBlock>
+                                                            <TextBlock Text="{Binding Arguments}"></TextBlock>
+
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </ListBox.ItemTemplate>
+                                            </ListBox>
+                                        </Expander>
+                                        <TextBlock Foreground="Green">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsBusy}" Value="False">
+                                                            <Setter Property="Visibility" Value="Hidden" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                          Running
+                                        </TextBlock>
+
+                                        <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" Padding="5" FontFamily="Cascadia Code" Document="{Binding Document}"  ></FlowDocumentScrollViewer>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <TextBox Grid.Row="1"  FontFamily="Cascadia Code"  AcceptsReturn="False" AcceptsTab="True" Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    <b:Interaction.Triggers>
+                        <b:KeyTrigger Key="Return" ActiveOnFocus="True">
+                            <b:InvokeCommandAction Command="{Binding SendChatCommand}" />
+                        </b:KeyTrigger>
+                    </b:Interaction.Triggers>
+
+                </TextBox>
+                <Button Grid.Row="1" Grid.Column="1" Content="Send" Command="{Binding SendChatCommand}"></Button>
+            </Grid>
+        </Grid>
+
+        <StatusBar Grid.Row="2" Grid.ColumnSpan="5">
             <StatusBarItem>
                 <Button Command="{Binding CancelExecutingAction}">Cancel</Button>
             </StatusBarItem>
