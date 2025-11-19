@@ -27,6 +27,7 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
+
 using System.Xml.Linq;
 using UMLModels;
 using Xceed.Wpf.AvalonDock.Converters;
@@ -106,6 +107,9 @@ namespace PlantUMLEditor.Models
                 return _cancelCurrentExecutingAction != null;
             });
 
+
+            UndoAIEditsCommand = new AsyncDelegateCommand<ObservableCollection<UndoOperation>>(UndoEditCommandHandler);
+
             GotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
             FindAllReferencesCommand = new DelegateCommand<string>(FindAllReferencesInvoked);
             Documents = new UMLModels.UMLDocumentCollection();
@@ -177,6 +181,7 @@ namespace PlantUMLEditor.Models
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
 
+ 
 
         private void Messages_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
@@ -1812,6 +1817,7 @@ namespace PlantUMLEditor.Models
                 }
             }
 
+            public ObservableCollection<UndoOperation> Undos { get; init; } = new ObservableCollection<UndoOperation>();
 
             private string _message = string.Empty;
             public string Message
@@ -1857,14 +1863,35 @@ namespace PlantUMLEditor.Models
 
         private ChatClientAgentThread _convThread = null;
 
+        public ICommand UndoAIEditsCommand { get; init; }
+
+        private async Task UndoEditCommandHandler(ObservableCollection<UndoOperation> list)
+        {
+            var first = list.First();
+            await AttemptOpeningFile(first.fileName);
+            TextDocumentModel tdm = CurrentDocument as TextDocumentModel;
+            if(tdm is not null)
+                tdm.Content = first.textBefore;
+        }
+
+        public enum UndoTypes
+        {
+            Replace,
+            Positional,
+            ReplaceAll
+        }
+        public record UndoOperation(UndoTypes undoType, string fileName, string textBefore, string textAfter );
+
         [Description("Replaces all occurrences of 'text' with 'newText' in the document.")]
         public void ReplaceText([Description("the text to find")] string text, [Description("the new text")] string newText)
         {
             if (_currentTdm != null)
             {
-                var t = _currentTdm.Content;
-                t = t.Replace(text, newText);
+                var original = _currentTdm.Content;
+                var t = original.Replace(text, newText);
                 _currentTdm.Content = t;
+
+                _currentMessage.Undos.Add(new UndoOperation(UndoTypes.Replace, _currentTdm.FileName, original, t));
             }
         }
 
@@ -1873,8 +1900,11 @@ namespace PlantUMLEditor.Models
         {
             if (_currentTdm != null)
             {
-
+                var original = _currentTdm.Content;
                 _currentTdm.InsertTextAt(text, position, text.Length);
+                var t = _currentTdm.Content;
+                _currentMessage.Undos.Add(new UndoOperation(UndoTypes.Positional, _currentTdm.FileName, original, t));
+     
             }
         }
 
@@ -1883,6 +1913,8 @@ namespace PlantUMLEditor.Models
         {
             if (_currentTdm != null)
             {
+                var original = _currentTdm.Content;
+                _currentMessage.Undos.Add(new UndoOperation(UndoTypes.ReplaceAll, _currentTdm.FileName, original, text));
                 _currentTdm.Content = text;
             }
 
@@ -1900,7 +1932,8 @@ namespace PlantUMLEditor.Models
         }
 
         [Description("search for a term in all documents")]
-        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text)
+        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text, 
+            [Description("search within current doc or all documents in the workspace")] bool onlyCurrentDocument)
         {
 
             string WILDCARD = "*";
@@ -1908,8 +1941,34 @@ namespace PlantUMLEditor.Models
             {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
             });
 
+            if (onlyCurrentDocument)
+            {
+                return findresults.Where(z => z.FileName == _currentTdm.FileName).ToList();
+            }
+
             return findresults;
 
+        }
+
+        [Description("creates a new document in the current workspace")]
+        public async Task CreateNewDocument(
+            [Description("the relative directory path to the current file to store the file in")] string path,
+            [Description("the name of the new document")] string name,
+            [Description("the file extension of the new document, .md, .puml, .yml, .seq.puml, .component.puml, .class.puml")] string extension,
+            [Description("the initial content of the document")] string content)
+        {
+            string fullPath = CheckPathAccess(path);
+
+
+            string pathToFile = System.IO.Path.Combine(fullPath, name + extension);
+
+            await File.WriteAllTextAsync(pathToFile, content);
+
+            await ScanDirectory(FolderBase);
+
+
+            await AttemptOpeningFile(pathToFile);
+           
         }
 
         [Description("read a file by a path")]
@@ -1918,14 +1977,18 @@ namespace PlantUMLEditor.Models
             if (string.IsNullOrEmpty(path))
                 throw new ArgumentException("path is null or empty", nameof(path));
 
+            string fullPath = CheckPathAccess(path);
+
+            return await File.ReadAllTextAsync(fullPath);
+        }
+
+        private string CheckPathAccess(string path)
+        {
             if (string.IsNullOrEmpty(FolderBase) || !Directory.Exists(FolderBase))
                 throw new InvalidOperationException("Root directory is not set or does not exist.");
 
             string root = System.IO.Path.GetFullPath(FolderBase);
-            if (!root.EndsWith(System.IO.Path.DirectorySeparatorChar))
-            {
-                root += System.IO.Path.DirectorySeparatorChar;
-            }
+
 
             string fullPath;
             if (System.IO.Path.IsPathRooted(path))
@@ -1944,12 +2007,12 @@ namespace PlantUMLEditor.Models
                 throw new UnauthorizedAccessException("Access to files outside the workspace root is not allowed.");
             }
 
-            return await File.ReadAllTextAsync(fullPath);
+            return fullPath;
         }
-
 
         public ICommand NewChatCommand { get; init; }
         private TextDocumentModel _currentTdm;
+        private ChatMessage _currentMessage = null;
 
          private void NewChatCommandHandler()
         {
@@ -1972,6 +2035,7 @@ namespace PlantUMLEditor.Models
                 InsertTextAtPosition,
                 RewriteDocument,
                 SearchInDocuments,
+                CreateNewDocument,
                 ReadDocumentText
             });
 
@@ -1985,9 +2049,9 @@ namespace PlantUMLEditor.Models
                 IsBusy = false
 
             });
-            ChatMessage cm = new ChatMessage(false);
+            _currentMessage = new ChatMessage(false);
 
-            AIConversation.Add(cm);
+            AIConversation.Add(_currentMessage);
 
             var prompt = $"User input: \n{ChatText}";
 
@@ -1997,8 +2061,8 @@ namespace PlantUMLEditor.Models
             _currentTdm = CurrentDocument as TextDocumentModel;
             if (_currentTdm is null)
             {
-                cm.Message = "No text document is currently open to interact with the AI.";
-                cm.IsBusy = false;
+                _currentMessage.Message = "No text document is currently open to interact with the AI.";
+                _currentMessage.IsBusy = false;
                 return;
             }
 
@@ -2011,7 +2075,7 @@ namespace PlantUMLEditor.Models
                     {
                         if (c is FunctionCallContent fc)
                         {
-                            cm.ToolCalls.Add(new ChatMessage.ToolCall
+                            _currentMessage.ToolCalls.Add(new ChatMessage.ToolCall
                             {
                                 ToolName = fc.Name,
                                 Arguments = System.Text.Json.JsonSerializer.Serialize(fc.Arguments)
@@ -2019,16 +2083,16 @@ namespace PlantUMLEditor.Models
                         }
                     }
 
-                    cm.Message += item;
+                    _currentMessage.Message += item;
                 }
 
             }
             catch (Exception ex)
             {
-                cm.Message += $"\n\nError: {ex.Message}";
+                _currentMessage.Message += $"\n\nError: {ex.Message}";
             }
 
-            cm.IsBusy = false;
+            _currentMessage.IsBusy = false;
 
 
            

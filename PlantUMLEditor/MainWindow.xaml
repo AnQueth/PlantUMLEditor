@@ -8,8 +8,9 @@
     xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
    xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
-   
+    xmlns:behaviors="clr-namespace:PlantUMLEditor.Behaviors"
 
+       
         mc:Ignorable="d"
         Title="Aaron's Plant UML Editor" Height="{Binding UIModel.WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding UIModel.WindowWidth, Mode=TwoWay, FallbackValue=1000}"
 FontFamily="Consolas Code"  Loaded="Window_Loaded"
@@ -1271,6 +1272,40 @@ CanContentScroll="False">
                                                 </ListBox.ItemTemplate>
                                             </ListBox>
                                         </Expander>
+                                        <Expander Header="Undo Operations"  ExpandDirection="Down">
+                                            
+                                            <Expander.Style>
+                                                <Style TargetType="Expander">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Undos.Count}" Value="0">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Expander.Style>
+                                            <Grid >
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition></RowDefinition>
+                                                    <RowDefinition></RowDefinition>
+                                                </Grid.RowDefinitions>
+
+                                                <ListBox ItemsSource="{Binding Undos}">
+                                                    <ListBox.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <StackPanel Orientation="Vertical">
+                                                                <TextBlock Text="{Binding undoType}" FontWeight="Bold"></TextBlock>
+                                                                <TextBlock Text="{Binding fileName}"></TextBlock>
+                                                                <TextBlock Text="{Binding textBefore}"></TextBlock>
+
+
+                                                            </StackPanel>
+                                                        </DataTemplate>
+                                                    </ListBox.ItemTemplate>
+                                                </ListBox>
+                                                <Button Grid.Row="1"  CommandParameter="{Binding Undos}" Command="{Binding DataContext.UndoAIEditsCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}">Undo Operations</Button>
+                                            </Grid>
+                                        </Expander>
                                         <TextBlock Foreground="Green">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
@@ -1285,7 +1320,11 @@ CanContentScroll="False">
                                           Running
                                         </TextBlock>
 
-                                        <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" Padding="5" FontFamily="Cascadia Code" Document="{Binding Document}"  ></FlowDocumentScrollViewer>
+                                        <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" Padding="5" FontFamily="Cascadia Code" Document="{Binding Document}"  >
+                                            <b:Interaction.Behaviors>
+                                                <behaviors:BubbleMouseWheelToChatScrollBehavior />
+                                            </b:Interaction.Behaviors>
+                                        </FlowDocumentScrollViewer>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

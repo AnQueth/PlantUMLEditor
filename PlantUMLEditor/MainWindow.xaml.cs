@@ -15,7 +15,6 @@ namespace PlantUMLEditor
         private readonly MainModel _model;
 
 
-
         public MainWindow()
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
