@@ -1,13 +1,24 @@
-﻿using PlantUMLEditor.Controls;
+﻿using Markdig;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using Microsoft.Xaml.Behaviors.Core;
+using OpenAI.Chat;
+using PlantUMLEditor.Controls;
+using PlantUMLEditorAI;
 using Prism.Commands;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Shapes;
+using System.Xml.Serialization;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -16,7 +27,7 @@ namespace PlantUMLEditor.Models
     internal abstract class TextDocumentModel : BaseDocumentModel, IAutoCompleteCallback
     {
         protected readonly IIOService _ioService;
- 
+
         private bool _binding;
 
         private IAutoComplete? _autoComplete;
@@ -38,20 +49,198 @@ namespace PlantUMLEditor.Models
 
         protected Action? _bindedAction;
 
-
-
-
-        public TextDocumentModel(  IIOService openDirectoryService,
-            string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) : base(fileName, title)
+        public class ChatMessage(bool isUser) : INotifyPropertyChanged
         {
 
+            private bool _isBusy = true;
+            public bool IsBusy
+            {
+                get
+                {
+                    return _isBusy;
+                }
+                set
+                {
+                    _isBusy = value;
+                    OnPropertyChanged(nameof(IsBusy));
+                }
+            }
+
+            public class ToolCall
+            {
+                // allow nullable since some tool result objects may not have all fields
+                public string? Id { get; set; }
+                public string? ToolName { get; set; }
+                public string? Arguments { get; set; }
+                public string? Result { get; set; }
+
+            }
+
+            public bool IsUser { get; } = isUser;
+
+            public ObservableCollection<ToolCall> ToolCalls { get; } = new ObservableCollection<ToolCall>();
+
+            public FlowDocument Document
+            {
+                get
+                {
+                    MarkdownPipeline? pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
+                
+                    return  Markdig.Wpf.Markdown.ToFlowDocument(Message, pipeline);
+
+                }
+            }
+
+
+            private string _message = string.Empty;
+            public string Message
+            {
+                get => _message;
+                set
+                {
+                    _message = value;
+                    OnPropertyChanged(nameof(Message));
+                    OnPropertyChanged(nameof(Document));
+                }
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+
+            private void OnPropertyChanged(string name)
+            {
+                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+            }
+        }
+        public ObservableCollection<ChatMessage> AIConversation { get; } = new ObservableCollection<ChatMessage>();
+
+        private string _chatText = string.Empty;
+
+        public string ChatText
+        {
+            get
+            {
+                return _chatText;
+            }
+            set
+            {
+                _chatText = value;
+                (SendChatCommand as AsyncDelegateCommand)?.RaiseCanExecuteChanged();
+
+                PropertyChangedInvoke(nameof(ChatText));
+
+            }
+        }
+
+
+        public IAsyncCommand SendChatCommand { get; init; }
+
+        private ChatClientAgentThread _convThread = null;
+
+        [Description("Replaces all occurrences of 'text' with 'newText' in the document.")]
+        public void ReplaceText([Description("the text to find")] string text, [Description("the new text")] string newText)
+        {
+            var t = this.TextEditor.TextRead();
+            t = t.Replace(text, newText);
+            this.TextEditor.TextWrite(t, false, GetColorCodingProvider(), GetIndenter());
+        }
+
+        [Description("Inserts the specified text at the given position.")]
+        public void InsertTextAtPosition([Description("position in the original text to insert at")] int position, [Description("the text to insert")] string text)
+        {
+            this.TextEditor.InsertTextAt(text, position, text.Length);
+        }
+
+        [Description("rewrite the complete document")]
+        public void RewriteDocument([Description("the new text for the document")] string text)
+        {
+            this.TextEditor.TextWrite(text, false, GetColorCodingProvider(), GetIndenter());
+        }
+
+        [Description("reads the current text in the document.")]
+        public string ReadDocumentText()
+        {
+            return this.TextEditor.TextRead();
+        }
+
+        private async Task SendChat()
+        {
+            AIAgentFactory factory = new AIAgentFactory();
+            var agent = factory.Create(new AISettings()
+            {
+                Deployment = AppSettings.Default.AzureAIDeployment,
+                Endpoint = AppSettings.Default.AzureAIEndpoint,
+                Key = AppSettings.Default.AzureAIKey,
+                SourceName = "PlantUML"
+            }, new Delegate[] {
+                ReplaceText,
+                InsertTextAtPosition,
+                RewriteDocument,
+                ReadDocumentText
+            });
+
+            if (_convThread == null)
+            {
+                _convThread = (ChatClientAgentThread)agent.GetNewThread();
+            }
+            AIConversation.Add(new ChatMessage(true)
+            {
+                Message = ChatText,
+                IsBusy = false
+
+            });
+            ChatMessage cm = new ChatMessage(false);
+
+            AIConversation.Add(cm);
+
+            var prompt = $"User input: \n{ChatText}";
+
+
+            ChatText = string.Empty;
+
+            try
+            {
+                await foreach (var item in agent.RunStreamingAsync(prompt, _convThread))
+                {
+                    foreach(var c in item.Contents)
+                    {
+                        if(c is FunctionCallContent fc)
+                        {
+                            cm.ToolCalls.Add(new ChatMessage.ToolCall
+                            {
+                                 ToolName = fc.Name,
+                                 Arguments = JsonSerializer.Serialize(fc.Arguments)
+                            });
+                        }
+                    }
+                 
+                    cm.Message += item;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                cm.Message += $"\n\nError: {ex.Message}";
+            }
+
+            cm.IsBusy = false;
+
+
+
+
+        }
+
+
+        public TextDocumentModel(IIOService openDirectoryService,
+            string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) : base(fileName, title)
+        {
+            SendChatCommand = new AsyncDelegateCommand(SendChat, () => ChatText.Length > 0);
 
 
             _messageCheckerTrigger = messageCheckerTrigger;
             _textValue = content;
 
             _ioService = openDirectoryService;
-            
+
 
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
             MatchingAutoCompletes = new List<string>();
@@ -119,12 +308,12 @@ namespace PlantUMLEditor.Models
 
         private async void ShowPreviewCommandHandler()
         {
-            if(previewWindow is not null && imageModel is not null)  
+            if (previewWindow is not null && imageModel is not null)
             {
                 imageModel.Stop();
                 previewWindow.Close();
-                
-                
+
+
             }
 
             (IPreviewModel? model, Window? window) res = GetPreviewView();
@@ -153,7 +342,7 @@ namespace PlantUMLEditor.Models
                 return;
             }
 
-            string tmp = Path.GetTempFileName();
+            string tmp = System.IO.Path.GetTempFileName();
             await File.WriteAllTextAsync(tmp, text);
 
             imageModel?.Show(tmp, Title.Trim('\"'), true);

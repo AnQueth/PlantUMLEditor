@@ -61,6 +61,39 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        public string AzureAIEndpoint
+        {
+            get => AppSettings.Default.AzureAIEndpoint;
+            set
+            {
+                AppSettings.Default.AzureAIEndpoint = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AzureAIEndpoint)));
+            }
+        }
+
+
+        public string AzureAIKey
+        {
+            get => AppSettings.Default.AzureAIKey;
+            set
+            {
+                AppSettings.Default.AzureAIKey = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AzureAIKey)));
+            }
+        }
+
+
+        public string AzureAIDeployment
+        {
+            get => AppSettings.Default.AzureAIDeployment;
+            set
+            {
+                AppSettings.Default.AzureAIDeployment = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AzureAIDeployment)));
+            }
+        }
+
+
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 }
