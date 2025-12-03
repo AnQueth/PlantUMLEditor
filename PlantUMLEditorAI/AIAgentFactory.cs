@@ -63,7 +63,13 @@ namespace PlantUMLEditorAI
 
             };
 
-            const string instructions = @"You are a plant uml expert to help users create and edit plantuml. Use the available tools. Ensure you verify any edits. Use tools to read and edit the current diagram.";
+            const string instructions = @"You are a plant uml expert to help users create and edit plantuml.
+Use the available tools. Ensure you verify any edits. Use tools to read and edit the current diagram.
+Assistant must not modify files without explicit user confirmation.
+For any proposed file edit, produce a diff and ask 'Apply changes? (yes/no)'. New files do not require confirmation.
+Only apply on an explicit 'yes'.
+When showing diffs, wrap it in ````diff` blocks for clarity.
+";
 
 
             // Create agent with tools and RAG context provider

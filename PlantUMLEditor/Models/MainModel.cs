@@ -1,5 +1,4 @@
-﻿using Markdig;
-using Microsoft.Agents.AI;
+﻿using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -21,7 +20,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -113,7 +111,11 @@ namespace PlantUMLEditor.Models
             GotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
             FindAllReferencesCommand = new DelegateCommand<string>(FindAllReferencesInvoked);
             Documents = new UMLModels.UMLDocumentCollection();
-            SendChatCommand = new AsyncDelegateCommand(SendChat, () => ChatText.Length > 0);
+            SendChatCommand = new AsyncDelegateCommand<BaseDocumentModel>(SendChat,
+                (doc) =>
+                {
+                    return ChatText.Length > 0;
+                });
             _ioService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(() => _ = OpenDirectoryHandler());
             DeleteMRUCommand = new DelegateCommand<string>((s) => DeleteMRUCommandHandler(s));
@@ -181,7 +183,7 @@ namespace PlantUMLEditor.Models
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
 
- 
+
 
         private void Messages_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
@@ -1771,73 +1773,7 @@ namespace PlantUMLEditor.Models
         }
 
 
-        public class ChatMessage(bool isUser) : INotifyPropertyChanged
-        {
 
-            private bool _isBusy = true;
-            public bool IsBusy
-            {
-                get
-                {
-                    return _isBusy;
-                }
-                set
-                {
-                    _isBusy = value;
-                    OnPropertyChanged(nameof(IsBusy));
-                }
-            }
-
-            public class ToolCall
-            {
-                // allow nullable since some tool result objects may not have all fields
-                public string? Id { get; set; }
-                public string? ToolName { get; set; }
-                public string? Arguments { get; set; }
-                public string? Result { get; set; }
-
-            }
-
-            public bool IsUser { get; } = isUser;
-
-            public ObservableCollection<ToolCall> ToolCalls { get; } = new ObservableCollection<ToolCall>();
-
-            public FlowDocument Document
-            {
-                get
-                {
-                    MarkdownPipeline? pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
-
-                    var doc =Markdig.Wpf.Markdown.ToFlowDocument(Message, pipeline);
-
-                    CompactFlowDocument(doc);
-
-                    return doc;
-
-                }
-            }
-
-            public ObservableCollection<UndoOperation> Undos { get; init; } = new ObservableCollection<UndoOperation>();
-
-            private string _message = string.Empty;
-            public string Message
-            {
-                get => _message;
-                set
-                {
-                    _message = value;
-                    OnPropertyChanged(nameof(Message));
-                    OnPropertyChanged(nameof(Document));
-                }
-            }
-
-            public event PropertyChangedEventHandler? PropertyChanged;
-
-            private void OnPropertyChanged(string name)
-            {
-                this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-            }
-        }
         public ObservableCollection<ChatMessage> AIConversation { get; } = new ObservableCollection<ChatMessage>();
 
         private string _chatText = string.Empty;
@@ -1850,10 +1786,10 @@ namespace PlantUMLEditor.Models
             }
             set
             {
-                _chatText = value;
-                (SendChatCommand as AsyncDelegateCommand)?.RaiseCanExecuteChanged();
+                SetValue(ref _chatText, value);
 
-                PropertyChangedInvoke(nameof(ChatText));
+                (SendChatCommand as AsyncDelegateCommand<BaseDocumentModel>)?.RaiseCanExecuteChanged();
+
 
             }
         }
@@ -1870,159 +1806,66 @@ namespace PlantUMLEditor.Models
             var first = list.First();
             await AttemptOpeningFile(first.fileName);
             TextDocumentModel tdm = CurrentDocument as TextDocumentModel;
-            if(tdm is not null)
+            if (tdm is not null)
                 tdm.Content = first.textBefore;
         }
 
-        public enum UndoTypes
-        {
-            Replace,
-            Positional,
-            ReplaceAll
-        }
-        public record UndoOperation(UndoTypes undoType, string fileName, string textBefore, string textAfter );
-
-        [Description("Replaces all occurrences of 'text' with 'newText' in the document.")]
-        public void ReplaceText([Description("the text to find")] string text, [Description("the new text")] string newText)
-        {
-            if (_currentTdm != null)
-            {
-                var original = _currentTdm.Content;
-                var t = original.Replace(text, newText);
-                _currentTdm.Content = t;
-
-                _currentMessage.Undos.Add(new UndoOperation(UndoTypes.Replace, _currentTdm.FileName, original, t));
-            }
-        }
-
-        [Description("Inserts the specified text at the given position.")]
-        public void InsertTextAtPosition([Description("position in the original text to insert at")] int position, [Description("the text to insert")] string text)
-        {
-            if (_currentTdm != null)
-            {
-                var original = _currentTdm.Content;
-                _currentTdm.InsertTextAt(text, position, text.Length);
-                var t = _currentTdm.Content;
-                _currentMessage.Undos.Add(new UndoOperation(UndoTypes.Positional, _currentTdm.FileName, original, t));
-     
-            }
-        }
-
-        [Description("rewrite the complete document")]
-        public void RewriteDocument([Description("the new text for the document")] string text)
-        {
-            if (_currentTdm != null)
-            {
-                var original = _currentTdm.Content;
-                _currentMessage.Undos.Add(new UndoOperation(UndoTypes.ReplaceAll, _currentTdm.FileName, original, text));
-                _currentTdm.Content = text;
-            }
-
-        }
-
-        [Description("reads the current text in the document.")]
-        public string ReadDocumentText()
-        {
-            if (_currentTdm != null)
-            {
-                return _currentTdm.Content;
-            }
-
-            return string.Empty;
-        }
-
-        [Description("search for a term in all documents")]
-        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text, 
-            [Description("search within current doc or all documents in the workspace")] bool onlyCurrentDocument)
-        {
-
-            string WILDCARD = "*";
-            List<GlobalFindResult>? findresults = await GlobalSearch.Find(text, new string[]
-            {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
-            });
-
-            if (onlyCurrentDocument)
-            {
-                return findresults.Where(z => z.FileName == _currentTdm.FileName).ToList();
-            }
-
-            return findresults;
-
-        }
-
-        [Description("creates a new document in the current workspace")]
-        public async Task CreateNewDocument(
-            [Description("the relative directory path to the current file to store the file in")] string path,
-            [Description("the name of the new document")] string name,
-            [Description("the file extension of the new document, .md, .puml, .yml, .seq.puml, .component.puml, .class.puml")] string extension,
-            [Description("the initial content of the document")] string content)
-        {
-            string fullPath = CheckPathAccess(path);
-
-
-            string pathToFile = System.IO.Path.Combine(fullPath, name + extension);
-
-            await File.WriteAllTextAsync(pathToFile, content);
-
-            await ScanDirectory(FolderBase);
-
-
-            await AttemptOpeningFile(pathToFile);
-           
-        }
-
-        [Description("read a file by a path")]
-        public async Task<string> ReadFileByPath([Description("the full path to the file")] string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path is null or empty", nameof(path));
-
-            string fullPath = CheckPathAccess(path);
-
-            return await File.ReadAllTextAsync(fullPath);
-        }
-
-        private string CheckPathAccess(string path)
-        {
-            if (string.IsNullOrEmpty(FolderBase) || !Directory.Exists(FolderBase))
-                throw new InvalidOperationException("Root directory is not set or does not exist.");
-
-            string root = System.IO.Path.GetFullPath(FolderBase);
-
-
-            string fullPath;
-            if (System.IO.Path.IsPathRooted(path))
-            {
-                fullPath = System.IO.Path.GetFullPath(path);
-            }
-            else
-            {
-                // resolve relative path against the root directory
-                fullPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(root, path));
-            }
-
-            // Normalize for comparison
-            if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new UnauthorizedAccessException("Access to files outside the workspace root is not allowed.");
-            }
-
-            return fullPath;
-        }
 
         public ICommand NewChatCommand { get; init; }
-        private TextDocumentModel _currentTdm;
-        private ChatMessage _currentMessage = null;
 
-         private void NewChatCommandHandler()
+
+        private void NewChatCommandHandler()
         {
-      
+
             AIConversation.Clear();
             _convThread = null;
         }
 
-        private async Task SendChat()
+        private async Task SendChat(BaseDocumentModel baseDocumentModel)
         {
+            var currentMessage = new ChatMessage(false);
+
+            AIConversation.Add(new ChatMessage(true)
+            {
+                Message = ChatText,
+                IsBusy = false
+
+            });
+            AIConversation.Add(currentMessage);
+
+            var currentDoc = baseDocumentModel as TextDocumentModel;
+            if (currentDoc is null)
+            {
+                currentMessage.Message = "No text document is currently open to interact with the AI.";
+                currentMessage.IsBusy = false;
+                return;
+            }
+
+
+            if (string.IsNullOrEmpty(FolderBase))
+            {
+                currentMessage.Message = "No folder is currently open.";
+                currentMessage.IsBusy = false;
+                return;
+            }
+
+            AITools aiTools = new AITools(currentDoc, currentMessage,
+                async (string folderBase) =>
+                {
+                    await Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        await ScanDirectory(folderBase);
+                    });
+                },
+                async (string pathToFile) =>
+                {
+                    await Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        await AttemptOpeningFile(pathToFile);
+                    });
+                },
+                FolderBase);
+
             AIAgentFactory factory = new AIAgentFactory();
             var agent = factory.Create(new AISettings()
             {
@@ -2031,40 +1874,26 @@ namespace PlantUMLEditor.Models
                 Key = AppSettings.Default.AzureAIKey,
                 SourceName = "PlantUML"
             }, new Delegate[] {
-                ReplaceText,
-                InsertTextAtPosition,
-                RewriteDocument,
-                SearchInDocuments,
-                CreateNewDocument,
-                ReadDocumentText
+                aiTools.ReplaceText,
+                aiTools.InsertTextAtPosition,
+                aiTools.RewriteDocument,
+                aiTools.SearchInDocuments,
+                aiTools.CreateNewDocument,
+                aiTools.ReadDocumentText
             });
 
             if (_convThread == null)
             {
                 _convThread = (ChatClientAgentThread)agent.GetNewThread();
             }
-            AIConversation.Add(new ChatMessage(true)
-            {
-                Message = ChatText,
-                IsBusy = false
 
-            });
-            _currentMessage = new ChatMessage(false);
-
-            AIConversation.Add(_currentMessage);
 
             var prompt = $"User input: \n{ChatText}";
 
 
             ChatText = string.Empty;
 
-            _currentTdm = CurrentDocument as TextDocumentModel;
-            if (_currentTdm is null)
-            {
-                _currentMessage.Message = "No text document is currently open to interact with the AI.";
-                _currentMessage.IsBusy = false;
-                return;
-            }
+
 
 
             try
@@ -2075,7 +1904,7 @@ namespace PlantUMLEditor.Models
                     {
                         if (c is FunctionCallContent fc)
                         {
-                            _currentMessage.ToolCalls.Add(new ChatMessage.ToolCall
+                            currentMessage.ToolCalls.Add(new ChatMessage.ToolCall
                             {
                                 ToolName = fc.Name,
                                 Arguments = System.Text.Json.JsonSerializer.Serialize(fc.Arguments)
@@ -2083,63 +1912,24 @@ namespace PlantUMLEditor.Models
                         }
                     }
 
-                    _currentMessage.Message += item;
+                    currentMessage.Message += item;
                 }
 
             }
             catch (Exception ex)
             {
-                _currentMessage.Message += $"\n\nError: {ex.Message}";
+                currentMessage.Message += $"\n\nError: {ex.Message}";
             }
 
-            _currentMessage.IsBusy = false;
-
-
-           
+            currentMessage.IsBusy = false;
 
 
 
 
 
-        }
 
-        static void CompactFlowDocument(System.Windows.Documents.FlowDocument doc)
-        {
-            doc.PagePadding = new System.Windows.Thickness(6);
-            doc.ColumnWidth = double.PositiveInfinity; // avoid column wrapping
-            foreach (var block in doc.Blocks.ToList())
-                CompactBlock(block);
-        }
 
-        static void CompactBlock(System.Windows.Documents.Block block)
-        {
-            switch (block)
-            {
-                case System.Windows.Documents.Paragraph p:
-                    p.Margin = new System.Windows.Thickness(0, 0, 0, 4);
-                    p.LineStackingStrategy = System.Windows.LineStackingStrategy.MaxHeight;
-                    p.LineHeight = p.FontSize * 1.15;
-                    break;
 
-                case System.Windows.Documents.List list:
-                    list.Margin = new System.Windows.Thickness(0, 0, 0, 4);
-                    list.MarkerOffset = 12;
-                    foreach (var li in list.ListItems)
-                    {
-                        li.Margin = new System.Windows.Thickness(0, 0, 0, 2);
-                        foreach (var inner in li.Blocks.ToList()) CompactBlock(inner);
-                    }
-                    break;
-
-                case System.Windows.Documents.Section s:
-                    s.Margin = new System.Windows.Thickness(0);
-                    foreach (var inner in s.Blocks.ToList()) CompactBlock(inner);
-                    break;
-
-                default:
-                    // handle other block types if needed
-                    break;
-            }
         }
     }
 }

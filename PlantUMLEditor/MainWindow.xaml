@@ -1335,12 +1335,12 @@ CanContentScroll="False">
                 <TextBox Grid.Row="2"  FontFamily="Cascadia Code"  AcceptsReturn="False" AcceptsTab="True" Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                     <b:Interaction.Triggers>
                         <b:KeyTrigger Key="Return" ActiveOnFocus="True">
-                            <b:InvokeCommandAction Command="{Binding SendChatCommand}" />
+                            <b:InvokeCommandAction Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}" />
                         </b:KeyTrigger>
                     </b:Interaction.Triggers>
 
                 </TextBox>
-                <Button Grid.Row="2" Grid.Column="1" Content="Send" Command="{Binding SendChatCommand}"></Button>
+                <Button Grid.Row="2" Grid.Column="1" Content="Send" Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}"></Button>
             </Grid>
         </Grid>
 

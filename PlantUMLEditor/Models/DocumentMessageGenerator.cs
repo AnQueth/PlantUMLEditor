@@ -25,10 +25,27 @@ namespace PlantUMLEditor.Models
 
         public static string[] GetCleanTypes(IEnumerable<UMLDataType> dataTypes, string name)
         {
-            var types = name.Split(GENERICSPLITS, StringSplitOptions.RemoveEmptyEntries).Select(z => z.Trim())
+            if (string.IsNullOrWhiteSpace(name))
+                return Array.Empty<string>();
 
+            // Split on generic delimiters, then take the last segment of any dotted name and remove empties.
+            // For example:
+            //  - "HashSet<string>" -> ["HashSet", "string"]
+            //  - "List<HashSet<string>>" -> ["List", "HashSet", "string"]
+            var parts = name
+                .Split(GENERICSPLITS, StringSplitOptions.RemoveEmptyEntries)
+                .Select(z => z.Trim())
+                .Where(z => !string.IsNullOrEmpty(z))
+                .Select(z =>
+                {
+                    var segs = z.Split(seperators, StringSplitOptions.RemoveEmptyEntries);
+                    return segs.Length > 0 ? segs[^1].Trim() : string.Empty;
+                })
+                .Where(z => !string.IsNullOrEmpty(z))
+                .Distinct()
                 .ToArray();
-            return types;
+
+            return parts;
 
 
         }
@@ -66,30 +83,33 @@ namespace PlantUMLEditor.Models
                 {
                     foreach (UMLDataType? fdt in f2.DataTypes)
                     {
-                        foreach(var d in dataTypes.Where(z=> 
+                        // Exact-name duplicate (including generic arguments)
+                        foreach(var d in dataTypes.Where(z=> z.DataType is not UMLOther &&
                         z.DataType.Namespace == fdt.Namespace &&
-                        z.DataType.NonGenericName == fdt.NonGenericName))
+                        string.CompareOrdinal(z.DataType.Name, fdt.Name) == 0))
                         {
                             newMessages.Add(new DocumentMessage(f2.FileName, 
                                 GetRelativeName(folderBase, f2.FileName),
-                                fdt.LineNumber, "Duplicate type " + fdt.NonGenericName, false));
+                                fdt.LineNumber, "Duplicate type " + fdt.Name, false));
 
                             newMessages.Add(new DocumentMessage(d.FileName,
                                 GetRelativeName(folderBase, d.FileName),
-                                d.DataType.LineNumber, "Duplicate type " + fdt.NonGenericName, false));
+                                d.DataType.LineNumber, "Duplicate type " + fdt.Name, false));
                         }
 
-                        foreach (var d in dataTypes.Where(z =>           
-                  z.DataType.NonGenericName == fdt.NonGenericName))
-                        {
-                            newMessages.Add(new DocumentMessage(f2.FileName,
-                                GetRelativeName(folderBase, f2.FileName),
-                                fdt.LineNumber, "Same name " + fdt.NonGenericName, true));
+                        // Same base non-generic name but different actual type (e.g. HashSet and HashSet<string>)
+                  //      foreach (var d in dataTypes.Where(z =>
+                  //z.DataType.NonGenericName == fdt.NonGenericName &&
+                  //string.CompareOrdinal(z.DataType.Name, fdt.Name) != 0))
+                  //      {
+                  //          newMessages.Add(new DocumentMessage(f2.FileName,
+                  //              GetRelativeName(folderBase, f2.FileName),
+                  //              fdt.LineNumber, "Same name " + fdt.NonGenericName, true));
 
-                            newMessages.Add(new DocumentMessage(d.FileName,
-                                GetRelativeName(folderBase, d.FileName),
-                                d.DataType.LineNumber, "Same name " + fdt.NonGenericName, true));
-                        }
+                  //          newMessages.Add(new DocumentMessage(d.FileName,
+                  //              GetRelativeName(folderBase, d.FileName),
+                  //              d.DataType.LineNumber, "Same name " + fdt.NonGenericName, true));
+                  //      }
 
 
                         dataTypes.Add(new(fdt, f2.FileName));
@@ -272,8 +292,19 @@ namespace PlantUMLEditor.Models
             static void ProcessPDT(string folderBase, List<DocumentMessage> newMessages, List<DataTypeToNamespaceMapping> namespaceReferences,
                 DataTypeRecord dt, string name, string dataType, DataTypeRecord? pdt)
             {
+                // If we don't have a matching type, skip reporting for known framework/collection names.
+                string simple = dataType;
+                if (simple.Contains('.'))
+                    simple = simple.Split('.').Last();
+
                 if (pdt == default)
                 {
+                    if (knownwords.Contains(simple))
+                    {
+                        // known framework/collection type - do not report as missing
+                        return;
+                    }
+
                     newMessages.Add(new MissingDataTypeMessage(dt.FileName, GetRelativeName(folderBase, dt.FileName),
                     dt.DataType.LineNumber, dataType + " used by " + name, false, dataType, false));
 

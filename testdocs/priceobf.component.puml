@@ -9,9 +9,9 @@ component RandomizedImage
 component Map
 component ServerMap
 component WebServer as ws <<ffff>>
-component Browser <<bro>> {
+component Browser <<bro>>   { 
     
-     
+      
     port test
     portout test2
     portin test3
