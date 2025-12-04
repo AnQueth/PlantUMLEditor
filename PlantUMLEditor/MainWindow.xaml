@@ -843,7 +843,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="4*" />
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition  Width="{Binding UIModel.GridSettings.AIWidth, Mode=TwoWay}" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
