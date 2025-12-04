@@ -50,17 +50,26 @@ namespace PlantUML
                 return (false, string.Empty, string.Empty, string.Empty, string.Empty);
             
             string name = nameMatch.Groups["name"].Value;
+            // Do not TrimStart before marker search to correctly detect leading "as "
             remaining = remaining.Substring(nameMatch.Length);
-            
-            // Try to match description (optional)
-            string description = string.Empty;
-            description = remaining.Substring(0, remaining.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0 ?
-                remaining.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) :
-                remaining.IndexOf(" #", StringComparison.OrdinalIgnoreCase) >= 0 ?
-                remaining.IndexOf(" #", StringComparison.OrdinalIgnoreCase) :
-                remaining.Length).Trim();
 
-            remaining = remaining.Substring(description.Length);
+            // Try to match description/stereotype (optional) - everything before alias or color marker
+            string description = string.Empty;
+            // Find alias marker: either " as " with leading space or startswith "as " at beginning
+            int asIndex = remaining.IndexOf(" as ", StringComparison.OrdinalIgnoreCase);
+            if (asIndex < 0 && remaining.StartsWith("as ", StringComparison.OrdinalIgnoreCase))
+                asIndex = 0;
+
+            int colorIndex = remaining.IndexOf(" #", StringComparison.OrdinalIgnoreCase);
+
+            int endIndex = remaining.Length;
+            if (asIndex >= 0 && (colorIndex < 0 || asIndex < colorIndex))
+                endIndex = asIndex;
+            else if (colorIndex >= 0)
+                endIndex = colorIndex;
+
+            description = remaining.Substring(0, endIndex).Trim();
+            remaining = remaining.Substring(endIndex).TrimStart();
          
             // Try to match alias (optional)
             string alias = string.Empty;
