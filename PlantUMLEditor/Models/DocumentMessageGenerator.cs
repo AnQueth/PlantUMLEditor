@@ -147,6 +147,8 @@ namespace PlantUMLEditor.Models
         {
             foreach (LineError? lineError in doc.LineErrors)
             {
+                if(lineError == null)
+                    continue;
                 newMessages.Add(new DocumentMessage(doc.FileName,
                     GetRelativeName(folderBase, doc.FileName), lineError.LineNumber, lineError.Text, false));
             }

@@ -228,7 +228,7 @@ namespace PlantUMLEditor.Models
                                         return;
                                     }
 
-                                    string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.name) + ".png");
+                                    string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.name) + FileExtension.PNG);
 
                                     if (File.Exists(fn2))
                                     {
@@ -265,7 +265,7 @@ namespace PlantUMLEditor.Models
 
         private void SaveImageHandler()
         {
-            string? fileName = _ioService.GetSaveFile("Png files | *.png", ".png");
+            string? fileName = _ioService.GetSaveFile("Png files | *.png", FileExtension.PNG);
 
             if (fileName == null || Image == null)
             {

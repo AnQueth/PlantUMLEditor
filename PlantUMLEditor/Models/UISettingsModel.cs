@@ -52,8 +52,8 @@ namespace PlantUMLEditor.Models
 
             _gridSettingLoader = new Lazy<GridSettings>(() =>
             {
-                GridSettings? l = !string.IsNullOrEmpty(AppSettings.Default.GridSettings) ?
-                JsonConvert.DeserializeObject<GridSettings>(AppSettings.Default.GridSettings) :
+                GridSettings l = !string.IsNullOrEmpty(AppSettings.Default.GridSettings) ?
+                JsonConvert.DeserializeObject<GridSettings>(AppSettings.Default.GridSettings) ?? new GridSettings() :
                 new GridSettings();
 
                 l.ChangedCB = GridSettingsChanged;

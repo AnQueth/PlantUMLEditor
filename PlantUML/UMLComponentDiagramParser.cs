@@ -13,7 +13,13 @@ namespace PlantUML
     {
         private const string CLASSNAME = "class";
         private const string PACKAGENAME = "name";
-        private static readonly Regex _component = new(@"^(?:component|database|queue|actor)\s*(?:""(?<name>[^""]+)""|(?<name>\w+))\s*(?:(?:<<(?<description>[^>]+)>>|\[(?<description>[^\]]+)\]|(?<description>(?:(?!\s+as\b|\s+#).)+?)(?=\s+(?:as\s+\w+|#|$))))?\s*(?:as\s+(?<alias>\w+))?\s*(?<color>#(?:[0-9A-Fa-f]{3,6}|[A-Za-z]+))?\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        
+        // Component regex broken into smaller parts for better maintainability
+        private static readonly Regex _componentType = new(@"^(component|database|queue|actor)\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _componentName = new(@"^(?:""(?<name>[^""]+)""|(?<name>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+               private static readonly Regex _componentAlias = new(@"^\s*as\s+(?<alias>\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _componentColor = new(@"^\s*(?<color>#(?:[0-9A-Fa-f]{3,6}|[A-Za-z]+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +\""*(?<name>[\w\W ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
@@ -25,6 +31,55 @@ namespace PlantUML
         {
             string? t = name.Trim();
             return t.TrimEnd('{').Trim();
+        }
+
+        private static (bool success, string name, string description, string alias, string color) ParseComponentLine(string line)
+        {
+            string remaining = line;
+            
+            // Match component type
+            Match typeMatch = _componentType.Match(remaining);
+            if (!typeMatch.Success)
+                return (false, string.Empty, string.Empty, string.Empty, string.Empty);
+            
+            remaining = remaining.Substring(typeMatch.Length);
+            
+            // Match name
+            Match nameMatch = _componentName.Match(remaining);
+            if (!nameMatch.Success)
+                return (false, string.Empty, string.Empty, string.Empty, string.Empty);
+            
+            string name = nameMatch.Groups["name"].Value;
+            remaining = remaining.Substring(nameMatch.Length);
+            
+            // Try to match description (optional)
+            string description = string.Empty;
+            description = remaining.Substring(0, remaining.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) >= 0 ?
+                remaining.IndexOf(" as ", StringComparison.OrdinalIgnoreCase) :
+                remaining.IndexOf(" #", StringComparison.OrdinalIgnoreCase) >= 0 ?
+                remaining.IndexOf(" #", StringComparison.OrdinalIgnoreCase) :
+                remaining.Length).Trim();
+
+            remaining = remaining.Substring(description.Length);
+         
+            // Try to match alias (optional)
+            string alias = string.Empty;
+            Match aliasMatch = _componentAlias.Match(remaining);
+            if (aliasMatch.Success)
+            {
+                alias = aliasMatch.Groups["alias"].Value;
+                remaining = remaining.Substring(aliasMatch.Length);
+            }
+            
+            // Try to match color (optional)
+            string color = string.Empty;
+            Match colorMatch = _componentColor.Match(remaining);
+            if (colorMatch.Success)
+            {
+                color = colorMatch.Groups["color"].Value;
+            }
+            
+            return (true, name, description, alias, color);
         }
 
         private static string GetPackage(Stack<string> packages)
@@ -196,20 +251,19 @@ namespace PlantUML
 
                         continue;
                     }
-                    else if (_component.IsMatch(line))
+                    else if (_componentType.IsMatch(line))
                     {
-                        Match? g = _component.Match(line);
-                        if (string.IsNullOrEmpty(g.Groups[PACKAGENAME].Value))
+                        var parseResult = ParseComponentLine(line);
+                        if (!parseResult.success || string.IsNullOrEmpty(parseResult.name))
                         {
                             continue;
                         }
 
                         string package = GetPackage(packages);
 
-                        DataType = new UMLComponent(package, Clean(g.Groups[PACKAGENAME].Value),
-                            g.Groups["alias"].Value);
+                        DataType = new UMLComponent(package, Clean(parseResult.name), parseResult.alias);
 
-                        _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
+                        _ = aliases.TryAdd(parseResult.alias, DataType);
 
                         if (currentComponent is not null)
                         {

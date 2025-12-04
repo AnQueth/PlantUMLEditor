@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -42,7 +43,7 @@ namespace PlantUMLEditor.Models
             LockedList<UMLClassDiagram> otherClassDiagrams,
             string fileName,
             string title,
-            string content, AutoResetEvent messageCheckerTrigger) : base(  openDirectoryService,
+            string content, Channel<bool> messageCheckerTrigger) : base(  openDirectoryService,
                 fileName, title, content, messageCheckerTrigger)
         {
             Diagram = diagram;

@@ -1,6 +1,7 @@
 ﻿using PlantUMLEditor.Controls;
 using System.IO;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -12,7 +13,7 @@ namespace PlantUMLEditor.Models
         private readonly MDColorCoding _colorCoding;
         private readonly IIndenter _indenter;
         public MDDocumentModel(  IIOService openDirectoryService,
-          string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
+          string fileName, string title, string content, Channel<bool> messageCheckerTrigger) :
             base( openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
             _colorCoding = new MDColorCoding();

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using UMLModels;
 
@@ -17,11 +18,11 @@ namespace PlantUMLEditor.Models
         private readonly UMLDocumentCollection _umlDocumentCollection;
         private readonly object _docLock;
         private readonly IIOService _ioService;
-        private readonly AutoResetEvent _messageCheckerTrigger;
+        private readonly Channel<bool> _messageCheckerTrigger;
 
         public OpenDocumentManager(ObservableCollection<BaseDocumentModel> openDocuments,
             UMLDocumentCollection umlDocumentCollection,
-            object docLock, IIOService ioService, AutoResetEvent messageCheckerTrigger)
+            object docLock, IIOService ioService, Channel<bool> messageCheckerTrigger)
         {
             this._openDocuments = openDocuments;
             this._umlDocumentCollection = umlDocumentCollection;
@@ -71,12 +72,9 @@ namespace PlantUMLEditor.Models
 
 
 
-        private async Task<BaseDocumentModel> OpenTextFile(string fullPath, int lineNumber, string? searchText)
+        private async Task<BaseDocumentModel?> OpenTextFile(string fullPath, int lineNumber, string? searchText)
         {
-            if(!File.Exists(fullPath))
-            {
-                return null;
-            }
+         
 
             string content = await File.ReadAllTextAsync(fullPath);
             TextFileDocumentModel? d = new TextFileDocumentModel(_ioService,

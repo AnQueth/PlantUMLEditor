@@ -2,6 +2,7 @@
 
 using System.IO;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using UMLModels;
 
@@ -13,12 +14,12 @@ namespace PlantUMLEditor.Models
         private readonly IIOService _ioService;
         private readonly Func<TextDocumentModel, Task> _afterCreateCallback;
         private readonly UMLDocumentCollection _documentCollection;
-        private readonly AutoResetEvent _messageCheckerTrigger;
+        private readonly Channel<bool> _messageCheckerTrigger;
 
         public NewFileManager(IIOService ioService,
             Func<TextDocumentModel, Task> afterCreateCallback,
             UMLDocumentCollection documentCollection,
-            AutoResetEvent messageCheckerTrigger)
+            Channel<bool> messageCheckerTrigger)
         {
             _ioService = ioService;
             _afterCreateCallback = afterCreateCallback;
@@ -27,7 +28,7 @@ namespace PlantUMLEditor.Models
         }
         private string? GetNewFile(TreeViewModel? selectedFolder, string? folderBase, string fileExtension)
         {
-            if(selectedFolder == null && string.IsNullOrEmpty(folderBase))
+            if (selectedFolder == null && string.IsNullOrEmpty(folderBase))
             {
                 return null;
             }
@@ -45,8 +46,11 @@ namespace PlantUMLEditor.Models
         public async Task CreateNewClassDiagram(TreeViewModel? selectedFolder, string? folderBase)
         {
 
-
-            string? nf = GetNewFile(selectedFolder, folderBase, ".class.puml");
+            if (selectedFolder == null || string.IsNullOrEmpty(folderBase))
+            {
+                return;
+            }
+            string? nf = GetNewFile(selectedFolder, folderBase, ".class" + FileExtension.PUML);
 
             if (!string.IsNullOrEmpty(nf))
             {
@@ -57,9 +61,12 @@ namespace PlantUMLEditor.Models
         }
         public async Task CreateNewComponentDiagram(TreeViewModel? selectedFolder, string? folderBase)
         {
+            if (selectedFolder == null || string.IsNullOrEmpty(folderBase))
+            {
+                return;
+            }
 
-
-            string? nf = GetNewFile(selectedFolder, folderBase, ".component.puml");
+            string? nf = GetNewFile(selectedFolder, folderBase, ".component" + FileExtension.PUML);
 
             if (!string.IsNullOrEmpty(nf))
             {
@@ -106,7 +113,7 @@ namespace PlantUMLEditor.Models
 
         public async Task CreateNewJsonDiagram(TreeViewModel? selectedFolder, string? folderBase)
         {
-            string? nf = GetNewFile(selectedFolder, folderBase, ".json.puml");
+            string? nf = GetNewFile(selectedFolder, folderBase, ".json" + FileExtension.PUML);
 
             if (!string.IsNullOrEmpty(nf))
             {
@@ -125,7 +132,7 @@ namespace PlantUMLEditor.Models
         }
         internal async Task CreateNewMarkdownFile(TreeViewModel? selectedFolder, string? folderBase)
         {
-            string? nf = GetNewFile(selectedFolder, folderBase, ".md");
+            string? nf = GetNewFile(selectedFolder, folderBase, FileExtension.MD);
 
             if (!string.IsNullOrEmpty(nf))
             {
@@ -148,7 +155,7 @@ namespace PlantUMLEditor.Models
         internal async Task CreateNewSequenceFile(TreeViewModel? selectedFolder, string? folderBase)
         {
 
-            string? nf = GetNewFile(selectedFolder, folderBase, ".seq.puml");
+            string? nf = GetNewFile(selectedFolder, folderBase, ".seq" + FileExtension.PUML);
 
             if (!string.IsNullOrEmpty(nf))
             {
@@ -172,7 +179,7 @@ namespace PlantUMLEditor.Models
 
         internal async Task CreateNewUnknownDiagramFile(TreeViewModel? selectedFolder, string? folderBase)
         {
-            string? nf = GetNewFile(selectedFolder, folderBase, ".puml");
+            string? nf = GetNewFile(selectedFolder, folderBase, FileExtension.PUML);
 
             if (!string.IsNullOrEmpty(nf))
             {
@@ -192,7 +199,7 @@ namespace PlantUMLEditor.Models
         }
         internal async Task CreateNewYamlFile(TreeViewModel? selectedFolder, string? folderBase)
         {
-            string? nf = GetNewFile(selectedFolder, folderBase, ".yml");
+            string? nf = GetNewFile(selectedFolder, folderBase, FileExtension.YML);
 
             if (!string.IsNullOrEmpty(nf))
             {

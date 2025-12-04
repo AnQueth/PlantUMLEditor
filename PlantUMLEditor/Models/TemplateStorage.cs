@@ -5,13 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace PlantUMLEditor.Models
 {
     internal class TemplateItem
     {
-        public string Name { get; set; }
-        public string Content { get; set; }
+        public required string Name { get; set; }
+        public required string Content { get; set; }
     }
     internal class TemplateStorage
     {
@@ -54,15 +55,27 @@ namespace PlantUMLEditor.Models
             {
                 Directory.CreateDirectory(path);
             }
+            
+            var loadedTemplates = new List<TemplateItem>();
+            
             foreach (var file in System.IO.Directory.GetFiles(path, "*.template"))
             {
                 var content = await System.IO.File.ReadAllTextAsync(file);
-                Templates.Add(new TemplateItem
+                loadedTemplates.Add(new TemplateItem
                 {
                     Name = System.IO.Path.GetFileNameWithoutExtension(file),
                     Content = content
                 });
             }
+            
+            // Modify ObservableCollection on UI thread
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                foreach (var template in loadedTemplates)
+                {
+                    Templates.Add(template);
+                }
+            });
         }
     }
 }

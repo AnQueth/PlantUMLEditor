@@ -1,4 +1,4 @@
 ﻿namespace UMLModels
 {
-    public record LineError(string? Text, int LineNumber);
+    public record LineError(string Text, int LineNumber);
 }

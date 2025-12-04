@@ -15,12 +15,11 @@ namespace PlantUMLEditor.Models
         {
             foreach (var item in umlDocumentCollection.ClassDocuments.Where(z =>
          z.DataTypes.Any(v => string.CompareOrdinal(v.NonGenericName, text) == 0))
-                .Select(p => new GotoDefinitionResult
-                {
-                    FileName = p.FileName,
-                    Diagram = p,
-                    DataType = p.DataTypes.First(z => z.NonGenericName == text)
-                }))
+                .Select(p => new GotoDefinitionResult(
+                    p.FileName,
+                    p,
+                    p.DataTypes.First(z => z.NonGenericName == text)
+                )))
             {
                 yield return item;
             }
@@ -69,7 +68,7 @@ namespace PlantUMLEditor.Models
                 }
                 foreach (GlobalFindResult? ln in documents.SequenceDiagrams.SelectMany(z => z.Entities.OfType<UMLSequenceConnection>()
                 .Where(x => x.From?.DataTypeId == item.DT.Id || x.To?.DataTypeId == item.DT.Id).Where(c => c.Action is not null).Select(c =>
-               new GlobalFindResult(z.FileName, c.LineNumber, c.Action.Signature, text))))
+               new GlobalFindResult(z.FileName, c.LineNumber, c.Action!.Signature, text))))
 
                 {
                     yield return ln;
@@ -79,6 +78,13 @@ namespace PlantUMLEditor.Models
 
         public class GotoDefinitionResult
         {
+            public GotoDefinitionResult(string fileName, UMLClassDiagram diagram, UMLDataType dataType)
+            {
+                FileName = fileName;
+                Diagram = diagram;
+                DataType = dataType;
+            }
+
             public string FileName { get; set; }
             public UMLClassDiagram Diagram { get; set; }
             public UMLDataType DataType { get; set; }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -34,7 +35,7 @@ namespace PlantUMLEditor.Models
 
         public SequenceDiagramDocumentModel( 
                         IIOService openDirectoryService, UMLSequenceDiagram diagram, LockedList<UMLClassDiagram> dataTypes,
-                        string fileName, string title, string content, AutoResetEvent messageCheckerTrigger) :
+                        string fileName, string title, string content, Channel<bool> messageCheckerTrigger) :
             base(  openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
             Diagram = diagram;

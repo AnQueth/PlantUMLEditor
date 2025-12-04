@@ -53,10 +53,10 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         private List<FormatResult> _colorCodings = new();
         private IAutoCompleteCallback? _currentCallback = null;
         private string _findText = string.Empty;
-        private IIndenter _indenter;
+        private IIndenter? _indenter;
         private int _lastKnownFirstCharacterIndex = 0;
         private int _lastKnownLastCharacterIndex = 0;
-     
+
         private ImageSource? _lineNumbers;
         private bool _renderText;
         private string _replaceText = string.Empty;
@@ -201,7 +201,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
         }
 
-        
+
         public void CloseAutoComplete()
         {
             PopupControl.IsOpen = false;
@@ -455,7 +455,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 sv.ScrollChanged += Sv_ScrollChanged;
             }
-            
+
         }
 
         public void ReportError(int line, int character)
@@ -597,9 +597,9 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
-          
-                this.ClearFindResults();
-            
+
+            this.ClearFindResults();
+
             base.OnMouseDown(e);
 
             _autoComplete.CloseAutoComplete();
@@ -629,7 +629,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 int pos = CaretIndex;
 
-                Text = _indenter.Process(TextRead(), false);
+                Text = _indenter?.Process(TextRead(), false);
                 CaretIndex = pos;
                 _autoComplete.CloseAutoComplete();
 
@@ -640,7 +640,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             {
                 int pos = CaretIndex;
 
-                Text = _indenter.Process(TextRead(), true);
+                Text = _indenter?.Process(TextRead(), true);
                 CaretIndex = pos;
                 _autoComplete.CloseAutoComplete();
 
@@ -684,14 +684,17 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
             else if (e.Key is Key.Enter)
             {
-                int indent = _indenter.GetIndentLevelForLine(Text, GetLineIndexFromCharacterIndex(CaretIndex));
-                string line = "\r\n" + new string(' ', indent * 2);
-                int index = CaretIndex + line.Length;
-                Text = Text.Insert(CaretIndex, line);
-                CaretIndex = index;
-                CloseAutoComplete();
-                CalculateFirstAndLastCharacters();
-                e.Handled = true;
+                if (_indenter != null)
+                {
+                    int indent = _indenter.GetIndentLevelForLine(Text, GetLineIndexFromCharacterIndex(CaretIndex));
+                    string line = "\r\n" + new string(' ', indent * 2);
+                    int index = CaretIndex + line.Length;
+                    Text = Text.Insert(CaretIndex, line);
+                    CaretIndex = index;
+                    CloseAutoComplete();
+                    CalculateFirstAndLastCharacters();
+                    e.Handled = true;
+                }
             }
 
             base.OnPreviewKeyDown(e);
@@ -937,7 +940,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         private void ClearFindResults()
         {
-           // FindHeight = 0;
+            // FindHeight = 0;
             FindResults.Clear();
             FindText = "";
             ReplaceText = "";
@@ -1086,7 +1089,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         private (int, int) GetStartAndEndCharacters()
         {
-           
+
 
             GetStartAndEndLines(out int startLine, out int endLine);
 
@@ -1372,7 +1375,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                 ForceDraw();
             }
 
-           // FindHeight = 50 + Math.Min( FindResults.Count * 20, 200);
+            // FindHeight = 50 + Math.Min( FindResults.Count * 20, 200);
         }
 
         private void SelectAndFind()

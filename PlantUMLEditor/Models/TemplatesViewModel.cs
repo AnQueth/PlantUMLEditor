@@ -17,8 +17,8 @@ namespace PlantUMLEditor.Models
 
         internal class TemplateModel : BindingBase
         {
-            private string _name;
-            private string _content;
+            private string _name = string.Empty;
+            private string _content = string.Empty;
 
              public string Name
             {
@@ -52,7 +52,7 @@ namespace PlantUMLEditor.Models
         public DelegateCommand<Window> SaveCommand { get; }
         public DelegateCommand DeleteCommand { get; }
         public DelegateCommand AddCommand { get; }
-        public DelegateCommand CancelCommand { get; }
+        public DelegateCommand<Window> CancelCommand { get; }
 
         public TemplatesViewModel(TemplateStorage templateStorage)
         {
@@ -74,11 +74,11 @@ namespace PlantUMLEditor.Models
             SaveCommand = new DelegateCommand<Window>(SaveCommandHandler);
             DeleteCommand = new DelegateCommand(DeleteCommandHandler, ()=> _selectedTemplate is not null);
             AddCommand = new DelegateCommand(AddCommandHandler, ()=> !string.IsNullOrEmpty(_name));
- 
+            CancelCommand = new DelegateCommand<Window>(window => window.Close());
         }
 
 
-        private string _name;
+        private string _name = string.Empty;
         public string Name
         {
             get => _name;
@@ -101,7 +101,10 @@ namespace PlantUMLEditor.Models
 
         private void DeleteCommandHandler()
         {
-            Templates.Remove(SelectedTemplate);
+            if (SelectedTemplate != null)
+            {
+                Templates.Remove(SelectedTemplate);
+            }
         }
 
         private async void SaveCommandHandler(Window window)

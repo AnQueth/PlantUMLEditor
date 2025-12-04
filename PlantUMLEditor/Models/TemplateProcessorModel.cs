@@ -13,9 +13,9 @@ namespace PlantUMLEditor.Models
     {
         public class Field : BindingBase
         {
-            private string _value;
+            private string _value = string.Empty;
 
-            public string Name
+            public required string Name
             {
                 get; init;
             }
@@ -35,6 +35,7 @@ namespace PlantUMLEditor.Models
         internal TemplateProcessorModel(TemplateItem template)
         {
             _template = template;
+            ProcessedContent = string.Empty;
              var fields = ReadFields(template.Content);
             Fields.AddRange(fields);
 

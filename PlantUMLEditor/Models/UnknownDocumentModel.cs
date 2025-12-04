@@ -1,6 +1,7 @@
 ﻿using PlantUMLEditor.Controls;
 using System;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -28,7 +29,7 @@ namespace PlantUMLEditor.Models
         public UnknownDocumentModel(Action<UMLDiagram, UMLDiagram> changedCallback,
                         IIOService openDirectoryService,
                         UMLUnknownDiagram model, UMLDocumentCollection diagrams, string fileName, string title, string content,
-                         AutoResetEvent messageCheckerTrigger
+                         Channel<bool> messageCheckerTrigger
                         ) : base( openDirectoryService, fileName, title, content, messageCheckerTrigger)
         {
             ChangedCallback = changedCallback;

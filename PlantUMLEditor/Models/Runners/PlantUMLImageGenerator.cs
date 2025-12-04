@@ -28,7 +28,7 @@ namespace PlantUMLEditor.Models.Runners
             {
 
 
-                string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(path) + ".png");
+                string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(path) + FileExtension.PNG);
 
 
                 Process p = new();

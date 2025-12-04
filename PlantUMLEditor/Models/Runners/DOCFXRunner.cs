@@ -30,6 +30,11 @@ namespace PlantUMLEditor.Models.Runners
         }
         internal static void Run(string? folderBase)
         {
+            if (string.IsNullOrEmpty(folderBase))
+            {
+                return;
+            }
+
             string? folderWithDocFXConfig = FindDocFXConfig(folderBase);
 
             if (string.IsNullOrEmpty(folderWithDocFXConfig))

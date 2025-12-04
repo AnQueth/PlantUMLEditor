@@ -5,11 +5,23 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using MessageBox = System.Windows.MessageBox;
 
 namespace PlantUMLEditor.Models
 {
+        public enum GitFileStatus
+        {
+            Unmodified,
+            Modified,
+            Untracked,
+            Deleted,
+            Staged,
+            Conflict,
+            Ignored
+        }
+
     public class FolderTreeViewModel : TreeViewModel
     {
         private bool _isExpanded;
@@ -98,6 +110,7 @@ namespace PlantUMLEditor.Models
         private Visibility _isVisible;
         private string _name;
         private string _rename = string.Empty;
+    private GitFileStatus _gitStatus = GitFileStatus.Unmodified;
 
         public TreeViewModel(TreeViewModel? parent, string path, BitmapSource? icon)
         {
@@ -188,6 +201,40 @@ namespace PlantUMLEditor.Models
         {
             get => _name;
             set => SetValue(ref _name, value);
+        }
+
+        public GitFileStatus GitStatus
+        {
+            get => _gitStatus;
+            set
+            {
+                SetValue(ref _gitStatus, value);
+                PropertyChangedInvoke(nameof(GitStatusBrush));
+            }
+        }
+
+        public Brush GitStatusBrush
+        {
+            get
+            {
+                switch (_gitStatus)
+                {
+                    case GitFileStatus.Modified:
+                        return new SolidColorBrush(Color.FromRgb(255, 165, 0)); // Orange
+                    case GitFileStatus.Untracked:
+                        return new SolidColorBrush(Color.FromRgb(0, 200, 0)); // Green
+                    case GitFileStatus.Deleted:
+                        return new SolidColorBrush(Color.FromRgb(255, 0, 0)); // Red
+                    case GitFileStatus.Staged:
+                        return new SolidColorBrush(Color.FromRgb(0, 150, 255)); // Blue
+                    case GitFileStatus.Conflict:
+                        return new SolidColorBrush(Color.FromRgb(200, 0, 200)); // Purple
+                    case GitFileStatus.Ignored:
+                        return new SolidColorBrush(Color.FromRgb(128, 128, 128)); // Gray
+                    default:
+                        return Brushes.Transparent; // Unmodified
+                }
+            }
         }
 
 

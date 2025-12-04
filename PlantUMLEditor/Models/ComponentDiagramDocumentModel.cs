@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using UMLModels;
@@ -36,7 +37,7 @@ namespace PlantUMLEditor.Models
 
         public ComponentDiagramDocumentModel( 
                  IIOService openDirectoryService,
-                 UMLComponentDiagram diagram, string filename, string title, string content, AutoResetEvent messageCheckerTrigger) :
+                 UMLComponentDiagram diagram, string filename, string title, string content, Channel<bool> messageCheckerTrigger) :
             base( openDirectoryService,
                       filename, title, content, messageCheckerTrigger)
         {

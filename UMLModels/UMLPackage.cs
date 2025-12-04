@@ -26,10 +26,6 @@ namespace UMLModels
         {
             get; set;
         }
-        public string? Alias
-        {
-            get;
-            set;
-        }
+    
     }
 }

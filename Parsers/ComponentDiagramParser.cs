@@ -49,469 +49,19 @@ public class Parser
 
 internal class UMLComponentDiagramTokenVisitor : ITokenVisitor
 {
-    public UMLModels.UMLComponentDiagram Diagram { get; private set; }
-    private UMLModels.UMLPackage? _rootPackage;
-    private readonly Stack<UMLModels.UMLPackage> _packageStack = new();
-    private bool _expectingTitleText;
-
-    // Entity building state
-    private string? _pendingEntityType; // "component", "interface", etc.
-    private string? _pendingName;
-    private string? _pendingAlias;
-    private UMLModels.UMLComponent? _currentComponentForPorts;
-
-    // Relation state
-    private string? _lastEntityRef; // last seen identifier or component name/alias
-    private string? _relationSource;
-
-    // Note connection state
-    private bool _inNoteDeclaration;
-    private string? _noteDirection; // left/right/top/bottom
-    private bool _expectingOfTarget;
-    private UMLModels.UMLNote? _currentNote;
-    private bool _inMultilineNote;
-    private string? _lastArrowRaw;
-    private string? _lastArrowLabel;
+    public UMLModels.UMLComponentDiagram Diagram { get; private set; } = null!;
+    
 
     public void Visit(PlantUmlTokenizer.Token token)
     {
-        switch (token.Type)
-        {
-            case PlantUmlTokenizer.TokenType.StartUml:
-                // Initialize a diagram with an empty title and a root package
-                _rootPackage = new UMLModels.UMLPackage("root");
-                Diagram = new UMLModels.UMLComponentDiagram(string.Empty, string.Empty, _rootPackage);
-                _packageStack.Clear();
-                _packageStack.Push(_rootPackage);
-                break;
-
-            case PlantUmlTokenizer.TokenType.Title:
-                _expectingTitleText = true;
-                break;
-
-            // Title text handled via HandleTextValue when _expectingTitleText is true
-
-            case PlantUmlTokenizer.TokenType.Component:
-                if (_rootPackage != null)
-                {
-                    var name = token.Value?.Trim() ?? string.Empty;
-                    if (string.Equals(name, "component", StringComparison.OrdinalIgnoreCase))
-                    {
-                        // keyword form: expect Identifier and optional 'as' alias
-                        _pendingEntityType = "component";
-                        _pendingName = null;
-                        _pendingAlias = null;
-                    }
-                    else
-                    {
-                        // bracketed form [Component Name]
-                        var comp = new UMLModels.UMLComponent(string.Empty, name, name)
-                        {
-                            LineNumber = token.Line
-                        };
-                        CurrentPackage().Children.Add(comp);
-                        _currentComponentForPorts = comp;
-                        _lastEntityRef = comp.Alias ?? comp.Name;
-                    }
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.Interface:
-                // Interface lollipop declaration: next text is its name/alias
-                _pendingEntityType = "interface";
-                _pendingName = null;
-                _pendingAlias = null;
-                break;
-
-            case PlantUmlTokenizer.TokenType.Note:
-                // Standalone note (we do not yet parse connections here)
-                if (_rootPackage != null)
-                {
-                    var note = new UMLModels.UMLNote(string.Empty, null)
-                    {
-                        LineNumber = token.Line
-                    };
-                    CurrentPackage().Children.Add(note);
-                    _lastEntityRef = note.Alias ?? note.Text;
-                    _inNoteDeclaration = true; // may be followed by direction and 'of'
-                    _currentNote = note;
-                    _inMultilineNote = true;
-                }
-                break;
-
-            // 'As' handled in HandleIdentifier to avoid duplicate switch labels
-
-            case PlantUmlTokenizer.TokenType.Left:
-            case PlantUmlTokenizer.TokenType.Right:
-            case PlantUmlTokenizer.TokenType.Top:
-            case PlantUmlTokenizer.TokenType.Bottom:
-                if (_inNoteDeclaration)
-                {
-                    _noteDirection = token.Type.ToString().ToLowerInvariant();
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.Of:
-                if (_inNoteDeclaration)
-                {
-                    _expectingOfTarget = true;
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.Package:
-                // Begin a package declaration; next Identifier/QuotedString is its name
-                _pendingEntityType = "package";
-                _pendingName = null;
-                _pendingAlias = null;
-                break;
-
-            case PlantUmlTokenizer.TokenType.Together:
-                // Group block similar to a package named 'together'
-                _pendingEntityType = "together";
-                _pendingName = "together";
-                _pendingAlias = null;
-                break;
-
-            // Treat other element keywords similarly to component (keyword form)
-            case PlantUmlTokenizer.TokenType.Database:
-            case PlantUmlTokenizer.TokenType.Queue:
-            case PlantUmlTokenizer.TokenType.Actor:
-            case PlantUmlTokenizer.TokenType.Node:
-            case PlantUmlTokenizer.TokenType.Cloud:
-            case PlantUmlTokenizer.TokenType.Folder:
-            case PlantUmlTokenizer.TokenType.Rectangle:
-            case PlantUmlTokenizer.TokenType.Frame:
-                _pendingEntityType = token.Type.ToString().ToLowerInvariant();
-                _pendingName = null;
-                _pendingAlias = null;
-                break;
-
-            case PlantUmlTokenizer.TokenType.Identifier:
-                HandleIdentifier(token);
-                break;
-
-            case PlantUmlTokenizer.TokenType.As:
-                // Next identifier becomes alias for the pending entity
-                _pendingAlias = string.Empty; // mark that alias expected
-                break;
-
-            case PlantUmlTokenizer.TokenType.QuotedString:
-            case PlantUmlTokenizer.TokenType.Label:
-                HandleTextValue(token.Value, token.Line);
-                if (_relationSource != null)
-                {
-                    _lastArrowLabel = token.Value;
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.End:
-                // Could terminate multiline note ("end note") or grouping
-                if (_inMultilineNote)
-                {
-                    _inMultilineNote = false;
-                    _inNoteDeclaration = false;
-                    _expectingOfTarget = false;
-                    _noteDirection = null;
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.OpenBrace:
-                // Enter last declared package block
-                if ((_pendingEntityType == "package" || _pendingEntityType == "together") && !string.IsNullOrEmpty(_pendingName))
-                {
-                    var pkg = new UMLModels.UMLPackage(_pendingName!, alias: _pendingAlias);
-                    CurrentPackage().Children.Add(pkg);
-                    _packageStack.Push(pkg);
-                    Diagram?.ContainedPackages.Add(pkg);
-                    _pendingEntityType = null;
-                    _pendingName = null;
-                    _pendingAlias = null;
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.CloseBrace:
-                // Exit current package block
-                if (_packageStack.Count > 1)
-                {
-                    _packageStack.Pop();
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.Port:
-            case PlantUmlTokenizer.TokenType.PortIn:
-            case PlantUmlTokenizer.TokenType.PortOut:
-                // Next identifier/label adds a port to the last component
-                // Mark type via pending entity type state
-                _pendingEntityType = token.Type.ToString().ToLowerInvariant();
-                break;
-
-            case PlantUmlTokenizer.TokenType.Arrow:
-                // Prepare relation: next entity becomes the target
-                _relationSource = _lastEntityRef;
-                _lastArrowRaw = token.Value;
-                break;
-
-            case PlantUmlTokenizer.TokenType.Stereotype:
-                // Attach stereotype as auxiliary info under the current component
-                if (_currentComponentForPorts != null)
-                {
-                    _currentComponentForPorts.Children.Add(new UMLModels.UMLOther($"<<{token.Value}>>")
-                    {
-                        LineNumber = token.Line
-                    });
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.Color:
-                // Attach color tag as auxiliary info under the current component
-                if (_currentComponentForPorts != null)
-                {
-                    _currentComponentForPorts.Children.Add(new UMLModels.UMLOther($"#{token.Value}")
-                    {
-                        LineNumber = token.Line
-                    });
-                }
-                break;
-
-            case PlantUmlTokenizer.TokenType.EndUml:
-                // No specific action for now; diagram already built incrementally
-                break;
-
-            default:
-                // Ignore other tokens in this minimal implementation
-                break;
-        }
+       
+       Console.WriteLine($"Token: {token.Type}, Value: '{token.Value}' at Line {token.Line}, Column {token.Column}");
+        
     }
-
-    private UMLModels.UMLPackage CurrentPackage()
-    {
-        return _packageStack.Count > 0 ? _packageStack.Peek() : (_rootPackage ?? new UMLModels.UMLPackage("root"));
-    }
-
-    private void HandleIdentifier(PlantUmlTokenizer.Token token)
-    {
-        var id = token.Value;
-
-        // Interpret keyword 'as' from identifier stream for aliasing
-        if (string.Equals(id, "as", StringComparison.OrdinalIgnoreCase))
-        {
-            if (_inNoteDeclaration && _currentNote != null)
-            {
-                _pendingAlias = string.Empty; // next identifier becomes note alias
-                return;
-            }
-            _pendingAlias = string.Empty; // next identifier becomes alias for pending entity
-            return;
-        }
-
-        // Alias assignment for current note
-        if (_inNoteDeclaration && _pendingAlias == string.Empty && _currentNote != null)
-        {
-            _currentNote.Alias = id;
-            _pendingAlias = null;
-            return;
-        }
-
-        // Alias assignment for last created component (bracketed form with 'as')
-        if (_pendingAlias == string.Empty && _currentComponentForPorts != null && _pendingEntityType == null)
-        {
-            _currentComponentForPorts.Alias = id;
-            _pendingAlias = null;
-            _lastEntityRef = _currentComponentForPorts.Alias ?? _currentComponentForPorts.Name;
-            return;
-        }
-
-        // Note connection target after 'of'
-        if (_inNoteDeclaration && _expectingOfTarget && _currentNote != null)
-        {
-            var connector = _noteDirection != null ? $"note {_noteDirection} of" : "note of";
-            // Use note alias or text as identifier for second; if neither, generate
-            var noteId = _currentNote.Alias ?? (!string.IsNullOrEmpty(_currentNote.Text) ? _currentNote.Text : $"note_{_currentNote.LineNumber}");
-            Diagram?.AddNoteConnection(new UMLModels.UMLNoteConnection(id, connector, noteId));
-            _inNoteDeclaration = false;
-            _expectingOfTarget = false;
-            _noteDirection = null;
-            _lastEntityRef = id;
-            return;
-        }
-
-        if (_pendingEntityType == "component")
-        {
-            if (string.IsNullOrEmpty(_pendingName))
-            {
-                _pendingName = id;
-                return;
-            }
-            if (_pendingAlias == string.Empty)
-            {
-                _pendingAlias = id;
-            }
-
-            // finalize component
-            var alias = _pendingAlias ?? _pendingName;
-            var comp = new UMLModels.UMLComponent(string.Empty, _pendingName!, alias!)
-            {
-                LineNumber = token.Line
-            };
-            CurrentPackage().Children.Add(comp);
-            _currentComponentForPorts = comp;
-            _lastEntityRef = comp.Alias ?? comp.Name;
-            _pendingEntityType = null;
-            _pendingName = null;
-            _pendingAlias = null;
-            return;
-        }
-
-        if (_pendingEntityType == "interface")
-        {
-            // Create UMLInterface entity
-            var name = id;
-            var alias = _pendingAlias ?? name;
-            var iface = new UMLModels.UMLInterface(string.Empty, name, alias, Array.Empty<UMLModels.UMLDataType>())
-            {
-                LineNumber = token.Line
-            };
-            CurrentPackage().Children.Add(iface);
-            _lastEntityRef = iface.Alias ?? iface.Name;
-            _pendingEntityType = null;
-            _pendingName = null;
-            _pendingAlias = null;
-            return;
-        }
-
-        if (_pendingEntityType == "package")
-        {
-            _pendingName = id;
-            return;
-        }
-
-        // Treat common element keywords as components as they appear as identifiers after keywords
-        if (string.Equals(_pendingEntityType, "database", StringComparison.Ordinal) ||
-            string.Equals(_pendingEntityType, "queue", StringComparison.Ordinal) ||
-            string.Equals(_pendingEntityType, "actor", StringComparison.Ordinal) ||
-            string.Equals(_pendingEntityType, "node", StringComparison.Ordinal) ||
-            string.Equals(_pendingEntityType, "cloud", StringComparison.Ordinal) ||
-            string.Equals(_pendingEntityType, "folder", StringComparison.Ordinal) ||
-            string.Equals(_pendingEntityType, "rectangle", StringComparison.Ordinal) ||
-            string.Equals(_pendingEntityType, "frame", StringComparison.Ordinal))
-        {
-            var alias = _pendingAlias ?? id;
-            var comp = new UMLModels.UMLComponent(string.Empty, id, alias)
-            {
-                LineNumber = token.Line
-            };
-            CurrentPackage().Children.Add(comp);
-            _currentComponentForPorts = comp;
-            _lastEntityRef = comp.Alias ?? comp.Name;
-            _pendingEntityType = null;
-            _pendingName = null;
-            _pendingAlias = null;
-            return;
-        }
-
-        // Ports
-        if (_pendingEntityType == "port" && _currentComponentForPorts != null)
-        {
-            _currentComponentForPorts.Ports.Add(id);
-            _pendingEntityType = null;
-            return;
-        }
-        if (_pendingEntityType == "portin" && _currentComponentForPorts != null)
-        {
-            _currentComponentForPorts.PortsIn.Add(id);
-            _pendingEntityType = null;
-            return;
-        }
-        if (_pendingEntityType == "portout" && _currentComponentForPorts != null)
-        {
-            _currentComponentForPorts.PortsOut.Add(id);
-            _pendingEntityType = null;
-            return;
-        }
-
-        // Relations: if we just saw an arrow, this identifier is the target
-        if (_relationSource != null)
-        {
-            var target = id;
-            ConnectRelation(_relationSource, target);
-            _relationSource = null;
-            _lastEntityRef = target;
-            return;
-        }
-
-        // Track last reference for potential relations
-        _lastEntityRef = id;
-    }
-
-    private void HandleTextValue(string text, int line)
-    {
-        if (_expectingTitleText && Diagram != null)
-        {
-            Diagram.Title = text;
-            _expectingTitleText = false;
-            return;
-        }
-
-        if (_pendingEntityType == "package" && string.IsNullOrEmpty(_pendingName))
-        {
-            _pendingName = text;
-            return;
-        }
-
-        if (_pendingEntityType == "component" && string.IsNullOrEmpty(_pendingName))
-        {
-            _pendingName = text;
-            return;
-        }
-
-        // For notes: use text as note content (supports multiline)
-        if (_inMultilineNote && _currentNote != null)
-        {
-            if (string.IsNullOrEmpty(_currentNote.Text))
-            {
-                _currentNote.Text = text;
-            }
-            else
-            {
-                _currentNote.Text += "\n" + text;
-            }
-            _currentNote.LineNumber = line;
-            _lastEntityRef = _currentNote.Alias ?? _currentNote.Text;
-            return;
-        }
-    }
-
-    private void ConnectRelation(string fromRef, string toRef)
-    {
-        // Find components by alias or name in current package hierarchy and connect consumes/exposes
-        var allEntities = Diagram?.Entities ?? new List<UMLModels.UMLDataType>();
-        UMLModels.UMLComponent? from = null;
-        UMLModels.UMLComponent? to = null;
-        foreach (var e in allEntities)
-        {
-            if (e is UMLModels.UMLComponent c)
-            {
-                if (string.Equals(c.Alias, fromRef, StringComparison.OrdinalIgnoreCase) || string.Equals(c.Name, fromRef, StringComparison.OrdinalIgnoreCase))
-                    from = c;
-                if (string.Equals(c.Alias, toRef, StringComparison.OrdinalIgnoreCase) || string.Equals(c.Name, toRef, StringComparison.OrdinalIgnoreCase))
-                    to = c;
-            }
-        }
-
-        if (from != null && to != null)
-        {
-            from.Consumes.Add(to);
-            to.Exposes.Add(from);
-
-            // Attach simple relation metadata
-            var meta = $"arrow={_lastArrowRaw}; label={_lastArrowLabel}";
-            from.Children.Add(new UMLModels.UMLOther(meta));
-            to.Children.Add(new UMLModels.UMLOther(meta));
-            _lastArrowRaw = null;
-            _lastArrowLabel = null;
-        }
-    }
+ 
 }
+
+ 
 
 public class PlantUmlTokenizer
 {
@@ -617,6 +167,10 @@ public class PlantUmlTokenizer
         while (!reader.End)
         {
             var token = NextToken(ref reader, state);
+            if (token.Type == TokenType.EndOfFile)
+            {
+                break;
+            }
             if (token.Type != TokenType.Whitespace && token.Type != TokenType.Comment)
             {
                 visitor.Visit(token);
@@ -1061,6 +615,25 @@ public class PlantUmlTokenizer
             }
         }
         
+        // If we failed to consume any character, advance by one to avoid infinite loops
+        if (reader.Sequence.GetPosition(0, startPosition).Equals(reader.Position))
+        {
+            // Consume a single byte as unknown
+            if (reader.TryPeek(out byte unknown))
+            {
+                reader.Advance(1);
+                if (unknown == '\n')
+                {
+                    state.AdvanceLine();
+                }
+                else
+                {
+                    state.AdvanceColumn();
+                }
+            }
+            return new Token(TokenType.Unknown, string.Empty, startLine, startColumn);
+        }
+
         var identifierSequence = reader.Sequence.Slice(startPosition, reader.Position);
         string value = Encoding.UTF8.GetString(identifierSequence);
         
@@ -1119,7 +692,11 @@ public class ComponentDiagramParser : Parser
 
         await Task.WhenAll(fillPipeTask, readPipeTask);
 
-        return visitor.Diagram;
+    
+        var diagram = visitor.Diagram;
+  
+
+        return diagram;
     }
 
 

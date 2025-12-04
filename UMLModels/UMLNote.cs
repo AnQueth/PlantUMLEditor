@@ -12,10 +12,6 @@
         {
             get; set;
         }
-        public string? Alias
-        {
-            get;
-            set;
-        }
+ 
     }
 }

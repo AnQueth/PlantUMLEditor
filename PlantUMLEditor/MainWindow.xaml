@@ -67,6 +67,8 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             <MenuItem Header="Delete" Command="{Binding DeleteCommand}"></MenuItem>
             <Separator></Separator>
             <MenuItem Header="Generate Image" Command="{Binding DataContext.CreateUMLImage, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
+            <Separator></Separator>
+            <MenuItem Header="Undo Git Changes" Command="{Binding DataContext.UndoGitChangesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" CommandParameter="{Binding}" />
 
         </ContextMenu>
         <ContextMenu x:Key="FileMenu">
@@ -74,6 +76,8 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             <MenuItem Header="Rename" Command="{Binding StartRenameCommand}"></MenuItem>
             <Separator></Separator>
             <MenuItem Header="Delete" Command="{Binding DeleteCommand}"></MenuItem>
+            <Separator></Separator>
+            <MenuItem Header="Undo Git Changes" Command="{Binding DataContext.UndoGitChangesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" CommandParameter="{Binding}" />
 
         </ContextMenu>
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
@@ -423,56 +427,7 @@ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                 </DataTrigger>
             </HierarchicalDataTemplate.Triggers>
         </HierarchicalDataTemplate>
-        <Thickness x:Key="TabHeaderMargin">2,2,2,2</Thickness>
         <local:TabHeaderDataTemplateSelector x:Key="TabHeaderSelector"></local:TabHeaderDataTemplateSelector>
-        <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3" />
-        <SolidColorBrush x:Key="TextBox.MouseOver.Border" Color="#FF7EB4EA" />
-        <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5" />
-        <Style x:Key="TextBoxStyle1" TargetType="{x:Type localControls:MyTextBox}">
-            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
-            <Setter Property="BorderBrush" Value="{StaticResource TextBox.Static.Border}" />
-            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="KeyboardNavigation.TabNavigation" Value="None" />
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="AllowDrop" Value="true" />
-            <Setter Property="ScrollViewer.PanningMode" Value="VerticalFirst" />
-            <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type localControls:MyTextBox}">
-
-                        <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="True">
-                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible" >
-
-
-                            </ScrollViewer>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsEnabled" Value="false">
-                                <Setter Property="Opacity" TargetName="border" Value="0.56" />
-                            </Trigger>
-                            <!--<Trigger Property="IsMouseOver" Value="true">
-                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource TextBox.MouseOver.Border}" />
-                            </Trigger>-->
-                            <Trigger Property="IsKeyboardFocused" Value="true">
-                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource TextBox.Focus.Border}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <MultiTrigger>
-                    <MultiTrigger.Conditions>
-                        <Condition Property="IsInactiveSelectionHighlightEnabled" Value="true" />
-                        <Condition Property="IsSelectionActive" Value="false" />
-                    </MultiTrigger.Conditions>
-                    <Setter Property="SelectionBrush" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightBrushKey}}" />
-                </MultiTrigger>
-            </Style.Triggers>
-        </Style>
         <Style x:Key="FocusVisual">
             <Setter Property="Control.Template">
                 <Setter.Value>
@@ -494,6 +449,7 @@ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
             <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
             <Setter Property="ScrollViewer.PanningMode" Value="Both" />
             <Setter Property="Stylus.IsFlicksEnabled" Value="False" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -586,14 +542,8 @@ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
             </Setter>
         </Style>
         <Style   TargetType="{x:Type TreeViewItem}">
-            <Setter Property="HorizontalContentAlignment" Value="Left"></Setter>
-
-
-
             <Setter Property="Background" Value="Transparent" />
-            <Setter Property="HorizontalContentAlignment" Value="{Binding HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
-            <Setter Property="VerticalContentAlignment" Value="{Binding VerticalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />
-            <Setter Property="Padding" Value="1,0,0,0" />
+                 <Setter Property="Padding" Value="1,0,0,0" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource TreeViewItemFocusVisual}" />
             <Setter Property="Template">
@@ -637,7 +587,14 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             </Grid.RowDefinitions>
                             <ToggleButton x:Name="Expander" ClickMode="Press" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource ExpandCollapseToggleStyle}" />
                             <Border x:Name="Bd" CornerRadius="10" HorizontalAlignment="Stretch"  Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Grid.Column="1" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
-                                <ContentPresenter Margin="2,2,2,2" x:Name="PART_Header" ContentSource="Header" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="4" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Rectangle Grid.Column="0" RadiusX="2" RadiusY="2" Fill="{Binding GitStatusBrush}" />
+                                    <ContentPresenter Grid.Column="1" Margin="2,2,2,2" x:Name="PART_Header" ContentSource="Header" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                                </Grid>
                             </Border>
                             <ItemsPresenter x:Name="ItemsHost" Grid.ColumnSpan="2" Grid.Column="1" Grid.Row="1" />
                         </Grid>
@@ -1350,6 +1307,12 @@ CanContentScroll="False">
             </StatusBarItem>
             <StatusBarItem>
                 <TextBlock Text="{Binding CurrentActionExecuting}"></TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock>
+                    <Run Text="Branch: "></Run>
+                    <Run Text="{Binding CurrentGitBranch}" />
+                </TextBlock>
             </StatusBarItem>
         </StatusBar>
 

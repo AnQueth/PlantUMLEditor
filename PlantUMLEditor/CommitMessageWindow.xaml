@@ -1,0 +1,54 @@
+<Window x:Class="PlantUMLEditor.CommitMessageWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Commit Changes" Height="450" Width="600"
+        WindowStartupLocation="CenterOwner"
+        FontFamily="Consolas Code">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Commit Message -->
+        <TextBlock Grid.Row="0" Text="Commit Message:" Margin="0,0,0,5" FontWeight="Bold"/>
+        <TextBox Grid.Row="1" 
+                 Text="{Binding CommitMessage, UpdateSourceTrigger=PropertyChanged}"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 FontFamily="Cascadia Code"
+                 FontSize="12"
+                 Margin="0,0,0,10"
+                 MinHeight="100"/>
+
+        <!-- Changed Files Preview -->
+        <GroupBox Grid.Row="2" Header="Changed Files" MaxHeight="200" Margin="0,0,0,10">
+            <ScrollViewer>
+                <ItemsControl ItemsSource="{Binding ChangedFiles}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding}" Margin="2" FontFamily="Cascadia Code" FontSize="11"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </GroupBox>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Commit and Sync" 
+                    Command="{Binding CommitCommand}"
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
+                    IsDefault="True"
+                    Width="130" Margin="0,0,10,0"
+                    Padding="10,5"/>
+            <Button Content="Cancel" 
+                    IsCancel="True"
+                    Width="80"
+                    Padding="10,5"/>
+        </StackPanel>
+    </Grid>
+</Window>

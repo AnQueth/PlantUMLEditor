@@ -11,7 +11,7 @@ namespace PlantUMLEditor.Models
     public static  class GlobalSearch
     {
 
-        public static string RootDirectory { get; set; }
+        public static string? RootDirectory { get; set; }
 
         public static Task<List<GlobalFindResult>> Find( string text, string[] extensions)
         {

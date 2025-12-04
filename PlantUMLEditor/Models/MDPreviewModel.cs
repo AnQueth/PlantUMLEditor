@@ -34,7 +34,7 @@ namespace PlantUMLEditor.Models
 
                     base.Write(renderer, link);
                 }
-                catch(FileNotFoundException fe)
+                catch(FileNotFoundException)
                 {
 
                 }
