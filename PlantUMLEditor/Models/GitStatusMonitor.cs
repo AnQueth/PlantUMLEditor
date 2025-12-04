@@ -28,9 +28,8 @@ namespace PlantUMLEditor.Models
         public void Start()
         {
             Stop();
-            _timer = new Timer(_ => Poll(), null, _interval, _interval);
-            // Do an immediate poll
-            Poll();
+            // Create a one-shot timer; Poll will reschedule after completion
+            _timer = new Timer(_ => Poll(), null, TimeSpan.Zero, Timeout.InfiniteTimeSpan);
         }
 
         public void Stop()
@@ -65,6 +64,11 @@ namespace PlantUMLEditor.Models
             catch
             {
                 // Swallow errors (non-git folder, transient issues)
+            }
+            finally
+            {
+                // Reschedule next poll after processing completes (prevents concurrent runs)
+                _timer?.Change(_interval, Timeout.InfiniteTimeSpan);
             }
         }
 
