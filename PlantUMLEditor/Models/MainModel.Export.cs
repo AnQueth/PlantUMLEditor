@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using PlantUMLEditor.Models.Runners;
 
@@ -45,6 +47,39 @@ namespace PlantUMLEditor.Models
             DOCFXRunner.Run(FolderBase);
         }
 
+        private (List<string> files, string statusText) GetStatus(Dictionary<string, GitFileStatus> existingStatus = null)
+        {
+            List<string> files = new List<string>();
+            var sb = new StringBuilder();
+
+            foreach (var item in existingStatus)
+            {
+
+
+                var statusStr = item.Value switch
+                {
+                    GitFileStatus.Untracked => "[New]",
+                    GitFileStatus.Modified => "[Modified]",
+                    GitFileStatus.Deleted => "[Deleted]",
+
+                    _ => $"[{item.Value.ToString()}]"
+                };
+
+
+                files.Add($"{statusStr} {item.Key}");
+            }
+
+            sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Total changed files: {files.Count}");
+
+            if (files.Count == 0)
+            {
+                sb.AppendLine("Working directory is clean.");
+            }
+
+
+            return (files, sb.ToString());
+        }
+
         private async void GitCommitAndSyncCommandHandler()
         {
             if (string.IsNullOrEmpty(FolderBase))
@@ -56,7 +91,9 @@ namespace PlantUMLEditor.Models
             GitSupport gs = new GitSupport();
 
             // Get changed files first
-            var (changedFiles, statusText) = gs.GetStatus(FolderBase);
+
+            var rawStatus = gs.GetRawStatus(FolderBase);
+            var (changedFiles, statusText) = GetStatus(rawStatus);
 
             if (changedFiles.Count == 0)
             {
@@ -83,9 +120,9 @@ namespace PlantUMLEditor.Models
             // Proceed with commit using custom message
             CurrentActionExecuting = "Committing and syncing...";
             SelectedToolTab = 3;
-            
+
             (var hadConflict, GitMessages) = await gs.CommitAndSync(FolderBase, viewModel.CommitMessage);
-            
+
             CurrentActionExecuting = null;
 
             if (hadConflict)

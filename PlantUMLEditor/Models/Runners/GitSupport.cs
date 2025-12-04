@@ -14,7 +14,7 @@ namespace PlantUMLEditor.Models.Runners
         {
         }
 
-        private static string? FindRepoRoot(string anyPath)
+        internal static string? FindRepoRoot(string anyPath)
         {
             try
             {
@@ -166,68 +166,7 @@ namespace PlantUMLEditor.Models.Runners
             });
         }
 
-        internal (List<string> files, string statusText) GetStatus(string folderBase)
-        {
-            var files = new List<string>();
-            var sb = new StringBuilder();
-
-            if (string.IsNullOrEmpty(folderBase))
-            {
-                sb.AppendLine("No folder path provided.");
-                return (files, sb.ToString());
-            }
-
-            try
-            {
-                var repoRoot = FindRepoRoot(folderBase) ?? folderBase;
-                using (var repo = new Repository(repoRoot))
-                {
-                    var status = repo.RetrieveStatus();
-
-                    foreach (var item in status)
-                    {
-                        // Compute full path from repo root
-                        var full = System.IO.Path.GetFullPath(System.IO.Path.Combine(repoRoot, item.FilePath));
-                        // Filter only items inside the opened folderBase (supports deep subfolder openings)
-                        var inScope = full.StartsWith(System.IO.Path.GetFullPath(folderBase), StringComparison.OrdinalIgnoreCase);
-                        if (!inScope) continue;
-
-                        var statusStr = item.State switch
-                        {
-                            FileStatus.NewInIndex => "[New]",
-                            FileStatus.ModifiedInIndex => "[Modified]",
-                            FileStatus.DeletedFromIndex => "[Deleted]",
-                            FileStatus.RenamedInIndex => "[Renamed]",
-                            FileStatus.NewInWorkdir => "[Untracked]",
-                            FileStatus.ModifiedInWorkdir => "[Modified]",
-                            FileStatus.DeletedFromWorkdir => "[Deleted]",
-                            _ => $"[{item.State}]"
-                        };
-
-                        // Return path relative to folderBase for UI consistency
-                        var relToOpened = System.IO.Path.GetRelativePath(folderBase, full).Replace("\\", "/");
-                        files.Add($"{statusStr} {relToOpened}");
-                    }
-
-                    sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Total changed files: {files.Count}");
-                    
-                    if (files.Count == 0)
-                    {
-                        sb.AppendLine("Working directory is clean.");
-                    }
-                }
-            }
-            catch (RepositoryNotFoundException)
-            {
-                sb.AppendLine("Not a git repository.");
-            }
-            catch (Exception ex)
-            {
-                sb.AppendLine(System.Globalization.CultureInfo.InvariantCulture, $"Error: {ex.Message}");
-            }
-
-            return (files, sb.ToString());
-        }
+      
 
         private Credentials UseGitCredentials(string url, string usernameFromUrl, SupportedCredentialTypes types)
         {
@@ -284,6 +223,41 @@ namespace PlantUMLEditor.Models.Runners
                     Password = password
                 };
             
+        }
+
+        internal Dictionary<string, GitFileStatus> GetRawStatus(string openedPath)
+        {
+            var repoRoot = FindRepoRoot(openedPath);
+            using var repo = new Repository(repoRoot);
+
+            var status = repo.RetrieveStatus();
+                  var map = new Dictionary<string, GitFileStatus>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (StatusEntry entry in status)
+                {
+                    // Compute full path relative to repo root
+                    var full = System.IO.Path.GetFullPath(System.IO.Path.Combine(openedPath, entry.FilePath));
+                    // Only include files under the opened path (supports deep subfolder openings)
+                    if (!full.StartsWith(openedPath, StringComparison.OrdinalIgnoreCase))
+                        continue;
+                    map[full] = Map(entry.State);
+                }
+
+                return map;
+        }
+
+        
+        private static GitFileStatus Map(FileStatus s)
+        {
+            if (s.HasFlag(FileStatus.Conflicted)) return GitFileStatus.Conflict;
+            if (s.HasFlag(FileStatus.NewInWorkdir)) return GitFileStatus.Untracked;
+            if (s.HasFlag(FileStatus.ModifiedInWorkdir)) return GitFileStatus.Modified;
+            if (s.HasFlag(FileStatus.DeletedFromWorkdir)) return GitFileStatus.Deleted;
+            if (s.HasFlag(FileStatus.NewInIndex)) return GitFileStatus.Staged;
+            if (s.HasFlag(FileStatus.ModifiedInIndex)) return GitFileStatus.Staged;
+            if (s.HasFlag(FileStatus.DeletedFromIndex)) return GitFileStatus.Staged;
+            if (s.HasFlag(FileStatus.Ignored)) return GitFileStatus.Ignored;
+            return GitFileStatus.Unmodified;
         }
     }
 }
