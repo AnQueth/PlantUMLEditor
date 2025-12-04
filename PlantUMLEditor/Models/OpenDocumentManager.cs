@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 using UMLModels;
 
 namespace PlantUMLEditor.Models
@@ -67,6 +68,21 @@ namespace PlantUMLEditor.Models
 
            
             d.GotoLineNumber(lineNumber, searchText);
+            return d;
+        }
+      private async Task<BaseDocumentModel?> OpenURLLinkFile(string fullPath)
+        {
+         
+
+            string content = await File.ReadAllTextAsync(fullPath);
+            var url = content[(content.IndexOf("URL=", StringComparison.Ordinal) + 4)..];
+
+            UrlLinkDocumentModel? d = new UrlLinkDocumentModel(
+                fullPath,
+                Path.GetFileNameWithoutExtension(fullPath),
+                url);
+ 
+    
             return d;
         }
 
@@ -215,6 +231,10 @@ int lineNumber, string? searchText)
             else if (FileExtension.JPG.Compare(ext) || FileExtension.PNG.Compare(ext))
             {
                 return await OpenImageFile(fullPath);
+            }
+            else if(FileExtension.URLLINK.Compare(ext))
+            {
+                return await OpenURLLinkFile(fullPath);
             }
             else
             {

@@ -10,7 +10,7 @@
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
     xmlns:behaviors="clr-namespace:PlantUMLEditor.Behaviors"
 
-       
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="Aaron's Plant UML Editor" Height="{Binding UIModel.WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding UIModel.WindowWidth, Mode=TwoWay, FallbackValue=1000}"
 FontFamily="Consolas Code"  Loaded="Window_Loaded"
@@ -50,7 +50,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             <MenuItem Header="New JSON UML Document" Command="{Binding DataContext.CreateNewJSONDocumentCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New Markdown Document" Command="{Binding DataContext.CreateMarkDownDocument, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New YAML Document" Command="{Binding DataContext.CreateYAMLDocument, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
-
+            <MenuItem Header="New URL Link" Command="{Binding DataContext.CreateNewURLLinkCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <Separator></Separator>
 
             <MenuItem Header="New Folder" Command="{Binding NewFolderCommand}"></MenuItem>
@@ -93,6 +93,19 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                             <Image Source="{Binding Image}" Stretch="None" ></Image>
                         </localControls:PanAndZoomBorder>
                     </ScrollViewer>
+                </Border>
+            </Grid>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type models:UrlLinkDocumentModel}">
+
+            <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+                <Border BorderThickness="3" CornerRadius="2" BorderBrush="Black">
+               <wv2:WebView2
+                    Source="{Binding URL}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    />
+
                 </Border>
             </Grid>
         </DataTemplate>

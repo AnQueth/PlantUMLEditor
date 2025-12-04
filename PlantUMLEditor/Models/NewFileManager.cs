@@ -209,5 +209,26 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        internal async Task CreateNewURLLinkFile(TreeViewModel? selectedFolder, string? folderBase)
+        {
+            string? nf = GetNewFile(selectedFolder, folderBase, FileExtension.URLLINK);
+
+            if (!string.IsNullOrEmpty(nf))
+            {
+                var urlWindow = new URLPromptWindow();
+                if (urlWindow.ShowDialog() == true)
+                {
+                    string? url = urlWindow.URLValue;
+                    using var writer = new StreamWriter(nf);
+                    await writer.WriteLineAsync("[InternetShortcut]");
+                    if (!string.IsNullOrEmpty(url))
+                    {
+                        await writer.WriteLineAsync($"URL={url}");
+                    }
+                }
+
+                selectedFolder?.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+            }
+        }
     }
 }

@@ -1,0 +1,42 @@
+<Window x:Class="PlantUMLEditor.URLPromptWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Enter URL" Height="250" Width="500"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        FontFamily="Segoe UI">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Label -->
+        <TextBlock Grid.Row="0" Text="URL:" Margin="0,0,0,10" FontWeight="Bold" FontSize="14"/>
+
+        <!-- TextBox -->
+        <TextBox Grid.Row="1" 
+                 x:Name="URLTextBox"
+                 Height="35"
+                 Padding="10,8"
+                 FontSize="12"
+                 Margin="0,0,0,20"/>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="OK" 
+                    Click="OKButton_Click"
+                    IsDefault="True"
+                    Width="80" 
+                    Height="35"
+                    Margin="0,0,10,0"
+                    Padding="10"/>
+            <Button Content="Cancel" 
+                    IsCancel="True"
+                    Width="80"
+                    Height="35"
+                    Padding="10"/>
+        </StackPanel>
+    </Grid>
+</Window>

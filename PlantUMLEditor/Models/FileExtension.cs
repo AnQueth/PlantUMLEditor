@@ -9,6 +9,8 @@ namespace PlantUMLEditor.Models
         public static readonly FileExtension PUML = new FileExtension(".puml");
         public static readonly FileExtension MD = new FileExtension(".md");
         public static readonly FileExtension YML = new FileExtension(".yml");
+        public static readonly FileExtension URLLINK = new FileExtension(".url");
+ 
 
         public FileExtension(string extension)
         {

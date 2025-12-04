@@ -135,6 +135,7 @@ namespace PlantUMLEditor.Models
             CreateNewUnknownDiagram = new DelegateCommand(NewUnknownDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
             OpenUMLColorConfigCommand = new DelegateCommand(OpenUMLColorConfigHandler);
             OpenMDColorConfigCommand = new DelegateCommand(OpenMDColorConfigHandler);
+            CreateNewURLLinkCommand = new DelegateCommand(NewURLLinkDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
             CreateNewSequenceDiagram = new DelegateCommand(NewSequenceDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
             CreateNewClassDiagram = new DelegateCommand(NewClassDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
@@ -312,6 +313,11 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand CreateNewSequenceDiagram
+        {
+            get;
+        }
+
+        public DelegateCommand CreateNewURLLinkCommand
         {
             get;
         }

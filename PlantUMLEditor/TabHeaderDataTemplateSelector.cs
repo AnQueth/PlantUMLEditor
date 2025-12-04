@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using PlantUMLEditor.Models;
+using System.Windows;
 using System.Windows.Controls;
 
 namespace PlantUMLEditor
@@ -17,7 +18,7 @@ namespace PlantUMLEditor
             {
                 return (DataTemplate)element.FindResource("TextDocumentTabHeader");
             }
-            else if (item is Models.ImageDocumentModel)
+            else if (item is Models.ImageDocumentModel || item is UrlLinkDocumentModel)
             {
                 return (DataTemplate)element.FindResource("ImageDocumentTabHeader");
             }

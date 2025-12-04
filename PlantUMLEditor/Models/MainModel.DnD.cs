@@ -212,6 +212,11 @@ namespace PlantUMLEditor.Models
             await _newFileManager.CreateNewSequenceFile(_selectedFolder, FolderBase);
         }
 
+        private async void NewURLLinkDiagramHandler()
+        {
+            await _newFileManager.CreateNewURLLinkFile(_selectedFolder, FolderBase);
+        }
+
         private async void NewUnknownDiagramHandler()
         {
             await _newFileManager.CreateNewUnknownDiagramFile(_selectedFolder, FolderBase);

@@ -3,6 +3,20 @@ using System.Windows;
 
 namespace PlantUMLEditor.Models
 {
+
+    internal class UrlLinkDocumentModel : BaseDocumentModel
+    {
+        public UrlLinkDocumentModel(string fileName, string title, string url) : base(fileName, title)
+        {
+            URL = url;
+        }
+
+        public string URL
+        {
+            get; set;
+        }
+    }
+
     internal abstract class BaseDocumentModel : BindingBase
     {
         private bool _isDirty;
