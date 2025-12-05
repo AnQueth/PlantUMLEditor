@@ -13,16 +13,17 @@ namespace PlantUML
     {
         private const string CLASSNAME = "class";
         private const string PACKAGENAME = "name";
-        
+
         // Component regex broken into smaller parts for better maintainability
+        private static readonly Regex _componentBracketStyle = new(@"^\[(?<name>[^]]+)\]\s*(?:as\s+(?<alias>\w+))?\s*(?:<<(?<stereotype>[\w\s]+)>>)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentType = new(@"^(component|database|queue|actor)\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentName = new(@"^(?:""(?<name>[^""]+)""|(?<name>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-               private static readonly Regex _componentAlias = new(@"^\s*as\s+(?<alias>\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _componentAlias = new(@"^\s*as\s+(?<alias>\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentColor = new(@"^\s*(?<color>#(?:[0-9A-Fa-f]{3,6}|[A-Za-z]+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        
+
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +\""*(?<name>[\w\W ]+)*\""*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
+        private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|folder|together|rectangle)\s+(?:""(?<name>[^""]+)""|(?<name>[^{}\r\n]+?))\s*\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\=\,\.\#\<\|]+(?<direction>[\w\,\=\[\]]+)*[\->\(\)o\[\]\.\#\|\>]*) *(?<rightbracket>\[*)(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _ports = new(@"^\s*(port |portin |portout )(?<name>.*)", RegexOptions.Compiled);
 
@@ -36,19 +37,19 @@ namespace PlantUML
         private static (bool success, string name, string description, string alias, string color) ParseComponentLine(string line)
         {
             string remaining = line;
-            
+
             // Match component type
             Match typeMatch = _componentType.Match(remaining);
             if (!typeMatch.Success)
                 return (false, string.Empty, string.Empty, string.Empty, string.Empty);
-            
+
             remaining = remaining.Substring(typeMatch.Length);
-            
+
             // Match name
             Match nameMatch = _componentName.Match(remaining);
             if (!nameMatch.Success)
                 return (false, string.Empty, string.Empty, string.Empty, string.Empty);
-            
+
             string name = nameMatch.Groups["name"].Value;
             // Do not TrimStart before marker search to correctly detect leading "as "
             remaining = remaining.Substring(nameMatch.Length);
@@ -70,7 +71,7 @@ namespace PlantUML
 
             description = remaining.Substring(0, endIndex).Trim();
             remaining = remaining.Substring(endIndex).TrimStart();
-         
+
             // Try to match alias (optional)
             string alias = string.Empty;
             Match aliasMatch = _componentAlias.Match(remaining);
@@ -79,7 +80,12 @@ namespace PlantUML
                 alias = aliasMatch.Groups["alias"].Value;
                 remaining = remaining.Substring(aliasMatch.Length);
             }
-            
+
+            if(string.IsNullOrEmpty(alias))
+            {
+                alias = name;
+            }
+
             // Try to match color (optional)
             string color = string.Empty;
             Match colorMatch = _componentColor.Match(remaining);
@@ -87,7 +93,7 @@ namespace PlantUML
             {
                 color = colorMatch.Groups["color"].Value;
             }
-            
+
             return (true, name, description, alias, color);
         }
 
@@ -260,6 +266,28 @@ namespace PlantUML
 
                         continue;
                     }
+                    else if (_componentBracketStyle.IsMatch(line))
+                    {
+                        Match m = _componentBracketStyle.Match(line);
+                        string package = GetPackage(packages);
+                        DataType = new UMLComponent(package, Clean(m.Groups["name"].Value), m.Groups["alias"].Value);
+                        if (!aliases.TryAdd(m.Groups["alias"].Value, DataType))
+                        {
+                            d.AddLineError($"Duplicate identifier : {m.Groups["alias"].Value}", linenumber);
+                        }
+
+                        if (currentComponent is not null)
+                        {
+                            currentComponent.Children.Add(DataType);
+                        }
+
+                        if (line.EndsWith("{", StringComparison.Ordinal))
+                        {
+                            brackets.Push(CLASSNAME);
+                            components.Push((UMLComponent)DataType);
+                            currentComponent = (UMLComponent)DataType;
+                        }
+                    }
                     else if (_componentType.IsMatch(line))
                     {
                         var parseResult = ParseComponentLine(line);
@@ -272,7 +300,11 @@ namespace PlantUML
 
                         DataType = new UMLComponent(package, Clean(parseResult.name), parseResult.alias);
 
-                        _ = aliases.TryAdd(parseResult.alias, DataType);
+                        if (!aliases.TryAdd(parseResult.alias, DataType))
+                        {
+                            d.AddLineError($"Duplicate identifier : {parseResult.alias}", linenumber);
+
+                        }
 
                         if (currentComponent is not null)
                         {
@@ -294,7 +326,10 @@ namespace PlantUML
                         {
                             DataType = new UMLInterface(package, Clean(g.Groups[PACKAGENAME].Value), g.Groups["alias"].Value,
                                 new List<UMLDataType>());
-                            _ = aliases.TryAdd(g.Groups["alias"].Value, DataType);
+                            if(!aliases.TryAdd(g.Groups["alias"].Value, DataType))
+                            {
+                                d.AddLineError($"Duplicate identifier : {g.Groups["alias"].Value}", linenumber);
+                            }
                         }
                         if (line.EndsWith("{", StringComparison.Ordinal))
                         {
@@ -317,7 +352,7 @@ namespace PlantUML
                             string arrow = m.Groups["arrow"].Value.Trim();
                             if (leftComponent == null || rightComponent == null)
                             {
-                                d.ExplainedErrors.Add((line, linenumber, $"left: {leftComponent} right: {rightComponent}"));
+                                d.ExplainedErrors.Add((line, linenumber, $"left: {leftComponent?.Alias} right: {rightComponent?.Alias}"));
                             }
                             else if (leftComponent is UMLComponent c)
                             {
@@ -410,15 +445,20 @@ namespace PlantUML
             packages.Push(name);
             brackets.Push(PACKAGENAME);
 
+            string alias = string.IsNullOrWhiteSpace(s.Groups["alias"].Value) ? name : s.Groups["alias"].Value;
+
             UMLPackage? c = new UMLPackage(name,
-                s.Groups["type"].Value, s.Groups["alias"].Value);
+                s.Groups["type"].Value, alias);
 
             currentPackage.Children.Add(c);
 
             d.ContainedPackages.Add(c);
 
             currentPackage = c;
-            _ = aliases.TryAdd(string.IsNullOrWhiteSpace(s.Groups["alias"].Value) ? name : s.Groups["alias"].Value, c);
+            if (!aliases.TryAdd(alias, c))
+            {
+                d.AddLineError($"Duplicate identifier : {alias}", 0);
+            }
             packagesStack.Push(c);
             return currentPackage;
         }
