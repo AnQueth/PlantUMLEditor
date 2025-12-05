@@ -7,6 +7,7 @@ using System.Windows;
 using Prism.Commands;
 using PlantUML;
 using UMLModels;
+using System.Diagnostics.Eventing.Reader;
 
 namespace PlantUMLEditor.Models
 {
@@ -62,8 +63,10 @@ namespace PlantUMLEditor.Models
                     continue;
                 }
 
-                UMLClassDiagramParser.TryParseLineForDataType(missingMethodMessage.MissingMethodText.Trim(),
-                    new Dictionary<string, UMLDataType>(), d);
+                UMLClassDiagramParser.TryParseLineForDataType(null, missingMethodMessage.MissingMethodText.Trim(),
+       new Dictionary<string, UMLDataType>(), d);
+
+
 
                 ClassDiagramDocumentModel? od = textDocumentModels.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => string.CompareOrdinal(p.FileName, doc.FileName) == 0);
                 if (od != null)
@@ -165,46 +168,105 @@ namespace PlantUMLEditor.Models
 
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
+                      
+                     
                         List<DocumentMessage> removals = new();
                         foreach (DocumentMessage? item in Messages)
                         {
                             if (!newMessages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
                             string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
                             {
-                                removals.Add(item);
+                              removals.Add(item);
                             }
                         }
 
-                        removals.ForEach(p => Messages.Remove(p));
+                        removals.ForEach(z=> Messages.Remove(z));
+                    
 
                         foreach (DocumentMessage? item in newMessages)
                         {
                             if (!Messages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
                            string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
                             {
+
                                 Messages.Add(item);
                             }
                         }
 
+                      
+                      
+
+                        if(CurrentDocument is TextDocumentModel tdm)
+                            tdm.ClearMessages();
+
+                        void WalkReset(TreeViewModel node)
+                        {
+                            node.HasMessages = false;
+                            foreach (TreeViewModel? child in node.Children)
+                            {
+
+                                WalkReset(child);
+                            }
+                        }
+
+                        WalkReset(Folder);
+
+
                         foreach (DocumentMessage? d in Messages)
                         {
+                            if(d.FileName == CurrentDocument?.FileName)
+                            {
+                                d.SortOrder = 0;
+
+                            }
+                            else
+                                                        {
+                                d.SortOrder = 1;
+                            }
                             if ((d is MissingMethodDocumentMessage || d is MissingDataTypeMessage) && d.FixingCommand is null)
                             {
                                 d.FixingCommand = new DelegateCommand<DocumentMessage>(FixingCommandHandler);
                             }
 
-                            lock (_docLock)
+                 
+                            void Walk(TreeViewModel node)
                             {
-                                IEnumerable<BaseDocumentModel>? docs = OpenDocuments.Where(p => string.Equals(p.FileName, d.FileName, StringComparison.Ordinal));
-                                foreach (BaseDocumentModel? doc in docs)
+                                if(node.FullPath.EndsWith(d.FileName, StringComparison.Ordinal))
                                 {
-                                    if (CurrentDocument == doc && doc is TextDocumentModel textDoc)
-                                    {
-                                        textDoc.ReportMessage(d);
-                                    }
+                                    node.HasMessages = true;
+                                }
+                                foreach (TreeViewModel? child in node.Children)
+                                {
+                                    
+                                    Walk(child);
                                 }
                             }
+
+                            Walk(Folder);
+
+                            lock (_docLock)
+                            {
+                                IEnumerable<TextDocumentModel>? docs = OpenDocuments.Where(p => 
+                                string.Equals(p.FileName, d.FileName, StringComparison.Ordinal))
+                                .OfType< TextDocumentModel>();
+                                
+
+
+                                foreach (TextDocumentModel? doc in docs)
+                                {
+                                    
+                                    if (CurrentDocument == doc)
+                                    {
+                                        
+                                        doc.ReportMessage(d);
+                                    }
+                                }
+
+
+                            }
                         }
+
+                       
                     });
                 }
                 finally

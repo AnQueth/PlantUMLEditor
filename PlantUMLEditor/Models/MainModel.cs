@@ -1,4 +1,5 @@
-﻿using Microsoft.Agents.AI;
+﻿using LibGit2Sharp;
+using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -13,10 +14,10 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Channels;
 using System.Linq;
 using System.Runtime.Intrinsics.Arm;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -25,7 +26,6 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.TextFormatting;
-
 using System.Xml.Linq;
 using UMLModels;
 using Xceed.Wpf.AvalonDock.Converters;
@@ -98,6 +98,15 @@ namespace PlantUMLEditor.Models
         {
             get => _currentGitBranch;
             set => SetValue(ref _currentGitBranch, value);
+        }
+
+        public string CurrentGitRepoRoot
+        {
+            get => _currentGitRepoRoot;
+            set => SetValue(ref _currentGitRepoRoot, value);
+
+
+
         }
 
         public DelegateCommand<TreeViewModel> UndoGitChangesCommand { get; private set; }
@@ -186,9 +195,9 @@ namespace PlantUMLEditor.Models
                 Documents, _messageCheckerTrigger);
 
             _templateStorage = new TemplateStorage();
-            
+
             // Initialize TemplatePath to Documents folder if not set or invalid
-            if (string.IsNullOrWhiteSpace(AppSettings.Default.TemplatePath) || 
+            if (string.IsNullOrWhiteSpace(AppSettings.Default.TemplatePath) ||
                 !Path.IsPathRooted(AppSettings.Default.TemplatePath))
             {
                 AppSettings.Default.TemplatePath = Path.Combine(
@@ -196,7 +205,7 @@ namespace PlantUMLEditor.Models
                     "PlantUMLEditor", "Templates");
                 AppSettings.Default.Save();
             }
-            
+
             _ = _templateStorage.Load(AppSettings.Default.TemplatePath);
 
             EditorFontSize = AppSettings.Default.EditorFontSize;
@@ -204,15 +213,17 @@ namespace PlantUMLEditor.Models
 
 
 
-        
+
 
         private int _selectedTab;
+        private string _currentGitRepoRoot = string.Empty;
+
         public int SelectedToolTab
         {
             get => _selectedTab;
             set => SetValue(ref _selectedTab, value);
         }
-        
+
 
 
         public double EditorFontSize
@@ -232,7 +243,7 @@ namespace PlantUMLEditor.Models
         }
 
 
-        
+
 
         private void OpenMDColorConfigHandler()
         {
@@ -246,7 +257,7 @@ namespace PlantUMLEditor.Models
             uMLColorCodingConfig.ShowDialog();
         }
 
-        
+
         public bool AllowContinueClosing
         {
             get;
@@ -328,7 +339,7 @@ namespace PlantUMLEditor.Models
         }
         public DelegateCommand OpenUMLColorConfigCommand { get; }
         public DelegateCommand OpenMDColorConfigCommand { get; }
-      
+
         public DelegateCommand CreateUMLImage
         {
             get;
@@ -516,7 +527,7 @@ namespace PlantUMLEditor.Models
             get;
         }
 
-        
+
 
         public DocumentMessage? SelectedMessage
         {
@@ -557,6 +568,7 @@ namespace PlantUMLEditor.Models
 
         public async void LoadedUI()
         {
+          
             await OpenDirectoryHandler(true);
 
             List<string>? files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
@@ -581,13 +593,35 @@ namespace PlantUMLEditor.Models
             string? folder = GetWorkingFolder();
             if (!string.IsNullOrEmpty(folder))
             {
+                StartGitStatusMonitor();
+
+                var git = new PlantUMLEditor.Models.Runners.GitSupport();
+                var md = git.GetCurrentBranch(folder);
+                if (md != null)
+                {
+                    CurrentGitBranch = md.CurrentBranch;
+                    CurrentGitRepoRoot = md.RepositoryRoot;
+                }
+                else
+                {
+                    CurrentGitBranch = string.Empty;
+                    CurrentGitRepoRoot = string.Empty;
+                }
+            }
+        }
+
+        private void StartGitStatusMonitor()
+        {
+            string? folder = GetWorkingFolder();
+            if (!string.IsNullOrEmpty(folder))
+            {
+
+
                 _gitStatusMonitor?.Dispose();
                 _gitStatusMonitor = new GitStatusMonitor(folder, Application.Current.Dispatcher, ApplyGitStatuses, interval: TimeSpan.FromSeconds(2));
                 _gitStatusMonitor.Start();
-
-                var git = new PlantUMLEditor.Models.Runners.GitSupport();
-                CurrentGitBranch = git.GetCurrentBranch(folder);
             }
+
         }
 
         public void TextDragEnter(object sender, DragEventArgs e)
@@ -598,25 +632,25 @@ namespace PlantUMLEditor.Models
         {
         }
 
-        
-
-        
-
-        
-
-        
-
-        
-
-        
-
-        
 
 
 
-        
 
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private static async Task UpdateDiagrams<T1, T2>(TextDocumentModel[] documentModels, LockedList<T2> classDocuments) where T1 : TextDocumentModel where T2 : UMLDiagram
         {
@@ -645,31 +679,31 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        
-
-        
-
-        
 
 
-        
+
+
+
+
+
+
 
         private void CancelCurrentExecutingAction()
         {
             _cancelCurrentExecutingAction?.Cancel();
         }
 
-        
 
-        
 
-        
 
-        
 
-        
 
-        
+
+
+
+
+
+
 
         private void DeleteMRUCommandHandler(string mru)
         {
@@ -677,38 +711,38 @@ namespace PlantUMLEditor.Models
             SaveMRU();
         }
 
-        
-
-        
 
 
 
-        
-
-        
-
-        
 
 
 
-        
-
-        
-
-        
-
-        
-
-        
-
-
-        
 
 
 
-        
 
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -731,7 +765,7 @@ namespace PlantUMLEditor.Models
             if (node == null || !node.IsFile) return;
 
             string? repoPath = GetWorkingFolder();
-            if (string.IsNullOrEmpty(repoPath) )
+            if (string.IsNullOrEmpty(repoPath))
             {
                 return;
             }
@@ -808,13 +842,13 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        
 
-        
 
-        
 
-        
+
+
+
+
 
         private async Task ScanAllFilesHandler()
         {
@@ -846,11 +880,11 @@ namespace PlantUMLEditor.Models
             CurrentActionExecuting = null;
         }
 
-        
 
-        
 
-        
+
+
+
 
         private async Task UpdateDiagramDependencies()
         {
@@ -906,10 +940,7 @@ namespace PlantUMLEditor.Models
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
             // Only trigger for relevant file types
-            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase) ||
-                                    e.Name.EndsWith(".class", StringComparison.OrdinalIgnoreCase) ||
-                                    e.Name.EndsWith(".component", StringComparison.OrdinalIgnoreCase) ||
-                                    e.Name.EndsWith(".seq", StringComparison.OrdinalIgnoreCase)))
+            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
             {
                 _messageCheckerTrigger.Writer.TryWrite(true);
             }
@@ -917,10 +948,7 @@ namespace PlantUMLEditor.Models
 
         private void OnFileRenamed(object sender, RenamedEventArgs e)
         {
-            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase) ||
-                                    e.Name.EndsWith(".class", StringComparison.OrdinalIgnoreCase) ||
-                                    e.Name.EndsWith(".component", StringComparison.OrdinalIgnoreCase) ||
-                                    e.Name.EndsWith(".seq", StringComparison.OrdinalIgnoreCase)))
+            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase) ))
             {
                 _messageCheckerTrigger.Writer.TryWrite(true);
             }
@@ -951,11 +979,16 @@ namespace PlantUMLEditor.Models
             Walk(Folder);
 
             // Update current branch name opportunistically
-            var folder = GetWorkingFolder();
-            if (!string.IsNullOrEmpty(folder))
+
+            if (!string.IsNullOrEmpty(FolderBase))
             {
                 var git = new PlantUMLEditor.Models.Runners.GitSupport();
-                CurrentGitBranch = git.GetCurrentBranch(folder);
+                var md = git.GetCurrentBranch(FolderBase);
+                if (md != null)
+                {
+                    CurrentGitBranch = md.CurrentBranch;
+                    CurrentGitRepoRoot = md.RepositoryRoot;
+                }
             }
         }
     }

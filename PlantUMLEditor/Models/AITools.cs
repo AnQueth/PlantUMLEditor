@@ -33,7 +33,124 @@ using Xceed.Wpf.AvalonDock.Converters;
 namespace PlantUMLEditor.Models
 {
 
-    internal class AITools(TextDocumentModel _currentTdm, ChatMessage _currentMessage, Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase)
+internal class AIToolsBase(ITextGetter _currentTdm,  
+    Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase)
+    {
+        
+
+
+        [Description("reads the current text in the document.")]
+        public async Task< string> ReadDocumentText()
+        {
+            if (_currentTdm != null)
+            {
+                return await  _currentTdm.ReadContent();
+            }
+
+            return string.Empty;
+        }
+
+        [Description("search for a term in all documents")]
+        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text,
+            [Description("search within current doc or all documents in the workspace")] bool onlyCurrentDocument)
+        {
+
+            string WILDCARD = "*";
+            List<GlobalFindResult>? findresults = await GlobalSearch.Find(text, new string[]
+            {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
+            });
+
+            if (onlyCurrentDocument)
+            {
+                return findresults.Where(z => z.FileName == _currentTdm.FileName).ToList();
+            }
+
+            return findresults;
+
+        }
+
+        [Description(@"creates a new document in the current workspace.
+             if creating a class diagram use extension .class.puml. 
+            if making a component diagram use .component.puml.
+            if making a sequence diagram use .seq.puml.")]
+        public async Task CreateNewDocument(
+            [Description("the relative directory path to the current file to store the file in")] string path,
+            [Description("the name of the new document")] string name,
+            [Description("the file extension of the new document, .md, .puml, .yml, .seq.puml, .component.puml, .class.puml")] string extension,
+            [Description("the initial content of the document")] string content)
+        {
+            string fullPath = CheckPathAccess(path);
+
+
+            string pathToFile = System.IO.Path.Combine(fullPath, name + extension);
+
+            if(!Directory.Exists(fullPath))
+            {
+                Directory.CreateDirectory(fullPath);
+            }
+
+            await File.WriteAllTextAsync(pathToFile, content);
+
+            await _updateTree(_folderBase);
+
+
+            await _openDocument(pathToFile);
+
+        }
+
+        [Description("read a file by a path")]
+        public async Task<string> ReadFileByPath([Description("the full path to the file")] string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                throw new ArgumentException("path is null or empty", nameof(path));
+
+            string fullPath = CheckPathAccess(path);
+
+            return await File.ReadAllTextAsync(fullPath);
+        }
+
+        protected string CheckPathAccess(string path)
+        {
+            if (string.IsNullOrEmpty(_folderBase) || !Directory.Exists(_folderBase))
+                throw new InvalidOperationException("Root directory is not set or does not exist.");
+
+            string root = System.IO.Path.GetFullPath(_folderBase);
+
+
+            string fullPath;
+            if (System.IO.Path.IsPathRooted(path))
+            {
+                fullPath = System.IO.Path.GetFullPath(path);
+            }
+            else
+            {
+                // resolve relative path against the root directory
+                fullPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(root, path));
+            }
+
+            // Normalize for comparison
+            if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Access to files outside the workspace root is not allowed.");
+            }
+
+            return fullPath;
+        }
+    }
+
+    internal class AIToolsTextGetter(ITextGetter _currentTdm,  
+    Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase) : AIToolsBase(_currentTdm,
+        _updateTree, _openDocument, _folderBase)
+    {
+
+
+
+
+ 
+    }
+    internal class AIToolsEditable(TextDocumentModel _currentTdm, ChatMessage _currentMessage, 
+    Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase) : 
+    AIToolsBase(_currentTdm,    _updateTree, _openDocument, _folderBase)
     {
 
 
@@ -76,100 +193,6 @@ namespace PlantUMLEditor.Models
             }
 
         }
-
-        [Description("reads the current text in the document.")]
-        public string ReadDocumentText()
-        {
-            if (_currentTdm != null)
-            {
-                return _currentTdm.Content;
-            }
-
-            return string.Empty;
-        }
-
-        [Description("search for a term in all documents")]
-        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text,
-            [Description("search within current doc or all documents in the workspace")] bool onlyCurrentDocument)
-        {
-
-            string WILDCARD = "*";
-            List<GlobalFindResult>? findresults = await GlobalSearch.Find(text, new string[]
-            {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
-            });
-
-            if (onlyCurrentDocument)
-            {
-                return findresults.Where(z => z.FileName == _currentTdm.FileName).ToList();
-            }
-
-            return findresults;
-
-        }
-
-        [Description("creates a new document in the current workspace")]
-        public async Task CreateNewDocument(
-            [Description("the relative directory path to the current file to store the file in")] string path,
-            [Description("the name of the new document")] string name,
-            [Description("the file extension of the new document, .md, .puml, .yml, .seq.puml, .component.puml, .class.puml")] string extension,
-            [Description("the initial content of the document")] string content)
-        {
-            string fullPath = CheckPathAccess(path);
-
-
-            string pathToFile = System.IO.Path.Combine(fullPath, name + extension);
-
-            if(!Directory.Exists(fullPath))
-            {
-                Directory.CreateDirectory(fullPath);
-            }
-
-            await File.WriteAllTextAsync(pathToFile, content);
-
-            await _updateTree(_folderBase);
-
-
-            await _openDocument(pathToFile);
-
-        }
-
-        [Description("read a file by a path")]
-        public async Task<string> ReadFileByPath([Description("the full path to the file")] string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                throw new ArgumentException("path is null or empty", nameof(path));
-
-            string fullPath = CheckPathAccess(path);
-
-            return await File.ReadAllTextAsync(fullPath);
-        }
-
-        private string CheckPathAccess(string path)
-        {
-            if (string.IsNullOrEmpty(_folderBase) || !Directory.Exists(_folderBase))
-                throw new InvalidOperationException("Root directory is not set or does not exist.");
-
-            string root = System.IO.Path.GetFullPath(_folderBase);
-
-
-            string fullPath;
-            if (System.IO.Path.IsPathRooted(path))
-            {
-                fullPath = System.IO.Path.GetFullPath(path);
-            }
-            else
-            {
-                // resolve relative path against the root directory
-                fullPath = System.IO.Path.GetFullPath(System.IO.Path.Combine(root, path));
-            }
-
-            // Normalize for comparison
-            if (!fullPath.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new UnauthorizedAccessException("Access to files outside the workspace root is not allowed.");
-            }
-
-            return fullPath;
-        }
+ 
     }
 }

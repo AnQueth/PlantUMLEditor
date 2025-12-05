@@ -44,42 +44,42 @@ namespace PlantUMLEditor.Models
             return d;
         }
 
-        private async Task<BaseDocumentModel> OpenJsonFile(string fullPath, UMLUnknownDiagram diagram,
+        private async Task<BaseDocumentModel> OpenJsonFile(string fileName, UMLUnknownDiagram diagram,
             int lineNumber, string? searchText)
         {
-            string content = await File.ReadAllTextAsync(fullPath);
+            string content = await File.ReadAllTextAsync(fileName);
             JsonDocumentModel? d = new JsonDocumentModel((old, newdoc) =>
             {
             }, _ioService, diagram,
-                _umlDocumentCollection, fullPath, diagram.Title, content, _messageCheckerTrigger);
+                _umlDocumentCollection, fileName, Path.GetFileName(fileName), content, _messageCheckerTrigger);
 
       
             d.GotoLineNumber(lineNumber, searchText);
             return d;
         }
 
-        private async Task<BaseDocumentModel> OpenMarkDownFile(string fullPath, int lineNumber, string? searchText)
+        private async Task<BaseDocumentModel> OpenMarkDownFile(string fileName, int lineNumber, string? searchText)
         {
-            string content = await File.ReadAllTextAsync(fullPath);
+            string content = await File.ReadAllTextAsync(fileName);
             MDDocumentModel? d = new MDDocumentModel(_ioService,
-                fullPath,
-                Path.GetFileName(fullPath)
+                fileName,
+                Path.GetFileName(fileName)
                 , content, _messageCheckerTrigger);
 
            
             d.GotoLineNumber(lineNumber, searchText);
             return d;
         }
-      private async Task<BaseDocumentModel?> OpenURLLinkFile(string fullPath)
+      private async Task<BaseDocumentModel?> OpenURLLinkFile(string fileName)
         {
          
 
-            string content = await File.ReadAllTextAsync(fullPath);
+            string content = await File.ReadAllTextAsync(fileName);
             var url = content[(content.IndexOf("URL=", StringComparison.Ordinal) + 4)..];
 
             UrlLinkDocumentModel? d = new UrlLinkDocumentModel(
-                fullPath,
-                Path.GetFileNameWithoutExtension(fullPath),
+                fileName,
+                Path.GetFileNameWithoutExtension(fileName),
                 url);
  
     
@@ -88,26 +88,26 @@ namespace PlantUMLEditor.Models
 
 
 
-        private async Task<BaseDocumentModel?> OpenTextFile(string fullPath, int lineNumber, string? searchText)
+        private async Task<BaseDocumentModel?> OpenTextFile(string fileName, int lineNumber, string? searchText)
         {
          
 
-            string content = await File.ReadAllTextAsync(fullPath);
+            string content = await File.ReadAllTextAsync(fileName);
             TextFileDocumentModel? d = new TextFileDocumentModel(_ioService,
-                fullPath,
-                Path.GetFileName(fullPath)
+                fileName,
+                Path.GetFileName(fileName)
                 , content, _messageCheckerTrigger);
  
             d.GotoLineNumber(lineNumber, searchText);
             return d;
         }
 
-        private async Task<BaseDocumentModel> OpenUnknownDiagram(string fullPath, UMLUnknownDiagram diagram)
+        private async Task<BaseDocumentModel> OpenUnknownDiagram(string fileName, UMLUnknownDiagram diagram)
         {
-            string content = await File.ReadAllTextAsync(fullPath);
+            string content = await File.ReadAllTextAsync(fileName);
             UnknownDocumentModel? d = new UnknownDocumentModel((old, @new) =>
             {
-            }, _ioService, diagram, _umlDocumentCollection, fullPath, diagram.Title, content, _messageCheckerTrigger);
+            }, _ioService, diagram, _umlDocumentCollection, fileName, Path.GetFileName(fileName), content, _messageCheckerTrigger);
 
           
             return d;
@@ -131,8 +131,8 @@ namespace PlantUMLEditor.Models
             string content = await File.ReadAllTextAsync(fileName);
 
             SequenceDiagramDocumentModel? d = new SequenceDiagramDocumentModel(
-                _ioService, diagram, _umlDocumentCollection.ClassDocuments, fileName, 
-                diagram.Title, content, _messageCheckerTrigger);
+                _ioService, diagram, _umlDocumentCollection.ClassDocuments, fileName,
+                Path.GetFileName(fileName), content, _messageCheckerTrigger);
 
        
 
@@ -145,7 +145,7 @@ int lineNumber, string? searchText)
         {
             string content = await File.ReadAllTextAsync(fileName);
             ComponentDiagramDocumentModel? d = new ComponentDiagramDocumentModel(
-                _ioService, diagram, fileName, diagram.Title, content, _messageCheckerTrigger);
+                _ioService, diagram, fileName, Path.GetFileName(fileName), content, _messageCheckerTrigger);
 
         
             d.GotoLineNumber(lineNumber, searchText);
@@ -158,7 +158,7 @@ int lineNumber, string? searchText)
         {
             string? content = await File.ReadAllTextAsync(fileName);
             ClassDiagramDocumentModel? d = new ClassDiagramDocumentModel(
-                _ioService, diagram, _umlDocumentCollection.ClassDocuments, fileName, diagram.Title, content, _messageCheckerTrigger);
+                _ioService, diagram, _umlDocumentCollection.ClassDocuments, fileName, Path.GetFileName(fileName), content, _messageCheckerTrigger);
 
       
             d.GotoLineNumber(lineNumber, searchText);
@@ -168,13 +168,13 @@ int lineNumber, string? searchText)
         }
 
 
-        internal async Task<BaseDocumentModel?> TryOpen(string fullPath, int lineNumber, string? searchText)
+        internal async Task<BaseDocumentModel?> TryOpen(string fileName, int lineNumber, string? searchText)
         {
 
             BaseDocumentModel? doc;
             lock (_docLock)
             {
-                doc = _openDocuments.FirstOrDefault(p => p.FileName == fullPath);
+                doc = _openDocuments.FirstOrDefault(p => p.FileName == fileName);
             }
 
             if (doc != null)
@@ -187,58 +187,58 @@ int lineNumber, string? searchText)
 
                 return doc;
             }
-            string ext = Path.GetExtension(fullPath);
+            string ext = Path.GetExtension(fileName);
 
             if (FileExtension.PUML.Compare(ext))
             {
                 (UMLClassDiagram? cd, UMLSequenceDiagram? sd, UMLComponentDiagram? comd, UMLUnknownDiagram? ud) =
-                    await UMLDiagramTypeDiscovery.TryFindOrAddDocument(_umlDocumentCollection, fullPath);
+                    await UMLDiagramTypeDiscovery.TryFindOrAddDocument(_umlDocumentCollection, fileName);
 
                 if (cd != null)
                 {
-                    return await OpenClassDiagram(fullPath, cd, lineNumber, searchText);
+                    return await OpenClassDiagram(fileName, cd, lineNumber, searchText);
                 }
                 else if (sd != null)
                 {
-                    return await OpenSequenceDiagram(fullPath, sd, lineNumber, searchText);
+                    return await OpenSequenceDiagram(fileName, sd, lineNumber, searchText);
                 }
                 else if (comd != null)
                 {
-                    return await OpenComponentDiagram(fullPath, comd, lineNumber, searchText);
+                    return await OpenComponentDiagram(fileName, comd, lineNumber, searchText);
                 }
                 else if (ud != null)
                 {
-                    foreach (var line in File.ReadLines(fullPath))
+                    foreach (var line in File.ReadLines(fileName))
                     {
                         if (line == "@startjson")
                         {
-                            return await OpenJsonFile(fullPath, ud, lineNumber, searchText);
+                            return await OpenJsonFile(fileName, ud, lineNumber, searchText);
                            
                         }
                     }
 
-                    return await OpenUnknownDiagram(fullPath, ud);
+                    return await OpenUnknownDiagram(fileName, ud);
                 }
             }
             else if (FileExtension.MD.Compare(ext))
             {
-                return await OpenMarkDownFile(fullPath, lineNumber, searchText);
+                return await OpenMarkDownFile(fileName, lineNumber, searchText);
             }
             else if (FileExtension.YML.Compare(ext))
             {
-                return await OpenYMLFile(fullPath, lineNumber, searchText);
+                return await OpenYMLFile(fileName, lineNumber, searchText);
             }
             else if (FileExtension.JPG.Compare(ext) || FileExtension.PNG.Compare(ext))
             {
-                return await OpenImageFile(fullPath);
+                return await OpenImageFile(fileName);
             }
             else if(FileExtension.URLLINK.Compare(ext))
             {
-                return await OpenURLLinkFile(fullPath);
+                return await OpenURLLinkFile(fileName);
             }
             else
             {
-                return await OpenTextFile(fullPath, lineNumber, searchText);
+                return await OpenTextFile(fileName, lineNumber, searchText);
             }
 
             return null;

@@ -209,34 +209,11 @@ namespace PlantUMLEditor.Models
             set
             {
                 SetValue(ref _gitStatus, value);
-                PropertyChangedInvoke(nameof(GitStatusBrush));
+                
             }
         }
 
-        public Brush GitStatusBrush
-        {
-            get
-            {
-                switch (_gitStatus)
-                {
-                    case GitFileStatus.Modified:
-                        return new SolidColorBrush(Color.FromRgb(255, 165, 0)); // Orange
-                    case GitFileStatus.Untracked:
-                        return new SolidColorBrush(Color.FromRgb(0, 200, 0)); // Green
-                    case GitFileStatus.Deleted:
-                        return new SolidColorBrush(Color.FromRgb(255, 0, 0)); // Red
-                    case GitFileStatus.Staged:
-                        return new SolidColorBrush(Color.FromRgb(0, 150, 255)); // Blue
-                    case GitFileStatus.Conflict:
-                        return new SolidColorBrush(Color.FromRgb(200, 0, 200)); // Purple
-                    case GitFileStatus.Ignored:
-                        return new SolidColorBrush(Color.FromRgb(128, 128, 128)); // Gray
-                    default:
-                        return Brushes.Transparent; // Unmodified
-                }
-            }
-        }
-
+ 
 
         public TreeViewModel? Parent
         {
@@ -253,6 +230,9 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
+
+        private bool _hasMessages;
+        public bool HasMessages { get => _hasMessages; set => SetValue(ref _hasMessages, value); }
 
         private void OpenInNativeCommandHandler()
         {

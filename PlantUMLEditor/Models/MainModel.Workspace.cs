@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using Newtonsoft.Json;
 using PlantUMLEditor.Models.Runners;
 
@@ -164,6 +165,10 @@ namespace PlantUMLEditor.Models
                 SelectedMRUFolder = sf;
 
                 SaveMRU();
+
+
+                StartGitStatusMonitor();
+
             }
             finally
             {
@@ -212,8 +217,10 @@ namespace PlantUMLEditor.Models
 
             await Task.Delay(1); //sleep for ui updates
 
-            foreach (string? file in Directory.EnumerateFiles(dir))
+            foreach (string file in Directory.EnumerateFiles(dir))
             {
+                if (Path.GetFileName(file).EndsWith(TemporarySave.Extension, StringComparison.Ordinal))
+                    continue;
                 model.Children.Add(new TreeViewModel(model, file, Statics.GetIcon(file)));
             }
 

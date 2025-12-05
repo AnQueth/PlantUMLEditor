@@ -36,18 +36,21 @@ namespace PlantUMLEditor.Models.Runners
             }
         }
 
-        internal string GetCurrentBranch(string folderBase)
+        public record GitMetadataInfo(string RepositoryRoot, string CurrentBranch);
+
+        internal GitMetadataInfo? GetCurrentBranch(string folderBase)
         {
-            if (string.IsNullOrEmpty(folderBase)) return string.Empty;
+            if (string.IsNullOrEmpty(folderBase)) 
+                return null;
             var repoRoot = FindRepoRoot(folderBase) ?? folderBase;
             try
             {
                 using var repo = new Repository(repoRoot);
-                return repo.Head.FriendlyName;
+                return new( repoRoot, repo.Head.FriendlyName);
             }
             catch
             {
-                return string.Empty;
+                return null;
             }
         }
 
@@ -228,6 +231,8 @@ namespace PlantUMLEditor.Models.Runners
         internal Dictionary<string, GitFileStatus> GetRawStatus(string openedPath)
         {
             var repoRoot = FindRepoRoot(openedPath);
+            if(repoRoot == null)
+                return new Dictionary<string, GitFileStatus>(StringComparer.OrdinalIgnoreCase);
             using var repo = new Repository(repoRoot);
 
             var status = repo.RetrieveStatus();
@@ -236,7 +241,7 @@ namespace PlantUMLEditor.Models.Runners
                 foreach (StatusEntry entry in status)
                 {
                     // Compute full path relative to repo root
-                    var full = System.IO.Path.GetFullPath(System.IO.Path.Combine(openedPath, entry.FilePath));
+                    var full = System.IO.Path.GetFullPath(System.IO.Path.Combine(repoRoot, entry.FilePath));
                     // Only include files under the opened path (supports deep subfolder openings)
                     if (!full.StartsWith(openedPath, StringComparison.OrdinalIgnoreCase))
                         continue;

@@ -2,8 +2,11 @@
 using PlantUMLEditor.Models.Services;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 
 namespace PlantUMLEditor
 {
@@ -48,6 +51,8 @@ namespace PlantUMLEditor
             await Task.Delay(50);
 
             ((MainModel)DataContext).LoadedUI();
+
+            
         }
     }
 }

@@ -1,63 +1,66 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="PlantUMLEditor" GeneratedClassName="AppSettings">
-	<Profiles />
-	<Settings>
-		<Setting Name="WorkingDir" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="Files" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="GridSettings" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="WindowWidth" Type="System.Int32" Scope="User">
-			<Value Profile="(Default)">1000</Value>
-		</Setting>
-		<Setting Name="WindowHeight" Type="System.Int32" Scope="User">
-			<Value Profile="(Default)">850</Value>
-		</Setting>
-		<Setting Name="WindowTop" Type="System.Int32" Scope="User">
-			<Value Profile="(Default)">0</Value>
-		</Setting>
-		<Setting Name="WindowLeft" Type="System.Int32" Scope="User">
-			<Value Profile="(Default)">0</Value>
-		</Setting>
-		<Setting Name="MRU" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="DocFXEXE" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="GITUser" Type="System.String" Scope="User">
-			<Value Profile="(Default)">noone</Value>
-		</Setting>
-		<Setting Name="GITEmail" Type="System.String" Scope="User">
-			<Value Profile="(Default)">none@nowhere.com</Value>
-		</Setting>
-		<Setting Name="JARLocation" Type="System.String" Scope="User">
-			<Value Profile="(Default)">plantuml.jar</Value>
-		</Setting>
-		<Setting Name="ColorSettings" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="MDColorSettings" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="TemplatePath" Type="System.String" Scope="User">
-			<Value Profile="(Default)">\Templates</Value>
-		</Setting>
-		<Setting Name="EditorFontSize" Type="System.Double" Scope="User">
-			<Value Profile="(Default)">14</Value>
-		</Setting>
-		<Setting Name="AzureAIEndpoint" Type="System.String" Scope="User">
-			<Value Profile="(Default)" />
-		</Setting>
-		<Setting Name="AzureAIKey" Type="System.String" Scope="User">
-			<Value Profile="(Default)"></Value>
-		</Setting>
-		<Setting Name="AzureAIDeployment" Type="System.String" Scope="User">
-			<Value Profile="(Default)"></Value>
-		</Setting>
-	</Settings>
+  <Profiles />
+  <Settings>
+    <Setting Name="WorkingDir" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Files" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GridSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="WindowWidth" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="WindowHeight" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">850</Value>
+    </Setting>
+    <Setting Name="WindowTop" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="WindowLeft" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="MRU" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DocFXEXE" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="GITUser" Type="System.String" Scope="User">
+      <Value Profile="(Default)">noone</Value>
+    </Setting>
+    <Setting Name="GITEmail" Type="System.String" Scope="User">
+      <Value Profile="(Default)">none@nowhere.com</Value>
+    </Setting>
+    <Setting Name="JARLocation" Type="System.String" Scope="User">
+      <Value Profile="(Default)">plantuml.jar</Value>
+    </Setting>
+    <Setting Name="ColorSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="MDColorSettings" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="TemplatePath" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\Templates</Value>
+    </Setting>
+    <Setting Name="EditorFontSize" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">14</Value>
+    </Setting>
+    <Setting Name="AzureAIEndpoint" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AzureAIKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AzureAIDeployment" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="AzureAIMaxOutputTokens" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2046</Value>
+    </Setting>
+  </Settings>
 </SettingsFile>

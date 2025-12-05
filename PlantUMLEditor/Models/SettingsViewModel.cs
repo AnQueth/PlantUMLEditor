@@ -94,6 +94,16 @@ namespace PlantUMLEditor.Models
         }
 
 
+        public int AzureAIMaxOutputTokens
+        {
+            get => AppSettings.Default.AzureAIMaxOutputTokens;
+            set
+            {
+                AppSettings.Default.AzureAIMaxOutputTokens = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AzureAIMaxOutputTokens)));
+            }
+        }
+
         public event PropertyChangedEventHandler? PropertyChanged;
     }
 }

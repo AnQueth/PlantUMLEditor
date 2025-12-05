@@ -29,13 +29,18 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
     </b:Interaction.Triggers>
 
     <Window.Resources>
-        <CollectionViewSource x:Key="GroupedMessages" Source="{Binding Messages}">
+        <CollectionViewSource x:Key="GroupedMessages" IsLiveSortingRequested="True" Source="{Binding Messages}">
             <CollectionViewSource.GroupDescriptions>
                 <PropertyGroupDescription PropertyName="Warning"  />
             </CollectionViewSource.GroupDescriptions>
+            <CollectionViewSource.LiveSortingProperties>
+                <System:String>SortOrder</System:String>
+            </CollectionViewSource.LiveSortingProperties>
             <CollectionViewSource.SortDescriptions>
 
+                <componentmodel:SortDescription PropertyName="SortOrder" Direction="Ascending" />
                 <componentmodel:SortDescription PropertyName="Warning" Direction="Ascending" />
+               
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
         <SolidColorBrush x:Key="CustomColor" Color="#FF4D8DEA"></SolidColorBrush>
@@ -100,11 +105,16 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
 
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
                 <Border BorderThickness="3" CornerRadius="2" BorderBrush="Black">
-               <wv2:WebView2
+                    <wv2:WebView2
                     Source="{Binding URL}"
+                    
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    />
+                    >
+                        <b:Interaction.Behaviors>
+                            <behaviors:WebView2HtmlCaptureBehavior />
+                        </b:Interaction.Behaviors>
+                    </wv2:WebView2>
 
                 </Border>
             </Grid>
@@ -138,7 +148,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"></ColumnDefinition>
                             <ColumnDefinition Width="2*"></ColumnDefinition>
-           
+
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
 
@@ -197,7 +207,7 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
                             </localControls:MyTextBox.PopupControl>
                         </localControls:MyTextBox>
 
-                        
+
 
                         <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
 
@@ -408,6 +418,30 @@ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                 </TextBox>
 
                 <TextBlock x:Name="txt" Text="{Binding Name}" Width="Auto" FontWeight="Bold">
+
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+              
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasMessages}" Value="true">
+
+
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="Foreground" Value="#FFAA0000">
+                                        </Setter>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding HasMessages}" Value="false">
+
+
+                                    <DataTrigger.Setters>
+                                        <Setter   Property="Foreground" Value="Black">
+                                        </Setter>
+                                    </DataTrigger.Setters>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
                 </TextBlock>
 
             </StackPanel>
@@ -556,7 +590,7 @@ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
         </Style>
         <Style   TargetType="{x:Type TreeViewItem}">
             <Setter Property="Background" Value="Transparent" />
-                 <Setter Property="Padding" Value="1,0,0,0" />
+            <Setter Property="Padding" Value="1,0,0,0" />
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource TreeViewItemFocusVisual}" />
             <Setter Property="Template">
@@ -605,7 +639,33 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                                         <ColumnDefinition Width="4" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Rectangle Grid.Column="0" RadiusX="2" RadiusY="2" Fill="{Binding GitStatusBrush}" />
+                                    <Rectangle Grid.Column="0" RadiusX="2" RadiusY="2">
+                                        <Rectangle.Style>
+                                            <Style TargetType="Rectangle">
+                                                <Setter Property="Fill" Value="Transparent" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding GitStatus}" Value="{x:Static models:GitFileStatus.Modified}">
+                                                        <Setter Property="Fill" Value="#FFFFA500" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GitStatus}" Value="{x:Static models:GitFileStatus.Untracked}">
+                                                        <Setter Property="Fill" Value="#FF00C800" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GitStatus}" Value="{x:Static models:GitFileStatus.Deleted}">
+                                                        <Setter Property="Fill" Value="#FFFF0000" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GitStatus}" Value="{x:Static models:GitFileStatus.Staged}">
+                                                        <Setter Property="Fill" Value="#FF0096FF" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GitStatus}" Value="{x:Static models:GitFileStatus.Conflict}">
+                                                        <Setter Property="Fill" Value="#FFC800C8" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding GitStatus}" Value="{x:Static models:GitFileStatus.Ignored}">
+                                                        <Setter Property="Fill" Value="#FF808080" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Rectangle.Style>
+                                    </Rectangle>
                                     <ContentPresenter Grid.Column="1" Margin="2,2,2,2" x:Name="PART_Header" ContentSource="Header" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
                                 </Grid>
                             </Border>
@@ -1165,11 +1225,11 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
         <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Column="3" Grid.Row="1" Width="5" ShowsPreview="True" ResizeDirection="Columns" HorizontalAlignment="Center" 
                      VerticalAlignment="Stretch"  ></GridSplitter>
         <Grid Grid.Column="4" Grid.Row="1" >
-   
+
 
             <Grid Grid.Column="3" Grid.RowSpan="3">
                 <Grid.ColumnDefinitions>
-                    
+
                     <ColumnDefinition Width="1*"></ColumnDefinition>
                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
@@ -1243,7 +1303,7 @@ CanContentScroll="False">
                                             </ListBox>
                                         </Expander>
                                         <Expander Header="Undo Operations"  ExpandDirection="Down">
-                                            
+
                                             <Expander.Style>
                                                 <Style TargetType="Expander">
                                                     <Setter Property="Visibility" Value="Visible" />
@@ -1325,6 +1385,12 @@ CanContentScroll="False">
                 <TextBlock>
                     <Run Text="Branch: "></Run>
                     <Run Text="{Binding CurrentGitBranch}" />
+                </TextBlock>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock>
+                    <Run Text="Repo: "></Run>
+                    <Run Text="{Binding CurrentGitRepoRoot}" />
                 </TextBlock>
             </StatusBarItem>
         </StatusBar>

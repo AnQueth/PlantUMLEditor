@@ -193,7 +193,7 @@ namespace PlantUMLEditor {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        [global::System.Configuration.DefaultSettingValueAttribute("\\Templates")]
         public string TemplatePath {
             get {
                 return ((string)(this["TemplatePath"]));
@@ -248,6 +248,18 @@ namespace PlantUMLEditor {
             }
             set {
                 this["AzureAIDeployment"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2046")]
+        public int AzureAIMaxOutputTokens {
+            get {
+                return ((int)(this["AzureAIMaxOutputTokens"]));
+            }
+            set {
+                this["AzureAIMaxOutputTokens"] = value;
             }
         }
     }

@@ -25,7 +25,7 @@ using UMLModels;
 namespace PlantUMLEditor.Models
 {
 
-    internal abstract class TextDocumentModel : BaseDocumentModel, IAutoCompleteCallback
+    internal abstract class TextDocumentModel : BaseDocumentModel, IAutoCompleteCallback, ITextGetter
     {
         protected readonly IIOService _ioService;
 
@@ -54,7 +54,7 @@ namespace PlantUMLEditor.Models
         public TextDocumentModel(IIOService openDirectoryService,
             string fileName, string title, string content, Channel<bool> messageCheckerTrigger) : base(fileName, title)
         {
-          
+
 
 
             _messageCheckerTrigger = messageCheckerTrigger;
@@ -79,6 +79,11 @@ namespace PlantUMLEditor.Models
         }
 
         protected ITextEditor? TextEditor => _textEditor;
+
+        public Task<string> ReadContent()
+        {
+            return Task.FromResult(Content);
+        }
 
         public string Content
         {
@@ -266,6 +271,11 @@ namespace PlantUMLEditor.Models
         internal void ReportMessage(DocumentMessage d)
         {
             _textEditor?.ReportError(d.LineNumber, 0);
+        }
+
+        internal void ClearMessages()
+        {
+            _textEditor?.ClearErrors();
         }
 
         internal async Task Save()

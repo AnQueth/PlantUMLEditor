@@ -47,7 +47,7 @@ namespace PlantUMLEditor.Models
             DOCFXRunner.Run(FolderBase);
         }
 
-        private (List<string> files, string statusText) GetStatus(Dictionary<string, GitFileStatus> existingStatus = null)
+        private (List<string> files, string statusText) GetStatus(Dictionary<string, GitFileStatus> existingStatus)
         {
             List<string> files = new List<string>();
             var sb = new StringBuilder();

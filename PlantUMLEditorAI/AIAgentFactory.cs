@@ -13,6 +13,7 @@ namespace PlantUMLEditorAI
     public class AISettings
     {
 
+public int MaxOutputTokens { get; set; } = 2048;
         public string Endpoint { get; set; } = string.Empty;
         public string Key { get; set; } = string.Empty;
         public string Deployment { get; set; } = string.Empty;
@@ -59,16 +60,19 @@ namespace PlantUMLEditorAI
             // Register function tools
             var toolOptions = new ChatOptions
             {
-                Tools = tools.Select(d => (AITool) AIFunctionFactory.Create(d)).ToList()
+                Tools = tools.Select(d => (AITool) AIFunctionFactory.Create(d)).ToList(),
+                 MaxOutputTokens = settings.MaxOutputTokens
 
             };
 
             const string instructions = @"You are a plant uml expert to help users create and edit plantuml.
+        You have the ability read html content from current documents.
 Use the available tools. Ensure you verify any edits. Use tools to read and edit the current diagram.
 Assistant must not modify files without explicit user confirmation.
 For any proposed file edit, produce a diff and ask 'Apply changes? (yes/no)'. New files do not require confirmation.
 Only apply on an explicit 'yes'.
 When showing diffs, wrap it in ````diff` blocks for clarity.
+If you create a new diagram you do not need to repeat the diagram code back to the user.
 ";
 
 
@@ -77,7 +81,8 @@ When showing diffs, wrap it in ````diff` blocks for clarity.
             {
                 Instructions = instructions,
                 Name = "PlantUMLAI",
-                ChatOptions = toolOptions,
+                ChatOptions = toolOptions
+                 
             });
 
             // Add OpenTelemetry instrumentation (returns an AIAgent wrapper)

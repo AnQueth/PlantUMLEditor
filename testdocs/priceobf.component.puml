@@ -32,4 +32,5 @@ Randomizer -- RandomizedImage : Create From SourceSpriteStrip
 Randomizer -- Map : Create map for client side
 Randomizer -- ServerMap : Create map for server to see numbers
 Browser <-- ws : Serve either server rendered, or js powered number obfuscation
+
 @enduml

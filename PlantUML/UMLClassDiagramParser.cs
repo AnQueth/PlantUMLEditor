@@ -23,11 +23,11 @@ namespace PlantUML
 
         private static readonly Regex _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*(\\s+{|\\s+as\\s+(?<alias>\\w+)\\s+{)", RegexOptions.Compiled);
 
-        private static readonly Regex _classLine = new("(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)", RegexOptions.Compiled);
+        private static readonly Regex _classLine = new("(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)\\s*:*\\s*((?<type2>[\\w\\<\\>\\[\\]\\,\\s]+))*", RegexOptions.Compiled);
 
         private static readonly Regex _packageRegex = new("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"*[\\w\\W]*\\{", RegexOptions.Compiled);
 
-        private static readonly Regex _propertyLine = new(@"^\s*(?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+)\s*$", RegexOptions.Compiled);
+        private static readonly Regex _propertyLine = new(@"^\s*((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+))|((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<name>[\w_]+):(?<type>[\w\<\>\,\[\] \?]+))\s*$", RegexOptions.Compiled);
 
         private static readonly Regex _baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
@@ -251,7 +251,7 @@ namespace PlantUML
                     }
                     string? alias = g.Groups["alias"].Length > 0 ? g.Groups["alias"].Value : null;
 
-                    currentDataType = new UMLClass(stereotype, package, alias, 
+                    currentDataType = new UMLClass(stereotype, package, alias,
                         !string.IsNullOrEmpty(g.Groups["abstract"].Value)
                         , name, new List<UMLDataType>());
 
@@ -373,7 +373,7 @@ namespace PlantUML
                     }
                     if (cl != null && i != null)
                     {
-                        if(cl.Name == i.Name)
+                        if (cl.Name == i.Name)
                         {
                             d.Errors.Add(new UMLError("Base class cannot be the same as the derived class", second, lineNumber));
                             continue;
@@ -392,10 +392,10 @@ namespace PlantUML
 
                     if (m.Groups["text"].Success)
                     {
-                        string second = m.Groups["second"].Value;
+                        string second2 = m.Groups["second"].Value;
 
-                        UMLDataType? propType = d.DataTypes.Find(p => p.NonGenericName == second);
-                        if (propType == null)
+                        UMLDataType? propTyper = d.DataTypes.Find(p => string.Equals(p.NonGenericName, second2, StringComparison.Ordinal));
+                        if (propTyper == null)
                         {
                             d.AddLineError(line, lineNumber);
 
@@ -429,7 +429,7 @@ namespace PlantUML
                                     }
                                 }
 
-                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propType, UMLVisibility.Public, l, false, false, true));
+                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propTyper, UMLVisibility.Public, l, false, false, true));
                             }
                         }
                         continue;
@@ -450,6 +450,7 @@ namespace PlantUML
 
                     currentDataType.LineNumber = lineNumber;
                     currentPackage.Children.Add(currentDataType);
+                    bool inComment = false;
                     while ((line = await sr.ReadLineAsync()) != null)
                     {
                         lineNumber++;
@@ -458,6 +459,24 @@ namespace PlantUML
                         {
                             continue;
                         }
+
+                        if(line == "/'")
+                        {
+                            inComment = true;
+                            continue;
+                        }
+                        if(line == "'/")
+                        {
+                            inComment = false;
+                            continue;
+                        }
+                        if (inComment)
+                        {
+                            continue;
+                        }
+
+                        if (line.StartsWith('\''))
+                            continue;
 
                         if (line == "}")
                         {
@@ -469,7 +488,7 @@ namespace PlantUML
                             break;
                         }
 
-                        TryParseLineForDataType(line, aliases, currentDataType);
+                        TryParseLineForDataType(d, line, aliases, currentDataType);
                     }
                 }
                 else
@@ -525,7 +544,7 @@ namespace PlantUML
             return c;
         }
 
-        public static void TryParseLineForDataType(string line, Dictionary<string, UMLDataType> aliases, UMLDataType dataType)
+        public static void TryParseLineForDataType(UMLClassDiagram? diagram, string line, Dictionary<string, UMLDataType> aliases, UMLDataType dataType)
         {
             Match? methodMatch = _classLine.Match(line);
             if (methodMatch.Success)
@@ -545,6 +564,32 @@ namespace PlantUML
                 }
                 returntype = returntype.Trim();
 
+                string returntype2 = string.Empty;
+                for (int x = 0; x < methodMatch.Groups["type2"].Captures.Count; x++)
+                {
+                    if (x != 0)
+                    {
+                        returntype2 += " ";
+                    }
+                    returntype2 += methodMatch.Groups["type2"].Captures[x].Value;
+                }
+                returntype2 = returntype2.Trim();
+
+                if (!string.IsNullOrWhiteSpace(returntype2))
+                {
+                    returntype = returntype2;
+                }
+
+                // If return type wasn't captured in the C#-style group, attempt to read UML-style "): type" suffix.
+                if (string.IsNullOrWhiteSpace(returntype))
+                {
+                    var m = Regex.Match(line, @"\)\s*:\s*(?<rtype>.+)$");
+                    if (m.Success)
+                    {
+                        returntype = m.Groups["rtype"].Value.Trim();
+                    }
+                }
+
                 string modifier = methodMatch.Groups["modifier"].Value;
 
                 UMLDataType returnType;
@@ -561,81 +606,127 @@ namespace PlantUML
 
                 List<UMLParameter> pars = new();
 
-                Stack<char> p = new();
-                StringBuilder pname = new();
-                StringBuilder sbtype = new();
-                bool inName = false;
+                // Robust parameter tokenization that supports:
+                // - C# style: "int id, Product dto"
+                // - UML style: "id:int, dto:Product"
+                // - Generics with angle brackets (no splitting inside <>)
                 string v = methodMatch.Groups["params"].Value;
                 v = Regex.Replace(v, "\\s{2,}", " ");
-                for (int x = 0; x < v.Length; x++)
+
+                List<string> tokens = new();
+                StringBuilder current = new();
+                int genericDepth = 0;
+                for (int i = 0; i < v.Length; i++)
                 {
-                    char c = v[x];
-                    if (c == '<')
+                    char ch = v[i];
+                    if (ch == '<')
                     {
-                        p.Push(c);
+                        genericDepth++;
+                        current.Append(ch);
                     }
-                    else if (c == '>')
+                    else if (ch == '>')
                     {
-                        _ = p.Pop();
+                        if (genericDepth > 0) genericDepth--;
+                        current.Append(ch);
                     }
-
-                    if (c == ' ' && p.Count == 0)
+                    else if (ch == ',' && genericDepth == 0)
                     {
-                        if (sbtype.ToString() is not "out" and not "ref")
-                        {
-                            if (!inName)
-                            {
-                                inName = true;
-                            }
-                        }
-                        else
-                        {
-                            _ = sbtype.Append(c);
-                        }
-                    }
-                    else if ((c == ',' || x == v.Length - 1) && p.Count == 0)
-                    {
-                        if (c != ',')
-                        {
-                            _ = pname.Append(c);
-                        }
-
-                        CollectionRecord d = CreateFrom(sbtype.ToString());
-
-                        UMLDataType paramType;
-
-                        if (aliases.ContainsKey(d.Word))
-                        {
-                            paramType = aliases[d.Word];
-                        }
-                        else
-                        {
-                            paramType = new UMLDataType(d.Word, string.Empty);
-                            aliases.Add(d.Word, paramType);
-                        }
-
-                        pars.Add(new UMLParameter(pname.ToString().Trim(), paramType, d.ListType));
-
-                        _ = sbtype.Clear();
-                        _ = pname.Clear();
-                        inName = false;
-                        x++;
-                    }
-                    else if (inName)
-                    {
-                        _ = pname.Append(c);
+                        tokens.Add(current.ToString());
+                        current.Clear();
                     }
                     else
                     {
-                        _ = sbtype.Append(c);
+                        current.Append(ch);
                     }
+                }
+                if (current.Length > 0)
+                {
+                    tokens.Add(current.ToString());
+                }
+
+                foreach (var token in tokens)
+                {
+                    string tkn = token.Trim();
+                    if (string.IsNullOrEmpty(tkn))
+                    {
+                        continue;
+                    }
+
+                    string paramName = string.Empty;
+                    string typeString = string.Empty;
+
+                    // UML style: "name:type"
+                    int colonIndex = -1;
+                    int depth = 0;
+                    for (int i = 0; i < tkn.Length; i++)
+                    {
+                        char ch = tkn[i];
+                        if (ch == '<') depth++;
+                        else if (ch == '>') depth = Math.Max(0, depth - 1);
+                        else if (ch == ':' && depth == 0)
+                        {
+                            colonIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (colonIndex != -1)
+                    {
+                        paramName = tkn[..colonIndex].Trim();
+                        typeString = tkn[(colonIndex + 1)..].Trim();
+                    }
+                    else
+                    {
+                        // Fallback to C# style: "type name" or "ref/out type name"
+                        // find last space that is not inside generics
+                        int lastSpace = -1;
+                        depth = 0;
+                        for (int i = tkn.Length - 1; i >= 0; i--)
+                        {
+                            char ch = tkn[i];
+                            if (ch == '>') depth++;
+                            else if (ch == '<') depth = Math.Max(0, depth - 1);
+                            else if (ch == ' ' && depth == 0)
+                            {
+                                lastSpace = i;
+                                break;
+                            }
+                        }
+
+                        if (lastSpace != -1)
+                        {
+                            paramName = tkn[(lastSpace + 1)..].Trim();
+                            typeString = tkn[..lastSpace].Trim();
+                        }
+                        else
+                        {
+                            // If we cannot split, treat whole token as name (no type)
+                            paramName = tkn;
+                            typeString = string.Empty;
+                        }
+                    }
+
+                    // Normalize typeString (if empty, keep as empty string)
+                    CollectionRecord collection = CreateFrom(typeString);
+
+                    UMLDataType paramType;
+                    if (aliases.ContainsKey(collection.Word))
+                    {
+                        paramType = aliases[collection.Word];
+                    }
+                    else
+                    {
+                        paramType = new UMLDataType(collection.Word, string.Empty);
+                        aliases.Add(collection.Word, paramType);
+                    }
+
+                    pars.Add(new UMLParameter(paramName.Trim(), paramType, collection.ListType));
                 }
 
                 dataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
                 {
                     IsStatic = modifier == "static",
                     IsAbstract = modifier == "abstract"
-
                 });
             }
             else if (_propertyLine.IsMatch(line))
@@ -662,10 +753,19 @@ namespace PlantUML
 
                 dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType, modifier == "{static}", modifier == "{abstract}", false));
             }
+            else if (dataType is UMLEnum)
+            {
+                string enumValue = line.Trim().TrimEnd(',');
+                if (!string.IsNullOrEmpty(enumValue))
+                {
+                    dataType.Properties.Add(new UMLProperty(enumValue, new UMLDataType("int"), UMLVisibility.Public, ListTypes.None, false, false, false));
+                }
+
+            }
             else
             {
-                dataType.Properties.Add(new UMLProperty(line, new UMLDataType(string.Empty),
-                    UMLVisibility.None, ListTypes.None, false, false, false));
+                diagram?.Errors.Add(new UMLError("Could not parse method or property line", line, dataType.LineNumber));
+
             }
         }
     }

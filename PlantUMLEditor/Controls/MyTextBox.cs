@@ -458,6 +458,12 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         }
 
+        public void ClearErrors()
+        {
+            _errors.Clear();
+            ForceDraw();
+        }
+
         public void ReportError(int line, int character)
         {
             Error? e = new Error(line, character);

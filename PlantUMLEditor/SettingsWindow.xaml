@@ -18,6 +18,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -45,9 +46,11 @@
 
         <TextBlock Text="Azure AI Deployment:" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
         <TextBox Text="{Binding AzureAIDeployment, UpdateSourceTrigger=PropertyChanged}" Grid.Row="7" Grid.Column="1" Margin="5" />
+        <TextBlock Text="Azure AI Max Tokens:" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
+        <TextBox Text="{Binding AzureAIMaxOutputTokens, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" Margin="5" />
 
 
-        <StackPanel Orientation="Horizontal" Grid.Row="8" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5">
+        <StackPanel Orientation="Horizontal" Grid.Row="9" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5">
             <Button Content="Save" Width="100" Margin="5" Click="SaveButton_Click" />
             <Button Content="Cancel" Width="100" Margin="5" Click="CancelButton_Click" />
         </StackPanel>

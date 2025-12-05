@@ -22,6 +22,68 @@ namespace UmlTests
 
     public class Tests
     {
+
+        [Test]
+        public async Task ParseClass()
+        {
+            string uml = """
+            @startuml
+            package "Web" {
+  class ProductController <<controller>> {
+    +Index()
+    +Details(id:int)
+    +Create(dto:Product)
+    +Edit(id:int, dto:Product)
+    +Delete(id:int)
+  }
+
+  class ProductService <<service>> {
+ 
+  }
+
+  interface IProductService {
+    +GetAll(): List<Product>
+    +GetById(id:int): Product
+    +Create(dto:Product): void
+    +Update(id:int, dto:Product): void
+    +Delete(id:int): void
+  }
+
+  class Product {
+    -Id: int
+    -Name: string
+    -Description: string
+    -Price: decimal
+    -CategoryId: int
+  }
+
+  class ApplicationDbContext {
+    -Products: DbSet<Product>
+    -Categories: DbSet<Category>
+  }
+
+  class Category {
+    -Id: int
+    -Name: string
+  }
+}
+ 
+ 
+
+' Relationships
+ProductController ..> IProductService : uses
+IProductService <|.. ProductService
+ 
+ApplicationDbContext "1" o-- "*" Product : manages
+Product "*" -- "1" Category : belongs to
+#enduml
+""";
+
+            UMLClassDiagram? diagram = await UMLClassDiagramParser.ReadString(uml);
+        
+
+        }
+
         [Test]
         public void ClassDiagram1()
         {

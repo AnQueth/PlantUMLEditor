@@ -11,10 +11,11 @@ namespace PlantUMLEditor.Models
         private readonly Task _processor;
         private string? _text;
         private readonly ManualResetEventSlim _mre = new ManualResetEventSlim(false);
+        public const string Extension = ".tmp.backup";
 
         public TemporarySave(string fileName)
         {
-            _fileName = fileName + ".tmp";
+            _fileName = fileName + Extension;
             _running = true;
             _processor = SaveQueue();
 

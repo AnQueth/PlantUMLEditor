@@ -64,7 +64,7 @@ namespace PlantUMLEditor.Models
         public override bool IsFixable => true;
     }
 
-    public class DocumentMessage
+    public class DocumentMessage : BindingBase
     {
         public DocumentMessage(string fileName, string relativeFileName, int lineNumber, string text, bool warning = false)
         {
@@ -115,6 +115,13 @@ namespace PlantUMLEditor.Models
         public string Warning
         {
             get; init;
+        }
+
+        private int _sortOrder;
+        public int SortOrder
+        {
+            get => _sortOrder;
+            set => SetValue(ref _sortOrder, value);
         }
     }
 }
