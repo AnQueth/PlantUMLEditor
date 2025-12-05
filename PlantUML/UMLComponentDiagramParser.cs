@@ -16,7 +16,7 @@ namespace PlantUML
 
         // Component regex broken into smaller parts for better maintainability
         private static readonly Regex _componentBracketStyle = new(@"^\[(?<name>[^]]+)\]\s*(?:as\s+(?<alias>\w+))?\s*(?:<<(?<stereotype>[\w\s]+)>>)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _componentType = new(@"^(component|database|queue|actor)\s*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _componentType = new(@"^(component|database|queue|actor)\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentName = new(@"^(?:""(?<name>[^""]+)""|(?<name>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentAlias = new(@"^\s*as\s+(?<alias>\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentColor = new(@"^\s*(?<color>#(?:[0-9A-Fa-f]{3,6}|[A-Za-z]+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -324,11 +324,13 @@ namespace PlantUML
                         string package = GetPackage(packages);
                         if (line.Length > 8)
                         {
-                            DataType = new UMLInterface(package, Clean(g.Groups[PACKAGENAME].Value), g.Groups["alias"].Value,
+                            var alias = string.IsNullOrWhiteSpace(g.Groups["alias"].Value) ? g.Groups[PACKAGENAME].Value : g.Groups["alias"].Value;
+                            DataType = new UMLInterface(package, Clean(g.Groups[PACKAGENAME].Value), alias,
                                 new List<UMLDataType>());
-                            if(!aliases.TryAdd(g.Groups["alias"].Value, DataType))
+
+                            if(!aliases.TryAdd(alias, DataType))
                             {
-                                d.AddLineError($"Duplicate identifier : {g.Groups["alias"].Value}", linenumber);
+                                d.AddLineError($"Duplicate identifier : {alias}", linenumber);
                             }
                         }
                         if (line.EndsWith("{", StringComparison.Ordinal))
