@@ -107,7 +107,11 @@ namespace PlantUMLEditor.Models
 
 
 
+
+
         }
+
+ 
 
         public DelegateCommand<TreeViewModel> UndoGitChangesCommand { get; private set; }
         public MainModel(IIOService openDirectoryService,
@@ -120,6 +124,21 @@ namespace PlantUMLEditor.Models
                 return _cancelCurrentExecutingAction != null;
             });
 
+            OpenHyperlinkCommand = new DelegateCommand<Uri>((uri) =>
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = uri.ToString(),
+                        UseShellExecute = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex);
+                }
+            });
 
             UndoAIEditsCommand = new AsyncDelegateCommand<ObservableCollection<UndoOperation>>(UndoEditCommandHandler);
 
@@ -269,7 +288,7 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
+        public DelegateCommand<Uri> OpenHyperlinkCommand { get; }
         public bool CanClose
         {
             get;

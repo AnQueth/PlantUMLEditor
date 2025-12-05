@@ -21,6 +21,9 @@ namespace PlantUMLEditor.Models
             ConcurrentBag<GlobalFindResult> res = new();
 
             // Try to treat the search text as a regex. If it fails to compile, fall back to plain string search.
+
+            text = EscapeTextForRegex(text);
+
             Regex? regex = null;
             bool useRegex = false;
             try
@@ -70,6 +73,11 @@ namespace PlantUMLEditor.Models
             });
 
             return Task.FromResult(res.OrderBy(p => p.FileName).ThenBy(p => p.LineNumber).ToList());
+        }
+
+        private static string EscapeTextForRegex(string text)
+        {
+            return Regex.Escape(text);
         }
     }
 }

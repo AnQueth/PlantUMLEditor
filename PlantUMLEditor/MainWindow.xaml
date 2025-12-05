@@ -9,6 +9,7 @@
    xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:b="http://schemas.microsoft.com/xaml/behaviors" x:Class="PlantUMLEditor.MainWindow"
     xmlns:behaviors="clr-namespace:PlantUMLEditor.Behaviors"
+    xmlns:markdig="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
 
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
@@ -18,7 +19,9 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
     Top="{Binding UIModel.WindowTop, Mode=TwoWay}"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" Icon="/PlantUMLEditor;component/Images/uml.png">
 
-
+<Window.CommandBindings>
+        <CommandBinding Command="{x:Static markdig:Commands.Hyperlink}" Executed="HyperlinkExecuted" />
+</Window.CommandBindings>
     <b:Interaction.Triggers>
 
         <b:EventTrigger EventName="SizeChanged">

@@ -46,9 +46,9 @@ namespace PlantUMLEditor.Models
 
                 var renderer = new ChatWpfRenderer();
                 var doc = Markdig.Wpf.Markdown.ToFlowDocument(Message, pipeline, renderer);
-                var xaml = Markdig.Wpf.Markdown.ToXaml(Message, pipeline);
+             
 
-               // FlowDocumentCompactor.CompactFlowDocument(doc);
+           
             
 
                 return doc;

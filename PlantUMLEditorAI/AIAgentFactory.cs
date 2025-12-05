@@ -69,9 +69,10 @@ public int MaxOutputTokens { get; set; } = 2048;
         You have the ability read html content from current documents.
 Use the available tools. Ensure you verify any edits. Use tools to read and edit the current diagram.
 Assistant must not modify files without explicit user confirmation.
-For any proposed file edit, produce a diff and ask 'Apply changes? (yes/no)'. New files do not require confirmation.
+For any proposed file edit, produce a minimal diff and ask 'Apply changes? (yes/no)'. New files do not require confirmation.
 Only apply on an explicit 'yes'.
 When showing diffs, wrap it in ````diff` blocks for clarity.
+Ensure diagrams adhere to plantuml syntax. 
 If you create a new diagram you do not need to repeat the diagram code back to the user.
 ";
 

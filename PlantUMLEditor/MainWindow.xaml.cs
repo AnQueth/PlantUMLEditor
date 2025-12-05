@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Input;
 
 namespace PlantUMLEditor
 {
@@ -24,6 +25,14 @@ namespace PlantUMLEditor
             InitializeComponent();
             _model = new MainModel(new IOService(), new UMLDocumentCollectionSerialization(), this);
             DataContext = _model;
+        }
+        private void HyperlinkExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            if (DataContext is MainModel vm && Uri.TryCreate(e.Parameter.ToString(), UriKind.Absolute, out var uri))
+            {
+                if (vm.OpenHyperlinkCommand.CanExecute(uri))
+                    vm.OpenHyperlinkCommand.Execute(uri);
+            }
         }
 
         protected override void OnClosing(CancelEventArgs e)

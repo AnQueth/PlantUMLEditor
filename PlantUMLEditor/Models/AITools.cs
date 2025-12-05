@@ -36,8 +36,22 @@ namespace PlantUMLEditor.Models
 internal class AIToolsBase(ITextGetter _currentTdm,  
     Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase)
     {
-        
 
+        [Description("returns the contents of a url as text.")]
+        public async Task<string> FetchUrlContent([Description("the url to fetch")] string url)
+        {
+            using (var httpClient = new System.Net.Http.HttpClient())
+            {
+                try
+                {
+                    return await httpClient.GetStringAsync(url);
+                }
+                catch (Exception ex)
+                {
+                    return $"Error fetching URL content: {ex.Message}";
+                }
+            }
+        }
 
         [Description("reads the current text in the document.")]
         public async Task< string> ReadDocumentText()

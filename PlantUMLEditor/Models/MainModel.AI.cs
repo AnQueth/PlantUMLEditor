@@ -116,7 +116,8 @@ namespace PlantUMLEditor.Models
                         aiTools.RewriteDocument,
                         aiTools.SearchInDocuments,
                         aiTools.CreateNewDocument,
-                        aiTools.ReadDocumentText
+                        aiTools.ReadDocumentText,
+                        aiTools.FetchUrlContent
                 }
         );
             }
@@ -151,7 +152,8 @@ namespace PlantUMLEditor.Models
 
                         aiTools.SearchInDocuments,
                         aiTools.CreateNewDocument,
-                        aiTools.ReadDocumentText
+                        aiTools.ReadDocumentText,
+                        aiTools.FetchUrlContent
                 }
         );
             }

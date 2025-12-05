@@ -1,5 +1,8 @@
 ﻿using PlantUMLEditor.Controls;
+using System.Diagnostics;
 using System.Windows;
+using System.Windows.Documents;
+using System.Windows.Navigation;
 
 namespace PlantUMLEditor
 {
@@ -13,6 +16,9 @@ namespace PlantUMLEditor
             UMLColorCodingConfig.LoadFromSettings();
             MDColorCodingConfig.LoadFromSettings();
             base.OnStartup(e);
+
+      
+
         }
     }
 }
