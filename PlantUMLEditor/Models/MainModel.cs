@@ -111,7 +111,7 @@ namespace PlantUMLEditor.Models
 
         }
 
- 
+
 
         public DelegateCommand<TreeViewModel> UndoGitChangesCommand { get; private set; }
         public MainModel(IIOService openDirectoryService,
@@ -124,21 +124,7 @@ namespace PlantUMLEditor.Models
                 return _cancelCurrentExecutingAction != null;
             });
 
-            OpenHyperlinkCommand = new DelegateCommand<Uri>((uri) =>
-            {
-                try
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = uri.ToString(),
-                        UseShellExecute = true
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex);
-                }
-            });
+            OpenHyperlinkCommand = new DelegateCommand<Uri>(ExecuteUriLink);
 
             UndoAIEditsCommand = new AsyncDelegateCommand<ObservableCollection<UndoOperation>>(UndoEditCommandHandler);
 
@@ -231,9 +217,23 @@ namespace PlantUMLEditor.Models
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
 
+        private void ExecuteUriLink(Uri uri)
+        {
 
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = uri.ToString(),
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
 
-
+        }
 
         private int _selectedTab;
         private string _currentGitRepoRoot = string.Empty;
@@ -592,7 +592,7 @@ namespace PlantUMLEditor.Models
 
         public async void LoadedUI()
         {
-          
+
             await OpenDirectoryHandler(true);
 
             List<string>? files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
@@ -972,7 +972,7 @@ namespace PlantUMLEditor.Models
 
         private void OnFileRenamed(object sender, RenamedEventArgs e)
         {
-            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase) ))
+            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
             {
                 _messageCheckerTrigger.Writer.TryWrite(true);
             }
