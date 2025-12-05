@@ -5,54 +5,102 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlantUMLEditor"
         mc:Ignorable="d"
-        Title="Settings"   WindowStartupLocation="CenterScreen">
-    <Grid Margin="10">
+        Title="Settings" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI"
+        Background="#FFFFFF"
+        Height="600" Width="700">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
 
-        <TextBlock Text="DocFX Executable Path:" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding DocFXEXE, UpdateSourceTrigger=PropertyChanged}" Grid.Row="0" Grid.Column="1" Margin="5" />
+        <!-- Title -->
+        <TextBlock Text="Settings" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F1F1F" />
 
-        <TextBlock Text="GIT User:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding GITUser, UpdateSourceTrigger=PropertyChanged}" Grid.Row="1" Grid.Column="1" Margin="5" />
+        <!-- Settings ScrollViewer -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20">
+            <StackPanel>
+                <!-- Section: Paths -->
+                <Border Background="{StaticResource BackgroundSecondary}" CornerRadius="6" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Paths &amp; Locations" FontSize="14" FontWeight="SemiBold" Foreground="#1F1F1F"/>
+                        
+                        <StackPanel>
+                            <TextBlock Text="DocFX Executable Path:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding DocFXEXE, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
 
-        <TextBlock Text="GIT Email:" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding GITEmail, UpdateSourceTrigger=PropertyChanged}" Grid.Row="2" Grid.Column="1" Margin="5" />
-        <TextBlock Text="Plant UML Jar Location:" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding PlantUMLJarLocation, UpdateSourceTrigger=PropertyChanged}" Grid.Row="3" Grid.Column="1" Margin="5" />
-        <TextBlock Text="Templates Directory:" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding TemplatesDirectory, UpdateSourceTrigger=PropertyChanged}" Grid.Row="4" Grid.Column="1" Margin="5" />
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="Plant UML Jar Location:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding PlantUMLJarLocation, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
 
-        <TextBlock Text="Azure AI Endpoint:" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding AzureAIEndpoint, UpdateSourceTrigger=PropertyChanged}" Grid.Row="5" Grid.Column="1" Margin="5" />
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="Templates Directory:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding TemplatesDirectory, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
-        <TextBlock Text="Azure AI Key:" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding AzureAIKey, UpdateSourceTrigger=PropertyChanged}" Grid.Row="6" Grid.Column="1" Margin="5" />
+                <!-- Section: GIT -->
+                <Border Background="{StaticResource BackgroundSecondary}" CornerRadius="6" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="GIT Configuration" FontSize="14" FontWeight="SemiBold" Foreground="#1F1F1F"/>
+                        
+                        <StackPanel>
+                            <TextBlock Text="GIT User:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding GITUser, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
 
-        <TextBlock Text="Azure AI Deployment:" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding AzureAIDeployment, UpdateSourceTrigger=PropertyChanged}" Grid.Row="7" Grid.Column="1" Margin="5" />
-        <TextBlock Text="Azure AI Max Tokens:" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" Margin="5" />
-        <TextBox Text="{Binding AzureAIMaxOutputTokens, UpdateSourceTrigger=PropertyChanged}" Grid.Row="8" Grid.Column="1" Margin="5" />
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="GIT Email:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding GITEmail, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
 
+                <!-- Section: Azure AI -->
+                <Border Background="{StaticResource BackgroundSecondary}" CornerRadius="6" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="Azure AI Configuration" FontSize="14" FontWeight="SemiBold" Foreground="#1F1F1F"/>
+                        
+                        <StackPanel>
+                            <TextBlock Text="Azure AI Endpoint:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding AzureAIEndpoint, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="9" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="5">
-            <Button Content="Save" Width="100" Margin="5" Click="SaveButton_Click" />
-            <Button Content="Cancel" Width="100" Margin="5" Click="CancelButton_Click" />
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="Azure AI Key:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding AzureAIKey, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="Azure AI Deployment:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding AzureAIDeployment, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="Azure AI Max Output Tokens:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding AzureAIMaxOutputTokens, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Save" Width="100" Padding="8,8" Click="SaveButton_Click" Background="{StaticResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold"/>
+            <Button Content="Cancel" Width="100" Padding="8,8" Click="CancelButton_Click" Margin="8,0,0,0"/>
         </StackPanel>
     </Grid>
 </Window>

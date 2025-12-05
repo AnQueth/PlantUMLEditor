@@ -6,9 +6,15 @@
         xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
         xmlns:local="clr-namespace:PlantUMLEditor" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
-        Title="{Binding Title}" Height="1024" Width="1084" Icon="/PlantUMLEditor;component/Images/uml.png">
+        Title="{Binding Title}" Height="1024" Width="1084" Icon="/PlantUMLEditor;component/Images/uml.png"
+        FontFamily="Segoe UI"
+        Background="#FFFFFF">
     <Window.Resources>
-        <Thickness x:Key="Margin">5,5,5,5</Thickness>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
@@ -16,30 +22,36 @@
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Content="Print" Command="{Binding PrintImageCommand}" Margin="{DynamicResource Margin}" ToolTip="Print the image"></Button>
-            <Button Content="Copy" Command="{Binding CopyImage}" Margin="{DynamicResource Margin}" ToolTip="Copy the image for pasting"></Button>
-            <Button Content="Save" Command="{Binding SaveImageCommand}" Margin="{DynamicResource Margin}" ToolTip="Save image" />
+        
+        <!-- Toolbar -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="12,12,12,0">
+            <Button Content="Print" Command="{Binding PrintImageCommand}" ToolTip="Print the image" Padding="12,6" Width="80"/>
+            <Button Content="Copy" Command="{Binding CopyImage}" ToolTip="Copy the image for pasting" Padding="12,6" Width="80" Margin="8,0,0,0"/>
+            <Button Content="Save" Command="{Binding SaveImageCommand}" ToolTip="Save image" Padding="12,6" Width="80" Margin="8,0,0,0"/>
         </StackPanel>
-        <TextBlock Text="{Binding Messages}" Grid.Row="1"></TextBlock>
-        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" PanningMode="Both">
+        
+        <!-- Messages -->
+        <TextBlock Text="{Binding Messages}" Grid.Row="1" Margin="12" FontSize="12" Foreground="#666666"/>
+        
+        <!-- Image Viewer -->
+        <ScrollViewer Grid.Row="2" Padding="10" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" PanningMode="Both" Background="{StaticResource BackgroundSecondary}">
             <Behaviors:Interaction.Behaviors>
                 <Behaviors:TranslateZoomRotateBehavior />
             </Behaviors:Interaction.Behaviors>
             <localControls:PanAndZoomBorder>
-                <Image Source="{Binding Image}" Stretch="None" ></Image>
+                <Image Source="{Binding Image}" Stretch="None"/>
             </localControls:PanAndZoomBorder>
         </ScrollViewer>
-        <TextBlock Grid.Row="2" Text="Generating..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="Gray">
+        
+        <!-- Loading Message -->
+        <TextBlock Grid.Row="2" Text="Generating..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="#999999">
             <TextBlock.Style>
-                
                 <Style TargetType="TextBlock">
                     <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Image}" Value="{x:Null}">
                             <Setter Property="Visibility" Value="Visible" />
                         </DataTrigger>
-               
                     </Style.Triggers>
                 </Style>
             </TextBlock.Style>

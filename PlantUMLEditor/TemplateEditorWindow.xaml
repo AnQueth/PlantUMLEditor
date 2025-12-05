@@ -5,63 +5,114 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlantUMLEditor" xmlns:controls="clr-namespace:PlantUMLEditor.Controls"
         mc:Ignorable="d"
-        Title="Templates" Height="450" Width="800">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+        Title="Templates" Height="600" Width="1000" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI"
+        Background="#FFFFFF">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-           
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
-        <Grid>
+        
+        <!-- Title -->
+        <TextBlock Text="Template Editor" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F1F1F"/>
+        
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Name" VerticalAlignment="Center"></TextBlock>
-                <TextBox x:Name="NameOfNew" Width="200" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"></TextBox>
-                <Button Content="Add" Command="{Binding AddCommand}"  Margin="5"></Button>
-                <Button Content="Delete" Command="{Binding DeleteCommand}" Margin="5"></Button>
+
+            <!-- Left Panel: Template List -->
+            <StackPanel Grid.Row="0" Grid.Column="0">
+                <TextBlock Text="Templates" FontSize="14" FontWeight="SemiBold" Foreground="#1F1F1F" Margin="0,0,0,12"/>
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <TextBox x:Name="NameOfNew" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" 
+                             Padding="8,6" Height="32" VerticalContentAlignment="Center" 
+                             BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}" 
+                             Background="#FFFFFF" Foreground="#1F1F1F"
+                             Width="200" Margin="0,0,8,0"/>
+                    <Button Content="Add" Command="{Binding AddCommand}" 
+                            Padding="12,6" Height="32" Background="{StaticResource PrimaryAccent}" 
+                            Foreground="White" FontWeight="SemiBold" Margin="0,0,4,0"/>
+                    <Button Content="Delete" Command="{Binding DeleteCommand}" 
+                            Padding="12,6" Height="32" Background="#DC3545" 
+                            Foreground="White" FontWeight="SemiBold"/>
+                </StackPanel>
             </StackPanel>
-            <ListBox Grid.Row="1" SelectedItem="{Binding SelectedTemplate}" ItemsSource="{Binding Templates}">
+
+            <!-- Template ListBox -->
+            <ListBox Grid.Row="1" Grid.Column="0" SelectedItem="{Binding SelectedTemplate}" 
+                     ItemsSource="{Binding Templates}" 
+                     Background="#FFFFFF" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"
+                     Margin="0,0,0,12">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <TextBlock Text="{Binding Name}"></TextBlock>
+                        <TextBlock Text="{Binding Name}" Foreground="#1F1F1F" FontWeight="Medium" Padding="4,0"/>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="#1F1F1F"/>
+                        <Setter Property="Padding" Value="12,8"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E8F4FD"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
             </ListBox>
-        </Grid>
 
-        <GridSplitter Grid.Column="1" Width="5" ShowsPreview="True" HorizontalAlignment="Center" 
-              VerticalAlignment="Stretch" ></GridSplitter>
-        <Grid   Grid.Column="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <TextBlock>
-                <Run Text="Use {{name of tag}} to add fields to add at runtime."></Run>
-                <LineBreak/>
-                <Run Text="Text will be inserted at the cursor of the open document."></Run>
-            </TextBlock>
-            <TextBox HorizontalAlignment="Stretch" Grid.Row="1"
-     FontFamily="Cascadia Code" FontSize="14" AcceptsReturn="True" AcceptsTab="True" IsReadOnlyCaretVisible="True"
-                                VerticalAlignment="Stretch" 
-                                Text="{Binding SelectedTemplate.Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Grid.Column="2"></TextBox>
+            <!-- Grid Splitter -->
+            <GridSplitter Grid.Row="0" Grid.RowSpan="3" Grid.Column="1" Width="5" 
+                         ShowsPreview="True" HorizontalAlignment="Center" VerticalAlignment="Stretch" 
+                         Cursor="SizeWE" Background="{StaticResource BorderSubtle}" Margin="12,0"/>
 
-            <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right">
-                <Button Content="Save" Command="{Binding SaveCommand}" Margin="5"  CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"></Button>
-                <Button Content="Cancel"   Margin="5" Click="Button_Click"></Button>
-
+            <!-- Right Panel: Template Content -->
+            <StackPanel Grid.Row="0" Grid.Column="2">
+                <TextBlock Text="Template Content" FontSize="14" FontWeight="SemiBold" Foreground="#1F1F1F" Margin="0,0,0,8"/>
+                <TextBlock Text="Use {{name}} to add fields at runtime" FontSize="11" Foreground="#666666"/>
             </StackPanel>
-            
+
+            <!-- Content Editor -->
+            <Border Grid.Row="1" Grid.Column="2" Background="#FFFFFF" BorderThickness="1" 
+                   BorderBrush="{StaticResource BorderSubtle}" Margin="0,12,0,12" Padding="0">
+                <TextBox FontFamily="Cascadia Code" FontSize="12" AcceptsReturn="True" AcceptsTab="True" 
+                        IsReadOnlyCaretVisible="True" VerticalAlignment="Stretch" 
+                        Text="{Binding SelectedTemplate.Content, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Background="#FFFFFF" Foreground="#1F1F1F" BorderThickness="0" Padding="12"/>
+            </Border>
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Save" Command="{Binding SaveCommand}" 
+                        Padding="12,8" Height="36" Background="{StaticResource PrimaryAccent}" 
+                        Foreground="White" FontWeight="SemiBold" 
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Margin="0,0,8,0"/>
+                <Button Content="Cancel" Click="Button_Click" 
+                        Padding="12,8" Height="36" Background="{StaticResource BackgroundSecondary}" 
+                        Foreground="#1F1F1F" FontWeight="SemiBold" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"/>
+            </StackPanel>
         </Grid>
-        
     </Grid>
 </Window>

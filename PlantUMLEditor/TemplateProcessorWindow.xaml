@@ -5,34 +5,71 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PlantUMLEditor"
         mc:Ignorable="d"
-        Title="TemplateProcessorWindow" Height="450" Width="800">
-    <Grid>
+        Title="Process Template" Height="500" Width="900" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI"
+        Background="#FFFFFF">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ListView ItemsSource="{Binding Fields}" >
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" Width="Auto"/>
-                    <GridViewColumn Header="Value">
-                        <GridViewColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBox Width="500" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" />
 
-                            </DataTemplate>
-                        </GridViewColumn.CellTemplate>
-                    </GridViewColumn>
-                                </GridView>
-            </ListView.View>
-          
-              
-        
-            
-        </ListView>
+        <!-- Title -->
+        <TextBlock Text="Template Fields" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F1F1F"/>
 
-        <Button Grid.Row="1" Content="Process" HorizontalAlignment="Right" Margin="5"
-                Command="{Binding ProcessCommand}" 
-                CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" />
+        <!-- Fields ListView with Modern Styling -->
+        <Border Grid.Row="1" Background="#FFFFFF" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}">
+            <ListView ItemsSource="{Binding Fields}" Background="Transparent" BorderThickness="0">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Field Name" DisplayMemberBinding="{Binding Name}" Width="200"/>
+                        <GridViewColumn Header="Value" Width="600">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" 
+                                            Padding="8,6" Height="32" VerticalContentAlignment="Center"
+                                            BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"
+                                            Background="#FFFFFF" Foreground="#1F1F1F"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView>
+                </ListView.View>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="#1F1F1F"/>
+                        <Setter Property="Padding" Value="12,8"/>
+                        <Setter Property="BorderThickness" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="#E8F4FD"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="Process" 
+                    Padding="16,10" Height="40" Background="{StaticResource PrimaryAccent}" 
+                    Foreground="White" FontWeight="SemiBold" FontSize="13"
+                    Command="{Binding ProcessCommand}" 
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+        </StackPanel>
     </Grid>
 </Window>

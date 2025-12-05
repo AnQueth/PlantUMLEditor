@@ -1,54 +1,103 @@
 ﻿<Window x:Class="PlantUMLEditor.HelpWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Help" Height="261" Width="427" WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="107*"/>
-            <ColumnDefinition Width="43*"/>
-        </Grid.ColumnDefinitions>
+        Title="Help" Height="500" Width="600" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI"
+        Background="#FFFFFF">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Text="Keyboard Shortcuts" FontSize="20" FontWeight="Bold" Margin="10,10,10,10" Grid.ColumnSpan="2" />
-        <ListView Grid.Row="1" Margin="10,10,10,10" Grid.ColumnSpan="2">
-            <ListViewItem>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Ctrl + K" FontWeight="Bold" Width="150" />
-                    <TextBlock Text="Format with line breaks in place" />
-                </StackPanel>
-            </ListViewItem>
-            <ListViewItem>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Ctrl + L" FontWeight="Bold" Width="150" />
-                    <TextBlock Text="Format and remove line breaks" />
-                </StackPanel>
-            </ListViewItem>
-            <ListViewItem>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="Ctrl + S" FontWeight="Bold" Width="150" />
-                    <TextBlock Text="Save" />
-                </StackPanel>
-            </ListViewItem>
-            <ListViewItem>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="F12" FontWeight="Bold" Width="150" />
-                    <TextBlock Text="Goto definition" />
-                </StackPanel>
-            </ListViewItem>
-            <ListViewItem>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="F3" FontWeight="Bold" Width="150" />
-                    <TextBlock Text="Find word" />
-                </StackPanel>
-            </ListViewItem>
-            <ListViewItem>
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="F11" FontWeight="Bold" Width="150" />
-                    <TextBlock Text="Find all references" />
-                </StackPanel>
-            </ListViewItem>
-        </ListView>
+        
+        <TextBlock Text="Keyboard Shortcuts" FontSize="24" FontWeight="SemiBold" Margin="0,0,0,20" Foreground="#1F1F1F" />
+        
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <StackPanel.Resources>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{StaticResource BackgroundSecondary}"/>
+                        <Setter Property="CornerRadius" Value="6"/>
+                        <Setter Property="Padding" Value="12,10"/>
+                        <Setter Property="BorderThickness" Value="1"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
+                        <Setter Property="Margin" Value="0,8,0,0"/>
+                    </Style>
+                </StackPanel.Resources>
+                
+                <Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Ctrl + K" FontWeight="SemiBold" Foreground="{StaticResource PrimaryAccent}"/>
+                        <TextBlock Grid.Column="1" Text="Format with line breaks in place" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Ctrl + L" FontWeight="SemiBold" Foreground="{StaticResource PrimaryAccent}"/>
+                        <TextBlock Grid.Column="1" Text="Format and remove line breaks" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Ctrl + S" FontWeight="SemiBold" Foreground="{StaticResource PrimaryAccent}"/>
+                        <TextBlock Grid.Column="1" Text="Save" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="F12" FontWeight="SemiBold" Foreground="{StaticResource PrimaryAccent}"/>
+                        <TextBlock Grid.Column="1" Text="Goto definition" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="F3" FontWeight="SemiBold" Foreground="{StaticResource PrimaryAccent}"/>
+                        <TextBlock Grid.Column="1" Text="Find word" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <Border>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="F11" FontWeight="SemiBold" Foreground="{StaticResource PrimaryAccent}"/>
+                        <TextBlock Grid.Column="1" Text="Find all references" Margin="12,0,0,0"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

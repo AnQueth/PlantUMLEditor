@@ -44,12 +44,25 @@ namespace PlantUMLEditor.Models
             {
                 MarkdownPipeline? pipeline = new MarkdownPipelineBuilder().UseAdvancedExtensions().Build();
 
-                var doc = Markdig.Wpf.Markdown.ToFlowDocument(Message, pipeline);
+                var renderer = new ChatWpfRenderer();
+                var doc = Markdig.Wpf.Markdown.ToFlowDocument(Message, pipeline, renderer);
+                var xaml = Markdig.Wpf.Markdown.ToXaml(Message, pipeline);
 
-                FlowDocumentCompactor.CompactFlowDocument(doc);
+               // FlowDocumentCompactor.CompactFlowDocument(doc);
+            
 
                 return doc;
 
+            }
+        }
+
+        /// <summary>
+        /// Custom WPF renderer for chat messages using Markdig
+        /// </summary>
+        private class ChatWpfRenderer : Markdig.Renderers.WpfRenderer
+        {
+            public ChatWpfRenderer() : base()
+            {
             }
         }
 
@@ -63,7 +76,12 @@ namespace PlantUMLEditor.Models
             {
                 _message = value;
                 OnPropertyChanged(nameof(Message));
-                OnPropertyChanged(nameof(Document));
+                if (!string.IsNullOrEmpty(_message))
+                {
+
+
+                    OnPropertyChanged(nameof(Document));
+                }
             }
         }
 

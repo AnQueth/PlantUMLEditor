@@ -8,8 +8,8 @@
        
         Title="{Binding Title}" Height="1024" Width="1084" Icon="/PlantUMLEditor;component/Images/uml.png">
 
-    <Grid>
+    <Grid >
 
-        <FlowDocumentScrollViewer x:Name="Viewer"  Document="{Binding Document}" />
+        <FlowDocumentScrollViewer x:Name="Viewer"  Padding="10" Document="{Binding Document}" />
     </Grid>
 </Window>

@@ -3,59 +3,88 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:PlantUMLEditor.Controls"
-        Title="UML Color Coding" Height="285" Width="800" WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-                <ColumnDefinition/>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Select Start/End Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="0" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.StartEndColor), Mode=TwoWay}" Margin="10"/>
+        Title="UML Color Coding" Height="500" Width="900" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI"
+        Background="#FFFFFF">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <TextBlock Text="UML Color Coding Configuration" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,16" Foreground="#1F1F1F"/>
+        
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="Select Direction Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="0" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.DirectionColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 0 -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Start/End Color:" Margin="0,0,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="0" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.StartEndColor), Mode=TwoWay}"/>
 
-            <TextBlock Grid.Row="1" Grid.Column="0" Text="Select Keyword Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="1" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.KeywordColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Direction Color:" Margin="0,0,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="0" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.DirectionColor), Mode=TwoWay}"/>
 
-            <TextBlock Grid.Row="1" Grid.Column="2" Text="Select Port Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="1" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.PortColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 1 -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Keyword Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="1" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.KeywordColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <TextBlock Grid.Row="2" Grid.Column="0" Text="Select Control Flow Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="2" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.ControlFlowColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="Port Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="1" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.PortColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <TextBlock Grid.Row="2" Grid.Column="2" Text="Select Group Keyword Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="2" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.GroupKeywordColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 2 -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Control Flow Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="2" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.ControlFlowColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <TextBlock Grid.Row="3" Grid.Column="0" Text="Select Single Group Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="3" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.SingleGroupColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="Group Keyword Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="2" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.GroupKeywordColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <TextBlock Grid.Row="3" Grid.Column="2" Text="Select Bracket Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="3" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.BracketColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 3 -->
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Single Group Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="3" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.SingleGroupColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <TextBlock Grid.Row="4" Grid.Column="0" Text="Select Parenthesis Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="4" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.ParenthesisColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="3" Grid.Column="2" Text="Bracket Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="3" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.BracketColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <TextBlock Grid.Row="4" Grid.Column="2" Text="Select Note Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="4" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.NoteColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 4 -->
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="Parenthesis Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="4" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.ParenthesisColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <TextBlock Grid.Row="5" Grid.Column="0" Text="Select Comment Color:" Margin="10"/>
-            <xctk:ColorPicker Grid.Row="5" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.CommentColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="4" Grid.Column="2" Text="Note Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="4" Grid.Column="3" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.NoteColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-            <Button Grid.Row="5" Grid.Column="2" Content="Save" Click="SaveButton_Click" Margin="10"/>
-            <Button Grid.Row="5" Grid.Column="3" Content="Cancel" Click="CancelButton_Click" Margin="10"/>
-        </Grid>
+                <!-- Row 5 -->
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="Comment Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="5" Grid.Column="1" SelectedColor="{Binding Path=(local:UMLColorCodingConfig.CommentColor), Mode=TwoWay}" Margin="0,12,0,0"/>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Save" Width="100" Padding="8,8" Click="SaveButton_Click" Background="{StaticResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold"/>
+            <Button Content="Cancel" Width="100" Padding="8,8" Click="CancelButton_Click" Margin="8,0,0,0"/>
+        </StackPanel>
     </Grid>
 </Window>
 

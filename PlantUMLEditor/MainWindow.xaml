@@ -13,7 +13,7 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="Aaron's Plant UML Editor" Height="{Binding UIModel.WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding UIModel.WindowWidth, Mode=TwoWay, FallbackValue=1000}"
-FontFamily="Consolas Code"  Loaded="Window_Loaded"
+FontFamily="Segoe UI"  Loaded="Window_Loaded"
     Left="{Binding UIModel.WindowLeft, Mode=TwoWay}"
     Top="{Binding UIModel.WindowTop, Mode=TwoWay}"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" Icon="/PlantUMLEditor;component/Images/uml.png">
@@ -44,8 +44,42 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
         <SolidColorBrush x:Key="CustomColor" Color="#FF4D8DEA"></SolidColorBrush>
+        
+        <!-- Modern Color Palette -->
+        <SolidColorBrush x:Key="PrimaryAccent" Color="#007ACC"/>
+        <SolidColorBrush x:Key="PrimaryAccentHover" Color="#1E8AD6"/>
+        <SolidColorBrush x:Key="BackgroundSecondary" Color="#F3F3F3"/>
+        <SolidColorBrush x:Key="BackgroundHover" Color="#E8E8E8"/>
+        <SolidColorBrush x:Key="BorderSubtle" Color="#CCCCCC"/>
+        <SolidColorBrush x:Key="TextSecondary" Color="#616161"/>
+        <SolidColorBrush x:Key="SuccessColor" Color="#28A745"/>
+        <SolidColorBrush x:Key="WarningColor" Color="#FF9500"/>
+        
         <Style TargetType="GridSplitter">
-            <Setter Property="Background" Value="DarkGray"></Setter>
+            <Setter Property="Background" Value="{StaticResource BackgroundSecondary}"/>
+        </Style>
+
+        <!-- Modern MenuItem Styles -->
+        <Style TargetType="MenuItem">
+            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#1F1F1F"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+                </Trigger>
+                <Trigger Property="IsHighlighted" Value="True">
+                    <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style TargetType="Menu">
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="#1F1F1F"/>
+            <Setter Property="FontFamily" Value="Segoe UI"/>
         </Style>
         <ContextMenu x:Key="FolderMenu">
             <MenuItem Header="New Class Diagram" Command="{Binding DataContext.CreateNewClassDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
@@ -89,7 +123,10 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         <DataTemplate DataType="{x:Type models:ImageDocumentModel}">
 
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="3" CornerRadius="2" BorderBrush="Black">
+                <Border BorderThickness="1" CornerRadius="6" Margin="4" BorderBrush="{StaticResource BorderSubtle}">
+                    <Border.Effect>
+                        <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
+                    </Border.Effect>
                     <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto"  VerticalScrollBarVisibility="Auto" PanningMode="Both">
                         <Behaviors:Interaction.Behaviors>
                             <Behaviors:TranslateZoomRotateBehavior />
@@ -104,7 +141,10 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         <DataTemplate DataType="{x:Type models:UrlLinkDocumentModel}">
 
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="3" CornerRadius="2" BorderBrush="Black">
+                <Border BorderThickness="1" CornerRadius="6" Margin="4" BorderBrush="{StaticResource BorderSubtle}">
+                    <Border.Effect>
+                        <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
+                    </Border.Effect>
                     <wv2:WebView2
                     Source="{Binding URL}"
                     
@@ -121,23 +161,22 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         </DataTemplate>
         <DataTemplate DataType="{x:Type models:TextDocumentModel}">
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="3" CornerRadius="2">
-
+                <Border BorderThickness="1" CornerRadius="6" Margin="4">
+                    <Border.Effect>
+                        <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
+                    </Border.Effect>
                     <Border.Style>
                         <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsDirty}" Value="true">
                                     <DataTrigger.Setters>
-                                        <Setter   Property="BorderBrush" Value="#FFAA0000">
-                                        </Setter>
-
+                                        <Setter Property="BorderBrush" Value="{StaticResource WarningColor}"/>
                                     </DataTrigger.Setters>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsDirty}" Value="false">
                                     <DataTrigger.Setters>
-                                        <Setter   Property="BorderBrush" Value="Green">
-                                        </Setter>
-
+                                        <Setter Property="BorderBrush" Value="{StaticResource SuccessColor}"/>
                                     </DataTrigger.Setters>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -209,9 +248,10 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
 
 
 
-                        <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
+                        <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch" Cursor="SizeNS"></GridSplitter>
 
-                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black"
+                        <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"
+                                CornerRadius="4" Margin="4" Background="{StaticResource BackgroundSecondary}"
                                 Width="{Binding Width, ElementName=Editor}">
 
                             <Grid Width="{Binding ActualWidth, ElementName=Editor}">
@@ -259,23 +299,22 @@ FontFamily="Consolas Code"  Loaded="Window_Loaded"
         </DataTemplate>
         <DataTemplate DataType="{x:Type models:MDDocumentModel}">
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="3" CornerRadius="2">
-
+                <Border BorderThickness="1" CornerRadius="6" Margin="4">
+                    <Border.Effect>
+                        <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
+                    </Border.Effect>
                     <Border.Style>
                         <Style TargetType="Border">
+                            <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsDirty}" Value="true">
                                     <DataTrigger.Setters>
-                                        <Setter   Property="BorderBrush" Value="#FFAA0000">
-                                        </Setter>
-
+                                        <Setter Property="BorderBrush" Value="{StaticResource WarningColor}"/>
                                     </DataTrigger.Setters>
                                 </DataTrigger>
                                 <DataTrigger Binding="{Binding IsDirty}" Value="false">
                                     <DataTrigger.Setters>
-                                        <Setter   Property="BorderBrush" Value="Green">
-                                        </Setter>
-
+                                        <Setter Property="BorderBrush" Value="{StaticResource SuccessColor}"/>
                                     </DataTrigger.Setters>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -344,7 +383,7 @@ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                             </localControls:MyTextBox.PopupControl>
                         </localControls:MyTextBox>
 
-                        <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch"  ></GridSplitter>
+                        <GridSplitter Grid.Row="1" Grid.Column="1" ShowsPreview="True" ResizeDirection="Rows"  HorizontalAlignment="Stretch" Cursor="SizeNS"></GridSplitter>
 
                         <Border Grid.Row="2" Grid.Column="1" BorderThickness="1" BorderBrush="Black"
                                Width="{Binding Width, ElementName=Editor}">
@@ -633,7 +672,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                                 <RowDefinition />
                             </Grid.RowDefinitions>
                             <ToggleButton x:Name="Expander" ClickMode="Press" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource ExpandCollapseToggleStyle}" />
-                            <Border x:Name="Bd" CornerRadius="10" HorizontalAlignment="Stretch"  Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Grid.Column="1" Padding="{TemplateBinding Padding}" SnapsToDevicePixels="true">
+                            <Border x:Name="Bd" CornerRadius="4" HorizontalAlignment="Stretch"  Background="{TemplateBinding Background}" BorderThickness="0" BorderBrush="{TemplateBinding BorderBrush}" Grid.Column="1" Padding="4,3" SnapsToDevicePixels="true">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="4" />
@@ -679,7 +718,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                                 <Setter Property="Visibility" TargetName="Expander" Value="Hidden" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="true">
-                                <Setter Property="Background" TargetName="Bd" Value="{DynamicResource CustomColor}" />
+                                <Setter Property="Background" TargetName="Bd" Value="{StaticResource PrimaryAccent}" />
                                 <Setter Property="Foreground" Value="White" />
                             </Trigger>
                             <MultiTrigger>
@@ -738,26 +777,39 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             </Style.Triggers>
         </Style>
 
-        <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF" />
-        <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC" />
+        <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#F0F7FF" />
+        <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#007ACC" />
+        <SolidColorBrush x:Key="TabItem.Hover.Background" Color="#F5F5F5" />
         <DataTemplate x:Key="TextDocumentTabHeader">
 
-            <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="1" MinWidth="300">
+            <Border BorderThickness="0,0,0,3" Margin="4,2,4,0" CornerRadius="6,6,0,0" MinWidth="300">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="0" BlurRadius="2" Opacity="0.08"/>
+                </Border.Effect>
                 <Border.Style>
                     <Style TargetType="Border">
+                        <Setter Property="Background" Value="{StaticResource BackgroundSecondary}"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding IsDirty}" Value="true">
                                 <DataTrigger.Setters>
-                                    <Setter   Property="BorderBrush" Value="#FFAA0000">
-                                    </Setter>
+                                    <Setter Property="BorderBrush" Value="{StaticResource WarningColor}"/>
                                 </DataTrigger.Setters>
                             </DataTrigger>
                             <DataTrigger Binding="{Binding IsDirty}" Value="false">
                                 <DataTrigger.Setters>
-                                    <Setter   Property="BorderBrush" Value="Green">
-                                    </Setter>
+                                    <Setter Property="BorderBrush" Value="{StaticResource SuccessColor}"/>
                                 </DataTrigger.Setters>
                             </DataTrigger>
+                            <DataTrigger Binding="{Binding Visible}" Value="0">
+                                <DataTrigger.Setters>
+                                    <Setter Property="Background" Value="{StaticResource TabItem.Selected.Background}"/>
+                                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryAccent}"/>
+                                </DataTrigger.Setters>
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+                            </Trigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
@@ -766,7 +818,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <Style TargetType="Grid">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Visible}" Value="0">
-                                    <Setter Property="Background"  Value="{DynamicResource CustomColor}"></Setter>
+                                    <Setter Property="Background"  Value="{StaticResource TabItem.Selected.Background}"></Setter>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -781,7 +833,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <ColumnDefinition Width="*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 
-                    <Button ToolTip="Save"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                    <Button ToolTip="Save"  Margin="4,4" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
+                            Opacity="0.7">
 
                         <Button.Content>
                             <Grid>
@@ -789,7 +842,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             </Grid>
                         </Button.Content>
                     </Button>
-                    <Button ToolTip="Save and Close"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                    <Button ToolTip="Save and Close"  Margin="4,4" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
+                            Opacity="0.7">
                         <Button.Content>
                             <Grid>
                                 <Image Source="/PlantUMLEditor;component/Images/SaveClose_16x.png"></Image>
@@ -797,15 +851,17 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         </Button.Content>
                     </Button>
 
-                    <Button ToolTip="Close without saving"  Margin="{DynamicResource TabHeaderMargin}" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}">
+                    <Button ToolTip="Close without saving"  Margin="4,4" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
+                            Opacity="0.7">
                         <Button.Content>
                             <Grid>
                                 <Image Source="/PlantUMLEditor;component/Images/Close_8x_16x.png" ></Image>
                             </Grid>
                         </Button.Content>
                     </Button>
-                    <Button  ToolTip="Preview" Margin="{DynamicResource TabHeaderMargin}" Grid.Column="3" 
-                                             Command="{Binding  ShowPreviewCommand}">
+                    <Button  ToolTip="Preview" Margin="4,4" Grid.Column="3" 
+                                             Command="{Binding  ShowPreviewCommand}"
+                            Opacity="0.7">
 
                         <Button.Content>
                             <Grid>
@@ -816,10 +872,11 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                     <Label 
                             Grid.Column="4" 
                            IsHitTestVisible="True"
-                            FontWeight="ExtraBold"
+                            FontWeight="SemiBold"
+                            FontSize="11"
                             VerticalAlignment="Center"  
                             Content="{Binding Title}"
-                            Margin="{DynamicResource TabHeaderMargin}">
+                            Margin="8,4,8,4">
                         <b:Interaction.Triggers>
 
                             <b:EventTrigger EventName="MouseDown">
@@ -837,16 +894,29 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
         </DataTemplate>
         <DataTemplate x:Key="ImageDocumentTabHeader">
 
-            <Border BorderThickness="2" Margin="2,2,2,0" CornerRadius="1" MinWidth="300"  BorderBrush="Black">
+            <Border BorderThickness="0,0,0,3" Margin="4,2,4,0" CornerRadius="6,6,0,0" MinWidth="300" BorderBrush="{StaticResource SuccessColor}">
+                <Border.Effect>
+                    <DropShadowEffect ShadowDepth="0" BlurRadius="2" Opacity="0.08"/>
+                </Border.Effect>
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="{StaticResource BackgroundSecondary}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
 
                 <Grid IsHitTestVisible="True">
                     <Grid.Style>
                         <Style TargetType="Grid">
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Visible}" Value="0">
-                                    <Setter Property="Background"  Value="{DynamicResource CustomColor}"></Setter>
-                                </DataTrigger>
-                            </Style.Triggers>
+                                    <DataTrigger Binding="{Binding Visible}" Value="0">
+                                        <Setter Property="Background"  Value="{StaticResource TabItem.Selected.Background}"></Setter>
+                                    </DataTrigger>
+                                </Style.Triggers>
                         </Style>
                     </Grid.Style>
 
@@ -910,7 +980,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <ToolBar    Grid.ColumnSpan="5">
+        <ToolBar    Grid.ColumnSpan="5" Background="{StaticResource BackgroundSecondary}" 
+                    Padding="8,4" BorderThickness="0,0,0,1" BorderBrush="{StaticResource BorderSubtle}">
 
             <Button   Command="{Binding OpenDirectoryCommand}"  ToolTip="Open Directory">
                 <Image Source="/PlantUMLEditor;component/Images/OpenFolder_16x.png"></Image>
@@ -937,7 +1008,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="0,0,20,0"></TextBlock>
                             <Button Grid.Column="1" Margin="1" Command="{Binding  Path=DataContext.DeleteMRUCommand,  RelativeSource={RelativeSource FindAncestor,
-AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consolas">
+AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Segoe UI">
                                 <Button.Content>X</Button.Content>
                             </Button>
                         </Grid>
@@ -946,7 +1017,7 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consola
             </ComboBox>
 
             <Menu HorizontalAlignment="Center" VerticalAlignment="Center">
-                <MenuItem Header="Tools"  Margin="0,0,0,0" FontFamily="Consolas Code">
+                <MenuItem Header="Tools"  Margin="0,0,0,0" FontFamily="Segoe UI">
                     <MenuItem Header="Settings">
 
 
@@ -1021,7 +1092,7 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Consola
                       Grid.Row="0" Grid.RowSpan="1"  ItemsSource="{Binding Folder.Children}">
 
             </TreeView>
-            <GridSplitter Grid.Row="1" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" ></GridSplitter>
+            <GridSplitter Grid.Row="1" Height="5" ShowsPreview="True" HorizontalAlignment="Stretch" Cursor="SizeNS"></GridSplitter>
             <ListView Grid.Row="2"  ItemsSource="{Binding DataTypes}">
                 <b:Interaction.Triggers>
                     <b:EventTrigger EventName="SelectionChanged">
@@ -1041,7 +1112,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
         </Grid>
 
         <GridSplitter     HorizontalAlignment="Center" 
-              VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" />
+              VerticalAlignment="Stretch" Grid.Row="1" Grid.Column="1" ShowsPreview="True" Width="5" Cursor="SizeWE" />
         <Grid Grid.Row="1" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"></RowDefinition>
@@ -1068,36 +1139,56 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                           >
                 </ItemsControl>
             </Grid>
-            <GridSplitter Grid.Row="1" ShowsPreview="True"  Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch"></GridSplitter>
-            <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedToolTab, Mode=TwoWay}">
-                <TabItem >
-
+            <GridSplitter Grid.Row="1" ShowsPreview="True"  Height="5" ResizeDirection="Rows" HorizontalAlignment="Stretch" Cursor="SizeNS"></GridSplitter>
+            <TabControl Grid.Row="2" SelectedIndex="{Binding SelectedToolTab, Mode=TwoWay}" Background="White" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,1,0,0">
+                <TabControl.Resources>
+                    <Style TargetType="TabItem">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="TabItem">
+                                    <Grid>
+                                        <Border Name="Border" Background="{StaticResource BackgroundSecondary}" BorderBrush="{StaticResource BorderSubtle}" BorderThickness="0,0,1,0" Padding="12,8">
+                                            <ContentPresenter x:Name="ContentSite" VerticalAlignment="Center" HorizontalAlignment="Center" ContentSource="Header" Margin="0" RecognizesAccessKey="True" />
+                                        </Border>
+                                    </Grid>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsSelected" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="White" />
+                                            <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource PrimaryAccent}" />
+                                            <Setter TargetName="Border" Property="BorderThickness" Value="0,0,1,3" />
+                                            <Setter Property="Foreground" Value="{StaticResource PrimaryAccent}" />
+                                            <Setter Property="FontWeight" Value="SemiBold" />
+                                        </Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="Border" Property="Background" Value="{StaticResource BackgroundHover}" />
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Setter Property="FontFamily" Value="Segoe UI" />
+                        <Setter Property="FontSize" Value="12" />
+                    </Style>
+                </TabControl.Resources>
+                <TabItem>
+                    <TabItem.Header>Errors</TabItem.Header>
                     <TabItem.Style>
                         <Style TargetType="TabItem">
-
+                            <Setter Property="Foreground" Value="Red"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Messages.Count}" Value="0">
-                                    <Setter Property="Foreground" Value="Green">
-                                    </Setter>
+                                    <Setter Property="Foreground" Value="{StaticResource SuccessColor}"/>
                                 </DataTrigger>
                             </Style.Triggers>
-                            <Style.Setters>
-                                <Setter Property="Foreground" Value="Red">
-                                </Setter>
-                            </Style.Setters>
                         </Style>
                     </TabItem.Style>
-                    <TabItem.Header>Errors</TabItem.Header>
                     <DataGrid SelectionMode="Single" IsReadOnly="True"
                               Grid.Row="2"
-                              AutoGenerateColumns="False"  ItemsSource="{Binding Source={StaticResource GroupedMessages}}" Margin="{DynamicResource TabHeaderMargin}"  
+                              AutoGenerateColumns="False"  ItemsSource="{Binding Source={StaticResource GroupedMessages}}" Margin="0"
                            HorizontalContentAlignment="Stretch"
-                              
                                  SelectedItem="{Binding SelectedMessage}">
                         <DataGrid.Resources>
-
-
-                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="Cyan"/>
+                            <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#E8F4FD"/>
                         </DataGrid.Resources>
                         <DataGrid.GroupStyle>
                             <GroupStyle>
@@ -1223,7 +1314,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
         </Grid>
 
         <GridSplitter ResizeBehavior="PreviousAndNext" Grid.Column="3" Grid.Row="1" Width="5" ShowsPreview="True" ResizeDirection="Columns" HorizontalAlignment="Center" 
-                     VerticalAlignment="Stretch"  ></GridSplitter>
+                     VerticalAlignment="Stretch" Cursor="SizeWE"></GridSplitter>
         <Grid Grid.Column="4" Grid.Row="1" >
 
 
@@ -1231,16 +1322,15 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                 <Grid.ColumnDefinitions>
 
                     <ColumnDefinition Width="1*"></ColumnDefinition>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                 
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"></RowDefinition>
+                
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
-                <Button Content="New Chat" Grid.Column="1" Command="{Binding NewChatCommand}"></Button>
-                <ScrollViewer  
-                  Grid.ColumnSpan="2" Grid.Row="1"
+                     <ScrollViewer  
+             
 HorizontalScrollBarVisibility="Disabled"
 VerticalScrollBarVisibility="Auto" x:Name="ChatScroll"
 CanContentScroll="False">
@@ -1256,7 +1346,7 @@ CanContentScroll="False">
                         <ItemsControl.ItemTemplate>
 
                             <DataTemplate>
-                                <Border BorderThickness="1" CornerRadius="5"  BorderBrush="Gray" Margin="5"   >
+                                <Border BorderThickness="1" CornerRadius="5" Padding="4" BorderBrush="Gray" Margin="5"   >
                                     <Border.Style>
                                         <Style TargetType="Border">
                                             <Style.Triggers>
@@ -1269,7 +1359,7 @@ CanContentScroll="False">
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding IsUser}" Value="False">
                                                     <DataTrigger.Setters>
-                                                        <Setter   Property="Background" Value="LightGray">
+                                                        <Setter   Property="Background" Value="WhiteSmoke">
                                                         </Setter>
                                                     </DataTrigger.Setters>
                                                 </DataTrigger>
@@ -1342,7 +1432,7 @@ CanContentScroll="False">
                                                     <Setter Property="Visibility" Value="Visible" />
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsBusy}" Value="False">
-                                                            <Setter Property="Visibility" Value="Hidden" />
+                                                            <Setter Property="Visibility" Value="Collapsed" />
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
@@ -1350,7 +1440,7 @@ CanContentScroll="False">
                                           Running
                                         </TextBlock>
 
-                                        <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" Padding="5" FontFamily="Cascadia Code" Document="{Binding Document}"  >
+                                        <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" Padding="5" Document="{Binding Document}"  >
                                             <b:Interaction.Behaviors>
                                                 <behaviors:BubbleMouseWheelToChatScrollBehavior />
                                             </b:Interaction.Behaviors>
@@ -1362,19 +1452,38 @@ CanContentScroll="False">
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <TextBox Grid.Row="2"  FontFamily="Cascadia Code"  AcceptsReturn="False" AcceptsTab="True" Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                    <b:Interaction.Triggers>
-                        <b:KeyTrigger Key="Return" ActiveOnFocus="True">
-                            <b:InvokeCommandAction Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}" />
-                        </b:KeyTrigger>
-                    </b:Interaction.Triggers>
+                <Border Grid.Row="1"  BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" Background="{StaticResource BackgroundSecondary}" Padding="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Content="New Chat" Margin="0,0,10,0"   Command="{Binding NewChatCommand}"></Button>
 
-                </TextBox>
-                <Button Grid.Row="2" Grid.Column="1" Content="Send" Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}"></Button>
+                        <TextBox Grid.Column="1" FontFamily="Segoe UI" FontSize="12" AcceptsReturn="False" AcceptsTab="True"
+                                 Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 Padding="10,8" MinHeight="40" MaxHeight="100"
+                                 VerticalScrollBarVisibility="Auto"
+                                 BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"
+                                 Background="{StaticResource BackgroundMain}">
+                            <b:Interaction.Triggers>
+                                <b:KeyTrigger Key="Return" ActiveOnFocus="True">
+                                    <b:InvokeCommandAction Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}" />
+                                </b:KeyTrigger>
+                            </b:Interaction.Triggers>
+                        </TextBox>
+                        <Button Grid.Column="2" Content="Send" Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}"
+                                Padding="14,10" MinWidth="80" Height="40" Margin="8,0,0,0"
+                                Background="{StaticResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                    </Grid>
+                </Border>
             </Grid>
         </Grid>
 
-        <StatusBar Grid.Row="2" Grid.ColumnSpan="5">
+        <StatusBar Grid.Row="2" Grid.ColumnSpan="5" Background="{StaticResource BackgroundSecondary}"
+                   BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" 
+                   Padding="8,4" Height="28">
             <StatusBarItem>
                 <Button Command="{Binding CancelExecutingAction}">Cancel</Button>
             </StatusBarItem>
@@ -1400,11 +1509,11 @@ CanContentScroll="False">
 
 
 
-                <Border BorderThickness="2" CornerRadius="10" BorderBrush="Black" Background="White">
+                <Border BorderThickness="1" CornerRadius="8" BorderBrush="{StaticResource BorderSubtle}" Background="White">
                     <Border.Effect>
-                        <DropShadowEffect Direction="315"  ShadowDepth="10" BlurRadius="10"  Opacity="0.5" />
+                        <DropShadowEffect Direction="315"  ShadowDepth="8" BlurRadius="16"  Opacity="0.3" />
                     </Border.Effect>
-                    <Grid Margin="10,10,10,10">
+                    <Grid Margin="16">
                         <Grid.RowDefinitions>
                             <RowDefinition></RowDefinition>
                             <RowDefinition></RowDefinition>
@@ -1413,8 +1522,8 @@ CanContentScroll="False">
                             <ColumnDefinition></ColumnDefinition>
                             <ColumnDefinition></ColumnDefinition>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.ColumnSpan="2" Background="White" Margin="5,5,5,5">You have unsaved changes. Continue closing?</TextBlock>
-                        <Button Grid.Row="1" Margin="5,5,5,5">
+                        <TextBlock Grid.ColumnSpan="2" Background="White" Margin="8" FontSize="14" TextWrapping="Wrap">You have unsaved changes. Continue closing?</TextBlock>
+                        <Button Grid.Row="1" Margin="8,12,4,8" Padding="16,8">
                             <Button.Content>Yes</Button.Content>
 
                             <b:Interaction.Triggers>
@@ -1425,7 +1534,7 @@ CanContentScroll="False">
                                 </b:EventTrigger>
                             </b:Interaction.Triggers>
                         </Button>
-                        <Button Grid.Row="1" Grid.Column="1" Margin="5,5,5,5">
+                        <Button Grid.Row="1" Grid.Column="1" Margin="4,12,8,8" Padding="16,8">
                             <Button.Content>No</Button.Content>
 
                             <b:Interaction.Triggers>

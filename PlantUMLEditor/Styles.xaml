@@ -1,10 +1,178 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:localControls="clr-namespace:PlantUMLEditor.Controls">
+                    xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
+                    xmlns:markdig="clr-namespace:Markdig.Wpf;assembly=Markdig.Wpf"
+                    xmlns:helpers="clr-namespace:PlantUMLEditor.Models"
+                    xmlns:System="clr-namespace:System;assembly=System.Runtime">
+
+
+
+    <Style TargetType="{x:Type FlowDocument}" x:Key="{x:Static markdig:Styles.DocumentStyleKey}">
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="PagePadding" Value="0"/>
+        <Setter Property="FontSize" Value="14"/>
+
+    </Style>
+ 
+    <Style TargetType="{x:Type List}">
+        <Setter Property="Margin" Value="20,0,0,0" />
+        <Setter Property="Padding" Value="0,0,0,0" />
+    </Style>
+    <!-- Default paragraph spacing -->
+    <Style TargetType="{x:Type Paragraph}">
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+    <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static markdig:Styles.CodeBlockStyleKey}">
+        <Setter Property="Background" Value="#ffd3d3d3" />
+        <Setter Property="FontFamily" Value="Consolas, Lucida Sans Typewriter, Courier New" />
+    </Style>
+    <Style TargetType="{x:Type Run}" x:Key="{x:Static markdig:Styles.CodeStyleKey}">
+        <Setter Property="Background" Value="#ffd3d3d3" />
+        <Setter Property="FontFamily" Value="Consolas, Lucida Sans Typewriter, Courier New" />
+    </Style>
+    <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static markdig:Styles.Heading1StyleKey}">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="Foreground" Value="#ff000000" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static markdig:Styles.Heading2StyleKey}">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="Foreground" Value="#ff000000" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static markdig:Styles.Heading3StyleKey}">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Foreground" Value="#ff000000" />
+        <Setter Property="FontWeight" Value="Bold" />
+    </Style>
+    <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static markdig:Styles.Heading4StyleKey}">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="Foreground" Value="#ff000000" />
+        <Setter Property="FontWeight" Value="Light" />
+        <Setter Property="TextDecorations" Value="Underline" />
+    </Style>
+    <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static markdig:Styles.Heading5StyleKey}">
+        <!-- no changes -->
+    </Style>
+    <Style TargetType="{x:Type Paragraph}" x:Key="{x:Static markdig:Styles.Heading6StyleKey}">
+        <!-- no changes -->
+    </Style>
+    <Style TargetType="{x:Type Hyperlink}" x:Key="{x:Static markdig:Styles.HyperlinkStyleKey}">
+        <!-- no changes -->
+    </Style>
+    <Style TargetType="{x:Type Image}" x:Key="{x:Static markdig:Styles.ImageStyleKey}">
+        <Setter Property="MaxHeight" Value="{Binding RelativeSource={RelativeSource Self}, Path=Source.(BitmapSource.PixelHeight)}" />
+        <Setter Property="MaxWidth" Value="{Binding RelativeSource={RelativeSource Self}, Path=Source.(BitmapSource.PixelWidth)}" />
+    </Style>
+    <Style TargetType="{x:Type Section}" x:Key="{x:Static markdig:Styles.QuoteBlockStyleKey}">
+        <Setter Property="BorderBrush" Value="LightGray" />
+        <Setter Property="BorderThickness" Value="4,0,0,0" />
+        <Setter Property="Foreground" Value="Gray" />
+        <Setter Property="Padding" Value="16,0,0,0" />
+    </Style>
+    <Style TargetType="{x:Type Table}" x:Key="{x:Static markdig:Styles.TableStyleKey}">
+        <Setter Property="BorderBrush" Value="Black"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <Setter Property="CellSpacing" Value="0"/>
+    </Style>
+    <Style TargetType="{x:Type TableCell}" x:Key="{x:Static markdig:Styles.TableCellStyleKey}">
+        <Setter Property="BorderBrush" Value="Black"/>
+        <Setter Property="BorderThickness" Value="1,1,0,0"/>
+    </Style>
+    <Style TargetType="{x:Type TableRow}" x:Key="{x:Static markdig:Styles.TableHeaderStyleKey}">
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+    <Style TargetType="{x:Type CheckBox}" x:Key="{x:Static markdig:Styles.TaskListStyleKey}">
+        <Setter Property="Margin" Value="0,0,0,-2" />
+    </Style>
+    <Style TargetType="{x:Type Line}" x:Key="{x:Static markdig:Styles.ThematicBreakStyleKey}">
+        <Setter Property="Stretch" Value="Fill" />
+        <Setter Property="Stroke" Value="Black" />
+    </Style>
+    <Style TargetType="{x:Type Span}" x:Key="{x:Static markdig:Styles.SubscriptStyleKey}">
+        <Setter Property="Typography.Variants" Value="Subscript" />
+    </Style>
+    <Style TargetType="{x:Type Span}" x:Key="{x:Static markdig:Styles.SuperscriptStyleKey}">
+        <Setter Property="Typography.Variants" Value="Superscript" />
+    </Style>
+    <Style TargetType="{x:Type Span}" x:Key="{x:Static markdig:Styles.StrikeThroughStyleKey}">
+        <Setter Property="TextBlock.TextDecorations" Value="Strikethrough" />
+    </Style>
+    <Style TargetType="{x:Type Span}" x:Key="{x:Static markdig:Styles.InsertedStyleKey}">
+        <Setter Property="TextBlock.TextDecorations" Value="Underline" />
+    </Style>
+    <Style TargetType="{x:Type Span}" x:Key="{x:Static markdig:Styles.MarkedStyleKey}">
+        <Setter Property="Background" Value="Yellow" />
+    </Style>
+
+    <!-- ============================================ -->
+    <!-- MODERN COLOR PALETTE - Core Colors          -->
+    <!-- ============================================ -->
+    <SolidColorBrush x:Key="PrimaryAccent" Color="#007ACC"/>
+    <SolidColorBrush x:Key="PrimaryAccentHover" Color="#1E8AD6"/>
+    <SolidColorBrush x:Key="BackgroundMain" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BackgroundSecondary" Color="#F3F3F3"/>
+    <SolidColorBrush x:Key="BackgroundHover" Color="#E8E8E8"/>
+    <SolidColorBrush x:Key="BackgroundSelected" Color="#E8F4FD"/>
+    <SolidColorBrush x:Key="BorderSubtle" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="TextPrimary" Color="#1F1F1F"/>
+    <SolidColorBrush x:Key="TextSecondary" Color="#616161"/>
+    <SolidColorBrush x:Key="TextLight" Color="#999999"/>
+    <SolidColorBrush x:Key="SuccessColor" Color="#28A745"/>
+    <SolidColorBrush x:Key="WarningColor" Color="#FF9500"/>
+    <SolidColorBrush x:Key="ErrorColor" Color="#DC3545"/>
+
+    <!-- ============================================ -->
+    <!-- SPACING VALUES - Common Margins/Padding      -->
+    <!-- ============================================ -->
+    <Thickness x:Key="Spacing.ExtraSmall">4</Thickness>
+    <Thickness x:Key="Spacing.Small">8</Thickness>
+    <Thickness x:Key="Spacing.Medium">12</Thickness>
+    <Thickness x:Key="Spacing.Large">16</Thickness>
+    <Thickness x:Key="Spacing.ExtraLarge">20</Thickness>
+
+    <!-- Common margins for layout sections -->
+    <Thickness x:Key="Margin.SectionBottom">0,0,0,16</Thickness>
+    <Thickness x:Key="Margin.SectionSpacing">0,12,0,0</Thickness>
+    <Thickness x:Key="Margin.StandardPadding">20</Thickness>
+    <Thickness x:Key="Margin.ElementSpacing">0,8,0,0</Thickness>
+    <Thickness x:Key="Margin.ButtonSpacing">8,0,0,0</Thickness>
+    <Thickness x:Key="Margin.TabHeaderMargin">2,2,2,2</Thickness>
+
+    <!-- ============================================ -->
+    <!-- BORDER STYLES - Radius and Thickness         -->
+    <!-- ============================================ -->
+    <CornerRadius x:Key="CornerRadius.Small">4</CornerRadius>
+    <CornerRadius x:Key="CornerRadius.Medium">6</CornerRadius>
+    <Thickness x:Key="BorderThickness.Thin">1</Thickness>
+    <Thickness x:Key="BorderThickness.Medium">2</Thickness>
+
+    <!-- ============================================ -->
+    <!-- TYPOGRAPHY - Font Sizes and Weights          -->
+    <!-- ============================================ -->
+    <System:Double x:Key="FontSize.Small">11</System:Double>
+    <System:Double x:Key="FontSize.Normal">12</System:Double>
+    <System:Double x:Key="FontSize.Medium">13</System:Double>
+    <System:Double x:Key="FontSize.Large">14</System:Double>
+    <System:Double x:Key="FontSize.XLarge">16</System:Double>
+    <System:Double x:Key="FontSize.Title">20</System:Double>
+    <System:Double x:Key="FontSize.MainTitle">24</System:Double>
+
     <Thickness x:Key="TabHeaderMargin">2,2,2,2</Thickness>
+
+    <!-- ============================================ -->
+    <!-- TAB COLORS - Centralized Tab Styling         -->
+    <!-- ============================================ -->
+    <SolidColorBrush x:Key="TabItem.Background" Color="{Binding Source={StaticResource BackgroundSecondary}, Path=Color}"/>
+    <SolidColorBrush x:Key="TabItem.Selected.Background" Color="{Binding Source={StaticResource BackgroundSelected}, Path=Color}"/>
+    <SolidColorBrush x:Key="TabItem.Selected.Border" Color="{Binding Source={StaticResource PrimaryAccent}, Path=Color}"/>
+    <SolidColorBrush x:Key="TabItem.Hover.Background" Color="{Binding Source={StaticResource BackgroundHover}, Path=Color}"/>
+
     <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3" />
     <SolidColorBrush x:Key="TextBox.MouseOver.Border" Color="#FF7EB4EA" />
     <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5" />
+
+    <!-- MyTextBox Style - Custom TextBox Control -->
     <Style x:Key="TextBoxStyle1" TargetType="{x:Type localControls:MyTextBox}">
         <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}" />
         <Setter Property="BorderBrush" Value="{StaticResource TextBox.Static.Border}" />
@@ -43,29 +211,144 @@
             </MultiTrigger>
         </Style.Triggers>
     </Style>
-    <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FFBEE6FD" />
-    <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF3C7FB1" />
-    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FFC4E5F6" />
-    <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FF2C628B" />
-    <SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4" />
-    <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5" />
-    <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383" />
+
+    <SolidColorBrush x:Key="Button.MouseOver.Background" Color="{Binding Source={StaticResource BackgroundSelected}, Path=Color}" />
+    <SolidColorBrush x:Key="Button.MouseOver.Border" Color="{Binding Source={StaticResource PrimaryAccent}, Path=Color}" />
+    <SolidColorBrush x:Key="Button.Pressed.Background" Color="#C0E6F7" />
+    <SolidColorBrush x:Key="Button.Pressed.Border" Color="#005A9E" />
+    <SolidColorBrush x:Key="Button.Disabled.Background" Color="{Binding Source={StaticResource BackgroundSecondary}, Path=Color}" />
+    <SolidColorBrush x:Key="Button.Disabled.Border" Color="{Binding Source={StaticResource BorderSubtle}, Path=Color}" />
+    <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="{Binding Source={StaticResource TextLight}, Path=Color}" />
+
+    <!-- DataGrid Modern Styling - Uses centralized colors -->
+    <SolidColorBrush x:Key="DataGrid.Background" Color="{Binding Source={StaticResource BackgroundMain}, Path=Color}"/>
+    <SolidColorBrush x:Key="DataGrid.HeaderBackground" Color="{Binding Source={StaticResource BackgroundSecondary}, Path=Color}"/>
+    <SolidColorBrush x:Key="DataGrid.HeaderBorder" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="DataGrid.RowBackground" Color="{Binding Source={StaticResource BackgroundMain}, Path=Color}"/>
+    <SolidColorBrush x:Key="DataGrid.RowHoverBackground" Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="DataGrid.RowSelectedBackground" Color="{Binding Source={StaticResource BackgroundSelected}, Path=Color}"/>
+    <SolidColorBrush x:Key="DataGrid.GridLineBrush" Color="#E5E5E5"/>
+
+    <Style TargetType="DataGrid">
+        <Setter Property="Background" Value="{StaticResource DataGrid.Background}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
+        <Setter Property="BorderThickness" Value="{StaticResource BorderThickness.Thin}"/>
+        <Setter Property="RowBackground" Value="{StaticResource DataGrid.RowBackground}"/>
+        <Setter Property="AlternatingRowBackground" Value="#FAFAFA"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource DataGrid.GridLineBrush}"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Normal}"/>
+        <Setter Property="RowHeight" Value="32"/>
+        <Setter Property="ColumnHeaderHeight" Value="36"/>
+    </Style>
+
+    <Style TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="{StaticResource DataGrid.HeaderBackground}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DataGrid.HeaderBorder}"/>
+        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Normal}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Border x:Name="BackgroundBorder" Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="BackgroundBorder" Property="Background" Value="#E8E8E8"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="DataGridRow">
+        <Setter Property="Background" Value="{StaticResource DataGrid.RowBackground}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridRow">
+                    <Border x:Name="DGR_Border" 
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="#E5E5E5"
+                            BorderThickness="0,0,0,1"
+                            SnapsToDevicePixels="True">
+                        <DataGridCellsPresenter ItemsPanel="{TemplateBinding ItemsPanel}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="DGR_Border" Property="Background" Value="{StaticResource DataGrid.RowHoverBackground}"/>
+                        </Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="DGR_Border" Property="Background" Value="{StaticResource DataGrid.RowSelectedBackground}"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="True"/>
+                                <Condition Property="Selector.IsSelectionActive" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="DGR_Border" Property="Background" Value="#F0F0F0"/>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="DataGridCell">
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Background="{TemplateBinding Background}" 
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter VerticalAlignment="Center" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="Label">
-        <Setter Property="FontFamily" Value="Consolas Code"></Setter>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
     </Style>
+
     <Style TargetType="MenuItem">
-        <Setter Property="FontFamily" Value="Consolas Code"></Setter>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSize.Normal}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="Padding" Value="{StaticResource Spacing.Medium}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundMain}"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+            </Trigger>
+            <Trigger Property="IsHighlighted" Value="True">
+                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
+
     <Style TargetType="Button">
-        <Setter Property="FontFamily" Value="Consolas Code"></Setter>
-        <Setter Property="Padding" Value="5,2,5,2"></Setter>
-        <Setter Property="BorderThickness" Value="2"></Setter>
-        <Setter Property="BorderBrush"  Value="#DD0000FF"></Setter>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="BorderThickness" Value="{StaticResource BorderThickness.Thin}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
+        <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate  TargetType="{x:Type ButtonBase}">
                     <Border x:Name="border" Background="{TemplateBinding Background}" BorderThickness="{TemplateBinding BorderThickness}"
-                    CornerRadius="5" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="true">
+                    CornerRadius="4" BorderBrush="{TemplateBinding BorderBrush}" SnapsToDevicePixels="true">
                         <ContentPresenter x:Name="contentPresenter" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
                     </Border>
                     <ControlTemplate.Triggers>

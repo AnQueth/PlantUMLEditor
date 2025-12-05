@@ -3,43 +3,67 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:PlantUMLEditor.Controls"
-        Title="Markdown Color Coding" Height="285" Width="800" WindowStartupLocation="CenterScreen">
-    <Grid>
+        Title="Markdown Color Coding" Height="400" Width="900" WindowStartupLocation="CenterScreen"
+        FontFamily="Segoe UI"
+        Background="#FFFFFF">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        
+        <TextBlock Text="Markdown Color Coding Configuration" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,16" Foreground="#1F1F1F"/>
+        
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="200"/>
+                </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Select Heading Color:" Margin="10"/>
-        <xctk:ColorPicker Grid.Row="0" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.HeadingColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 0 -->
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Heading Color:" Margin="0,0,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="0" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.HeadingColor), Mode=TwoWay}"/>
 
-        <TextBlock Grid.Row="0" Grid.Column="2" Text="Select Bold Color:" Margin="10"/>
-        <xctk:ColorPicker Grid.Row="0" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.BoldColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Bold Color:" Margin="0,0,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="0" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.BoldColor), Mode=TwoWay}"/>
 
-        <TextBlock Grid.Row="1" Grid.Column="0" Text="Select Italic Color:" Margin="10"/>
-        <xctk:ColorPicker Grid.Row="1" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.ItalicColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 1 -->
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Italic Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="1" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.ItalicColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-        <TextBlock Grid.Row="1" Grid.Column="2" Text="Select List Color:" Margin="10"/>
-        <xctk:ColorPicker Grid.Row="1" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.ListColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="List Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="1" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.ListColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Select Link Color:" Margin="10"/>
-        <xctk:ColorPicker Grid.Row="2" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.LinkColor), Mode=TwoWay}" Margin="10"/>
+                <!-- Row 2 -->
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Link Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="2" Grid.Column="1" SelectedColor="{Binding Path=(local:MDColorCodingConfig.LinkColor), Mode=TwoWay}" Margin="0,12,0,0"/>
 
-        <TextBlock Grid.Row="2" Grid.Column="2" Text="Select Code Color:" Margin="10"/>
-        <xctk:ColorPicker Grid.Row="2" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.CodeColor), Mode=TwoWay}" Margin="10"/>
+                <TextBlock Grid.Row="2" Grid.Column="2" Text="Code Color:" Margin="0,12,12,0" VerticalAlignment="Center" FontWeight="Medium"/>
+                <xctk:ColorPicker Grid.Row="2" Grid.Column="3" SelectedColor="{Binding Path=(local:MDColorCodingConfig.CodeColor), Mode=TwoWay}" Margin="0,12,0,0"/>
+            </Grid>
+        </ScrollViewer>
 
-        <Button Grid.Row="3" Grid.Column="2" Content="Save" Click="SaveButton_Click" Margin="10"/>
-        <Button Grid.Row="3" Grid.Column="3" Content="Cancel" Click="CancelButton_Click" Margin="10"/>
+        <!-- Buttons -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Save" Width="100" Padding="8,8" Click="SaveButton_Click" Background="{StaticResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold"/>
+            <Button Content="Cancel" Width="100" Padding="8,8" Click="CancelButton_Click" Margin="8,0,0,0"/>
+        </StackPanel>
     </Grid>
 </Window>
