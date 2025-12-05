@@ -105,7 +105,9 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
             <Separator></Separator>
             <MenuItem Header="Delete" Command="{Binding DeleteCommand}"></MenuItem>
             <Separator></Separator>
-            <MenuItem Header="Generate Image" Command="{Binding DataContext.CreateUMLImage, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
+            <MenuItem Header="Generate PNG Image" Command="{Binding DataContext.CreateUMLPngImage, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
+            <Separator></Separator>
+            <MenuItem Header="Generate SVG Image" Command="{Binding DataContext.CreateUMLSVGImage, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <Separator></Separator>
             <MenuItem Header="Undo Git Changes" Command="{Binding DataContext.UndoGitChangesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" CommandParameter="{Binding}" />
 

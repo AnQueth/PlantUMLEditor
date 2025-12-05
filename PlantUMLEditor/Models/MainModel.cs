@@ -150,7 +150,8 @@ namespace PlantUMLEditor.Models
             CreateNewComponentDiagram = new DelegateCommand(NewComponentDiagramHandler, () => !string.IsNullOrEmpty(FolderBase));
             CreateMarkDownDocument = new DelegateCommand(NewMarkDownDocumentHandler, () => !string.IsNullOrEmpty(FolderBase));
             CreateYAMLDocument = new DelegateCommand(NewYAMLDocumentHandler, () => !string.IsNullOrEmpty(FolderBase));
-            CreateUMLImage = new DelegateCommand(CreateUMLImageHandler, () => _selectedFile is not null);
+            CreateUMLPngImage = new DelegateCommand(CreateUMLPngImageHandler, () => _selectedFile is not null);
+            CreateUMLSVGImage = new DelegateCommand(CreateUMLSVGImageHandler, () => _selectedFile is not null);
             GitCommitAndSyncCommand = new DelegateCommand(GitCommitAndSyncCommandHandler, () => !string.IsNullOrEmpty(FolderBase));
             OpenSettingsCommand = new DelegateCommand(OpenSettingsCommandHandler);
             CloseDocument = new DelegateCommand<BaseDocumentModel>(CloseDocumentHandler);
@@ -340,7 +341,11 @@ namespace PlantUMLEditor.Models
         public DelegateCommand OpenUMLColorConfigCommand { get; }
         public DelegateCommand OpenMDColorConfigCommand { get; }
 
-        public DelegateCommand CreateUMLImage
+        public DelegateCommand CreateUMLPngImage
+        {
+            get;
+        }
+        public DelegateCommand CreateUMLSVGImage
         {
             get;
         }

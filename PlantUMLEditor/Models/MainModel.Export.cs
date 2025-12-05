@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using PlantUMLEditor.Models.Runners;
 
@@ -10,7 +11,8 @@ namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
-        private async void CreateUMLImageHandler()
+
+        private async Task CreateUMLImage(bool svg)
         {
             if (_selectedFile is null)
             {
@@ -24,7 +26,7 @@ namespace PlantUMLEditor.Models
             }
 
             PlantUMLImageGenerator generator = new PlantUMLImageGenerator(AppSettings.Default.JARLocation,
-                _selectedFile.FullPath, dir);
+                _selectedFile.FullPath, dir, svg);
 
             TreeViewModel? folder = FindFolderContaining(Folder, _selectedFile.FullPath);
 
@@ -40,6 +42,14 @@ namespace PlantUMLEditor.Models
                     folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, Statics.GetIcon(res.fileName)));
                 }
             }
+        }
+        private async void CreateUMLSVGImageHandler()
+        {
+           await CreateUMLImage(true);
+        }
+        private async void CreateUMLPngImageHandler()
+        {
+            await CreateUMLImage(false);
         }
 
         private void DocFXServeCommandHandler()

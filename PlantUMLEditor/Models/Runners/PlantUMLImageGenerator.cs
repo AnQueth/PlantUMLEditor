@@ -9,13 +9,14 @@ namespace PlantUMLEditor.Models.Runners
         private readonly string jarLocation;
         private readonly string path;
         private readonly string dir;
+                private readonly bool svg;
 
-
-        public PlantUMLImageGenerator(string jarLocation, string path, string dir)
+        public PlantUMLImageGenerator(string jarLocation, string path, string dir, bool svg)
         {
             this.jarLocation = jarLocation;
             this.path = path;
             this.dir = dir;
+            this.svg = svg;
         }
 
         internal record UMLImageCreateRecord(string fileName, string normal, string errors);
@@ -28,14 +29,16 @@ namespace PlantUMLEditor.Models.Runners
             {
 
 
-                string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(path) + FileExtension.PNG);
+                string fn = Path.Combine(dir, Path.GetFileNameWithoutExtension(path) +
+                    (this.svg ?  FileExtension.SVG : FileExtension.PNG));
 
+                var svgString = this.svg ? "-tsvg" : string.Empty;
 
                 Process p = new();
 
                 p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.FileName = "java.exe";
-                p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {jarLocation} \"{path}\"";
+                p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {jarLocation} {svgString}  \"{path}\"";
                 p.StartInfo.RedirectStandardOutput = true;
                 p.StartInfo.RedirectStandardError = true;
 

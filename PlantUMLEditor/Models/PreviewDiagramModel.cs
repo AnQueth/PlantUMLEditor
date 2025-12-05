@@ -182,7 +182,7 @@ namespace PlantUMLEditor.Models
                             continue;
                         }
 
-                        PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir);
+                        PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir, false);
 
                         PlantUMLImageGenerator.UMLImageCreateRecord? createResult = generator.Create().Result;
 

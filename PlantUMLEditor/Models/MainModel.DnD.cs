@@ -141,7 +141,8 @@ namespace PlantUMLEditor.Models
                         _selectedFolder = model;
                     }
                     DocFXServeCommand.RaiseCanExecuteChanged();
-                    CreateUMLImage.RaiseCanExecuteChanged();
+                    CreateUMLPngImage.RaiseCanExecuteChanged();
+                    CreateUMLSVGImage.RaiseCanExecuteChanged();
                 }
             }
         }
