@@ -323,12 +323,16 @@
     </Style>
 
     <Style TargetType="MenuItem">
+
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="{StaticResource FontSize.Normal}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
-        <Setter Property="Padding" Value="{StaticResource Spacing.Medium}"/>
+        <Setter Property="Padding" Value="{StaticResource Spacing.Small}"/>
         <Setter Property="Background" Value="{StaticResource BackgroundMain}"/>
         <Style.Triggers>
+
+
+
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
             </Trigger>

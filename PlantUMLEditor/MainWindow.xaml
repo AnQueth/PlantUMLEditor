@@ -38,10 +38,12 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
             </CollectionViewSource.GroupDescriptions>
             <CollectionViewSource.LiveSortingProperties>
                 <System:String>SortOrder</System:String>
+                <System:String>LineNumber</System:String>
             </CollectionViewSource.LiveSortingProperties>
             <CollectionViewSource.SortDescriptions>
 
                 <componentmodel:SortDescription PropertyName="SortOrder" Direction="Ascending" />
+                <componentmodel:SortDescription PropertyName="LineNumber" Direction="Ascending" />
                 <componentmodel:SortDescription PropertyName="Warning" Direction="Ascending" />
                
             </CollectionViewSource.SortDescriptions>
@@ -63,27 +65,7 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
         </Style>
 
         <!-- Modern MenuItem Styles -->
-        <Style TargetType="MenuItem">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#1F1F1F"/>
-            <Setter Property="Padding" Value="12,8"/>
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
-                </Trigger>
-                <Trigger Property="IsHighlighted" Value="True">
-                    <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style TargetType="Menu">
-            <Setter Property="Background" Value="#FFFFFF"/>
-            <Setter Property="Foreground" Value="#1F1F1F"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-        </Style>
+       
         <ContextMenu x:Key="FolderMenu">
             <MenuItem Header="New Class Diagram" Command="{Binding DataContext.CreateNewClassDiagram, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
             <MenuItem Header="New Sequence Diagram" Command="{Binding DataContext.CreateNewSequenceDiagram , RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}" ></MenuItem>
@@ -1047,7 +1029,7 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Segoe U
             </ComboBox>
 
             <Menu HorizontalAlignment="Center" VerticalAlignment="Center">
-                <MenuItem Header="Tools"  Margin="0,0,0,0" FontFamily="Segoe UI">
+                <MenuItem Header="Tools"  Margin="0,0,0,0" >
                     <MenuItem Header="Settings">
 
 
