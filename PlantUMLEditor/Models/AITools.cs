@@ -61,7 +61,7 @@ namespace PlantUMLEditor.Models
             {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
             });
 
-       
+
 
             return findresults;
 
@@ -72,7 +72,7 @@ namespace PlantUMLEditor.Models
              if creating a class diagram use extension .class.puml. 
             if making a component diagram use .component.puml.
             if making a sequence diagram use .seq.puml.")]
-        public async Task CreateNewDocument(
+        public async Task<string> CreateNewDocument(
             [Description("the relative directory path to the current file to store the file in")] string path,
             [Description("the name of the new document")] string name,
             [Description("the file extension of the new document, .md, .puml, .yml, .seq.puml, .component.puml, .class.puml")] string extension,
@@ -88,12 +88,17 @@ namespace PlantUMLEditor.Models
                 Directory.CreateDirectory(fullPath);
             }
 
+            if (File.Exists(pathToFile))
+                return @"file already exists {pathToFile}";
+
             await File.WriteAllTextAsync(pathToFile, content);
 
 
 
 
             await _openDocument(pathToFile);
+
+            return "Created, make sure to verify if its plant uml";
 
         }
 
@@ -104,7 +109,7 @@ namespace PlantUMLEditor.Models
                 throw new ArgumentException("path is null or empty", nameof(path));
 
             string fullPath = CheckPathAccess(path);
-            if(!File.Exists(fullPath))
+            if (!File.Exists(fullPath))
                 return $"File not found: {fullPath}";
             return await File.ReadAllTextAsync(fullPath);
         }
@@ -145,7 +150,7 @@ namespace PlantUMLEditor.Models
      Func<string, Task> _openDocument, string _folderBase) : AIToolsBasic(_openDocument, _folderBase)
     {
 
-      
+
 
         [Description("reads the current text in the document.")]
         public async Task<string> ReadDocumentText()
@@ -199,7 +204,39 @@ namespace PlantUMLEditor.Models
     AIToolsTextGetter(_currentTdm, _openDocument, _folderBase)
     {
 
+        [Description("verifies a puml file is valid and can be rendered. returns error in the document.")]
+        public async Task<string> VerifyUMLFile([Description("path to the file to verify or for the current document, current_document")] string filePath)
+        {
 
+            this.CheckPathAccess(filePath);
+         
+
+            string dir = Path.GetTempPath();
+            if (filePath == "current_document" && _currentTdm != null)
+            {
+                string tempFile = Path.Combine(dir, Guid.NewGuid().ToString() + ".puml");
+                await File.WriteAllTextAsync(tempFile, _currentTdm.Content);
+                filePath = tempFile;
+            }
+            if(!File.Exists(filePath))
+            {
+                var found = Directory.GetFiles(_folderBase, Path.GetFileName(filePath), SearchOption.AllDirectories).FirstOrDefault();
+                if(found is null)
+                    return $"File not found: {filePath}";
+
+                filePath = found;
+
+            }
+            PlantUMLImageGenerator plantUMLImageGenerator = new(AppSettings.Default.JARLocation, filePath, dir, false);
+            var result = await plantUMLImageGenerator.Create();
+            File.Delete(result.fileName);
+            if (filePath == "current_document")
+            {
+                File.Delete(filePath);
+
+            }
+            return result.errors;
+        }
 
 
         [Description("Replaces all occurrences of 'text' with 'newText' in the document.")]

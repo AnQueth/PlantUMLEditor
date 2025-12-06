@@ -536,6 +536,8 @@ namespace PlantUMLEditor.Models
         {
             await OpenDirectoryHandler(true);
 
+            await InitializeAI();
+
             List<string>? files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
             if (files == null)
             {
@@ -732,7 +734,7 @@ namespace PlantUMLEditor.Models
 
             DateTypeRecord[]? dataTypes = (from o in Documents.ClassDocuments
                                            from z in o.DataTypes
-                                           where z is not UMLOther && z is not UMLComment
+                                           where z is not UMLOther && z is not UMLComment && z is not UMLNote
                                            select new DateTypeRecord(o.FileName, z)).ToArray();
 
             bool isDirty = false;

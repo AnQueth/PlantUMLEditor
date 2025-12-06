@@ -2,6 +2,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Text.Json.Serialization;
 using System.Windows.Documents;
 using static PlantUMLEditor.Models.MainModel;
 
@@ -38,6 +39,7 @@ namespace PlantUMLEditor.Models
 
         public ObservableCollection<ToolCall> ToolCalls { get; } = new ObservableCollection<ToolCall>();
 
+        [JsonIgnore]
         public FlowDocument Document
         {
             get

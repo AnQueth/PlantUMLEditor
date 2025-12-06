@@ -5,9 +5,12 @@ using Prism.Commands;
 using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.IO;
+using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -52,7 +55,7 @@ namespace PlantUMLEditor.Models
 
         }
         private string _chatText = string.Empty;
-        private ChatClientAgentThread? _convThread = null;
+
         private bool _isCheckingCommandCanRun;
 
         public ObservableCollection<ChatMessage> AIConversation { get; } = new ObservableCollection<ChatMessage>();
@@ -74,7 +77,7 @@ namespace PlantUMLEditor.Models
         private void NewChatCommandHandler()
         {
             AIConversation.Clear();
-            _convThread = null;
+            this.DeleteConversation();
         }
 
         private async Task OpenDocument(string pathToFile)
@@ -170,6 +173,7 @@ namespace PlantUMLEditor.Models
                         aiTools.ReplaceText,
                         aiTools.InsertTextAtPosition,
                         aiTools.RewriteDocument,
+                        aiTools.VerifyUMLFile,
 
                         aiTools.SearchInAllDocuments,
                                aiTools.ReadFileByPath,
@@ -222,10 +226,18 @@ namespace PlantUMLEditor.Models
                 });
             }
 
-            if (_convThread == null)
+            AgentThread thread;
+            var threadJson = await LoadConversation();
+            if (threadJson != null) 
             {
-                _convThread = (ChatClientAgentThread)agent.GetNewThread();
+                thread = agent.DeserializeThread(threadJson.Value);
             }
+            else
+            {
+                thread = (ChatClientAgentThread)agent.GetNewThread();
+            }
+                 
+           
 
             var prompt = $"User input: \n{ChatText}";
 
@@ -233,7 +245,7 @@ namespace PlantUMLEditor.Models
 
             try
             {
-                await foreach (var item in agent.RunStreamingAsync(prompt, _convThread))
+                await foreach (var item in agent.RunStreamingAsync(prompt, thread))
                 {
                     foreach (var c in item.Contents)
                     {
@@ -255,7 +267,78 @@ namespace PlantUMLEditor.Models
                 currentMessage.Message += $"\n\nError: {ex.Message}";
             }
 
+            await SaveConversation(AIConversation, thread.Serialize());
+
             currentMessage.IsBusy = false;
+        }
+
+        private async Task SaveConversation(ObservableCollection<ChatMessage> messages, JsonElement thread)
+        {
+            using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForAssembly())
+            {
+                IsolatedStorageFileStream stream = new IsolatedStorageFileStream("conversation.json", FileMode.Create, storage);
+                using (StreamWriter writer = new StreamWriter(stream))
+                {
+                    string json = JsonSerializer.Serialize(new ConversationData(messages, thread ));
+                    await writer.WriteAsync(json);
+                }
+            }
+        }
+
+        private void DeleteConversation()
+        {
+            using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForAssembly())
+            {
+                if (storage.FileExists("conversation.json"))
+                {
+                    storage.DeleteFile("conversation.json");
+                }
+            }
+        }
+
+        public async Task InitializeAI()
+        {
+            await LoadConversation();
+        }
+
+        private async Task<JsonElement?> LoadConversation()
+        {
+            using (IsolatedStorageFile storage = IsolatedStorageFile.GetUserStoreForAssembly())
+            {
+                if (storage.FileExists("conversation.json"))
+                {
+                    IsolatedStorageFileStream stream = new IsolatedStorageFileStream("conversation.json", FileMode.Open, storage);
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        string json = await reader.ReadToEndAsync();
+                        try
+                        {
+                            var data = JsonSerializer.Deserialize<ConversationData>(json);
+                            if (data is not null)
+                            {
+                                if (AIConversation.Count == 0)
+                                {
+                                    foreach (var msg in data.Messages)
+                                    {
+                                        AIConversation.Add(msg);
+
+                                    }
+                                }
+
+                                return data.Thread;
+
+                            }
+                        }
+                        catch (JsonException)
+                        {
+                            // Ignore JSON errors and return null
+
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
 
         private async Task UndoEditCommandHandler(ObservableCollection<UndoOperation> list)
@@ -268,5 +351,7 @@ namespace PlantUMLEditor.Models
             if (tdm is not null)
                 tdm.Content = first.textBefore;
         }
+
+        private record ConversationData(ObservableCollection<ChatMessage> Messages, JsonElement Thread);
     }
 }

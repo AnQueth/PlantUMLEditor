@@ -16,7 +16,7 @@ namespace PlantUML
 
         // Component regex broken into smaller parts for better maintainability
         private static readonly Regex _componentBracketStyle = new(@"^\[(?<name>[^]]+)\]\s*(?:as\s+(?<alias>\w+))?\s*(?:<<(?<stereotype>[\w\s]+)>>)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _componentType = new(@"^(component|entity|database|queue|actor)\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _componentType = new(@"^(component|entity|database|queue|actor|rectangle|cloud)\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentName = new(@"^(?:""(?<name>[^""]+)""|(?<name>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentAlias = new(@"^\s*as\s+(?<alias>\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _componentColor = new(@"^\s*(?<color>#(?:[0-9A-Fa-f]{3,6}|[A-Za-z]+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);

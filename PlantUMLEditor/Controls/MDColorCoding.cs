@@ -14,44 +14,65 @@ namespace PlantUMLEditor.Controls
         private static readonly Regex _links = new Regex("\\[.+\\)", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex _code = new Regex("`{3}[.\\w\\W]*?`{3}", RegexOptions.Compiled | RegexOptions.Multiline);
 
+        private readonly Brush _headingBrush;
+        private readonly Brush _boldBrush;
+        private readonly Brush _italicBrush;
+        private readonly Brush _listBrush;
+        private readonly Brush _linkBrush;
+        private readonly Brush _codeBrush;
+
+        public MDColorCoding()
+        {
+            Brush CreateFrozen(Color c)
+            {
+                var b = new SolidColorBrush(c);
+                if (b.CanFreeze)
+                {
+                    b.Freeze();
+                }
+                return b;
+            }
+
+            _headingBrush = CreateFrozen(MDColorCodingConfig.HeadingColor);
+            _boldBrush = CreateFrozen(MDColorCodingConfig.BoldColor);
+            _italicBrush = CreateFrozen(MDColorCodingConfig.ItalicColor);
+            _listBrush = CreateFrozen(MDColorCodingConfig.ListColor);
+            _linkBrush = CreateFrozen(MDColorCodingConfig.LinkColor);
+            _codeBrush = CreateFrozen(MDColorCodingConfig.CodeColor);
+        }
+
         public List<FormatResult> FormatText(string text)
         {
             List<FormatResult> results = new List<FormatResult>();
 
-            MatchCollection? bolds = _bolds.Matches(text);
-            foreach (Match m in bolds)
+            for (Match m = _bolds.Match(text); m.Success; m = m.NextMatch())
             {
-                results.Add(new FormatResult(new SolidColorBrush(MDColorCodingConfig.BoldColor), m.Index, m.Length, FontWeights.Bold, m.Value));
+                results.Add(new FormatResult(_boldBrush, m.Index, m.Length, FontWeights.Bold, m.Value));
             }
 
-            MatchCollection? lists = _lists.Matches(text);
-            foreach (Match m in lists)
+            for (Match m = _lists.Match(text); m.Success; m = m.NextMatch())
             {
-                results.Add(new FormatResult(new SolidColorBrush(MDColorCodingConfig.ListColor), m.Index, m.Length, FontWeights.Normal, m.Value));
+                results.Add(new FormatResult(_listBrush, m.Index, m.Length, FontWeights.Normal, m.Value));
             }
 
-            MatchCollection? italics = _italics.Matches(text);
-            foreach (Match m in italics)
+            for (Match m = _italics.Match(text); m.Success; m = m.NextMatch())
             {
-                results.Add(new FormatResult(new SolidColorBrush(MDColorCodingConfig.ItalicColor), m.Index, m.Length, FontWeights.Normal, m.Value, true));
+                results.Add(new FormatResult(_italicBrush, m.Index, m.Length, FontWeights.Normal, m.Value, true));
             }
 
-            MatchCollection? links = _links.Matches(text);
-            foreach (Match m in links)
+            for (Match m = _links.Match(text); m.Success; m = m.NextMatch())
             {
-                results.Add(new FormatResult(new SolidColorBrush(MDColorCodingConfig.LinkColor), m.Index, m.Length, FontWeights.Normal, m.Value, true));
+                results.Add(new FormatResult(_linkBrush, m.Index, m.Length, FontWeights.Normal, m.Value, true));
             }
 
-            MatchCollection? code = _code.Matches(text);
-            foreach (Match m in code)
+            for (Match m = _code.Match(text); m.Success; m = m.NextMatch())
             {
-                results.Add(new FormatResult(new SolidColorBrush(MDColorCodingConfig.CodeColor), m.Index, m.Length, FontWeights.Normal, m.Value));
+                results.Add(new FormatResult(_codeBrush, m.Index, m.Length, FontWeights.Normal, m.Value));
             }
 
-            MatchCollection? ms = _hs.Matches(text);
-            foreach (Match m in ms)
+            for (Match m = _hs.Match(text); m.Success; m = m.NextMatch())
             {
-                results.Add(new FormatResult(new SolidColorBrush(MDColorCodingConfig.HeadingColor), m.Index, m.Length, FontWeights.Normal, m.Value));
+                results.Add(new FormatResult(_headingBrush, m.Index, m.Length, FontWeights.Normal, m.Value));
             }
 
             return results;
