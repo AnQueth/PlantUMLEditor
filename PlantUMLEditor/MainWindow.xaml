@@ -32,6 +32,7 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
     </b:Interaction.Triggers>
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <CollectionViewSource x:Key="GroupedMessages" IsLiveSortingRequested="True" Source="{Binding Messages}">
             <CollectionViewSource.GroupDescriptions>
                 <PropertyGroupDescription PropertyName="Warning"  />
@@ -1340,6 +1341,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                 
                     <RowDefinition Height="*"></RowDefinition>
                     <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
                 </Grid.RowDefinitions>
                      <ScrollViewer  
              
@@ -1464,7 +1466,34 @@ CanContentScroll="False">
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                 </ScrollViewer>
-                <Border Grid.Row="1"  BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" Background="{StaticResource BackgroundSecondary}" Padding="8">
+                <Border  Grid.Row="1" Visibility="{Binding IsCheckingCommandCanRun, Converter={StaticResource BoolToVis}}" BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" Background="{StaticResource BackgroundSecondary}" Padding="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Margin="4" Text="{Binding TryingToRun}"></TextBlock>
+                        <TextBox IsReadOnly="True" Margin="4" Grid.Column="1"
+                                 MaxHeight="100" VerticalScrollBarVisibility="Auto"
+                                 Text="{Binding TryingToRunParameters}"></TextBox>
+                        <Button Grid.Row="1" Margin="4" Content="Run" Command="{Binding CanRunCommand}" >
+                            <Button.CommandParameter>
+                                <System:Boolean>True</System:Boolean>
+                            </Button.CommandParameter>
+                        </Button>
+                        <Button Grid.Row="1" Margin="4" Grid.Column="1" Content="Cancel" Command="{Binding CanRunCommand}" >
+                            <Button.CommandParameter>
+                                <System:Boolean>False</System:Boolean>
+                            </Button.CommandParameter>
+                        </Button> 
+                    </Grid>
+                </Border>
+                <Border Grid.Row="2"  BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" Background="{StaticResource BackgroundSecondary}" Padding="8">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>

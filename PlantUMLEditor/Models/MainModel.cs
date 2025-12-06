@@ -126,6 +126,7 @@ namespace PlantUMLEditor.Models
             GlobalSearchCommand = new DelegateCommand<string>(GlobalSearchHandler);
             ScanAllFiles = new DelegateCommand(async () => await ScanAllFilesHandler(), () => !string.IsNullOrEmpty(FolderBase));
             OpenTerminalCommand = new DelegateCommand(OpenTerminalHandler);
+            CanRunCommand = new DelegateCommand<bool?>(CanRunCommandHandler);
             OpenExplorerCommand = new DelegateCommand(OpenExplorerHandler);
             DocFXServeCommand = new DelegateCommand(DocFXServeCommandHandler, () =>
             {

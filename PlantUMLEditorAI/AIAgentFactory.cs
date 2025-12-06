@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace PlantUMLEditorAI
 {
@@ -23,8 +25,14 @@ public int MaxOutputTokens { get; set; } = 2048;
     }
     public class AIAgentFactory
     {
+     
 
-        public AIAgent Create(AISettings settings, Delegate[] tools)
+        public AIAgent Create(AISettings settings, Func<
+                AIAgent,
+                FunctionInvocationContext,
+                Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>>,
+                CancellationToken,
+                ValueTask<object?>> confirmMiddleware, Delegate[] tools)
         {
 
             string? apiKey = settings.Key;
@@ -68,10 +76,8 @@ public int MaxOutputTokens { get; set; } = 2048;
             const string instructions = @"You are a plant uml expert to help users create and edit plantuml.
         You have the ability read html content from current documents.
 Use the available tools. Ensure you verify any edits. Use tools to read and edit the current diagram.
-Assistant must not modify files without explicit user confirmation.
-For any proposed file edit, produce a minimal diff and ask 'Apply changes? (yes/no)'. New files do not require confirmation.
-Only apply on an explicit 'yes'.
-When showing diffs, wrap it in ````diff` blocks for clarity.
+ 
+ 
 Ensure diagrams adhere to plantuml syntax. 
 If you create a new diagram you do not need to repeat the diagram code back to the user.
 ";
@@ -88,6 +94,9 @@ If you create a new diagram you do not need to repeat the diagram code back to t
 
             // Add OpenTelemetry instrumentation (returns an AIAgent wrapper)
             var agent = baseAgent.AsBuilder()
+                .Use(confirmMiddleware)
+                
+                
                 .UseOpenTelemetry(sourceName: settings.SourceName)
                 .Build();
 

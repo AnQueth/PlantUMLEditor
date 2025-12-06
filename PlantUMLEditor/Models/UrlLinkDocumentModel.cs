@@ -5,16 +5,16 @@ using System.Windows.Forms;
 
 namespace PlantUMLEditor.Models
 {
-    internal class UrlLinkDocumentModel : BaseDocumentModel, ITextGetter
+    internal class UrlLinkDocumentModel : BaseDocumentModel, ITextGetter, IScriptable
     {
         private string _url;
- 
+
         private Func<Task<string>>? _captureHtmlFunc;
 
         public UrlLinkDocumentModel(string fileName, string title, string url) : base(fileName, title)
         {
             _url = url;
-           
+
         }
 
         public string URL
@@ -23,10 +23,16 @@ namespace PlantUMLEditor.Models
             set => SetValue(ref _url, value);
         }
 
- 
+        private Func<string, Task< string>>? _scriptExecuter;
 
-   
-      
+        internal Func<string, Task<string>>? ScriptExecuter
+        {
+            get => _scriptExecuter;
+            set => _scriptExecuter = value;
+
+        }
+
+
 
         /// <summary>
         /// Internal function set by the behavior to capture HTML on demand
@@ -47,7 +53,7 @@ namespace PlantUMLEditor.Models
                     return html;
                 }
 
-            
+
             }
             catch (Exception ex)
             {
@@ -55,6 +61,23 @@ namespace PlantUMLEditor.Models
             }
 
             return string.Empty;
+        }
+
+        public async Task<string> ExecuteScript(string script)
+        {
+            try
+            {
+                if (_scriptExecuter != null)
+                {
+                    return await _scriptExecuter(script);
+                }
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error executing script: {ex.Message}");
+                return ex.ToString();
+            }
         }
 
         public async Task<string> ReadContent()

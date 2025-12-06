@@ -32,9 +32,7 @@ using Xceed.Wpf.AvalonDock.Converters;
 
 namespace PlantUMLEditor.Models
 {
-
-internal class AIToolsBase(ITextGetter _currentTdm,  
-    Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase)
+    internal class AIToolsBasic(Func<string, Task> _openDocument, string _folderBase)
     {
 
         [Description("returns the contents of a url as text.")]
@@ -53,20 +51,9 @@ internal class AIToolsBase(ITextGetter _currentTdm,
             }
         }
 
-        [Description("reads the current text in the document.")]
-        public async Task< string> ReadDocumentText()
-        {
-            if (_currentTdm != null)
-            {
-                return await  _currentTdm.ReadContent();
-            }
-
-            return string.Empty;
-        }
 
         [Description("search for a term in all documents")]
-        public async Task<List<GlobalFindResult>> SearchInDocuments([Description("the text to search for. it can be a word or regex.")] string text,
-            [Description("search within current doc or all documents in the workspace")] bool onlyCurrentDocument)
+        public async Task<List<GlobalFindResult>> SearchInAllDocuments([Description("the text to search for. it can be a word or regex.")] string text)
         {
 
             string WILDCARD = "*";
@@ -74,14 +61,12 @@ internal class AIToolsBase(ITextGetter _currentTdm,
             {WILDCARD + FileExtension.PUML.Extension, WILDCARD + FileExtension.MD.Extension, WILDCARD + FileExtension.YML.Extension
             });
 
-            if (onlyCurrentDocument)
-            {
-                return findresults.Where(z => z.FileName == _currentTdm.FileName).ToList();
-            }
+       
 
             return findresults;
 
         }
+
 
         [Description(@"creates a new document in the current workspace.
              if creating a class diagram use extension .class.puml. 
@@ -98,14 +83,14 @@ internal class AIToolsBase(ITextGetter _currentTdm,
 
             string pathToFile = System.IO.Path.Combine(fullPath, name + extension);
 
-            if(!Directory.Exists(fullPath))
+            if (!Directory.Exists(fullPath))
             {
                 Directory.CreateDirectory(fullPath);
             }
 
             await File.WriteAllTextAsync(pathToFile, content);
 
-            await _updateTree(_folderBase);
+
 
 
             await _openDocument(pathToFile);
@@ -119,7 +104,8 @@ internal class AIToolsBase(ITextGetter _currentTdm,
                 throw new ArgumentException("path is null or empty", nameof(path));
 
             string fullPath = CheckPathAccess(path);
-
+            if(!File.Exists(fullPath))
+                return $"File not found: {fullPath}";
             return await File.ReadAllTextAsync(fullPath);
         }
 
@@ -150,21 +136,67 @@ internal class AIToolsBase(ITextGetter _currentTdm,
 
             return fullPath;
         }
+
+
     }
 
-    internal class AIToolsTextGetter(ITextGetter _currentTdm,  
-    Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase) : AIToolsBase(_currentTdm,
-        _updateTree, _openDocument, _folderBase)
+
+    internal class AIToolsReadable(ITextGetter _currentTdm,
+     Func<string, Task> _openDocument, string _folderBase) : AIToolsBasic(_openDocument, _folderBase)
+    {
+
+      
+
+        [Description("reads the current text in the document.")]
+        public async Task<string> ReadDocumentText()
+        {
+            if (_currentTdm != null)
+            {
+                return await _currentTdm.ReadContent();
+            }
+
+            return string.Empty;
+        }
+
+
+
+    }
+
+    internal class AIToolsTextGetter(ITextGetter _currentTdm,
+        Func<string, Task> _openDocument, string _folderBase) : AIToolsReadable(_currentTdm,
+         _openDocument, _folderBase)
     {
 
 
 
 
- 
+
     }
-    internal class AIToolsEditable(TextDocumentModel _currentTdm, ChatMessage _currentMessage, 
-    Func<string, Task> _updateTree, Func<string, Task> _openDocument, string _folderBase) : 
-    AIToolsBase(_currentTdm,    _updateTree, _openDocument, _folderBase)
+
+
+
+
+    internal class AIToolsScriptable(IScriptable _currentTdm,
+        Func<string, Task> _openDocument, string _folderBase) : AIToolsTextGetter(_currentTdm,
+         _openDocument, _folderBase)
+    {
+
+        [Description(@"executes javascript in the context of the document and returns the result as string")]
+        public async Task<string> ExecuteScript([Description("the javascript to execute")] string script)
+        {
+            if (_currentTdm != null)
+            {
+                return await _currentTdm.ExecuteScript(script);
+            }
+            return string.Empty;
+        }
+
+
+
+    }
+    internal class AIToolsEditable(TextDocumentModel _currentTdm, ChatMessage _currentMessage,
+     Func<string, Task> _openDocument, string _folderBase) :
+    AIToolsTextGetter(_currentTdm, _openDocument, _folderBase)
     {
 
 
@@ -207,6 +239,6 @@ internal class AIToolsBase(ITextGetter _currentTdm,
             }
 
         }
- 
+
     }
 }

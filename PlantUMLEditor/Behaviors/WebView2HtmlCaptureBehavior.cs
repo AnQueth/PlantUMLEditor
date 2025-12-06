@@ -43,6 +43,7 @@ namespace PlantUMLEditor.Behaviors
             if (_model != null)
             {
                 _model.CaptureHtmlFunc = null;
+                _model.ScriptExecuter = null;
                 _model = null;
             }
 
@@ -66,6 +67,7 @@ namespace PlantUMLEditor.Behaviors
             if (_model != null)
             {
                 _model.CaptureHtmlFunc = null;
+                _model.ScriptExecuter = null;
             }
 
             // Setup new model
@@ -73,7 +75,34 @@ namespace PlantUMLEditor.Behaviors
             {
                 _model = model;
                 _model.CaptureHtmlFunc = CaptureHtmlAsync;
+                _model.ScriptExecuter = ExecuteScriptAsync;
             }
+        }
+
+        private async Task<string> ExecuteScriptAsync(string script)
+        {
+            if (AssociatedObject?.CoreWebView2 != null)
+            {
+                try
+                {
+                    return await Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+
+
+                        // Execute JavaScript to get the HTML content
+                        string html = await AssociatedObject.ExecuteScriptAsync(script);
+
+                    
+                        return html;
+                    }).Task.Unwrap();
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
+
+            return string.Empty;
         }
 
         private async Task<string> CaptureHtmlAsync()
