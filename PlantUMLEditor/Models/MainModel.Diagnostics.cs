@@ -13,11 +13,6 @@ namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
-        private void Messages_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            SelectedMessage = null;
-        }
-
         private async Task AddDefaultDataType(TextDocumentModel[] textDocumentModels, MissingDataTypeMessage missingDataTypeMessage)
         {
             UMLClassDiagram? f = Documents.ClassDocuments.FirstOrDefault(p => string.CompareOrdinal(p.Title, DEFAULTSCLASS) == 0);
@@ -39,6 +34,15 @@ namespace PlantUMLEditor.Models
                     {
                         CurrentDocument = od;
                         od.UpdateDiagram(f);
+
+
+                        lock (_docLock)
+                        {
+                            if (CurrentDocument is not null && !OpenDocuments.Contains(CurrentDocument))
+                            {
+                                OpenDocuments.Add(CurrentDocument);
+                            }
+                        }
                     }
                 }
             }
@@ -66,8 +70,6 @@ namespace PlantUMLEditor.Models
                 UMLClassDiagramParser.TryParseLineForDataType(null, missingMethodMessage.MissingMethodText.Trim(),
        new Dictionary<string, UMLDataType>(), d);
 
-
-
                 ClassDiagramDocumentModel? od = textDocumentModels.OfType<ClassDiagramDocumentModel>().FirstOrDefault(p => string.CompareOrdinal(p.FileName, doc.FileName) == 0);
                 if (od != null)
                 {
@@ -81,6 +83,15 @@ namespace PlantUMLEditor.Models
                     {
                         CurrentDocument = od;
                         od.UpdateDiagram(doc);
+
+
+                        lock (_docLock)
+                        {
+                            if (CurrentDocument is not null && !OpenDocuments.Contains(CurrentDocument))
+                            {
+                                OpenDocuments.Add(CurrentDocument);
+                            }
+                        }
                     }
                 }
             }
@@ -168,35 +179,28 @@ namespace PlantUMLEditor.Models
 
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
-                      
-                     
                         List<DocumentMessage> removals = new();
                         foreach (DocumentMessage? item in Messages)
                         {
                             if (!newMessages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
                             string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
                             {
-                              removals.Add(item);
+                                removals.Add(item);
                             }
                         }
 
-                        removals.ForEach(z=> Messages.Remove(z));
-                    
+                        removals.ForEach(z => Messages.Remove(z));
 
                         foreach (DocumentMessage? item in newMessages)
                         {
                             if (!Messages.Any(z => string.CompareOrdinal(z.FileName, item.FileName) == 0 &&
                            string.CompareOrdinal(z.Text, item.Text) == 0 && z.LineNumber == item.LineNumber))
                             {
-
                                 Messages.Add(item);
                             }
                         }
 
-                      
-                      
-
-                        if(CurrentDocument is TextDocumentModel tdm)
+                        if (CurrentDocument is TextDocumentModel tdm)
                             tdm.ClearMessages();
 
                         void WalkReset(TreeViewModel node)
@@ -204,23 +208,20 @@ namespace PlantUMLEditor.Models
                             node.HasMessages = false;
                             foreach (TreeViewModel? child in node.Children)
                             {
-
                                 WalkReset(child);
                             }
                         }
 
                         WalkReset(Folder);
 
-
                         foreach (DocumentMessage? d in Messages)
                         {
-                            if(d.FileName == CurrentDocument?.FileName)
+                            if (d.FileName == CurrentDocument?.FileName)
                             {
                                 d.SortOrder = 0;
-
                             }
                             else
-                                                        {
+                            {
                                 d.SortOrder = 1;
                             }
                             if ((d is MissingMethodDocumentMessage || d is MissingDataTypeMessage) && d.FixingCommand is null)
@@ -228,16 +229,14 @@ namespace PlantUMLEditor.Models
                                 d.FixingCommand = new DelegateCommand<DocumentMessage>(FixingCommandHandler);
                             }
 
-                 
                             void Walk(TreeViewModel node)
                             {
-                                if(node.FullPath.EndsWith(d.FileName, StringComparison.Ordinal))
+                                if (node.FullPath.EndsWith(d.FileName, StringComparison.Ordinal))
                                 {
                                     node.HasMessages = true;
                                 }
                                 foreach (TreeViewModel? child in node.Children)
                                 {
-                                    
                                     Walk(child);
                                 }
                             }
@@ -246,27 +245,19 @@ namespace PlantUMLEditor.Models
 
                             lock (_docLock)
                             {
-                                IEnumerable<TextDocumentModel>? docs = OpenDocuments.Where(p => 
+                                IEnumerable<TextDocumentModel>? docs = OpenDocuments.Where(p =>
                                 string.Equals(p.FileName, d.FileName, StringComparison.Ordinal))
-                                .OfType< TextDocumentModel>();
-                                
-
+                                .OfType<TextDocumentModel>();
 
                                 foreach (TextDocumentModel? doc in docs)
                                 {
-                                    
                                     if (CurrentDocument == doc)
                                     {
-                                        
                                         doc.ReportMessage(d);
                                     }
                                 }
-
-
                             }
                         }
-
-                       
                     });
                 }
                 finally
@@ -290,6 +281,11 @@ namespace PlantUMLEditor.Models
                     await AddDefaultDataType(textDocumentModels, missingDataTypeMessage);
                     break;
             }
+        }
+
+        private void Messages_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            SelectedMessage = null;
         }
     }
 }

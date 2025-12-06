@@ -29,9 +29,9 @@ namespace PlantUML
 
         private static readonly Regex _propertyLine = new(@"^\s*((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+))|((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<name>[\w_]+):(?<type>[\w\<\>\,\[\] \?]+))\s*$", RegexOptions.Compiled);
 
-        private static readonly Regex _baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
+        private static readonly Regex _baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>\\<]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
 
-        private static readonly Regex _composition = new("(?<first>\\w+)( | \\\"(?<fm>[01\\*])\\\" )(?<arrow>[\\*o\\|\\<]*[\\-\\.]+[\\*o\\|\\>]*)( | \\\"(?<sm>[01\\*])\\\" )(?<second>\\w+) *:*(?<text>.*)", RegexOptions.Compiled);
+        private static readonly Regex _composition = new("""(?<first>\w+)( | \"(?<fm>[01\*\.]+)\" )(?<arrow>[\*o\|\<]*[\-\.]+[\*o\|\>]*)( | \"(?<sm>[01\*\.]+)\" )(?<second>\w+) *:*(?<text>.*)""", RegexOptions.Compiled);
 
 
         private static string Clean(string name)
@@ -350,6 +350,14 @@ namespace PlantUML
 
                     string first = m.Groups["first"].Value;
                     string second = m.Groups["second"].Value;
+
+                    if (m.Groups["arrow"].ValueSpan.Contains("<", StringComparison.InvariantCulture))
+                    {
+                        var f = first;
+                        first = second;
+                        second = f;
+                    }
+
                     UMLDataType? cl = d.DataTypes.FirstOrDefault(p => p.Name == first);
 
                     if (cl == null && d.Notes.FirstOrDefault(z => z.Alias == first) == null)
@@ -423,7 +431,7 @@ namespace PlantUML
                                 }
                                 if (m.Groups["sm"].Success)
                                 {
-                                    if (m.Groups["sm"].Value == "*")
+                                    if (m.Groups["sm"].ValueSpan.Contains("*", StringComparison.InvariantCulture))
                                     {
                                         l = ListTypes.List;
                                     }

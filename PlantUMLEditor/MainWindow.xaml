@@ -17,7 +17,7 @@
 FontFamily="Segoe UI"  Loaded="Window_Loaded"
     Left="{Binding UIModel.WindowLeft, Mode=TwoWay}"
     Top="{Binding UIModel.WindowTop, Mode=TwoWay}"
-    xmlns:System="clr-namespace:System;assembly=System.Runtime" xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" Icon="/PlantUMLEditor;component/Images/uml.png">
+    xmlns:System="clr-namespace:System;assembly=System.Runtime" xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" xmlns:svgc="http://sharpvectors.codeplex.com/svgc/" Icon="/PlantUMLEditor;component/Images/uml.png">
 
 <Window.CommandBindings>
         <CommandBinding Command="{x:Static markdig:Commands.Hyperlink}" Executed="HyperlinkExecuted" />
@@ -125,6 +125,31 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
 
         </ContextMenu>
         <System:Double x:Key="AutoCompleteOpacity">0.8</System:Double>
+        <DataTemplate DataType="{x:Type models:SVGDocumentModel}">
+
+            <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+
+                <ScrollViewer Grid.Row="2" Padding="10" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" PanningMode="Both" Background="{StaticResource BackgroundSecondary}">
+                    <Behaviors:Interaction.Behaviors>
+                        <Behaviors:TranslateZoomRotateBehavior />
+                    </Behaviors:Interaction.Behaviors>
+                    <localControls:PanAndZoomBorder>
+                        <svgc:SvgViewbox       Stretch="Uniform"
+                      Source="{Binding SVG}">
+                            <svgc:SvgViewbox.LayoutTransform>
+                                <ScaleTransform x:Name="SvgScale" ScaleX="1" ScaleY="1"/>
+                            </svgc:SvgViewbox.LayoutTransform>
+
+
+
+                        </svgc:SvgViewbox>
+                    </localControls:PanAndZoomBorder>
+
+                </ScrollViewer>
+
+       
+            </Grid>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type models:ImageDocumentModel}">
 
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
@@ -1009,7 +1034,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"></ColumnDefinition>
-                                <ColumnDefinition Width="25"></ColumnDefinition>
+                                <ColumnDefinition Width="Auto"></ColumnDefinition>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="0,0,20,0"></TextBlock>
                             <Button Grid.Column="1" Margin="1" Command="{Binding  Path=DataContext.DeleteMRUCommand,  RelativeSource={RelativeSource FindAncestor,
@@ -1208,8 +1233,8 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                             <DataGridTemplateColumn>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
-                                        <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}" Margin="10,5,10,5" CommandParameter="{Binding}"
-                                Content="Fix" Grid.Column="2"></Button>
+                                        <Button x:Name="createMissingMethod" Command="{Binding FixingCommand}"   CommandParameter="{Binding}"
+                                Content="Fix" Grid.Column="2"  />
                                         <DataTemplate.Triggers>
                                             <DataTrigger Binding="{Binding IsFixable}" Value="false">
                                                 <DataTrigger.Setters>
@@ -1488,7 +1513,7 @@ CanContentScroll="False">
 
         <StatusBar Grid.Row="2" Grid.ColumnSpan="5" Background="{StaticResource BackgroundSecondary}"
                    BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" 
-                   Padding="8,4" Height="28">
+                   Padding="8,4"  >
             <StatusBarItem>
                 <Button Command="{Binding CancelExecutingAction}">Cancel</Button>
             </StatusBarItem>

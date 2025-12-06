@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:localControls="clr-namespace:PlantUMLEditor.Controls"
-        xmlns:local="clr-namespace:PlantUMLEditor" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:local="clr-namespace:PlantUMLEditor" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors" xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="1024" Width="1084" Icon="/PlantUMLEditor;component/Images/uml.png"
         FontFamily="Segoe UI"
@@ -14,6 +14,9 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Styles.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <!-- Add this converter so Visibility binding works -->
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+
         </ResourceDictionary>
     </Window.Resources>
     <Grid>
@@ -24,37 +27,99 @@
         </Grid.RowDefinitions>
         
         <!-- Toolbar -->
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="12,12,12,0">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="12,12,6,6">
+            <CheckBox Content="Use SVG" IsChecked="{Binding UseSVG}" VerticalAlignment="Center" VerticalContentAlignment="Center" Margin="0,0,8,0"/>
             <Button Content="Print" Command="{Binding PrintImageCommand}" ToolTip="Print the image" Padding="12,6" Width="80"/>
             <Button Content="Copy" Command="{Binding CopyImage}" ToolTip="Copy the image for pasting" Padding="12,6" Width="80" Margin="8,0,0,0"/>
             <Button Content="Save" Command="{Binding SaveImageCommand}" ToolTip="Save image" Padding="12,6" Width="80" Margin="8,0,0,0"/>
         </StackPanel>
         
         <!-- Messages -->
-        <TextBlock Text="{Binding Messages}" Grid.Row="1" Margin="12" FontSize="12" Foreground="#666666"/>
-        
+        <TextBox Text="{Binding Messages}" Grid.Row="1" Margin="12" FontSize="12" Foreground="#666666" >
+            <TextBox.Style>
+                <Style TargetType="TextBox">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <!-- Hide when Messages is null -->
+                        <DataTrigger Binding="{Binding Messages}" Value="{x:Null}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                        <!-- Hide when Messages.Count == 0 -->
+                        <DataTrigger Binding="{Binding Messages.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
+
         <!-- Image Viewer -->
+   
         <ScrollViewer Grid.Row="2" Padding="10" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" PanningMode="Both" Background="{StaticResource BackgroundSecondary}">
             <Behaviors:Interaction.Behaviors>
                 <Behaviors:TranslateZoomRotateBehavior />
             </Behaviors:Interaction.Behaviors>
             <localControls:PanAndZoomBorder>
-                <Image Source="{Binding Image}" Stretch="None"/>
+                <svgc:SvgViewbox       Stretch="Uniform"
+             Source="{Binding SVG}">
+                    <svgc:SvgViewbox.LayoutTransform>
+                        <ScaleTransform x:Name="SvgScale" ScaleX="1" ScaleY="1"/>
+                    </svgc:SvgViewbox.LayoutTransform>
+
+
+
+                </svgc:SvgViewbox>
             </localControls:PanAndZoomBorder>
+
         </ScrollViewer>
-        
-        <!-- Loading Message -->
-        <TextBlock Grid.Row="2" Text="Generating..." HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="24" Foreground="#999999">
-            <TextBlock.Style>
-                <Style TargetType="TextBlock">
-                    <Setter Property="Visibility" Value="Collapsed" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Image}" Value="{x:Null}">
-                            <Setter Property="Visibility" Value="Visible" />
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBlock.Style>
-        </TextBlock>
+
+        <!-- Generating overlay with animated dots -->
+        <Border Grid.Row="0" Grid.RowSpan="3" Background="#FFFFFF" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}" Panel.ZIndex="99">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center" >
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" >
+                    <TextBlock Text="Generating" FontSize="24" Foreground="#333333" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                        <!-- Dot 1 -->
+                        <Ellipse Width="10" Height="10" Fill="#333333" Opacity="0.25" Margin="4,0">
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.25" To="1" Duration="0:0:0.45" AutoReverse="True" BeginTime="0:0:0"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+
+                        <!-- Dot 2 -->
+                        <Ellipse Width="10" Height="10" Fill="#333333" Opacity="0.25" Margin="4,0">
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.25" To="1" Duration="0:0:0.45" AutoReverse="True" BeginTime="0:0:0.18"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+
+                        <!-- Dot 3 -->
+                        <Ellipse Width="10" Height="10" Fill="#333333" Opacity="0.25" Margin="4,0">
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever">
+                                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.25" To="1" Duration="0:0:0.45" AutoReverse="True" BeginTime="0:0:0.36"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

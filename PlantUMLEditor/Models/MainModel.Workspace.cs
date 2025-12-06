@@ -178,7 +178,7 @@ namespace PlantUMLEditor.Models
             // Initialize FileSystemWatcher for the new workspace
             if (!string.IsNullOrEmpty(FolderBase))
             {
-                InitializeFileWatcher(FolderBase);
+                InitializeFileWatcherChannel(FolderBase);
             }
 
             _messageCheckerTrigger.Writer.TryWrite(true);

@@ -18,11 +18,12 @@ namespace PlantUMLEditor
             {
                 return (DataTemplate)element.FindResource("TextDocumentTabHeader");
             }
-            else if (item is Models.ImageDocumentModel || item is UrlLinkDocumentModel)
+            else if (item is Models.ImageDocumentModel || item is UrlLinkDocumentModel || item is SVGDocumentModel)
             {
                 return (DataTemplate)element.FindResource("ImageDocumentTabHeader");
             }
-            return base.SelectTemplate(item, container);
+      
+                return base.SelectTemplate(item, container);
         }
     }
 }

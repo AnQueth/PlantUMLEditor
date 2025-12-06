@@ -46,25 +46,19 @@ namespace PlantUMLEditor.Models
         public async Task CreateNewClassDiagram(TreeViewModel? selectedFolder, string? folderBase)
         {
 
-            if (selectedFolder == null || string.IsNullOrEmpty(folderBase))
-            {
-                return;
-            }
+       
             string? nf = GetNewFile(selectedFolder, folderBase, ".class" + FileExtension.PUML);
 
             if (!string.IsNullOrEmpty(nf))
             {
                 await NewClassDiagram(nf, Path.GetFileNameWithoutExtension(nf));
 
-                selectedFolder.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+              
             }
         }
         public async Task CreateNewComponentDiagram(TreeViewModel? selectedFolder, string? folderBase)
         {
-            if (selectedFolder == null || string.IsNullOrEmpty(folderBase))
-            {
-                return;
-            }
+         
 
             string? nf = GetNewFile(selectedFolder, folderBase, ".component" + FileExtension.PUML);
 
@@ -72,7 +66,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewComponentDiagram(nf, Path.GetFileNameWithoutExtension(nf));
 
-                selectedFolder.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+                
             }
         }
         private async Task NewClassDiagram(string fileName, string title)
@@ -120,7 +114,7 @@ namespace PlantUMLEditor.Models
                 string title = Path.GetFileNameWithoutExtension(nf);
                 await NewJsonUMLDiagram(nf, title, $"@startjson\r\ntitle {title}\r\n\r\n@endjson\r\n");
 
-                selectedFolder?.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+                
             }
         }
         private async Task NewMarkDownDocument(string filePath, string fileName)
@@ -138,7 +132,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewMarkDownDocument(nf, Path.GetFileNameWithoutExtension(nf));
 
-                selectedFolder?.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+             
             }
         }
         private async Task NewSequenceDiagram(string fileName, string title)
@@ -161,7 +155,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewSequenceDiagram(nf, Path.GetFileNameWithoutExtension(nf));
 
-                selectedFolder?.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+              
             }
         }
 
@@ -186,8 +180,7 @@ namespace PlantUMLEditor.Models
                 string title = Path.GetFileNameWithoutExtension(nf);
                 await NewUnknownUMLDiagram(nf, title, $"@startuml\r\ntitle {title}\r\n\r\n@enduml\r\n");
 
-                selectedFolder?.Children.Insert(0, new TreeViewModel(selectedFolder,
-                    nf, Statics.GetIcon(nf)));
+             
             }
         }
         private async Task NewYAMLDocument(string filePath, string fileName)
@@ -205,7 +198,7 @@ namespace PlantUMLEditor.Models
             {
                 await NewYAMLDocument(nf, Path.GetFileNameWithoutExtension(nf));
 
-                selectedFolder?.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+           
             }
         }
 
@@ -227,7 +220,7 @@ namespace PlantUMLEditor.Models
                     }
                 }
 
-                selectedFolder?.Children.Insert(0, new TreeViewModel(selectedFolder, nf, Statics.GetIcon(nf)));
+                 
             }
         }
     }

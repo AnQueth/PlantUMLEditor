@@ -85,6 +85,8 @@ namespace PlantUMLEditor.Models
                     {
                         // Exact-name duplicate (including generic arguments)
                         foreach(var d in dataTypes.Where(z=> z.DataType is not UMLOther &&
+                        z.DataType is not UMLNote &&
+                        z.DataType is not UMLComment &&
                         z.DataType.Namespace == fdt.Namespace &&
                         string.CompareOrdinal(z.DataType.Name, fdt.Name) == 0))
                         {

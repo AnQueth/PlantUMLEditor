@@ -1,14 +1,13 @@
 ﻿using PlantUMLEditor.Models.Runners;
 using Prism.Commands;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.DirectoryServices;
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,17 +22,40 @@ namespace PlantUMLEditor.Models
         private record QueueItem(string path, bool delete, string name);
 
         private readonly IIOService _ioService;
-        private readonly ConcurrentQueue<QueueItem> _regenRequests
-            = new();
-        private readonly AutoResetEvent _are = new(false);
+
+        // Replaced ConcurrentQueue + AutoResetEvent with Channel<T>
+        private readonly Channel<QueueItem> _channel;
+        private readonly CancellationTokenSource _cts = new();
+        private Task? _consumerTask;
+
         private FixedDocument? _doc;
         private string _messages = string.Empty;
-        private bool _running = false;
-        private BitmapSource? image;
+
         private readonly string _jarLocation;
         private string _name;
 
-        public PreviewDiagramModel(IIOService ioService,   string title)
+        private string _svg = string.Empty;
+        private QueueItem? _lastProcessed;
+        private byte[]? _lastImageData;
+        private bool _useSVG = true;
+
+        public bool UseSVG { get => _useSVG; set => SetValue(ref _useSVG, value); }
+
+        private bool _isBusy = true;
+        public bool IsBusy
+        {
+            get => _isBusy;
+            set => SetValue(ref _isBusy, value);
+        }
+
+        public string SVG
+        {
+            get => _svg;
+            set => SetValue(ref _svg, value);
+        }
+
+
+        public PreviewDiagramModel(IIOService ioService, string title)
         {
             _jarLocation = AppSettings.Default.JARLocation;
             _name = title;
@@ -43,8 +65,18 @@ namespace PlantUMLEditor.Models
             SaveImageCommand = new DelegateCommand(SaveImageHandler);
             Width = 1024;
             Height = 1024;
-            _running = true;
-            Task.Run(Runner);
+
+            var options = new BoundedChannelOptions(1)
+            {
+                SingleReader = true,
+                SingleWriter = true,
+                AllowSynchronousContinuations = false,
+                FullMode = BoundedChannelFullMode.DropOldest
+            };
+
+            _channel = Channel.CreateBounded<QueueItem>(options);
+
+            _consumerTask = Task.Run(() => Runner(_cts.Token));
         }
 
         public DelegateCommand CopyImage
@@ -63,11 +95,7 @@ namespace PlantUMLEditor.Models
             get; set;
         }
 
-        public BitmapSource? Image
-        {
-            get => image;
-            set => SetValue(ref image, value);
-        }
+
 
         public string Messages
         {
@@ -97,94 +125,199 @@ namespace PlantUMLEditor.Models
             set;
         }
 
-        private void CopyImageHandler()
+        private async void CopyImageHandler()
         {
-            if (Image != null)
+            if (UseSVG)
             {
-                int tries = 0;
-                while (tries < 5)
-                {
-                    try
-                    {
-                        Clipboard.SetImage(Image.Clone());
-                        return;
-                    }
-                    catch (Exception)
-                    {
-                        Thread.Sleep(100);
-                    }
-                    tries++;
+                var data = await File.ReadAllTextAsync(SVG);
+                Clipboard.SetText(data);
+                return;
+            }
 
+            await RunInBusy(async () =>
+            {
+                var img = await GenerateImage();
+
+                if (img != null)
+                {
+                    int tries = 0;
+                    while (tries < 5)
+                    {
+                        try
+                        {
+                            Clipboard.SetImage(img.Clone());
+                            return;
+                        }
+                        catch (Exception)
+                        {
+                            await Task.Delay(100);
+                        }
+                        tries++;
+
+                    }
                 }
+
+            });
+
+
+        }
+
+        private async Task PrintImage()
+        {
+            await RunInBusy(async () =>
+            {
+
+                PrintDialog? pdialog = new PrintDialog();
+
+                var img = await GenerateImage();
+
+                if (pdialog.ShowDialog() == true && img != null)
+                {
+                    int widthSlices = (int)Math.Ceiling(img.PixelWidth / Width);
+                    int heightSliced = (int)Math.Ceiling(img.PixelHeight / Height);
+
+                    List<DrawingVisual> images = new();
+
+                    SaveFrameworkElement(img, widthSlices, heightSliced, (int)Width, (int)Height, images);
+
+                    FixedDocument fd = new();
+
+                    foreach (DrawingVisual? item in images)
+                    {
+                        FixedPage? fp = new FixedPage();
+
+                        RenderTargetBitmap rtb = new(1024, 1024, 96d, 96d, PixelFormats.Default);
+                        rtb.Render(item);
+
+                        fp.Children.Add(new System.Windows.Controls.Image() { Source = rtb });
+
+                        PageContent? pc = new PageContent
+                        {
+                            Child = fp
+                        };
+
+                        fd.Pages.Add(pc);
+                    }
+                    Doc = fd;
+                    pdialog.PrintDocument(fd.DocumentPaginator, "");
+                }
+            });
+        }
+
+        private async void PrintImageHandler()
+        {
+            await PrintImage();
+        }
+
+        private async Task RunInBusy(Func<Task> func)
+        {
+            IsBusy = true;
+            try
+            {
+                await func();
+            }
+            finally
+            {
+                IsBusy = false;
             }
         }
 
-        private void PrintImage()
+        private async Task<BitmapSource?> GenerateImage()
         {
-            PrintDialog? pdialog = new PrintDialog();
-            if (pdialog.ShowDialog() == true && Image != null)
+
+
+            var res = _lastProcessed;
+
+            if (res is null || _lastImageData is null)
             {
-                int widthSlices = (int)Math.Ceiling(Image.PixelWidth / Width);
-                int heightSliced = (int)Math.Ceiling(Image.PixelHeight / Height);
+                return null;
+            }
 
-                List<DrawingVisual> images = new();
+            string? dir = Path.GetDirectoryName(res.path);
+            if (dir == null)
+            {
+                return null;
+            }
 
-                SaveFrameworkElement(Image, widthSlices, heightSliced, (int)Width, (int)Height, images);
+            var tmp = Path.GetTempFileName();
+            await File.WriteAllBytesAsync(tmp, _lastImageData);
+            try
+            {
 
-                FixedDocument fd = new();
+                PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, tmp, dir, false);
 
-                foreach (DrawingVisual? item in images)
+                PlantUMLImageGenerator.UMLImageCreateRecord? createResult = await generator.Create();
+
+                string errors = createResult.errors;
+
+
+                if (string.IsNullOrEmpty(errors))
                 {
-                    FixedPage? fp = new FixedPage();
 
-                    RenderTargetBitmap rtb = new(1024, 1024, 96d, 96d, PixelFormats.Default);
-                    rtb.Render(item);
-
-                    fp.Children.Add(new System.Windows.Controls.Image() { Source = rtb });
-
-                    PageContent? pc = new PageContent
+                    return Application.Current.Dispatcher.Invoke(() =>
                     {
-                        Child = fp
-                    };
+                        string fn = createResult.fileName;
+                        if (!File.Exists(fn))
+                        {
+                            string? dir = Path.GetDirectoryName(res.path);
+                            if (dir == null)
+                            {
+                                return null;
+                            }
 
-                    fd.Pages.Add(pc);
+                            string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.name) + FileExtension.PNG);
+
+                            if (File.Exists(fn2))
+                            {
+                                fn = fn2;
+                            }
+                        }
+
+
+                        if (res.delete && File.Exists(res.path))
+                        {
+                            File.Delete(res.path);
+                        }
+
+                        return new BitmapImage(new Uri(fn));
+
+                    });
                 }
-                Doc = fd;
-                pdialog.PrintDocument(fd.DocumentPaginator, "");
+                return null;
+            }
+            finally
+            {
+                if (File.Exists(tmp))
+                {
+                    File.Delete(tmp);
+                }
+
             }
         }
 
-        private void PrintImageHandler()
+        private async Task Runner(CancellationToken token)
         {
-            PrintImage();
-        }
-
-        private void Runner()
-        {
-            while (_running)
+            try
             {
-                _are.WaitOne();
-
-                try
+                await foreach (var res in _channel.Reader.ReadAllAsync(token))
                 {
-                    while (!_regenRequests.IsEmpty)
+                    Messages = string.Empty;
+
+                    string? dir = Path.GetDirectoryName(res.path);
+                    if (dir == null)
                     {
-                        Messages = string.Empty;
-                        _regenRequests.TryDequeue(out QueueItem? res);
-                        if (res is null)
-                        {
-                            continue;
-                        }
+                        continue;
+                    }
 
-                        string? dir = Path.GetDirectoryName(res.path);
-                        if (dir == null)
-                        {
-                            continue;
-                        }
+                    await RunInBusy(async () =>
+                    {
 
-                        PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir, false);
+                        _lastProcessed = res;
+                        _lastImageData = await File.ReadAllBytesAsync(res.path, token);
 
-                        PlantUMLImageGenerator.UMLImageCreateRecord? createResult = generator.Create().Result;
+                        PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir, true);
+
+                        PlantUMLImageGenerator.UMLImageCreateRecord? createResult = await generator.Create();
 
                         string errors = createResult.errors;
 
@@ -228,14 +361,18 @@ namespace PlantUMLEditor.Models
                                         return;
                                     }
 
-                                    string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.name) + FileExtension.PNG);
+                                    string fn2 = Path.Combine(dir, Path.GetFileNameWithoutExtension(res.name) + FileExtension.SVG);
 
                                     if (File.Exists(fn2))
                                     {
                                         fn = fn2;
                                     }
                                 }
-                                Image = new BitmapImage(new Uri(fn));
+
+                                SVG = fn;
+
+
+
 
                                 if (res.delete && File.Exists(res.path))
                                 {
@@ -243,12 +380,16 @@ namespace PlantUMLEditor.Models
                                 }
                             });
                         }
-                    }
+                    });
                 }
-                catch (Exception ex)
-                {
-                    Messages = ex.ToString();
-                }
+            }
+            catch (OperationCanceledException)
+            {
+                // graceful cancellation
+            }
+            catch (Exception ex)
+            {
+                Messages = ex.ToString();
             }
         }
 
@@ -263,30 +404,62 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void SaveImageHandler()
+        private async void SaveImageHandler()
         {
+            if (UseSVG)
+            {
+                SaveSVG();
+                return;
+            }
+
+            await RunInBusy(async () =>
+            {
+                await SavePNG();
+
+
+            });
+
+
+        }
+
+        private async Task SavePNG()
+        {
+            var img = await GenerateImage();
             string? fileName = _ioService.GetSaveFile("Png files | *.png", FileExtension.PNG);
 
-            if (fileName == null || Image == null)
+            if (fileName == null || img == null)
             {
                 return;
             }
 
             PngBitmapEncoder encoder = new();
 
-            encoder.Frames.Add(BitmapFrame.Create((BitmapImage?)Image));
+            encoder.Frames.Add(BitmapFrame.Create((BitmapImage?)img));
 
             using FileStream? filestream = new FileStream(fileName, FileMode.Create);
             encoder.Save(filestream);
+
+        }
+
+        private void SaveSVG()
+        {
+            string? fileName = _ioService.GetSaveFile("Svg files | *.svg", FileExtension.SVG);
+            if (fileName == null || string.IsNullOrEmpty(SVG))
+            {
+                return;
+            }
+            File.Copy(SVG, fileName, true);
+            return;
         }
 
         public void Stop()
         {
-            _running = false;
-            _are.Set();
+            // Signal cancellation and complete the writer so the consumer exits.
+            _cts.Cancel();
+            _channel.Writer.TryComplete();
         }
 
-        public static void SaveImage(BitmapSource sourceImage,
+        private static void SaveImage(BitmapSource sourceImage,
                                       int startX,
                               int startY,
 
@@ -315,10 +488,21 @@ namespace PlantUMLEditor.Models
             {
                 MessageBox.Show("plant uml is missing");
             }
-            _regenRequests.Clear();
-            _regenRequests.Enqueue(new QueueItem(path, delete, name));
 
-            _are.Set();
+            var item = new QueueItem(path, delete, name);
+
+            // Try synchronous write first; if that fails, write asynchronously.
+            if (!_channel.Writer.TryWrite(item))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _channel.Writer.WriteAsync(item, _cts.Token);
+                    }
+                    catch (OperationCanceledException) { }
+                });
+            }
         }
     }
 }

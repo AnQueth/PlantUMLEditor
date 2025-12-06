@@ -44,76 +44,33 @@ namespace PlantUMLEditor.Models
         private readonly object _docLock = new();
         private readonly IUMLDocumentCollectionSerialization _documentCollectionSerialization;
 
-
-
         private readonly IIOService _ioService;
 
-
         private readonly Channel<bool> _messageCheckerTrigger = Channel.CreateUnbounded<bool>();
-        private FileSystemWatcher? _fileWatcher;
-        private readonly MainWindow _window;
-        private GitStatusMonitor? _gitStatusMonitor;
-        private string _currentGitBranch = string.Empty;
-
-        private RunBlocker _closingBlocker = new();
-
-        private bool _confirmOpen;
-        private CancellationTokenSource? _cancelCurrentExecutingAction;
-
-
-        private string? _currentActionExecuting;
-
-        private string? _rootFolder;
-
-        private string? FolderBase
-        {
-            get => _rootFolder;
-            set
-            {
-                SetValue(ref _rootFolder, value);
-                GlobalSearch.RootDirectory = value ?? string.Empty;
-            }
-        }
-
-        private string? _gitMessages;
-        private string _metaDataDirectory = "";
-
-        private string _metaDataFile = "";
-
-
-        private bool _spellCheck;
-        private BaseDocumentModel? _currentDocument;
-
-
         private readonly NewFileManager _newFileManager;
         private readonly TemplateStorage _templateStorage;
+        private readonly MainWindow _window;
+        private readonly OpenDocumentManager OpenDocumenntManager;
+        private CancellationTokenSource? _cancelCurrentExecutingAction;
+        private RunBlocker _closingBlocker = new();
+        private bool _confirmOpen;
+        private string? _currentActionExecuting;
+        private BaseDocumentModel? _currentDocument;
+        private string _currentGitBranch = string.Empty;
+        private string _currentGitRepoRoot = string.Empty;
+        private FileSystemWatcher? _fileWatcher;
+        private string? _gitMessages;
+        private GitStatusMonitor? _gitStatusMonitor;
+        private string _metaDataDirectory = "";
+        private string _metaDataFile = "";
+        private string? _rootFolder;
+
+        private int _selectedTab;
+
+        private bool _spellCheck;
+
         private DocumentMessage? selectedMessage;
 
-        public TemplateStorage TemplateStorage
-        {
-            get => _templateStorage;
-        }
-
-        public string CurrentGitBranch
-        {
-            get => _currentGitBranch;
-            set => SetValue(ref _currentGitBranch, value);
-        }
-
-        public string CurrentGitRepoRoot
-        {
-            get => _currentGitRepoRoot;
-            set => SetValue(ref _currentGitRepoRoot, value);
-
-
-
-
-
-        }
-
-
-
-        public DelegateCommand<TreeViewModel> UndoGitChangesCommand { get; private set; }
         public MainModel(IIOService openDirectoryService,
             IUMLDocumentCollectionSerialization documentCollectionSerialization,
             MainWindow mainWindow)
@@ -181,7 +138,6 @@ namespace PlantUMLEditor.Models
 
             NewChatCommand = new DelegateCommand(NewChatCommandHandler);
 
-
             OpenDocuments.CollectionChanged += OpenDocuments_CollectionChanged;
 
             OpenDocumenntManager = new OpenDocumentManager(OpenDocuments, Documents, _docLock,
@@ -190,10 +146,6 @@ namespace PlantUMLEditor.Models
             UIModel = new UISettingsModel();
 
             _ = Task.Run(CheckMessages);
-
-
-
-
 
             _ = new Timer(MRULoader, null, 10, Timeout.Infinite);
 
@@ -217,78 +169,19 @@ namespace PlantUMLEditor.Models
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
 
-        private void ExecuteUriLink(Uri uri)
-        {
-
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = uri.ToString(),
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
-
-        }
-
-        private int _selectedTab;
-        private string _currentGitRepoRoot = string.Empty;
-
-        public int SelectedToolTab
-        {
-            get => _selectedTab;
-            set => SetValue(ref _selectedTab, value);
-        }
-
-
-
-        public double EditorFontSize
-        {
-            get => AppSettings.Default.EditorFontSize;
-            set
-            {
-
-                AppSettings.Default.EditorFontSize = value;
-                AppSettings.Default.Save();
-
-                base.PropertyChangedInvoke();
-
-
-            }
-
-        }
-
-
-
-
-        private void OpenMDColorConfigHandler()
-        {
-            var win = new MDColorCodingConfigWindow();
-            win.ShowDialog();
-        }
-
-        private void OpenUMLColorConfigHandler()
-        {
-            var uMLColorCodingConfig = new UMLColorCodingConfigWindow();
-            uMLColorCodingConfig.ShowDialog();
-        }
-
-
         public bool AllowContinueClosing
         {
             get;
             set;
         }
 
+        public DelegateCommand ApplyTemplateCommand { get; }
+
         public ICommand CancelExecutingAction
         {
             get;
         }
-        public DelegateCommand<Uri> OpenHyperlinkCommand { get; }
+
         public bool CanClose
         {
             get;
@@ -348,22 +241,21 @@ namespace PlantUMLEditor.Models
             get;
         }
 
+        public DelegateCommand CreateNewUnknownDiagram
+        {
+            get;
+        }
+
         public DelegateCommand CreateNewURLLinkCommand
         {
             get;
         }
 
-        public DelegateCommand CreateNewUnknownDiagram
-        {
-            get;
-        }
-        public DelegateCommand OpenUMLColorConfigCommand { get; }
-        public DelegateCommand OpenMDColorConfigCommand { get; }
-
         public DelegateCommand CreateUMLPngImage
         {
             get;
         }
+
         public DelegateCommand CreateUMLSVGImage
         {
             get;
@@ -403,17 +295,12 @@ namespace PlantUMLEditor.Models
                 if (_currentDocument != null)
                 {
                     _currentDocument.Visible = Visibility.Collapsed;
-
                 }
-
-
 
                 SetValue(ref _currentDocument, value);
                 if (value != null)
                 {
                     value.Visible = Visibility.Visible;
-
-
                 }
 
                 if (_currentDocument is TextDocumentModel)
@@ -427,6 +314,18 @@ namespace PlantUMLEditor.Models
                 ApplyTemplateCommand.RaiseCanExecuteChanged();
                 _messageCheckerTrigger.Writer.TryWrite(true);
             }
+        }
+
+        public string CurrentGitBranch
+        {
+            get => _currentGitBranch;
+            set => SetValue(ref _currentGitBranch, value);
+        }
+
+        public string CurrentGitRepoRoot
+        {
+            get => _currentGitRepoRoot;
+            set => SetValue(ref _currentGitRepoRoot, value);
         }
 
         public ObservableCollection<DateTypeRecord> DataTypes => _dataTypes;
@@ -455,6 +354,20 @@ namespace PlantUMLEditor.Models
             get;
             init;
         }
+
+        public double EditorFontSize
+        {
+            get => AppSettings.Default.EditorFontSize;
+            set
+            {
+                AppSettings.Default.EditorFontSize = value;
+                AppSettings.Default.Save();
+
+                base.PropertyChangedInvoke();
+            }
+        }
+
+        public DelegateCommand EditTemplatesCommand { get; }
 
         public DelegateCommand<string> FindAllReferencesCommand
         {
@@ -498,14 +411,14 @@ namespace PlantUMLEditor.Models
             init;
         }
 
-
-
         public ObservableCollection<DocumentMessage> Messages
         {
             get;
         }
 
         public ObservableCollection<string> MRUFolders { get; } = new ObservableCollection<string>();
+
+        public ICommand NewChatCommand { get; init; }
 
         public ICommand OpenDirectoryCommand
         {
@@ -524,12 +437,18 @@ namespace PlantUMLEditor.Models
 
         public DelegateCommand OpenHelpCommand { get; }
 
+        public DelegateCommand<Uri> OpenHyperlinkCommand { get; }
+
+        public DelegateCommand OpenMDColorConfigCommand { get; }
+
         public DelegateCommand OpenSettingsCommand { get; }
 
         public DelegateCommand OpenTerminalCommand
         {
             get;
         }
+
+        public DelegateCommand OpenUMLColorConfigCommand { get; }
 
         public DelegateCommand SaveAllCommand
         {
@@ -540,7 +459,7 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-        public DelegateCommand EditTemplatesCommand { get; }
+
         public DelegateCommand ScanAllFiles
         {
             get;
@@ -550,8 +469,6 @@ namespace PlantUMLEditor.Models
         {
             get;
         }
-
-
 
         public DocumentMessage? SelectedMessage
         {
@@ -567,16 +484,40 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        public int SelectedToolTab
+        {
+            get => _selectedTab;
+            set => SetValue(ref _selectedTab, value);
+        }
+
+        public IAsyncCommand SendChatCommand { get; init; }
+
         public bool SpellCheck
         {
             get => _spellCheck;
             set => SetValue(ref _spellCheck, value);
         }
 
-        private readonly OpenDocumentManager OpenDocumenntManager;
+        public TemplateStorage TemplateStorage
+        {
+            get => _templateStorage;
+        }
 
         public UISettingsModel UIModel { get; }
-        public DelegateCommand ApplyTemplateCommand { get; }
+
+        public ICommand UndoAIEditsCommand { get; init; }
+
+        public DelegateCommand<TreeViewModel> UndoGitChangesCommand { get; private set; }
+
+        private string? FolderBase
+        {
+            get => _rootFolder;
+            set
+            {
+                SetValue(ref _rootFolder, value);
+                GlobalSearch.RootDirectory = value ?? string.Empty;
+            }
+        }
 
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)
         {
@@ -592,7 +533,6 @@ namespace PlantUMLEditor.Models
 
         public async void LoadedUI()
         {
-
             await OpenDirectoryHandler(true);
 
             List<string>? files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
@@ -634,48 +574,6 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void StartGitStatusMonitor()
-        {
-            string? folder = GetWorkingFolder();
-            if (!string.IsNullOrEmpty(folder))
-            {
-
-
-                _gitStatusMonitor?.Dispose();
-                _gitStatusMonitor = new GitStatusMonitor(folder, Application.Current.Dispatcher, ApplyGitStatuses, interval: TimeSpan.FromSeconds(2));
-                _gitStatusMonitor.Start();
-            }
-
-        }
-
-        public void TextDragEnter(object sender, DragEventArgs e)
-        {
-        }
-
-        public void TextDragLeave(object sender, DragEventArgs e)
-        {
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         private static async Task UpdateDiagrams<T1, T2>(TextDocumentModel[] documentModels, LockedList<T2> classDocuments) where T1 : TextDocumentModel where T2 : UMLDiagram
         {
             foreach (T1? document in documentModels.OfType<T1>())
@@ -703,31 +601,48 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        private void ApplyGitStatuses(IDictionary<string, GitFileStatus> map)
+        {
+            if (Folder == null) return;
 
+            void Walk(TreeViewModel node)
+            {
+                if (map.TryGetValue(node.FullPath, out var status))
+                {
+                    node.GitStatus = status;
+                }
+                else
+                {
+                    // For folders or files with no entry, clear to Unmodified
+                    node.GitStatus = GitFileStatus.Unmodified;
+                }
 
+                foreach (var child in node.Children)
+                {
+                    Walk(child);
+                }
+            }
 
+            Walk(Folder);
 
+            // Update current branch name opportunistically
 
-
-
-
+            if (!string.IsNullOrEmpty(FolderBase))
+            {
+                var git = new PlantUMLEditor.Models.Runners.GitSupport();
+                var md = git.GetCurrentBranch(FolderBase);
+                if (md != null)
+                {
+                    CurrentGitBranch = md.CurrentBranch;
+                    CurrentGitRepoRoot = md.RepositoryRoot;
+                }
+            }
+        }
 
         private void CancelCurrentExecutingAction()
         {
             _cancelCurrentExecutingAction?.Cancel();
         }
-
-
-
-
-
-
-
-
-
-
-
-
 
         private void DeleteMRUCommandHandler(string mru)
         {
@@ -735,40 +650,56 @@ namespace PlantUMLEditor.Models
             SaveMRU();
         }
 
+        private void ExecuteUriLink(Uri uri)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = uri.ToString(),
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+            }
+        }
 
+        private void InitializeFileWatcher(string folderPath)
+        {
+            _fileWatcher?.Dispose();
 
+            _fileWatcher = new FileSystemWatcher(folderPath)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
+                Filter = "*.*",
+                IncludeSubdirectories = true,
+                EnableRaisingEvents = true
+            };
 
+            _fileWatcher.Changed += OnFileChanged;
+            _fileWatcher.Created += OnFileChanged;
+            _fileWatcher.Deleted += OnFileChanged;
+            _fileWatcher.Renamed += OnFileRenamed;
+        }
 
+        private void OnFileChanged(object sender, FileSystemEventArgs e)
+        {
+            // Only trigger for relevant file types
+            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
+            {
+                _messageCheckerTrigger.Writer.TryWrite(true);
+            }
+        }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        private void OnFileRenamed(object sender, RenamedEventArgs e)
+        {
+            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
+            {
+                _messageCheckerTrigger.Writer.TryWrite(true);
+            }
+        }
 
         private void OpenHelpCommandHandler()
         {
@@ -776,12 +707,101 @@ namespace PlantUMLEditor.Models
             help.ShowDialog();
         }
 
-
+        private void OpenMDColorConfigHandler()
+        {
+            var win = new MDColorCodingConfigWindow();
+            win.ShowDialog();
+        }
 
         private void OpenSettingsCommandHandler()
         {
             SettingsWindow settings = new();
             settings.ShowDialog();
+        }
+
+        private void OpenUMLColorConfigHandler()
+        {
+            var uMLColorCodingConfig = new UMLColorCodingConfigWindow();
+            uMLColorCodingConfig.ShowDialog();
+        }
+
+        private void ProcessDataTypes()
+        {
+            List<DateTypeRecord>? dt = DataTypes.ToList();
+
+            DateTypeRecord[]? dataTypes = (from o in Documents.ClassDocuments
+                                           from z in o.DataTypes
+                                           where z is not UMLOther && z is not UMLComment
+                                           select new DateTypeRecord(o.FileName, z)).ToArray();
+
+            bool isDirty = false;
+            foreach (DateTypeRecord? r in dt.ToArray())
+            {
+                if (!dataTypes.Contains(r))
+                {
+                    dt.Remove(r);
+                    isDirty = true;
+                }
+            }
+
+            foreach (DateTypeRecord? r in dataTypes)
+            {
+                if (!dt.Contains(r))
+                {
+                    dt.Add(r);
+                    isDirty = true;
+                }
+            }
+
+            if (isDirty)
+            {
+                DataTypes.Clear();
+                foreach (DateTypeRecord? d in dt.OrderBy(z => z.DataType.Namespace).ThenBy(z => z.DataType.Name))
+                {
+                    DataTypes.Add(d);
+                }
+            }
+        }
+
+        private async Task ScanAllFilesHandler()
+        {
+            Documents.ClassDocuments.Clear();
+            Documents.SequenceDiagrams.Clear();
+            Documents.ComponentDiagrams.Clear();
+
+            string? folder = GetWorkingFolder();
+            if (folder == null)
+            {
+                return;
+            }
+
+            List<string> potentialSequenceDiagrams = new();
+            await ScanForFiles(folder, potentialSequenceDiagrams);
+
+            foreach (string? seq in potentialSequenceDiagrams)
+            {
+                await UMLDiagramTypeDiscovery.TryCreateSequenceDiagram(Documents, seq);
+            }
+
+            ProcessDataTypes();
+
+            foreach (SequenceDiagramDocumentModel? doc in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
+            {
+                doc.UpdateDiagram(Documents.ClassDocuments);
+            }
+
+            CurrentActionExecuting = null;
+        }
+
+        private void StartGitStatusMonitor()
+        {
+            string? folder = GetWorkingFolder();
+            if (!string.IsNullOrEmpty(folder))
+            {
+                _gitStatusMonitor?.Dispose();
+                _gitStatusMonitor = new GitStatusMonitor(folder, Application.Current.Dispatcher, ApplyGitStatuses, interval: TimeSpan.FromSeconds(2));
+                _gitStatusMonitor.Start();
+            }
         }
 
         private void UndoGitChangesHandler(TreeViewModel node)
@@ -825,91 +845,6 @@ namespace PlantUMLEditor.Models
             }
         }
 
-
-
-
-        private void ProcessDataTypes()
-        {
-            List<DateTypeRecord>? dt = DataTypes.ToList();
-
-            DateTypeRecord[]? dataTypes = (from o in Documents.ClassDocuments
-                                           from z in o.DataTypes
-                                           where z is not UMLOther && z is not UMLComment
-                                           select new DateTypeRecord(o.FileName, z)).ToArray();
-
-            bool isDirty = false;
-            foreach (DateTypeRecord? r in dt.ToArray())
-            {
-                if (!dataTypes.Contains(r))
-                {
-                    dt.Remove(r);
-                    isDirty = true;
-                }
-            }
-
-            foreach (DateTypeRecord? r in dataTypes)
-            {
-                if (!dt.Contains(r))
-                {
-                    dt.Add(r);
-                    isDirty = true;
-                }
-            }
-
-            if (isDirty)
-            {
-                DataTypes.Clear();
-                foreach (DateTypeRecord? d in dt.OrderBy(z => z.DataType.Namespace).ThenBy(z => z.DataType.Name))
-                {
-                    DataTypes.Add(d);
-                }
-            }
-        }
-
-
-
-
-
-
-
-
-
-        private async Task ScanAllFilesHandler()
-        {
-            Documents.ClassDocuments.Clear();
-            Documents.SequenceDiagrams.Clear();
-            Documents.ComponentDiagrams.Clear();
-
-            string? folder = GetWorkingFolder();
-            if (folder == null)
-            {
-                return;
-            }
-
-            List<string> potentialSequenceDiagrams = new();
-            await ScanForFiles(folder, potentialSequenceDiagrams);
-
-            foreach (string? seq in potentialSequenceDiagrams)
-            {
-                await UMLDiagramTypeDiscovery.TryCreateSequenceDiagram(Documents, seq);
-            }
-
-            ProcessDataTypes();
-
-            foreach (SequenceDiagramDocumentModel? doc in OpenDocuments.OfType<SequenceDiagramDocumentModel>())
-            {
-                doc.UpdateDiagram(Documents.ClassDocuments);
-            }
-
-            CurrentActionExecuting = null;
-        }
-
-
-
-
-
-
-
         private async Task UpdateDiagramDependencies()
         {
             TextDocumentModel[] dm = GetTextDocumentModelReadingArray();
@@ -935,85 +870,6 @@ namespace PlantUMLEditor.Models
             }
 
             await _documentCollectionSerialization.Save(Documents, _metaDataFile);
-        }
-
-
-
-        public IAsyncCommand SendChatCommand { get; init; }
-        public ICommand UndoAIEditsCommand { get; init; }
-        public ICommand NewChatCommand { get; init; }
-
-        private void InitializeFileWatcher(string folderPath)
-        {
-            _fileWatcher?.Dispose();
-
-            _fileWatcher = new FileSystemWatcher(folderPath)
-            {
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
-                Filter = "*.*",
-                IncludeSubdirectories = true,
-                EnableRaisingEvents = true
-            };
-
-            _fileWatcher.Changed += OnFileChanged;
-            _fileWatcher.Created += OnFileChanged;
-            _fileWatcher.Deleted += OnFileChanged;
-            _fileWatcher.Renamed += OnFileRenamed;
-        }
-
-        private void OnFileChanged(object sender, FileSystemEventArgs e)
-        {
-            // Only trigger for relevant file types
-            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
-            {
-                _messageCheckerTrigger.Writer.TryWrite(true);
-            }
-        }
-
-        private void OnFileRenamed(object sender, RenamedEventArgs e)
-        {
-            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
-            {
-                _messageCheckerTrigger.Writer.TryWrite(true);
-            }
-        }
-
-        private void ApplyGitStatuses(IDictionary<string, GitFileStatus> map)
-        {
-            if (Folder == null) return;
-
-            void Walk(TreeViewModel node)
-            {
-                if (map.TryGetValue(node.FullPath, out var status))
-                {
-                    node.GitStatus = status;
-                }
-                else
-                {
-                    // For folders or files with no entry, clear to Unmodified
-                    node.GitStatus = GitFileStatus.Unmodified;
-                }
-
-                foreach (var child in node.Children)
-                {
-                    Walk(child);
-                }
-            }
-
-            Walk(Folder);
-
-            // Update current branch name opportunistically
-
-            if (!string.IsNullOrEmpty(FolderBase))
-            {
-                var git = new PlantUMLEditor.Models.Runners.GitSupport();
-                var md = git.GetCurrentBranch(FolderBase);
-                if (md != null)
-                {
-                    CurrentGitBranch = md.CurrentBranch;
-                    CurrentGitRepoRoot = md.RepositoryRoot;
-                }
-            }
         }
     }
 }

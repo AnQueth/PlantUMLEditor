@@ -32,6 +32,16 @@ namespace PlantUMLEditor.Models
             _messageCheckerTrigger = messageCheckerTrigger;
         }
 
+        private async Task<BaseDocumentModel> OpenSVGFile(string fullPath)
+        {
+            SVGDocumentModel? d = new SVGDocumentModel(
+                fullPath,
+                Path.GetFileName(fullPath));
+            await d.Init();
+         
+            return d;
+        }
+
 
         private async Task<BaseDocumentModel> OpenImageFile(string fullPath)
         {
@@ -232,7 +242,11 @@ int lineNumber, string? searchText)
             {
                 return await OpenImageFile(fileName);
             }
-            else if(FileExtension.URLLINK.Compare(ext))
+            else if(FileExtension.SVG.Compare(ext))
+            {
+                return await OpenSVGFile(fileName);
+            }
+            else if (FileExtension.URLLINK.Compare(ext))
             {
                 return await OpenURLLinkFile(fileName);
             }

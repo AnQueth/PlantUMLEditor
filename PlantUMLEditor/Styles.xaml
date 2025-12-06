@@ -340,10 +340,11 @@
 
     <Style TargetType="Button">
         <Setter Property="FontFamily" Value="Segoe UI"/>
-        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Padding" Value="8,2"/>
         <Setter Property="BorderThickness" Value="{StaticResource BorderThickness.Thin}"/>
         <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
         <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate  TargetType="{x:Type ButtonBase}">

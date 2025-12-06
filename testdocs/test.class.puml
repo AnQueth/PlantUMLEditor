@@ -19,7 +19,7 @@ class C1 {
 }
 package a{
 class C2 { 
- 
+  
   void aaa(C1 la)
   void doStuff()
  } 
