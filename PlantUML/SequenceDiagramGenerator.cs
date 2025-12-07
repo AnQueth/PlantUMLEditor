@@ -4,7 +4,7 @@ using UMLModels;
 
 namespace PlantUML
 {
-    internal class SequenceDiagramGenerator
+    internal static class SequenceDiagramGenerator
     {
         internal static void Create(UMLSequenceDiagram sequenceDiagram, TextWriter writer)
         {

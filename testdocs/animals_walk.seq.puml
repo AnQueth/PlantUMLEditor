@@ -1,0 +1,31 @@
+@startuml
+'@@novalidate
+
+participant "Owner" as Owner
+participant "AnimalController" as Controller
+participant "Dog" as Dog
+participant "Bird" as Bird
+
+Owner -> Controller: makeAllWalk(animals)
+activate Controller
+
+Controller -> Dog: walk()
+activate Dog
+Dog -> Dog: performSteps()
+Dog --> Controller: walked()
+deactivate Dog
+
+Controller -> Bird: walk()
+activate Bird
+alt can fly while walking
+  Bird -> Bird: flapWingsAndWalk()
+else ground only
+  Bird -> Bird: walkShortDistance()
+end
+Bird --> Controller: walked()
+deactivate Bird
+
+Controller --> Owner: allWalked()
+deactivate Controller
+
+@enduml

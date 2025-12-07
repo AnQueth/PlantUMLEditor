@@ -54,7 +54,7 @@ namespace PlantUMLEditor.Models
 
         protected override async Task ContentChanged(string text)
         {
-            UMLDiagramTypeDiscovery discovery = new();
+           
             (UMLClassDiagram? cd, UMLSequenceDiagram? sd, UMLUnknownDiagram? ud) = await UMLDiagramTypeDiscovery.TryCreateDiagram(Diagrams, text);
             if (cd != null)
             {

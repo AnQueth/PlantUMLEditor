@@ -6,7 +6,8 @@ namespace BenchmarkSuite1
     {
         static void Main(string[] args)
         {
-            var _ = BenchmarkRunner.Run(typeof(Program).Assembly);
+            // Use assembly-wide discovery so all benchmarks in this project are discovered
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
         }
     }
 }

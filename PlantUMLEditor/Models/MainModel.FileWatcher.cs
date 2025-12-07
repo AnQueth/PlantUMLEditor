@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace PlantUMLEditor.Models
 {
@@ -51,7 +52,11 @@ namespace PlantUMLEditor.Models
             };
 
             // Event handlers must be lightweight -> write path into channel
-            _fileWatcher.Changed += (s, e) => _fsEventChannel.Writer.TryWrite(e.FullPath);
+            _fileWatcher.Changed += (s, e) =>
+            {
+               
+                _fsEventChannel.Writer.TryWrite(e.FullPath);
+            };
             _fileWatcher.Created += (s, e) => _fsEventChannel.Writer.TryWrite(e.FullPath);
             _fileWatcher.Deleted += (s, e) => _fsEventChannel.Writer.TryWrite(e.FullPath);
             _fileWatcher.Renamed += (s, e) =>
@@ -118,7 +123,21 @@ namespace PlantUMLEditor.Models
                     {
                         Debug.WriteLine(ex);
                     }
-
+                    lock (_docLock)
+                    {
+                        foreach (var p in paths)
+                        {
+                            var doc = OpenDocuments.FirstOrDefault(d => string.Equals(d.FileName, p, StringComparison.Ordinal));
+                            if (doc is TextDocumentModel tdm)
+                            {
+                               
+                              
+                                    tdm.Content = File.ReadAllText(p);
+                              
+                               
+                            }
+                        }
+                    }
                     // Preserve existing behavior: trigger message checker for puml changes
                     if (paths.Any(p => p.EndsWith(FileExtension.PUML.Extension, StringComparison.OrdinalIgnoreCase)))
                     {

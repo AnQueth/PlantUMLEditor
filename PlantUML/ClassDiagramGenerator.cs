@@ -8,7 +8,7 @@ using UMLModels;
 
 namespace PlantUML
 {
-    internal class ClassDiagramGenerator
+    internal static class ClassDiagramGenerator
     {
         public static void Create(UMLClassDiagram classDiagram, TextWriter writer)
         {
@@ -16,10 +16,11 @@ namespace PlantUML
 
             writer.Write("title ");
             writer.WriteLine(classDiagram.Title);
-            StringBuilder postWriter = new();
+            var postWriter = StringBuilderPool.Rent();
 
             Write(classDiagram.Package.Children, writer, postWriter, classDiagram.DataTypes);
             writer.Write(postWriter.ToString());
+            StringBuilderPool.Return(postWriter);
             writer.WriteLine();
 
             foreach (var nc in classDiagram.NoteConnections)
@@ -126,8 +127,6 @@ namespace PlantUML
                         }
 
                         writer.Write(" ");
-
-
 
                         if (prop.ListType == ListTypes.None)
                         {

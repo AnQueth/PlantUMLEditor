@@ -63,7 +63,7 @@ internal class UMLComponentDiagramTokenVisitor : ITokenVisitor
 
  
 
-public class PlantUmlTokenizer
+public static class PlantUmlTokenizer
 {
     public enum TokenType
     {

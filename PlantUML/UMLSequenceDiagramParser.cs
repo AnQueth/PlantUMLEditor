@@ -8,10 +8,11 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UMLModels;
+using static System.Collections.Specialized.BitVector32;
 
 namespace PlantUML
 {
-    public class UMLSequenceDiagramParser : IPlantUMLParser
+    public static class UMLSequenceDiagramParser 
     {
         private static readonly Regex _lifeLineRegex = new(@"^(?<type>participant|actor|control|component|database|boundary|entity|collections)\s+\""*(?<name>[\w\\ \.]+?(\s*\<((?<generics>[\s\w]+)\,*)*\>)*)\""*(\s+as (?<alias>[\w]+|\"".+\""))*? *([\#\<]+.*)*$", RegexOptions.Compiled);
         private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.*)");
@@ -20,12 +21,28 @@ namespace PlantUML
 
         private static readonly Regex other = new("^(activate|deactivate)\\w*", RegexOptions.Compiled);
 
-        private static UMLSignature? CheckActionOnType(UMLDataType toType, string actionSignature)
+        private static UMLSignature? CheckActionOnType(UMLDataType toType, string actionSignature, bool laxMode)
         {
-            UMLSignature? action = toType.Methods.Find(p => p.Signature == actionSignature);
+            UMLSignature? action = null;
+            if (laxMode)
+            {
+                action = toType.Methods.Find(p => p.Signature.Contains(actionSignature, StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+              action =  toType.Methods.Find(p => p.Signature == actionSignature);
+            }
+               
             if (action == null)
             {
-                action = toType.Properties.Find(p => p.Signature == actionSignature);
+                if (laxMode)
+                {
+                    action = toType.Properties.Find(p => p.Signature.Contains(actionSignature,  StringComparison.OrdinalIgnoreCase));
+                }
+                else
+                {
+                    action = toType.Properties.Find(p => p.Signature == actionSignature);
+                }
             }
 
             if (action != null)
@@ -33,15 +50,37 @@ namespace PlantUML
                 return action;
             }
 
-            foreach (UMLDataType? item in toType.Bases)
+            if(CheckBaseAndInterfaces(toType, actionSignature, laxMode, out UMLSignature actionFound))
             {
-                action = CheckActionOnType(item, actionSignature);
+                return actionFound;
+            }
+
+         
+            return null;
+        }
+
+        private static bool CheckBaseAndInterfaces(UMLDataType toType, string actionSignature, bool laxMode,
+            out UMLSignature actionFound)
+        {
+            
+
+            foreach (UMLDataType? item in toType.Bases.Union(toType.Interfaces))
+            {
+                var action = CheckActionOnType(item, actionSignature, laxMode);
                 if (action != null)
                 {
-                    return action;
+                    actionFound = action;
+                    return true ;
+                }
+
+                if(CheckBaseAndInterfaces(item, actionSignature, laxMode, out UMLSignature actionFromBase))
+                {
+                    actionFound = actionFromBase;
+                    return true;
                 }
             }
-            return null;
+            actionFound = null!;
+            return false;
         }
 
         private static string Clean(string name)
@@ -65,7 +104,7 @@ namespace PlantUML
             {
                 foreach (UMLDataType? toType in types[to.DataTypeId])
                 {
-                    action = CheckActionOnType(toType, actionSignature);
+                    action = CheckActionOnType(toType, actionSignature, d.LaxMode);
 
                     if (action != null)
                     {
@@ -161,6 +200,12 @@ namespace PlantUML
                 if (line == "'@@novalidate")
                 {
                     d.ValidateAgainstClasses = false;
+                    continue;
+                }
+
+                if(line == "'@@laxmode")
+                {
+                    d.LaxMode = true;
                     continue;
                 }
 

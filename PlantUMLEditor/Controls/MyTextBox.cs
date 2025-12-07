@@ -514,7 +514,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         {
             _indenter = indenter;
             _colorCodingProvider = colorCodingProvider;
-            Text = text;
+            Dispatcher.Invoke(() => Text = text);
             FindReplaceVisible = false;
 
             _braces = default;
@@ -1119,7 +1119,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         private string GetWordFromCursor()
         {
-            StringBuilder sb = new(20);
+            var sb = StringBuilderPool.Rent(20);
             ReadOnlySpan<char> tp = Text.AsSpan();
 
             for (int c = CaretIndex; c >= 0; c--)
@@ -1142,6 +1142,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             }
 
             string found = sb.ToString();
+            StringBuilderPool.Return(sb);
             return found;
         }
 

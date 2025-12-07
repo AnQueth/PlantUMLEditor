@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ using UMLModels;
 
 namespace PlantUML
 {
-    public class UMLClassDiagramParser : IPlantUMLParser
+    public static class UMLClassDiagramParser
     {
         private static readonly (string word, ListTypes listType)[] COLLECTIONS = new[]
             {
@@ -33,6 +34,8 @@ namespace PlantUML
 
         private static readonly Regex _composition = new("""(?<first>\w+)( | \"(?<fm>[01\*\.]+)\" )(?<arrow>[\*o\|\<]*[\-\.]+[\*o\|\>]*)( | \"(?<sm>[01\*\.]+)\" )(?<second>\w+) *:*(?<text>.*)""", RegexOptions.Compiled);
 
+      
+        private static readonly Regex _rtypeSuffix = new(@"\)\s*:\s*(?<rtype>.+)$", RegexOptions.Compiled);
 
         private static string Clean(string name)
         {
@@ -70,7 +73,12 @@ namespace PlantUML
 
         private static string GetPackage(Stack<string> packages)
         {
-            StringBuilder sb = new();
+            // estimate capacity: sum of package name lengths + separators
+            int estimated = 0;
+            foreach (var it in packages)
+                estimated += (it?.Length ?? 0) + 1;
+
+            var sb = StringBuilderPool.Rent(Math.Max(16, estimated));
             int x = 0;
             foreach (string? item in packages.Reverse())
             {
@@ -83,7 +91,66 @@ namespace PlantUML
                 x++;
             }
 
-            return sb.ToString();
+            string res = sb.ToString();
+            StringBuilderPool.Return(sb);
+            return res;
+        }
+
+        // collapse multiple whitespace to a single space (avoid Regex.Replace allocations)
+        private static string CollapseSpaces(ReadOnlySpan<char> s)
+        {
+            if (s.Length == 0) return string.Empty;
+
+            // First pass: compute resulting length
+            int outLen = 0;
+            bool lastSpace = false;
+            for (int i = 0; i < s.Length; i++)
+            {
+                char ch = s[i];
+                if (char.IsWhiteSpace(ch))
+                {
+                    if (!lastSpace)
+                    {
+                        outLen++;
+                        lastSpace = true;
+                    }
+                }
+                else
+                {
+                    outLen++;
+                    lastSpace = false;
+                }
+            }
+
+            if (outLen == s.Length)
+            {
+                // no change required
+                return new string(s);
+            }
+
+            // Second pass: fill the string directly
+            return string.Create(outLen, s, (span, src) =>
+            {
+                int idx = 0;
+                bool last = false;
+                for (int i = 0; i < src.Length; i++)
+                {
+                    char ch = src[i];
+                    if (char.IsWhiteSpace(ch))
+                    {
+                        if (!last)
+                        {
+                            span[idx++] = ' ';
+                            last = true;
+                        }
+                    }
+                    else
+                    {
+                        span[idx++] = ch;
+                        last = false;
+                    }
+                }
+            });
         }
 
         private static async Task<UMLClassDiagram?> ReadClassDiagram(StreamReader sr, string fileName)
@@ -162,14 +229,10 @@ namespace PlantUML
                     continue;
                 }
 
-
                 if (!started)
                 {
                     continue;
                 }
-
-
-
 
 
 
@@ -386,7 +449,10 @@ namespace PlantUML
                             d.Errors.Add(new UMLError("Base class cannot be the same as the derived class", second, lineNumber));
                             continue;
                         }
-                        cl.Bases.Add(i);
+                        if (i is UMLInterface ii)
+                            cl.Interfaces.Add(ii);
+                        else
+                            cl.Bases.Add(i);
                     }
                     else
                     {
@@ -560,38 +626,41 @@ namespace PlantUML
                 UMLVisibility visibility = ReadVisibility(methodMatch.Groups["visibility"].Value);
                 string name = methodMatch.Groups["name"].Value;
 
-                string returntype = string.Empty;
+                // build return type from captures using StringBuilder to reduce allocations
+                var rtBuilder = StringBuilderPool.Rent();
                 for (int x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
                 {
                     if (x != 0)
                     {
-                        returntype += " ";
+                        rtBuilder.Append(' ');
                     }
 
-                    returntype += methodMatch.Groups["type"].Captures[x].Value;
+                    rtBuilder.Append(methodMatch.Groups["type"].Captures[x].Value);
                 }
-                returntype = returntype.Trim();
+                string returntype = rtBuilder.ToString().Trim();
+                StringBuilderPool.Return(rtBuilder);
 
-                string returntype2 = string.Empty;
+                var rt2Builder = StringBuilderPool.Rent();
                 for (int x = 0; x < methodMatch.Groups["type2"].Captures.Count; x++)
                 {
                     if (x != 0)
                     {
-                        returntype2 += " ";
+                        rt2Builder.Append(' ');
                     }
-                    returntype2 += methodMatch.Groups["type2"].Captures[x].Value;
+                    rt2Builder.Append(methodMatch.Groups["type2"].Captures[x].Value);
                 }
-                returntype2 = returntype2.Trim();
+                string returntype2 = rt2Builder.ToString().Trim();
+                StringBuilderPool.Return(rt2Builder);
 
                 if (!string.IsNullOrWhiteSpace(returntype2))
                 {
                     returntype = returntype2;
                 }
 
-                // If return type wasn't captured in the C#-style group, attempt to read UML-style "): type" suffix.
+                // If return type wasn't captured in the C#-style group, attempt to read UML-style ") : type" suffix.
                 if (string.IsNullOrWhiteSpace(returntype))
                 {
-                    var m = Regex.Match(line, @"\)\s*:\s*(?<rtype>.+)$");
+                    var m = _rtypeSuffix.Match(line);
                     if (m.Success)
                     {
                         returntype = m.Groups["rtype"].Value.Trim();
@@ -600,16 +669,12 @@ namespace PlantUML
 
                 string modifier = methodMatch.Groups["modifier"].Value;
 
-                UMLDataType returnType;
+                UMLDataType? returnType;
 
-                if (aliases.ContainsKey(returntype))
-                {
-                    returnType = aliases[returntype];
-                }
-                else
+                if (!aliases.TryGetValue(returntype, out returnType))
                 {
                     returnType = new UMLDataType(returntype, string.Empty);
-                    aliases.Add(returntype, returnType);
+                    aliases[returntype] = returnType;
                 }
 
                 List<UMLParameter> pars = new();
@@ -619,10 +684,10 @@ namespace PlantUML
                 // - UML style: "id:int, dto:Product"
                 // - Generics with angle brackets (no splitting inside <>)
                 string v = methodMatch.Groups["params"].Value;
-                v = Regex.Replace(v, "\\s{2,}", " ");
+                v = CollapseSpaces(v.AsSpan());
 
                 List<string> tokens = new();
-                StringBuilder current = new();
+                var current = StringBuilderPool.Rent();
                 int genericDepth = 0;
                 for (int i = 0; i < v.Length; i++)
                 {
@@ -651,6 +716,9 @@ namespace PlantUML
                 {
                     tokens.Add(current.ToString());
                 }
+
+                // return the pooled builder used for token accumulation
+                StringBuilderPool.Return(current);
 
                 foreach (var token in tokens)
                 {
@@ -717,15 +785,11 @@ namespace PlantUML
                     // Normalize typeString (if empty, keep as empty string)
                     CollectionRecord collection = CreateFrom(typeString);
 
-                    UMLDataType paramType;
-                    if (aliases.ContainsKey(collection.Word))
-                    {
-                        paramType = aliases[collection.Word];
-                    }
-                    else
+                    UMLDataType? paramType;
+                    if (!aliases.TryGetValue(collection.Word, out paramType))
                     {
                         paramType = new UMLDataType(collection.Word, string.Empty);
-                        aliases.Add(collection.Word, paramType);
+                        aliases[collection.Word] = paramType;
                     }
 
                     pars.Add(new UMLParameter(paramName.Trim(), paramType, collection.ListType));
@@ -747,16 +811,12 @@ namespace PlantUML
 
                 CollectionRecord? p = CreateFrom(g.Groups["type"].Value);
 
-                UMLDataType c;
+                UMLDataType? c;
 
-                if (aliases.ContainsKey(p.Word))
-                {
-                    c = aliases[p.Word];
-                }
-                else
+                if (!aliases.TryGetValue(p.Word, out c))
                 {
                     c = new UMLDataType(p.Word);
-                    aliases.Add(p.Word, c);
+                    aliases[p.Word] = c;
                 }
 
                 dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType, modifier == "{static}", modifier == "{abstract}", false));

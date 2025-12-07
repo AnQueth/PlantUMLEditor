@@ -669,40 +669,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void InitializeFileWatcher(string folderPath)
-        {
-            _fileWatcher?.Dispose();
-
-            _fileWatcher = new FileSystemWatcher(folderPath)
-            {
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName,
-                Filter = "*.*",
-                IncludeSubdirectories = true,
-                EnableRaisingEvents = true
-            };
-
-            _fileWatcher.Changed += OnFileChanged;
-            _fileWatcher.Created += OnFileChanged;
-            _fileWatcher.Deleted += OnFileChanged;
-            _fileWatcher.Renamed += OnFileRenamed;
-        }
-
-        private void OnFileChanged(object sender, FileSystemEventArgs e)
-        {
-            // Only trigger for relevant file types
-            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
-            {
-                _messageCheckerTrigger.Writer.TryWrite(true);
-            }
-        }
-
-        private void OnFileRenamed(object sender, RenamedEventArgs e)
-        {
-            if (e.Name != null && (e.Name.EndsWith(".puml", StringComparison.OrdinalIgnoreCase)))
-            {
-                _messageCheckerTrigger.Writer.TryWrite(true);
-            }
-        }
+       
 
         private void OpenHelpCommandHandler()
         {

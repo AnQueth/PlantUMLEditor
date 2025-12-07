@@ -7,7 +7,7 @@ using UMLModels;
 
 namespace PlantUML
 {
-    public class UnknownDiagramParser
+    public static class UnknownDiagramParser
     {
 
 

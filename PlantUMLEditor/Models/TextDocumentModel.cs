@@ -64,7 +64,7 @@ namespace PlantUMLEditor.Models
 
 
             ShowPreviewCommand = new DelegateCommand(ShowPreviewCommandHandler);
-            MatchingAutoCompletes = new List<string>();
+            MatchingAutoCompletes = new HashSet<string>(StringComparer.Ordinal);
             SortedMatchingAutoCompletes = new ObservableCollection<string>();
             RegenDocument = new DelegateCommand(RegenDocumentHandler);
             _temporarySave = new TemporarySave(fileName);
@@ -100,7 +100,7 @@ namespace PlantUMLEditor.Models
 
         internal abstract void AutoComplete(AutoCompleteParameters autoCompleteParameters);
 
-        public List<string> MatchingAutoCompletes
+        public HashSet<string> MatchingAutoCompletes
         {
             get;
         }

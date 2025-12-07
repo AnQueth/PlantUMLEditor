@@ -10,4 +10,8 @@
     <ProjectReference Include="..\UMLModels\UMLModels.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>

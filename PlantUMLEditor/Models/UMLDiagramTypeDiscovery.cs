@@ -3,7 +3,7 @@ using UMLModels;
 
 namespace PlantUMLEditor.Models
 {
-    internal class UMLDiagramTypeDiscovery
+    internal static class UMLDiagramTypeDiscovery
     {
         public static async Task<UMLClassDiagram?> TryCreateClassDiagram(UMLDocumentCollection documents, string fullPath)
         {

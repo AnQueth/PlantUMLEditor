@@ -9,7 +9,7 @@ using UMLModels;
 
 namespace PlantUML
 {
-    public class UMLComponentDiagramParser
+    public static class UMLComponentDiagramParser
     {
         private const string CLASSNAME = "class";
         private const string PACKAGENAME = "name";
@@ -99,7 +99,7 @@ namespace PlantUML
 
         private static string GetPackage(Stack<string> packages)
         {
-            StringBuilder sb = new();
+            var sb = StringBuilderPool.Rent();
             int x = 0;
             foreach (string? item in packages.Reverse())
             {
@@ -112,7 +112,9 @@ namespace PlantUML
                 x++;
             }
 
-            return sb.ToString();
+            string res = sb.ToString();
+            StringBuilderPool.Return(sb);
+            return res;
         }
 
         private static async Task<UMLComponentDiagram?> ReadComponentDiagram(StreamReader sr, string fileName)

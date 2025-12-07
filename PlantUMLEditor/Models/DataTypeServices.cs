@@ -8,7 +8,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace PlantUMLEditor.Models
 {
-    class DataTypeServices
+    static class DataTypeServices
     {
 
         public static IEnumerable<GotoDefinitionResult> GotoDefinition(UMLDocumentCollection umlDocumentCollection, string text)

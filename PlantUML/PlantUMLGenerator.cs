@@ -6,7 +6,7 @@ using UMLModels;
 
 namespace PlantUML
 {
-    public class PlantUMLGenerator
+    public static class PlantUMLGenerator
     {
 
 

@@ -63,7 +63,7 @@ namespace PlantUMLEditor.Models
             get; private set;
         }
 
-        private void AddAll(UMLDataType uMLDataType, List<string> matchingAutoCompletes, string word)
+        private void AddAll(UMLDataType uMLDataType, HashSet<string> matchingAutoCompletes, string word)
         {
             uMLDataType.Methods.ForEach(z =>
             {
@@ -80,7 +80,11 @@ namespace PlantUMLEditor.Models
                 }
             });
 
-            foreach (UMLDataType? item in uMLDataType.Bases)
+            
+
+
+
+            foreach (UMLDataType? item in uMLDataType.Bases.Union(uMLDataType.Interfaces))
             {
                 AddAll(item, matchingAutoCompletes, word);
             }

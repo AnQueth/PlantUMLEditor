@@ -4,6 +4,17 @@ using System.Threading.Tasks;
 
 namespace PlantUMLEditor.Models.Runners
 {
+    /// <summary>
+    ///  PlantUML output path notes (Windows):
+    /// - The -o option must point to a valid directory.
+    /// - Path must be the same directory as the diagram file, or a relative subfolder.
+    /// - Works: -o "C:\Users\aaron\AppData\Local\Temp" (no trailing backslash).
+    /// - Fails: -o "C:\Users\aaron\AppData\Local\Temp\" because \" is parsed as an escaped quote,
+    ///   so Java/PlantUML misreads the argument and no diagram is generated.
+    /// - If you need a trailing backslash, escape it as "\\", e.g. -o "C:\Users\aaron\AppData\Local\Temp\\"
+    /// - Rule of thumb: avoid single backslash at the end of quoted Windows paths,
+    ///   and keep output directory aligned with the diagram’s location.
+    /// </summary>
     internal class PlantUMLImageGenerator
     {
         private readonly string jarLocation;
@@ -38,7 +49,7 @@ namespace PlantUMLEditor.Models.Runners
 
                 p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.FileName = "java.exe";
-                p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {jarLocation} {svgString}  \"{path}\"";
+                p.StartInfo.Arguments = $"-Xmx1024m -DPLANTUML_LIMIT_SIZE=20000 -jar {jarLocation} {svgString} -o \"{dir}\" \"{path}\"";
                 p.StartInfo.RedirectStandardOutput = true;
                 p.StartInfo.RedirectStandardError = true;
 

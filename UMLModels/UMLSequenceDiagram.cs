@@ -16,6 +16,12 @@ namespace UMLModels
         public List<UMLOrderedEntity> Entities { get; init; } = new();
         public List<UMLSequenceLifeline> LifeLines { get; init; } = new();
 
+        public bool LaxMode
+        {
+                       get; set;
+
+        }
+
         public bool ValidateAgainstClasses
         {
             get; set;

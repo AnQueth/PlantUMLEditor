@@ -26,11 +26,14 @@ namespace PlantUMLEditor.Models
     Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>> next,
     CancellationToken cancellationToken)
         {
-
-            if (context.Arguments.Count == 0)
+            if(context.Function is null || context.Function.UnderlyingMethod is null)
             {
                 return await next(context, cancellationToken);
 
+            }
+            if (context.Function.UnderlyingMethod.GetCustomAttributes(typeof(AIToolModifyAttribute), true).Length == 0)
+            {               
+                return await next(context, cancellationToken);
             }
 
             StringBuilder sb = new StringBuilder();
@@ -41,7 +44,7 @@ namespace PlantUMLEditor.Models
 
             }
 
-            var canCall = await ConfirmCanRun(context!.Function.Name, sb.ToString());
+            var canCall = await ConfirmCanRun(context.Function.Name, sb.ToString());
             if (!canCall)
             {
 
@@ -200,7 +203,7 @@ namespace PlantUMLEditor.Models
             }
             else if (CurrentDocument is ITextGetter textGetter)
             {
-                var aiTools = new AIToolsTextGetter(textGetter, OpenDocument, FolderBase);
+                var aiTools = new AIToolsReadable(textGetter, OpenDocument, FolderBase);
 
                 AIAgentFactory factory = new AIAgentFactory();
                 agent = factory.Create(settings, ConfirmFunctionCallMiddleware,

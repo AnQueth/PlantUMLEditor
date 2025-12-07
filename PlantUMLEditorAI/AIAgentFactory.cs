@@ -86,7 +86,7 @@ examples:
 * if user asks to create a new class diagram, you create a new plantuml diagram with appropriate syntax and name it with a word with .class.puml
 * if user asks to create a new diagram, you create a new plantuml diagram with appropriate syntax and name it with a word with .puml
 * if current document text is not uml, it is either md or text from an html document.
-* when creating a sequence diagram, add this comment after @startuml: '@@novalidate. if this comment appears in a file, leave it!
+* when creating a new sequence diagram, not editing an existing one, add this comment after @startuml: ""'@@novalidate"". if this comment appears in a file, leave it!
 * for sequence diagrams prefer the format: participant ""name of something"" as alias
 
 ";

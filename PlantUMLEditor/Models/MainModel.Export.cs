@@ -32,16 +32,7 @@ namespace PlantUMLEditor.Models
 
             PlantUMLImageGenerator.UMLImageCreateRecord? res = await generator.Create();
 
-            if (folder != null)
-            {
-                TreeViewModel? file = folder.Children.First(z => string.Equals(z.FullPath, _selectedFile.FullPath, StringComparison.Ordinal));
-
-                int ix = folder.Children.IndexOf(file);
-                if (!folder.Children.Any(z => z.FullPath == res.fileName))
-                {
-                    folder.Children.Insert(ix, new TreeViewModel(folder, res.fileName, Statics.GetIcon(res.fileName)));
-                }
-            }
+         
         }
         private async void CreateUMLSVGImageHandler()
         {

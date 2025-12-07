@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using PlantUMLEditor;
 
 namespace PlantUMLEditor.Controls
 {
@@ -32,7 +33,7 @@ namespace PlantUMLEditor.Controls
 
             ReadOnlySpan<char> r = line.AsSpan();
 
-            StringBuilder sbNewLine = new(line.Length);
+            var sbNewLine = PlantUMLEditor.StringBuilderPool.Rent(line.Length);
             int starts = 0;
             char oldd = '\0';
 
@@ -64,6 +65,7 @@ namespace PlantUMLEditor.Controls
                 }
             }
             line = sbNewLine.ToString();
+            PlantUMLEditor.StringBuilderPool.Return(sbNewLine);
 
 
             if (tabStop.IsMatch(line))
@@ -123,7 +125,7 @@ namespace PlantUMLEditor.Controls
             string oldLine = "";
 
             bool processedTitle = false;
-            StringBuilder sb = new();
+            var sb = PlantUMLEditor.StringBuilderPool.Rent();
 
             for (int x = 0; x < lines.Length; x++)
             {
@@ -161,7 +163,9 @@ namespace PlantUMLEditor.Controls
 
                 ProcessLine(sb, lines[x].Trim(), ref indentLevel);
             }
-            return sb.ToString();
+            string res = sb.ToString();
+            PlantUMLEditor.StringBuilderPool.Return(sb);
+            return res;
         }
     }
 }
