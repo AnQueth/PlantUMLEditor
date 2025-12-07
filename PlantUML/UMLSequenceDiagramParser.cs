@@ -14,12 +14,12 @@ namespace PlantUML
 {
     public static class UMLSequenceDiagramParser 
     {
-        private static readonly Regex _lifeLineRegex = new(@"^(?<type>participant|actor|control|component|database|boundary|entity|collections)\s+\""*(?<name>[\w\\ \.]+?(\s*\<((?<generics>[\s\w]+)\,*)*\>)*)\""*(\s+as (?<alias>[\w]+|\"".+\""))*? *([\#\<]+.*)*$", RegexOptions.Compiled);
-        private static readonly Regex _blockSection = new("(?<type>alt|loop|else|par|opt|try|group|catch|finally|break)(?<text>.*)");
+        private static readonly Regex _lifeLineRegex = new(@"^(?<type>participant|create|actor|control|component|database|boundary|entity|collections)\s+\""*(?<name>[\w\\ \.]+?(\s*\<((?<generics>[\s\w]+)\,*)*\>)*)\""*(\s+as (?<alias>[\w]+|\"".+\""))*? *([\#\<]+.*)*$", RegexOptions.Compiled);
+        private static readonly Regex _blockSection = new("(?<type>alt|loop|ref|else|par|opt|try|group|catch|finally|break)(?<text>.*)");
 
         private static readonly Regex lineConnectionRegex = new(@"^([a-zA-Z0-9\>\<\,\[\]]+|[\-<>\]\[\#]+)\s*([a-zA-Z0-9\-\.\>\<\\\/\]\[\#]+)\s*([a-zA-Z0-9\-><]*)\s*\:*\s*(.+)*$", RegexOptions.Compiled, TimeSpan.FromMilliseconds(50));
 
-        private static readonly Regex other = new("^(activate|deactivate)\\w*", RegexOptions.Compiled);
+        private static readonly Regex other = new("^(activate|deactivate|destroy)\\w*", RegexOptions.Compiled);
 
         private static UMLSignature? CheckActionOnType(UMLDataType toType, string actionSignature, bool laxMode)
         {

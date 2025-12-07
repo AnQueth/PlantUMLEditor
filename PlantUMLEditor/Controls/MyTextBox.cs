@@ -69,6 +69,31 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
         private bool findReplaceVisible;
         private int _findHeight = 50;
 
+        // Cached shared brushes/pens and lightweight cached metrics to reduce allocations during rendering
+        private static readonly Pen s_findUnderlinePen;
+        private static readonly Pen s_errorPen;
+        private static readonly Pen s_linePen;
+        private static readonly Brush s_braceBrush;
+
+        // Instance-level cached DPI/typeface so we can update when font or DPI changes
+        private Typeface? _cachedTypeface;
+        private double _cachedPixelsPerDip = 1.0;
+
+        static MyTextBox()
+        {
+            s_findUnderlinePen = new Pen(Brushes.DarkBlue, 5);
+            if (s_findUnderlinePen.CanFreeze) s_findUnderlinePen.Freeze();
+
+            s_errorPen = new Pen(Brushes.Red, 2);
+            if (s_errorPen.CanFreeze) s_errorPen.Freeze();
+
+            s_linePen = new Pen(Brushes.Silver, 2);
+            if (s_linePen.CanFreeze) s_linePen.Freeze();
+
+            s_braceBrush = Brushes.LightBlue;
+            if (s_braceBrush.CanFreeze) s_braceBrush.Freeze();
+        }
+
         public MyTextBox()
         {
             DataContextChanged += MyTextBox_DataContextChanged;
@@ -219,23 +244,16 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             int cf = _lastKnownFirstCharacterIndex;
             int cl = _lastKnownLastCharacterIndex;
 
-            while (cl > Text.Length)
+            // clamp indices safely
+            cf = Math.Clamp(cf, 0, Text.Length);
+            cl = Math.Clamp(cl, cf, Text.Length);
+
+            // update cached DPI and typeface for this render
+            _cachedPixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+            _cachedTypeface = new Typeface(FontFamily, FontStyle, FontWeight, FontStretch);
+
+            if (Text.Length > 0 && cl > cf)
             {
-                cl--;
-            }
-
-            if (Text.Length > 0)
-            {
-                if (cl == -1)
-                {
-                    cl = Text.Length;
-                }
-
-                if (cf >= Text.Length)
-                {
-                    cf = 0;
-                }
-
                 if (cf + (cl - cf) > Text.Length || (cl - cf) < 0)
                 {
                     Debug.WriteLine("TEXT OUT OF RANGE");
@@ -248,12 +266,15 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
     ,
     CultureInfo.GetCultureInfo("en-us"),
     FlowDirection.LeftToRight,
-    new Typeface(FontFamily.Source),
-    FontSize, Brushes.Black, VisualTreeHelper.GetDpi(this).PixelsPerDip);
+    _cachedTypeface,
+    FontSize, Brushes.Black, _cachedPixelsPerDip);
 
                 // Debug.WriteLine($"{cf} {cl} {Text.Length} {t.Length}");
-                foreach (FormatResult? c in _colorCodings.Where(z => z.Intersects(cf, cl)))
+                for (int i = 0; i < _colorCodings.Count; i++)
                 {
+                    FormatResult? c = _colorCodings[i];
+                    if (c == null) continue;
+                    if (!c.Intersects(cf, cl)) continue;
                     try
                     {
                         formattedText.SetForegroundBrush(c.Brush, c.AdjustedStart(cf), c.AdjustedLength(cf, cl));
@@ -286,7 +307,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                                 int len = FormatResult.AdjustedLength(cf, cl, item.Start, item.Length, item.Start + item.Length);
 
                                 TextDecoration td = new(TextDecorationLocation.Underline,
-                              new System.Windows.Media.Pen(Brushes.DarkBlue, 5), 0, TextDecorationUnit.FontRecommended,
+                              s_findUnderlinePen, 0, TextDecorationUnit.FontRecommended,
                                TextDecorationUnit.FontRecommended);
 
                                 TextDecorationCollection textDecorations = new()
@@ -315,7 +336,10 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                         if (FormatResult.Intersects(cf, cl, _braces.selectionStart, _braces.selectionStart + 1))
                         {
                             Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.selectionStart), 1);
-                            col.DrawGeometry(Brushes.LightBlue, null, g);
+                            if (g != null)
+                            {
+                                col.DrawGeometry(s_braceBrush, null, g);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -328,7 +352,10 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                         if (FormatResult.Intersects(cf, cl, _braces.match, _braces.match + 1))
                         {
                             Geometry? g = formattedText.BuildHighlightGeometry(new Point(4, 0), FormatResult.AdjustedStart(cf, _braces.match), 1);
-                            col.DrawGeometry(Brushes.LightBlue, null, g);
+                            if (g != null)
+                            {
+                                col.DrawGeometry(s_braceBrush, null, g);
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -347,7 +374,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                         if (l >= cf && l <= cl)
                         {
                             TextDecoration td = new(TextDecorationLocation.Underline,
-                                new System.Windows.Media.Pen(Brushes.Red, 2), 0, TextDecorationUnit.FontRecommended,
+                                s_errorPen, 0, TextDecorationUnit.FontRecommended,
                                  TextDecorationUnit.FontRecommended);
 
                             TextDecorationCollection textDecorations = new()
@@ -369,7 +396,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
             double top = (GetLineNumberDuringRender(CaretIndex) * GetLineHeight()) - VerticalOffset + _textTransformOffset;
 
-            col.DrawRectangle(Brushes.Transparent, new Pen(Brushes.Silver, 2), new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), GetLineHeight()));
+            col.DrawRectangle(Brushes.Transparent, s_linePen, new Rect(0, top, Math.Max(ViewportWidth + HorizontalOffset, ActualWidth), GetLineHeight()));
         }
 
         public void GotoLine(int lineNumber, string? findText)
@@ -837,25 +864,31 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             base.OnRender(drawingContext);
             drawingContext.PushTransform(new TranslateTransform(-HorizontalOffset, -_textTransformOffset));
             drawingContext.PushClip(new RectangleGeometry(new Rect(HorizontalOffset, _textTransformOffset, ViewportWidth, ViewportHeight)));
-            //drawingContext.PushTransform(new TranslateTransform(-HorizontalOffset, -VerticalOffset));
-            //drawingContext.PushClip(new RectangleGeometry(new Rect(HorizontalOffset, VerticalOffset,
-            //    ViewportWidth, ViewportHeight)));
 
-            if (_renderText)
+            try
             {
-                _cachedDrawing = new DrawingVisual();
-
-                using (DrawingContext d = _cachedDrawing.RenderOpen())
+                if (_renderText)
                 {
-                    DrawText(d);
+                    _cachedDrawing = new DrawingVisual();
+
+                    using (DrawingContext d = _cachedDrawing.RenderOpen())
+                    {
+                        DrawText(d);
+                    }
+
+                    _renderText = false;
                 }
 
-                _renderText = false;
+                if (_cachedDrawing != null)
+                {
+                    drawingContext.DrawDrawing(_cachedDrawing.Drawing);
+                }
             }
-
-            if (_cachedDrawing != null)
+            finally
             {
-                drawingContext.DrawDrawing(_cachedDrawing.Drawing);
+                // Ensure we always pop what we pushed to avoid corrupting the drawing stack
+                drawingContext.Pop();
+                drawingContext.Pop();
             }
         }
 
@@ -1238,9 +1271,13 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                 int start = GetFirstVisibleLineIndex();
                 int lines = GetLastVisibleLineIndex();
 
-                double p = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+                // reuse cached DPI/typeface if possible
+                _cachedPixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
+                _cachedTypeface = new Typeface(FontFamily, FontStyle, FontWeight, FontStretch);
 
-                Typeface tf = new(FontFamily, FontStyle, FontWeight, FontStretch);
+                double p = _cachedPixelsPerDip;
+
+                Typeface tf = _cachedTypeface ?? new(FontFamily, FontStyle, FontWeight, FontStretch);
                 DrawingVisual dv = new();
                 DrawingContext? context = dv.RenderOpen();
 

@@ -70,6 +70,7 @@ namespace PlantUMLEditor.Models
 
 
 
+
             return findresults;
 
         }
@@ -198,7 +199,7 @@ namespace PlantUMLEditor.Models
     {
 
         [Description("verifies a puml file is valid and can be rendered. returns error in the document.")]
-        public async Task<string> VerifyUMLFile([Description("path to the file to verify or for the current document, current_document")] string filePath)
+        public async Task<string > VerifyUMLFile([Description("path to the file to verify or for the current document, current_document")] string filePath)
         {
 
             this.CheckPathAccess(filePath);
@@ -211,7 +212,7 @@ namespace PlantUMLEditor.Models
             }
             if (filePath == "current_document" && _currentTdm != null)
             {
-                string tempFile = Path.Combine(dir, Guid.NewGuid().ToString() + ".puml");
+                string tempFile = Path.Combine(dir, Guid.NewGuid().ToString() + ".svg");
                 await File.WriteAllTextAsync(tempFile, _currentTdm.Content);
                 filePath = tempFile;
             }
@@ -230,20 +231,23 @@ namespace PlantUMLEditor.Models
             File.Copy(filePath, tmpfn, true);
 
             PlantUMLImageGenerator plantUMLImageGenerator = new(AppSettings.Default.JARLocation,
-                tmpfn, dir, false);
+                tmpfn, dir, true);
             var result = await plantUMLImageGenerator.Create();
-            if (File.Exists(result.fileName))
-                File.Delete(result.fileName);
+   
             if (File.Exists(tmpfn))
                 File.Delete(tmpfn);
 
+            var svgContent = result.errors == string.Empty && File.Exists(result.fileName) ?
+                await File.ReadAllTextAsync(result.fileName) : null;
 
+            if (File.Exists(result.fileName))
+                File.Delete(result.fileName);
             return result.errors;
         }
 
         [AIToolModify]
         [Description("Replaces all occurrences of 'text' with 'newText' in the document.")]
-        public void ReplaceText(
+        public string ReplaceText(
             [Description("the file path to replace text in, leave empty for current document")] string filePath,
             [Description("the text to find")] string text,
             [Description("the new text")] string newText)
@@ -251,25 +255,73 @@ namespace PlantUMLEditor.Models
             if (_currentTdm != null && string.IsNullOrEmpty(filePath))
             {
                 var original = _currentTdm.Content;
+                var found = original.Contains(text);
+                if(!found)
+                {
+                    return "Text to replace not found in document.";
+                }
+
                 var t = original.Replace(text, newText);
+
+                found = t.Contains(newText);
+                if(!found)
+                    {
+                    return "Replacement failed.";
+                }
+
                 _currentTdm.Content = t;
 
                 _currentMessage.Undos.Add(new UndoOperation(UndoTypes.Replace, _currentTdm.FileName, original, t));
             }
             else
             {
+                filePath = GetFullPath(filePath);
+
                 CheckPathAccess(filePath);
+
                 if (File.Exists(filePath))
                 {
                     var original = File.ReadAllText(filePath);
+                    var found = original.Contains(text);
+                    if (!found)
+                    {
+                        return "Text to replace not found in document.";
+                    }
+
                     var t = original.Replace(text, newText);
+
+                    found = t.Contains(newText);
+                    if (!found)
+                    {
+                        return "Replacement failed.";
+                    }
+                   
                     File.WriteAllText(filePath, t);
 
 
                 }
+                else
+                {
+                    return $"File not found: {filePath}";
+                }
 
             }
+
+            return "Replacement successful.";
+
         }
+
+        private string GetFullPath(string filePath)
+        {
+             if(File.Exists(filePath))
+                return filePath;
+            var found = Directory.GetFiles(FolderBase, Path.GetFileName(filePath), SearchOption.AllDirectories).FirstOrDefault();
+            if (found is null)
+                throw new FileNotFoundException("File not found", filePath);
+
+            return found;
+        }
+
         [AIToolModify]
         [Description("Inserts the specified text at the given position of the current document only")]
         public void InsertTextAtPosition([Description("position in the original text to insert at")] int position, [Description("the text to insert")] string text)
@@ -285,7 +337,7 @@ namespace PlantUMLEditor.Models
         }
         [AIToolModify]
         [Description("rewrite the complete document")]
-        public void RewriteDocument(
+        public string RewriteDocument(
             [Description("the file path to rewrite if not the current document")] string filePath,
             [Description("the new text for the document")] string text)
         {
@@ -294,14 +346,20 @@ namespace PlantUMLEditor.Models
                 var original = _currentTdm.Content;
                 _currentMessage.Undos.Add(new UndoOperation(UndoTypes.ReplaceAll, _currentTdm.FileName, original, text));
                 _currentTdm.Content = text;
-            }
 
+                return "Rewrote";
+            }
+            filePath = GetFullPath(filePath);
             CheckPathAccess(filePath);
 
             if (File.Exists(filePath))
             {
                 File.WriteAllText(filePath, text);
+
+                return "Rewrote";
             }
+
+            return "File Not Found";
 
         }
 

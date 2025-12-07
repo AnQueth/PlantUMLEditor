@@ -52,10 +52,10 @@ namespace PlantUMLEditor.Models
                 return null;
             }
 
-            return await next(context, cancellationToken);
+            var res = await next(context, cancellationToken);
 
-
-
+            
+            return res;
         }
         private string _chatText = string.Empty;
 
@@ -257,8 +257,18 @@ namespace PlantUMLEditor.Models
                             currentMessage.ToolCalls.Add(new ChatMessage.ToolCall
                             {
                                 ToolName = fc.Name,
+                                Id = fc.CallId,
+                                    
                                 Arguments = System.Text.Json.JsonSerializer.Serialize(fc.Arguments)
                             });
+                        }
+                        else if(c is FunctionResultContent frc)
+                        {
+                            var lastCall = currentMessage.ToolCalls.LastOrDefault(tc => tc.Result is null && tc.Id == frc.CallId);
+                            if (lastCall is not null)
+                            {
+                                lastCall.Result = frc.Result?.ToString();
+                            }
                         }
                     }
 
@@ -269,10 +279,10 @@ namespace PlantUMLEditor.Models
             {
                 currentMessage.Message += $"\n\nError: {ex.Message}";
             }
-
+            currentMessage.IsBusy = false;
             await SaveConversation(AIConversation, thread.Serialize());
 
-            currentMessage.IsBusy = false;
+          
         }
 
         private async Task SaveConversation(ObservableCollection<ChatMessage> messages, JsonElement thread)

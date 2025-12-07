@@ -262,5 +262,17 @@ namespace PlantUMLEditor {
                 this["AzureAIMaxOutputTokens"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Segoe UI")]
+        public string SelectedFont {
+            get {
+                return ((string)(this["SelectedFont"]));
+            }
+            set {
+                this["SelectedFont"] = value;
+            }
+        }
     }
 }

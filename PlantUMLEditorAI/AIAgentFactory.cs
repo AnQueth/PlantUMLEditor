@@ -88,7 +88,7 @@ examples:
 * if current document text is not uml, it is either md or text from an html document.
 * when creating a new sequence diagram, not editing an existing one, add this comment after @startuml: ""'@@novalidate"". if this comment appears in a file, leave it!
 * for sequence diagrams prefer the format: participant ""name of something"" as alias
-
+* you should request plantuml syntax help after failing to resolve an issue fast by reading from using the html tool https://plantuml.com/
 ";
 
 

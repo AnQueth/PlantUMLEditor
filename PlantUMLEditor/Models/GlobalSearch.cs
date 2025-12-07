@@ -13,16 +13,16 @@ namespace PlantUMLEditor.Models
 
         public static string? RootDirectory { get; set; }
 
-        public static Task<List<GlobalFindResult>> Find( string text, string[] extensions)
+        public static Task<List<GlobalFindResult>> Find( string rawText, string[] extensions)
         {
-            if (string.IsNullOrEmpty(text))
+            if (string.IsNullOrEmpty(rawText))
                 return Task.FromResult(new List<GlobalFindResult>());
 
             ConcurrentBag<GlobalFindResult> res = new();
 
             // Try to treat the search text as a regex. If it fails to compile, fall back to plain string search.
 
-            text = EscapeTextForRegex(text);
+            var text = EscapeTextForRegex(rawText);
 
             Regex? regex = null;
             bool useRegex = false;
@@ -43,6 +43,10 @@ namespace PlantUMLEditor.Models
 
                 foreach (string? file in Directory.GetFiles(RootDirectory, ex, SearchOption.AllDirectories))
                 {
+                    if(Path.GetFileName(file) == Path.GetFileName(rawText))
+                    {
+                        res.Add(new GlobalFindResult(file,0, text, text ));
+                    }
                     try
                     {
                         using FileStream? f = File.OpenRead(file);

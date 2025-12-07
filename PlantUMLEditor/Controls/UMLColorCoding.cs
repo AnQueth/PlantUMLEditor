@@ -47,14 +47,14 @@ namespace PlantUMLEditor.Controls
                 {
                     (new Regex("(@start\\w+|@end\\w+)", RegexOptions.Compiled), CreateFrozen(UMLColorCodingConfig.StartEndColor), 0, FontWeights.Normal),
                     (new Regex(@"^left +to +right +direction\s*$", RegexOptions.Compiled | RegexOptions.Multiline), CreateFrozen( UMLColorCodingConfig.DirectionColor), 0, FontWeights.Normal),
-                    (new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|show|remove|skinparam|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|legend|endlegend|interface|struct|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), CreateFrozen( UMLColorCodingConfig.KeywordColor), 1, FontWeights.Normal),
+                    (new Regex(@"^[\s\+\-\#]*(\*+|abstract class|\{static\}|\{abstract\}|show|remove|skinparam|box|end box|autonumber|hide|title|class|\{\w+\}|usecase|legend|endlegend|interface|struct|activate|deactivate|package|together|alt(?:\#[\w]*)|alt|opt|loop|try|group|catch|break|par|end|enum|participant|actor|control|component|database|boundary|destroy|queue|entity|collections|else|rectangle|queue|node|folder|cloud)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), CreateFrozen( UMLColorCodingConfig.KeywordColor), 1, FontWeights.Normal),
                     (new Regex(@"^[\s\+\-\#]*(port|portin|portout)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled), CreateFrozen( UMLColorCodingConfig.PortColor), 1, FontWeights.Normal),
-                    (new Regex(@"^\s*(start|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork|while.*|endwhile.*)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),CreateFrozen(  UMLColorCodingConfig.ControlFlowColor), 1, FontWeights.Normal)
+                    (new Regex(@"^\s*(start|ref|endref|endif|if\s+\(.*|else\s+\(.*|repeat\s+while\s+\(.*|repeat|end\s+fork|fork\s+again|fork|while.*|endwhile.*)\s+?", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),CreateFrozen(  UMLColorCodingConfig.ControlFlowColor), 1, FontWeights.Normal)
                  };
 
             _groupedCodes = new()
                 {
-                        (new Regex(@"^\s*(?<k>package|rectangle|usecase|folder|participant|cloud|folder|actor|database|queue|component|struct|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:.+?)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
+                        (new Regex(@"^\s*(?<k>package|rectangle|usecase|folder|participant|create|destroy|cloud|folder|actor|database|queue|component|struct|class|interface|enum|boundary|entity)\s+(?:.+?)\s+(?<k>as)\s+(?:.+?)$", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled),
                         new Brush[] { CreateFrozen( UMLColorCodingConfig.KeywordColor), 
                           CreateFrozen(  UMLColorCodingConfig.GroupKeywordColor )})
                 };

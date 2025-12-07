@@ -62,5 +62,8 @@
     <Setting Name="AzureAIMaxOutputTokens" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2046</Value>
     </Setting>
+    <Setting Name="SelectedFont" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Segoe UI</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

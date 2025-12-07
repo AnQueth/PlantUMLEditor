@@ -1,0 +1,26 @@
+@startuml
+'@@novalidate
+title randomname.seq
+participant "User" as U
+participant "Service" as S
+participant "Database" as DB
+participant "Cache" as C
+
+U -> S: Send request
+activate S
+S -> C: Check cache
+activate C
+alt cache hit
+    C --> S: cached response
+else cache miss
+    C --> S: miss
+    S -> DB: Query data
+    activate DB
+    DB --> S: data
+    deactivate DB
+    S -> C: Store data
+    C --> S: stored
+end
+S --> U: Return response
+deactivate S
+@enduml

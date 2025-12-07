@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PlantUMLEditor"
         mc:Ignorable="d"
         Title="Process Template" Height="500" Width="900" WindowStartupLocation="CenterScreen"
-        FontFamily="Segoe UI"
+        FontFamily="{DynamicResource FontFamily.Primary}"
         Background="#FFFFFF">
     <Window.Resources>
         <ResourceDictionary>

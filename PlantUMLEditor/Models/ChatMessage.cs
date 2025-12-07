@@ -1,4 +1,5 @@
 ﻿using Markdig;
+using Prism.Mvvm;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -25,13 +26,17 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public class ToolCall
+        public class ToolCall : BindableBase
         {
+            private string? _toolName;
+            private string? _arguments;
+            private string? _result;
+
             // allow nullable since some tool result objects may not have all fields
             public string? Id { get; set; }
-            public string? ToolName { get; set; }
-            public string? Arguments { get; set; }
-            public string? Result { get; set; }
+            public string? ToolName { get => _toolName; set => SetProperty(ref _toolName, value); }
+            public string? Arguments { get => _arguments; set => SetProperty(ref _arguments, value); }
+            public string? Result { get => _result; set => SetProperty(ref _result, value); }
 
         }
 

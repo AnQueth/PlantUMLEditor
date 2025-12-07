@@ -14,7 +14,7 @@
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
         Title="Aaron's Plant UML Editor" Height="{Binding UIModel.WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding UIModel.WindowWidth, Mode=TwoWay, FallbackValue=1000}"
-FontFamily="Segoe UI"  Loaded="Window_Loaded"
+FontFamily="{DynamicResource FontFamily.Primary}"  Loaded="Window_Loaded"
     Left="{Binding UIModel.WindowLeft, Mode=TwoWay}"
     Top="{Binding UIModel.WindowTop, Mode=TwoWay}"
     xmlns:System="clr-namespace:System;assembly=System.Runtime" xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase" xmlns:svgc="http://sharpvectors.codeplex.com/svgc/" Icon="/PlantUMLEditor;component/Images/uml.png">
@@ -51,15 +51,7 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
         </CollectionViewSource>
         <SolidColorBrush x:Key="CustomColor" Color="#FF4D8DEA"></SolidColorBrush>
         
-        <!-- Modern Color Palette -->
-        <SolidColorBrush x:Key="PrimaryAccent" Color="#007ACC"/>
-        <SolidColorBrush x:Key="PrimaryAccentHover" Color="#1E8AD6"/>
-        <SolidColorBrush x:Key="BackgroundSecondary" Color="#F3F3F3"/>
-        <SolidColorBrush x:Key="BackgroundHover" Color="#E8E8E8"/>
-        <SolidColorBrush x:Key="BorderSubtle" Color="#CCCCCC"/>
-        <SolidColorBrush x:Key="TextSecondary" Color="#616161"/>
-        <SolidColorBrush x:Key="SuccessColor" Color="#28A745"/>
-        <SolidColorBrush x:Key="WarningColor" Color="#FF9500"/>
+       
         
         <Style TargetType="GridSplitter">
             <Setter Property="Background" Value="{StaticResource BackgroundSecondary}"/>
@@ -136,6 +128,9 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
         <DataTemplate DataType="{x:Type models:ImageDocumentModel}">
 
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+              
+
+              
                 <Border BorderThickness="1" CornerRadius="6" Margin="4" BorderBrush="{StaticResource BorderSubtle}">
                     <Border.Effect>
                         <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
@@ -154,6 +149,8 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
         <DataTemplate DataType="{x:Type models:UrlLinkDocumentModel}">
 
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+         
+ 
                 <Border BorderThickness="1" CornerRadius="6" Margin="4" BorderBrush="{StaticResource BorderSubtle}">
                     <Border.Effect>
                         <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
@@ -174,10 +171,10 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
         </DataTemplate>
         <DataTemplate DataType="{x:Type models:TextDocumentModel}">
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
-                <Border BorderThickness="1" CornerRadius="6" Margin="4">
-                    <Border.Effect>
-                        <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
-                    </Border.Effect>
+                 
+                 
+                <Border BorderThickness="2" Margin="1" Padding="5" CornerRadius="6"  >
+                   
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
@@ -216,10 +213,10 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                                                  CaretBrush="Green"
                             AcceptsReturn="True"  AcceptsTab="True"
-                                                
+                                                   SpellCheck.IsEnabled="{Binding DataContext.SpellCheck,  RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                                  FindAllReferencesCommand="{Binding DataContext.FindAllReferencesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                                  GotoDefinitionCommand="{Binding DataContext.GotoDefinitionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
-                               FontFamily="Cascadia Code" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"  >
+                               FontFamily="{DynamicResource FontFamily.Primary}" FontSize="{Binding DataContext.EditorFontSize, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"  >
                             <b:Interaction.Triggers>
                                 <b:EventTrigger EventName="PreviewDrop">
                                     <b:CallMethodAction MethodName="TextDrop" TargetObject="{Binding DataContext,
@@ -312,6 +309,9 @@ FontFamily="Segoe UI"  Loaded="Window_Loaded"
         </DataTemplate>
         <DataTemplate DataType="{x:Type models:MDDocumentModel}">
             <Grid Height="{Binding ActualHeight, ElementName=Tabs}" Visibility="{Binding Visible}">
+                
+
+              
                 <Border BorderThickness="1" CornerRadius="6" Margin="4">
                     <Border.Effect>
                         <DropShadowEffect ShadowDepth="0" BlurRadius="6" Opacity="0.1"/>
@@ -356,7 +356,7 @@ Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
                            AcceptsReturn="True"  AcceptsTab="True"
                                                 FindAllReferencesCommand="{Binding DataContext.FindAllReferencesCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                                 GotoDefinitionCommand="{Binding DataContext.GotoDefinitionCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
-                              FontFamily="Cascadia Code" FontSize="14">
+                              FontFamily="{DynamicResource FontFamily.Primary}" FontSize="14">
                             <b:Interaction.Triggers>
                                 <b:EventTrigger EventName="PreviewDrop">
                                     <b:CallMethodAction MethodName="TextDrop" TargetObject="{Binding DataContext,
@@ -790,14 +790,14 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
             </Style.Triggers>
         </Style>
 
-        <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#F0F7FF" />
-        <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#007ACC" />
+        <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#B5C3F5" />
+        <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#0000FF" />
         <SolidColorBrush x:Key="TabItem.Hover.Background" Color="#F5F5F5" />
         <DataTemplate x:Key="TextDocumentTabHeader">
 
-            <Border BorderThickness="0,0,0,3" Margin="4,2,4,0" CornerRadius="6,6,0,0" MinWidth="300">
+            <Border BorderThickness="0,0,0,4" Margin="4,2,4,0" Padding="1" CornerRadius="6" >
                 <Border.Effect>
-                    <DropShadowEffect ShadowDepth="0" BlurRadius="2" Opacity="0.08"/>
+                    <DropShadowEffect ShadowDepth="2" BlurRadius="9" Opacity="0.2"/>
                 </Border.Effect>
                 <Border.Style>
                     <Style TargetType="Border">
@@ -817,16 +817,48 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             <DataTrigger Binding="{Binding Visible}" Value="0">
                                 <DataTrigger.Setters>
                                     <Setter Property="Background" Value="{StaticResource TabItem.Selected.Background}"/>
-                                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryAccent}"/>
+                                   
                                 </DataTrigger.Setters>
                             </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                   To="12" Duration="0:0:0.15" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                   To="0.35" Duration="0:0:0.15" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.ShadowDepth)"
+                                   To="6" Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                                   To="2" Duration="0:0:0.12" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                                   To="0.20" Duration="0:0:0.12" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.ShadowDepth)"
+                                   To="2" Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+                                 
                             </Trigger>
                         </Style.Triggers>
                     </Style>
                 </Border.Style>
-                <Grid IsHitTestVisible="True">
+                <Grid IsHitTestVisible="True"  >
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
                     <Grid.Style>
                         <Style TargetType="Grid">
                             <Style.Triggers>
@@ -836,18 +868,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             </Style.Triggers>
                         </Style>
                     </Grid.Style>
-
-                    <Grid.ColumnDefinitions>
-
-                        <ColumnDefinition Width="Auto" ></ColumnDefinition>
-                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                        <ColumnDefinition Width="Auto"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
-                    </Grid.ColumnDefinitions>
-
                     <Button ToolTip="Save"  Margin="4,4" Grid.Column="0" CommandParameter="{Binding}" Command="{Binding Path=DataContext.SaveCommand, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
-                            Opacity="0.7">
+          Opacity="0.7">
 
                         <Button.Content>
                             <Grid>
@@ -856,7 +878,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         </Button.Content>
                     </Button>
                     <Button ToolTip="Save and Close"  Margin="4,4" Grid.Column="1" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocumentAndSave, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
-                            Opacity="0.7">
+          Opacity="0.7">
                         <Button.Content>
                             <Grid>
                                 <Image Source="/PlantUMLEditor;component/Images/SaveClose_16x.png"></Image>
@@ -865,7 +887,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                     </Button>
 
                     <Button ToolTip="Close without saving"  Margin="4,4" Grid.Column="2" CommandParameter="{Binding}" Command="{Binding Path=DataContext.CloseDocument, Mode=OneWay, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ItemsControl}}}"
-                            Opacity="0.7">
+          Opacity="0.7">
                         <Button.Content>
                             <Grid>
                                 <Image Source="/PlantUMLEditor;component/Images/Close_8x_16x.png" ></Image>
@@ -873,8 +895,8 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         </Button.Content>
                     </Button>
                     <Button  ToolTip="Preview" Margin="4,4" Grid.Column="3" 
-                                             Command="{Binding  ShowPreviewCommand}"
-                            Opacity="0.7">
+                           Command="{Binding  ShowPreviewCommand}"
+          Opacity="0.7">
 
                         <Button.Content>
                             <Grid>
@@ -883,18 +905,18 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                         </Button.Content>
                     </Button>
                     <Label 
-                            Grid.Column="4" 
-                           IsHitTestVisible="True"
-                            FontWeight="SemiBold"
-                            FontSize="11"
-                            VerticalAlignment="Center"  
-                            Content="{Binding Title}"
-                            Margin="8,4,8,4">
+          Grid.Column="4" 
+         IsHitTestVisible="True"
+          FontWeight="SemiBold"
+          FontSize="11"
+          VerticalAlignment="Center"  
+          Content="{Binding Title}"
+          Margin="8,4,8,4">
                         <b:Interaction.Triggers>
 
                             <b:EventTrigger EventName="MouseDown">
                                 <b:InvokeCommandAction Command="{Binding DataContext.SelectDocumentCommand, ElementName=Tabs}" 
-                            CommandParameter="{Binding}"/>
+          CommandParameter="{Binding}"/>
 
                             </b:EventTrigger>
 
@@ -902,21 +924,55 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
                     </Label>
                 </Grid>
+                
             </Border>
 
         </DataTemplate>
         <DataTemplate x:Key="ImageDocumentTabHeader">
 
-            <Border BorderThickness="0,0,0,3" Margin="4,2,4,0" CornerRadius="6,6,0,0" MinWidth="300" BorderBrush="{StaticResource SuccessColor}">
+            <Border BorderThickness="0,0,0,4"  Margin="4,2,4,0" Padding="1" CornerRadius="6" >
                 <Border.Effect>
-                    <DropShadowEffect ShadowDepth="0" BlurRadius="2" Opacity="0.08"/>
+                    <DropShadowEffect ShadowDepth="2" BlurRadius="9" Opacity="0.2"/>
                 </Border.Effect>
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="{StaticResource BackgroundSecondary}"/>
+                        <Setter Property="BorderBrush" Value="Transparent"/>
                         <Style.Triggers>
+                             
+                            <DataTrigger Binding="{Binding Visible}" Value="0">
+                                <DataTrigger.Setters>
+                                    <Setter Property="Background" Value="{StaticResource TabItem.Selected.Background}"/>
+
+                                </DataTrigger.Setters>
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+
+                                <Trigger.EnterActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                       To="12" Duration="0:0:0.15" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                       To="0.35" Duration="0:0:0.15" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.ShadowDepth)"
+                       To="6" Duration="0:0:0.15" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.EnterActions>
+                                <Trigger.ExitActions>
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.BlurRadius)"
+                       To="2" Duration="0:0:0.12" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.Opacity)"
+                       To="0.20" Duration="0:0:0.12" />
+                                            <DoubleAnimation Storyboard.TargetProperty="(UIElement.Effect).(DropShadowEffect.ShadowDepth)"
+                       To="2" Duration="0:0:0.12" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </Trigger.ExitActions>
+
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -957,9 +1013,9 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
 
                     <Label 
                             Grid.Column="1" 
-                           IsHitTestVisible="True"
-                            FontWeight="ExtraBold"
-                            VerticalAlignment="Center"  
+                             IsHitTestVisible="True"
+      FontWeight="SemiBold"
+      FontSize="11"
                             Content="{Binding Title}"
                             Margin="{DynamicResource TabHeaderMargin}">
                         <b:Interaction.Triggers>
@@ -1021,7 +1077,7 @@ AncestorType={x:Type TreeView}}}"></b:CallMethodAction>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding}" VerticalAlignment="Center" Margin="0,0,20,0"></TextBlock>
                             <Button Grid.Column="1" Margin="1" Command="{Binding  Path=DataContext.DeleteMRUCommand,  RelativeSource={RelativeSource FindAncestor,
-AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Segoe UI">
+AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="{DynamicResource FontFamily.Primary}">
                                 <Button.Content>X</Button.Content>
                             </Button>
                         </Grid>
@@ -1091,6 +1147,16 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="Segoe U
             <Label HorizontalAlignment="Center"  VerticalAlignment="Center" Content="Zoom"></Label>
 
             <Slider VerticalAlignment="Center" Width="100" Value="{Binding EditorFontSize, UpdateSourceTrigger=PropertyChanged, FallbackValue=14}" Minimum="4" Maximum="32" ></Slider>
+
+            <!-- Font selector -->
+            <Label HorizontalAlignment="Center" VerticalAlignment="Center" Content="Font" Margin="8,0,4,0"/>
+            <ComboBox Width="180" MinWidth="120" ItemsSource="{Binding AvailableFonts}" SelectedItem="{Binding SelectedFont, Mode=TwoWay}">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Source}" FontFamily="{Binding}" FontSize="12" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
         </ToolBar>
         <Grid Grid.Row="1">
             <Grid.RowDefinitions>
@@ -1138,16 +1204,17 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                     <RowDefinition Height="*"></RowDefinition>
                 </Grid.RowDefinitions>
 
-                <ItemsControl ItemsSource="{Binding OpenDocuments}" ItemTemplateSelector="{StaticResource TabHeaderSelector}">
+                <ItemsControl  ItemsSource="{Binding OpenDocuments}" 
+                              ItemTemplateSelector="{StaticResource TabHeaderSelector}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <WrapPanel />
+                            <WrapPanel  />
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
 
                 </ItemsControl>
 
-                <ItemsControl Grid.Row="1" x:Name="Tabs"
+                <ItemsControl Grid.Row="1" x:Name="Tabs" 
                           ItemsSource="{Binding OpenDocuments}"
                           >
                 </ItemsControl>
@@ -1179,7 +1246,7 @@ AncestorType={x:Type ListBox}}}"></b:CallMethodAction>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
-                        <Setter Property="FontFamily" Value="Segoe UI" />
+                        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Primary}" />
                         <Setter Property="FontSize" Value="12" />
                     </Style>
                 </TabControl.Resources>
@@ -1400,6 +1467,8 @@ CanContentScroll="False">
                                                         <StackPanel Orientation="Vertical">
                                                             <TextBlock Text="{Binding ToolName}" FontWeight="Bold"></TextBlock>
                                                             <TextBlock Text="{Binding Arguments}"></TextBlock>
+                                                            <TextBlock Text="Results"></TextBlock>
+                                                            <TextBox Text="{Binding Result}" MaxHeight="500" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"></TextBox>
 
                                                         </StackPanel>
                                                     </DataTemplate>
@@ -1440,25 +1509,69 @@ CanContentScroll="False">
                                                 <Button Grid.Row="1"  CommandParameter="{Binding Undos}" Command="{Binding DataContext.UndoAIEditsCommand, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}, AncestorLevel=1}}">Undo Operations</Button>
                                             </Grid>
                                         </Expander>
-                                        <TextBlock Foreground="Green">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsBusy}" Value="False">
-                                                            <Setter Property="Visibility" Value="Collapsed" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                          Running
-                                        </TextBlock>
-
                                         <FlowDocumentScrollViewer ScrollViewer.VerticalScrollBarVisibility="Disabled" Padding="5" Document="{Binding Document}"  >
                                             <b:Interaction.Behaviors>
                                                 <behaviors:BubbleMouseWheelToChatScrollBehavior />
                                             </b:Interaction.Behaviors>
                                         </FlowDocumentScrollViewer>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsBusy, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Running" VerticalAlignment="Center" Foreground="Green" FontWeight="SemiBold" />
+                                            <StackPanel Orientation="Horizontal" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                <Ellipse Width="6" Height="6" Margin="3,0" Fill="Green">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Style.Triggers>
+                                                                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                     From="0.25" To="1" Duration="0:0:0.6" 
+                                                     AutoReverse="True" BeginTime="0:0:0" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </EventTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <Ellipse Width="6" Height="6" Margin="3,0" Fill="Green">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Style.Triggers>
+                                                                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                     From="0.25" To="1" Duration="0:0:0.6" 
+                                                     AutoReverse="True" BeginTime="0:0:0.2" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </EventTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                                <Ellipse Width="6" Height="6" Margin="3,0" Fill="Green">
+                                                    <Ellipse.Style>
+                                                        <Style TargetType="Ellipse">
+                                                            <Style.Triggers>
+                                                                <EventTrigger RoutedEvent="FrameworkElement.Loaded">
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                            <DoubleAnimation Storyboard.TargetProperty="Opacity"
+                                                     From="0.25" To="1" Duration="0:0:0.6" 
+                                                     AutoReverse="True" BeginTime="0:0:0.4" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </EventTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </Ellipse.Style>
+                                                </Ellipse>
+                                            </StackPanel>
+                                        </StackPanel>
+
+                              
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -1502,7 +1615,7 @@ CanContentScroll="False">
                         </Grid.ColumnDefinitions>
                         <Button Content="New Chat" Margin="0,0,10,0"   Command="{Binding NewChatCommand}"></Button>
 
-                        <TextBox Grid.Column="1" FontFamily="Segoe UI" FontSize="12" AcceptsReturn="False" AcceptsTab="True"
+                        <TextBox Grid.Column="1" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" AcceptsReturn="False" AcceptsTab="True"
                                  Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  Padding="10,8" MinHeight="40" MaxHeight="100"
                                  VerticalScrollBarVisibility="Auto"

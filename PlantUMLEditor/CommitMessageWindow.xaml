@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Commit Changes" Height="450" Width="600"
         WindowStartupLocation="CenterOwner"
-        FontFamily="Segoe UI">
+        FontFamily="{DynamicResource FontFamily.Primary}">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -26,7 +26,7 @@
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
                  VerticalScrollBarVisibility="Auto"
-                 FontFamily="Cascadia Code"
+                 FontFamily="{DynamicResource FontFamily.Primary}"
                  FontSize="12"
                  Margin="0,0,0,10"
                  MinHeight="100"/>
@@ -37,7 +37,7 @@
                 <ItemsControl ItemsSource="{Binding ChangedFiles}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding}" Margin="2" FontFamily="Cascadia Code" FontSize="11"/>
+                            <TextBlock Text="{Binding}" Margin="2" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="11"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

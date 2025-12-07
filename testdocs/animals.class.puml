@@ -1,4 +1,6 @@
 @startuml
+
+
 ' Animals class diagram
 
 class Animal {
@@ -35,22 +37,20 @@ class Owner {
   + startWalks(): void
 }
 
-interface Walkable { 
-  + walk(): void 
+interface Walkable {
+  + walk(): void
 }
 
 interface Walk2 {
-   + walk2() : void 
-  }
+  + walk2() : void
+}
 
 Animal <|-- Dog
 Animal <|-- Bird
-
-Animal ..|> Walkable
+Animal ..|> Walkable 
 Dog ..|> Walkable
 Bird ..|> Walkable
 Walkable --> Walk2
-
 Owner --> AnimalController : uses
 AnimalController ..> Animal : operates on
 

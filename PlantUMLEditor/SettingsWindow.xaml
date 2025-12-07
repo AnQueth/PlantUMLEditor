@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PlantUMLEditor"
         mc:Ignorable="d"
         Title="Settings" WindowStartupLocation="CenterScreen"
-        FontFamily="Segoe UI"
+        FontFamily="{DynamicResource FontFamily.Primary}"
         Background="#FFFFFF"
         Height="600" Width="700">
     <Window.Resources>

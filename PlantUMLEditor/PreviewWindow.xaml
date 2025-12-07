@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:PlantUMLEditor" xmlns:Behaviors="http://schemas.microsoft.com/xaml/behaviors" xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
         mc:Ignorable="d"
         Title="{Binding Title}" Height="1024" Width="1084" Icon="/PlantUMLEditor;component/Images/uml.png"
-        FontFamily="Segoe UI"
+        FontFamily="{DynamicResource FontFamily.Primary}"
         Background="#FFFFFF">
     <Window.Resources>
         <ResourceDictionary>

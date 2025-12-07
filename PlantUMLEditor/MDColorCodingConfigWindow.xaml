@@ -4,7 +4,7 @@
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns:local="clr-namespace:PlantUMLEditor.Controls"
         Title="Markdown Color Coding" Height="400" Width="900" WindowStartupLocation="CenterScreen"
-        FontFamily="Segoe UI"
+        FontFamily="{DynamicResource FontFamily.Primary}"
         Background="#FFFFFF">
     <Window.Resources>
         <ResourceDictionary>

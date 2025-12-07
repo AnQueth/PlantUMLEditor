@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace PlantUMLEditor.Models.Runners
@@ -58,6 +60,30 @@ namespace PlantUMLEditor.Models.Runners
 
                 string? normal = p.StandardOutput.ReadToEnd();
                 string? errors = p.StandardError.ReadToEnd();
+
+                if(!string.IsNullOrEmpty(errors))
+                {
+                    Match? m = Regex.Match(errors, "Error line (\\d+)");
+                    if (m.Success)
+                    {
+                        int d = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
+                        d++;
+                        using StreamReader? g = File.OpenText(path);
+                        int x = 0;
+                        while (x <= d + 1)
+                        {
+                            x++;
+                            string? ll = g.ReadLine();
+                            if (ll != null)
+                            {
+                                if (x > d - 3)
+                                {
+                                    errors += "\r\n" + ll;
+                                }
+                            }
+                        }
+                    }
+                }
 
                 taskCompletionSource.SetResult(new UMLImageCreateRecord(fn, normal, errors));
             });

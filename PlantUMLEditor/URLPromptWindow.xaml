@@ -4,7 +4,7 @@
         Title="Enter URL" Height="250" Width="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
-        FontFamily="Segoe UI">
+        FontFamily="{DynamicResource FontFamily.Primary}">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

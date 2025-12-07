@@ -326,26 +326,7 @@ namespace PlantUMLEditor.Models
                         {
                             Debug.WriteLine(errors);
 
-                            Match? m = Regex.Match(errors, "Error line (\\d+)");
-                            if (m.Success)
-                            {
-                                int d = int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture);
-                                d++;
-                                using StreamReader? g = File.OpenText(res.path);
-                                int x = 0;
-                                while (x <= d + 1)
-                                {
-                                    x++;
-                                    string? ll = g.ReadLine();
-                                    if (ll != null)
-                                    {
-                                        if (x > d - 3)
-                                        {
-                                            errors += "\r\n" + ll;
-                                        }
-                                    }
-                                }
-                            }
+                          
                             Messages = errors;
                         }
                         else

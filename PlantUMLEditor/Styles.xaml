@@ -5,10 +5,13 @@
                     xmlns:helpers="clr-namespace:PlantUMLEditor.Models"
                     xmlns:System="clr-namespace:System;assembly=System.Runtime">
 
+    <FontFamily x:Key="FontFamily.Primary">Segoe UI, Consolas, Lucida Sans</FontFamily>
+    <FontFamily x:Key="FontFamily.Monospace">Consolas, Lucida Sans Typewriter, Courier New</FontFamily>
+
 
 
     <Style TargetType="{x:Type FlowDocument}" x:Key="{x:Static markdig:Styles.DocumentStyleKey}">
-        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Primary}" />
         <Setter Property="PagePadding" Value="0"/>
         <Setter Property="FontSize" Value="14"/>
 
@@ -119,7 +122,7 @@
     <SolidColorBrush x:Key="TextSecondary" Color="#616161"/>
     <SolidColorBrush x:Key="TextLight" Color="#999999"/>
     <SolidColorBrush x:Key="SuccessColor" Color="#28A745"/>
-    <SolidColorBrush x:Key="WarningColor" Color="#FF9500"/>
+    <SolidColorBrush x:Key="WarningColor" Color="#FF0000"/>
     <SolidColorBrush x:Key="ErrorColor" Color="#DC3545"/>
 
     <!-- ============================================ -->
@@ -237,7 +240,7 @@
         <Setter Property="AlternatingRowBackground" Value="#FAFAFA"/>
         <Setter Property="GridLinesVisibility" Value="Horizontal"/>
         <Setter Property="HorizontalGridLinesBrush" Value="{StaticResource DataGrid.GridLineBrush}"/>
-        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Primary}"/>
         <Setter Property="FontSize" Value="{StaticResource FontSize.Normal}"/>
         <Setter Property="RowHeight" Value="32"/>
         <Setter Property="ColumnHeaderHeight" Value="36"/>
@@ -318,13 +321,13 @@
     </Style>
 
     <Style TargetType="Label">
-        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Primary}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
     </Style>
 
     <Style TargetType="MenuItem">
 
-        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Primary}"/>
         <Setter Property="FontSize" Value="{StaticResource FontSize.Normal}"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
         <Setter Property="Padding" Value="{StaticResource Spacing.Small}"/>
@@ -343,7 +346,7 @@
     </Style>
 
     <Style TargetType="Button">
-        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontFamily" Value="{DynamicResource FontFamily.Primary}"/>
         <Setter Property="Padding" Value="8,2"/>
         <Setter Property="BorderThickness" Value="{StaticResource BorderThickness.Thin}"/>
         <Setter Property="BorderBrush" Value="{StaticResource BorderSubtle}"/>
