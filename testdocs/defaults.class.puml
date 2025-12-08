@@ -23,5 +23,7 @@ class IEnumerable {
  }
 class String {
  }
+class int {
+ }
 
 @enduml

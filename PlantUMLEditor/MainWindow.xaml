@@ -212,6 +212,8 @@ FontFamily="{DynamicResource FontFamily.Primary}"  Loaded="Window_Loaded"
                         <localControls:MyTextBox Grid.Column="1"
                                                      ToolTipService.ShowDuration="5000"
     ToolTipService.InitialShowDelay="500"
+                                                  Tag="{Binding DataContext, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                      
                                                  IsInactiveSelectionHighlightEnabled="True" AllowDrop="True"
                                               UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                             DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -232,6 +234,30 @@ FontFamily="{DynamicResource FontFamily.Primary}"  Loaded="Window_Loaded"
                                         RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"></b:CallMethodAction>
                                 </b:EventTrigger>
                             </b:Interaction.Triggers>
+                            <localControls:MyTextBox.ContextMenu>
+                                <ContextMenu DataContext="{Binding PlacementTarget, RelativeSource={RelativeSource Self}}">
+                                    <MenuItem Header="Cut" Command="ApplicationCommands.Cut"></MenuItem>
+                                    <MenuItem Header="Copy" Command="ApplicationCommands.Copy"></MenuItem>
+                                    <MenuItem Header="Paste" Command="ApplicationCommands.Paste"></MenuItem>
+                                    <Separator></Separator>
+                                    <MenuItem Header="Select All" Command="ApplicationCommands.SelectAll"></MenuItem>
+                                    <Separator></Separator>
+                                    <MenuItem Header="Goto Definition" >
+                                        <b:Interaction.Triggers>
+                                            <b:EventTrigger EventName="Click">
+                                                <b:CallMethodAction  TargetObject="{x:Reference Editor}" MethodName="GoToDefinition"/>
+                                            </b:EventTrigger>
+                                        </b:Interaction.Triggers>
+                                    </MenuItem>
+                                    <MenuItem Header="Find All References" >
+                                        <b:Interaction.Triggers>
+                                            <b:EventTrigger EventName="Click">
+                                                <b:CallMethodAction TargetObject="{x:Reference Name=Editor}" MethodName="FindAllReferences"/>
+                                            </b:EventTrigger>
+                                        </b:Interaction.Triggers>
+                                    </MenuItem>
+                                </ContextMenu>
+                            </localControls:MyTextBox.ContextMenu>
                             <localControls:MyTextBox.PopupControl>
                                 <Popup>
 

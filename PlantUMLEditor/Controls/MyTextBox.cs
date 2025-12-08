@@ -1,5 +1,4 @@
-﻿#define USE_OLD_COLORING
-
+﻿ 
 using PlantUMLEditor.Models;
 using Prism.Commands;
 using System;
@@ -1099,7 +1098,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             return lineCount;
         }
 
-        private void FindAllReferences()
+        public void FindAllReferences()
         {
             string found = GetWordFromCursor();
 
@@ -1271,8 +1270,8 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             StringBuilderPool.Return(sb);
             return found;
         }
-
-        private void GoToDefinition()
+      
+        public void GoToDefinition()
         {
             string found = GetWordFromCursor();
 
