@@ -48,6 +48,11 @@
                             <TextBlock Text="Templates Directory:" FontWeight="Medium" Foreground="#1F1F1F"/>
                             <TextBox Text="{Binding TemplatesDirectory, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
                         </StackPanel>
+
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="Templates Directory:" FontWeight="Medium" Foreground="#1F1F1F"/>
+                            <TextBox Text="{Binding PromptsDirectory, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 

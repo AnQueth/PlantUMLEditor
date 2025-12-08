@@ -32,7 +32,7 @@ public int MaxOutputTokens { get; set; } = 2048;
                 FunctionInvocationContext,
                 Func<FunctionInvocationContext, CancellationToken, ValueTask<object?>>,
                 CancellationToken,
-                ValueTask<object?>> confirmMiddleware, Delegate[] tools)
+                ValueTask<object?>> confirmMiddleware, string prompt, Delegate[] tools)
         {
 
             string? apiKey = settings.Key;
@@ -73,23 +73,9 @@ public int MaxOutputTokens { get; set; } = 2048;
 
             };
 
-            const string instructions = @"You are a plant uml expert to help users create and edit plantuml.
-        You have the ability read html content from current documents.
-Use the available tools. Ensure you verify any edits. Use tools to read and edit the current diagram.
-Ensure diagrams adhere to plantuml syntax. 
-If you create a new diagram you do not need to repeat the diagram code back to the user.
-examples:
-* if user asks to show methods on a class or interface, you search the whole folder for the class or interface definition and read the methods.
-* if user asks to add a relationship between two classes, you search the whole folder for the class definitions and add the relationship.
-* if user asks to create a new component diagram, you create a new plantuml diagram with appropriate syntax and name it with a word with .component.puml
-* if user asks to create a new sequence diagram, you create a new plantuml diagram with appropriate syntax and name it with a word with .seq.puml
-* if user asks to create a new class diagram, you create a new plantuml diagram with appropriate syntax and name it with a word with .class.puml
-* if user asks to create a new diagram, you create a new plantuml diagram with appropriate syntax and name it with a word with .puml
-* if current document text is not uml, it is either md or text from an html document.
-* when creating a new sequence diagram, not editing an existing one, add this comment after @startuml: ""'@@novalidate"". if this comment appears in a file, leave it!
-* for sequence diagrams prefer the format: participant ""name of something"" as alias
-* you should request plantuml syntax help after failing to resolve an issue fast by reading from using the html tool https://plantuml.com/
-";
+            string instructions = prompt;
+
+
 
 
 

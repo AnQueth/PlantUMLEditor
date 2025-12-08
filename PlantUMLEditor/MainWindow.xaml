@@ -1104,7 +1104,7 @@ AncestorType={x:Type Window}}}" CommandParameter="{Binding}" FontFamily="{Dynami
 
                         </Separator>
                         <MenuItem Header="Edit Templates" Command="{Binding EditTemplatesCommand}"/>
-
+                        <MenuItem Header="Edit Prompts" Command="{Binding EditPromptsCommand}"/>
 
 
                     </MenuItem>
@@ -1471,8 +1471,8 @@ CanContentScroll="False">
                                                 <ListBox.ItemTemplate>
                                                     <DataTemplate>
                                                         <StackPanel Orientation="Vertical">
-                                                            <TextBlock Text="{Binding ToolName}" FontWeight="Bold"></TextBlock>
-                                                            <TextBlock Text="{Binding Arguments}"></TextBlock>
+                                                            <TextBox Text="{Binding ToolName}" FontWeight="Bold"></TextBox>
+                                                            <TextBox Text="{Binding Arguments}"></TextBox>
                                                             <TextBlock Text="Results"></TextBlock>
                                                             <TextBox Text="{Binding Result}" MaxHeight="500" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"></TextBox>
 
@@ -1588,24 +1588,27 @@ CanContentScroll="False">
                 <Border  Grid.Row="1" Visibility="{Binding IsCheckingCommandCanRun, Converter={StaticResource BoolToVis}}" BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" Background="{StaticResource BackgroundSecondary}" Padding="8">
                     <Grid>
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="*"/>
+                            
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Margin="4" Text="{Binding TryingToRun}"></TextBlock>
-                        <TextBox IsReadOnly="True" Margin="4" Grid.Column="1"
+                        <TextBox IsReadOnly="True" Grid.RowSpan="3" Margin="4" Grid.Column="1"
                                  MaxHeight="100" VerticalScrollBarVisibility="Auto"
+                                 HorizontalScrollBarVisibility="Auto"
                                  Text="{Binding TryingToRunParameters}"></TextBox>
-                        <Button Grid.Row="1" Margin="4" Content="Run" Command="{Binding CanRunCommand}" >
+                        <Button Grid.Row="1" Margin="4" Grid.Column="0" Content="Run" Command="{Binding CanRunCommand}" >
                             <Button.CommandParameter>
                                 <System:Boolean>True</System:Boolean>
                             </Button.CommandParameter>
                         </Button>
-                        <Button Grid.Row="1" Margin="4" Grid.Column="1" Content="Cancel" Command="{Binding CanRunCommand}" >
+                        <Button Grid.Row="2" Margin="4" Grid.Column="0" Content="Cancel" Command="{Binding CanRunCommand}" >
                             <Button.CommandParameter>
                                 <System:Boolean>False</System:Boolean>
                             </Button.CommandParameter>
@@ -1616,14 +1619,17 @@ CanContentScroll="False">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
+                          
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Button Content="New Chat" Margin="0,0,10,0"   Command="{Binding NewChatCommand}"></Button>
-
+                   
                         <TextBox Grid.Column="1" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" AcceptsReturn="False" AcceptsTab="True"
                                  Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  Padding="10,8" MinHeight="40" MaxHeight="100"
+                                  HorizontalAlignment="Stretch"  VerticalAlignment="Center"
                                  VerticalScrollBarVisibility="Auto"
                                  BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"
                                  Background="{StaticResource BackgroundMain}">
@@ -1636,6 +1642,18 @@ CanContentScroll="False">
                         <Button Grid.Column="2" Content="Send" Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}"
                                 Padding="14,10" MinWidth="80" Height="40" Margin="8,0,0,0"
                                 Background="{StaticResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold" FontSize="12"/>
+                        <StackPanel Orientation="Vertical" Grid.Column="3">
+                            <TextBlock Text="Prompt:" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" />
+                            <ComboBox   HorizontalAlignment="Center"  VerticalAlignment="Center" Margin="8,0,0,0"
+               ItemsSource="{Binding Prompts}"
+               SelectedItem="{Binding SelectedPrompt}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" />
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                        </StackPanel>
                     </Grid>
                 </Border>
             </Grid>

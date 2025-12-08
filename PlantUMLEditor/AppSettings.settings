@@ -68,5 +68,8 @@
     <Setting Name="UMLPureMode" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="Prompts" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\Prompts</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

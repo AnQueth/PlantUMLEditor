@@ -286,5 +286,17 @@ namespace PlantUMLEditor {
                 this["UMLPureMode"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("\\Prompts")]
+        public string Prompts {
+            get {
+                return ((string)(this["Prompts"]));
+            }
+            set {
+                this["Prompts"] = value;
+            }
+        }
     }
 }

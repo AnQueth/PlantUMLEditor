@@ -70,7 +70,15 @@ namespace PlantUMLEditor.Models
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TemplatesDirectory)));
             }
         }
-
+        public string PromptsDirectory
+        {
+            get => AppSettings.Default.Prompts;
+            set
+            {
+                AppSettings.Default.Prompts = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(PromptsDirectory)));
+            }
+        }
         public string AzureAIEndpoint
         {
             get => AppSettings.Default.AzureAIEndpoint;

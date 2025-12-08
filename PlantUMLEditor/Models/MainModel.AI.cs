@@ -20,6 +20,13 @@ namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
+        private void EditPromptsCommandHandler()
+        {
+            var win = new PromptEditorWindow();
+            PromptViewModel vm = new(_promptStorage);
+            win.DataContext = vm;
+            win.ShowDialog();
+        }
         async ValueTask<object?> ConfirmFunctionCallMiddleware(
     AIAgent agent,
     FunctionInvocationContext context,
@@ -60,6 +67,23 @@ namespace PlantUMLEditor.Models
         private string _chatText = string.Empty;
 
         private bool _isCheckingCommandCanRun;
+
+        public ObservableCollection<PromptItem> Prompts { get => _promptStorage.Prompts; }
+
+        private PromptItem _selectedPrompt;
+        public PromptItem SelectedPrompt
+        {
+            get => _selectedPrompt ?? new PromptItem()
+            {
+                Name = PromptStorage.SystemPromptkey,
+                Content = PromptStorage.SystemPrompt
+            };
+            set
+            {
+                _selectedPrompt = value;
+                SetValue(ref _selectedPrompt, value);
+            }
+        }
 
         public ObservableCollection<ChatMessage> AIConversation { get; } = new ObservableCollection<ChatMessage>();
 
@@ -171,7 +195,7 @@ namespace PlantUMLEditor.Models
                 var aiTools = new AIToolsEditable(tdm, currentMessage, OpenDocument, FolderBase);
 
                 AIAgentFactory factory = new AIAgentFactory();
-                agent = factory.Create(settings, ConfirmFunctionCallMiddleware,
+                agent = factory.Create(settings, ConfirmFunctionCallMiddleware, SelectedPrompt.Content,
                     new Delegate[] {
                         aiTools.ReplaceText,
                         aiTools.InsertTextAtPosition,
@@ -191,7 +215,7 @@ namespace PlantUMLEditor.Models
                     FolderBase);
 
                 AIAgentFactory factory = new AIAgentFactory();
-                agent = factory.Create(settings, ConfirmFunctionCallMiddleware, new Delegate[]
+                agent = factory.Create(settings, ConfirmFunctionCallMiddleware, SelectedPrompt.Content, new Delegate[]
                 {
                         aiTools.SearchInAllDocuments,
                         aiTools.CreateNewDocument,
@@ -206,7 +230,7 @@ namespace PlantUMLEditor.Models
                 var aiTools = new AIToolsReadable(textGetter, OpenDocument, FolderBase);
 
                 AIAgentFactory factory = new AIAgentFactory();
-                agent = factory.Create(settings, ConfirmFunctionCallMiddleware,
+                agent = factory.Create(settings, ConfirmFunctionCallMiddleware, SelectedPrompt.Content,
                     new Delegate[] {
                         aiTools.SearchInAllDocuments,
 
@@ -221,7 +245,7 @@ namespace PlantUMLEditor.Models
                 var aiTools = new AIToolsBasic(OpenDocument, FolderBase);
 
                 AIAgentFactory factory = new AIAgentFactory();
-                agent = factory.Create(settings, ConfirmFunctionCallMiddleware,
+                agent = factory.Create(settings, ConfirmFunctionCallMiddleware, SelectedPrompt.Content,
                     new Delegate[] {
                         aiTools.SearchInAllDocuments,
                         aiTools.ReadFileByPath,

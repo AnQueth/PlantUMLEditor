@@ -44,5 +44,7 @@ namespace PlantUMLEditor.Models
             win.DataContext = vm;
             win.ShowDialog();
         }
+
+  
     }
 }

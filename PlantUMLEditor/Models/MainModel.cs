@@ -49,6 +49,7 @@ namespace PlantUMLEditor.Models
         private readonly Channel<bool> _messageCheckerTrigger = Channel.CreateUnbounded<bool>();
         private readonly NewFileManager _newFileManager;
         private readonly TemplateStorage _templateStorage;
+        private readonly PromptStorage _promptStorage;
         private readonly MainWindow _window;
         private readonly OpenDocumentManager OpenDocumenntManager;
         private CancellationTokenSource? _cancelCurrentExecutingAction;
@@ -120,6 +121,7 @@ namespace PlantUMLEditor.Models
             CloseDocumentAndSave = new DelegateCommand<BaseDocumentModel>(CloseDocumentAndSaveHandler);
             SaveCommand = new DelegateCommand<BaseDocumentModel>(SaveCommandHandler);
             EditTemplatesCommand = new DelegateCommand(EditTemplatesCommandHandler);
+            EditPromptsCommand = new DelegateCommand(EditPromptsCommandHandler);
             Messages = new ObservableCollection<DocumentMessage>();
             Messages.CollectionChanged += Messages_CollectionChanged;
             SelectDocumentCommand = new DelegateCommand<BaseDocumentModel>(SelectDocumentHandler);
@@ -154,7 +156,7 @@ namespace PlantUMLEditor.Models
                 Documents, _messageCheckerTrigger);
 
             _templateStorage = new TemplateStorage();
-
+            _promptStorage = new PromptStorage();
             // Initialize TemplatePath to Documents folder if not set or invalid
             if (string.IsNullOrWhiteSpace(AppSettings.Default.TemplatePath) ||
                 !Path.IsPathRooted(AppSettings.Default.TemplatePath))
@@ -166,6 +168,7 @@ namespace PlantUMLEditor.Models
             }
 
             _ = _templateStorage.Load(AppSettings.Default.TemplatePath);
+            _ = _promptStorage.Load(AppSettings.Default.Prompts);
 
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
@@ -369,7 +372,7 @@ namespace PlantUMLEditor.Models
         }
 
         public DelegateCommand EditTemplatesCommand { get; }
-
+        public DelegateCommand EditPromptsCommand { get; }
         public DelegateCommand<string> FindAllReferencesCommand
         {
             get;
@@ -502,6 +505,11 @@ namespace PlantUMLEditor.Models
         public TemplateStorage TemplateStorage
         {
             get => _templateStorage;
+        }
+
+        public PromptStorage PromptStorage
+        {
+            get => _promptStorage;
         }
 
         public UISettingsModel UIModel { get; }
