@@ -1,7 +1,6 @@
 @startuml
 title defaults.class
-class int { 
- } 
+ 
 class void { 
  } 
 class G { 

@@ -22,20 +22,23 @@ namespace PlantUML
 
         private const string PACKAGE = "package";
 
-        private static readonly Regex _class = new("(?<abstract>abstract)*\\s*class\\s+\"*(?<name>[\\w\\<\\>\\s\\,\\?]+)\"*(\\s+{|\\s+as\\s+(?<alias>\\w+)\\s+{)", RegexOptions.Compiled);
+        private static readonly Regex _class = new("""(?<abstract>abstract)*\s*class\s+"*(?<name>[\w\<\>\s\,\?]+?)"*(\s+{|\s+as\s+(?<alias>\w+)\s+{)""", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static readonly Regex _classLine = new("(?<visibility>[\\+\\-\\#\\~]*)\\s*((?<b>[\\{])(?<modifier>\\w+)*(?<-b>[\\}]))*\\s*((?<type>[\\w\\<\\>\\[\\]\\,]+)\\s)*\\s*(?<name>[\\w\\.\\<\\>\\\"]+)\\(\\s*(?<params>.*)\\)\\s*:*\\s*((?<type2>[\\w\\<\\>\\[\\]\\,\\s]+))*", RegexOptions.Compiled);
+        private static readonly Regex _classLine = new("""(?<visibility>[\+\-\#\~]*)\s*((?<b>[\{])(?<modifier>\w+)*(?<-b>[\}]))*\s*((?<type>[\w\<\>\[\]\,]+)\s)*\s*(?<name>[\w\.\<\>\"]+)\(\s*(?<params>.*)\)\s*:*\s*((?<type2>[\w\<\>\[\]\,\s]+))*\s*((?<b>[\{])(?<modifier>\w+)*(?<-b>[\}]))*""", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static readonly Regex _packageRegex = new("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"*[\\w\\W]*\\{", RegexOptions.Compiled);
+        private static readonly Regex _packageRegex = new("(package|together) \\\"*(?<package>[\\w\\s\\.\\-]+)\\\"*[\\w\\W]*\\{", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static readonly Regex _propertyLine = new(@"^\s*((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+))|((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<name>[\w_]+):(?<type>[\w\<\>\,\[\] \?]+))\s*$", RegexOptions.Compiled);
+        private static readonly Regex _propertyLine = new(@"^\s*((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+)(:(?<defaultvalue>.+))*)|((?<visibility>[\+\-\~\#])*\s*(?<modifier>\{[\w]+\})*\s*(?<name>[\w_]+)\s*:\s*(?<type>[\w\<\>\,\[\] \?]+))(\s+(?<defaultvalue>.+))*\s*$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static readonly Regex _baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>\\<]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled);
+        private static readonly Regex _propertyLine2 = new(@"^\s*((?<visibility>[\+\-\~\#])*\s*(?<type>[\w\<\>\,\[\] \?]+)\s+(?<name>[\w_]+))\s*(?<defaultvalue>[\s\w\=]+)*\s*(?<modifier>\{[\w]+\})*|((?<visibility>[\+\-\~\#])*\s*(?<name>[\w_]+)\s*:\s*(?<type>[\w\<\>\,\[\] \?]+))(\[(?<list>[0-9\.\*]+)\])*\s*(?<defaultvalue>[\s\w\=]+)*\s*(?<modifier>\{[\w]+\})*\s*$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static readonly Regex _composition = new("""(?<first>\w+)( | \"(?<fm>[01\*\.]+)\" )(?<arrow>[\*o\|\<]*[\-\.]+[\*o\|\>]*)( | \"(?<sm>[01\*\.]+)\" )(?<second>\w+) *:*(?<text>.*)""", RegexOptions.Compiled);
+
+        private static readonly Regex _baseClass = new("(?<first>\\w+)(\\<((?<generics1>[\\s\\w]+)\\,*)*\\>)*\\s+(?<arrow>[\\-\\.\\|\\>\\<\\*]+)\\s+(?<second>[\\w]+)(\\<((?<generics2>[\\s\\w]+)\\,*)*\\>)*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+        private static readonly Regex _composition = new("""(?<first>\w+)( | \"(?<fm>[01\*\.]+)\" )(?<arrow>[\*o\|\<]*[\-\.]+[\*o\|\>]*)( | \"(?<sm>[01\*\.\w]+)\" )(?<second>\w+) *:*(?<text>.*)""", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
       
-        private static readonly Regex _rtypeSuffix = new(@"\)\s*:\s*(?<rtype>.+)$", RegexOptions.Compiled);
+        private static readonly Regex _rtypeSuffix = new(@"\)\s*:\s*(?<rtype>.+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         private static string Clean(string name)
         {
@@ -497,13 +500,15 @@ namespace PlantUML
                                 }
                                 if (m.Groups["sm"].Success)
                                 {
-                                    if (m.Groups["sm"].ValueSpan.Contains("*", StringComparison.InvariantCulture))
+                                    if (m.Groups["sm"].ValueSpan.Contains("*", StringComparison.InvariantCulture) ||
+                                        m.Groups["sm"].ValueSpan.Contains("many", StringComparison.InvariantCulture))
                                     {
                                         l = ListTypes.List;
                                     }
                                 }
 
-                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), propTyper, UMLVisibility.Public, l, false, false, true));
+                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), 
+                                    propTyper, UMLVisibility.Public, l, false, false, true, null));
                             }
                         }
                         continue;
@@ -801,6 +806,36 @@ namespace PlantUML
                     IsAbstract = modifier == "abstract"
                 });
             }
+            else if(_propertyLine2.IsMatch(line))
+            {
+                Match? g = _propertyLine2.Match(line);
+
+                UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
+
+                string modifier = g.Groups["modifier"].Value;
+
+                CollectionRecord? p = CreateFrom(g.Groups["type"].Value);
+
+                UMLDataType? c;
+
+                if (!aliases.TryGetValue(p.Word, out c))
+                {
+                    c = new UMLDataType(p.Word);
+                    aliases[p.Word] = c;
+                }
+
+                var isList = g.Groups["list"].ValueSpan.Trim().Length != 0;
+                if(isList)
+                {
+                    p = new CollectionRecord(ListTypes.List, p.Word);
+                }
+
+                string defaultValue = g.Groups["defaultvalue"].Value;
+
+                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, 
+                    visibility, p.ListType, modifier == "{static}", modifier == "{abstract}", false, defaultValue));
+
+            }
             else if (_propertyLine.IsMatch(line))
             {
                 Match? g = _propertyLine.Match(line);
@@ -819,14 +854,17 @@ namespace PlantUML
                     aliases[p.Word] = c;
                 }
 
-                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, visibility, p.ListType, modifier == "{static}", modifier == "{abstract}", false));
+                string defaultValue = g.Groups["defaultvalue"].Value;
+
+                dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c,
+                    visibility, p.ListType, modifier == "{static}", modifier == "{abstract}", false, defaultValue));
             }
             else if (dataType is UMLEnum)
             {
                 string enumValue = line.Trim().TrimEnd(',');
                 if (!string.IsNullOrEmpty(enumValue))
                 {
-                    dataType.Properties.Add(new UMLProperty(enumValue, new UMLDataType("int"), UMLVisibility.Public, ListTypes.None, false, false, false));
+                    dataType.Properties.Add(new UMLProperty(enumValue, new UMLDataType("int"), UMLVisibility.Public, ListTypes.None, false, false, false, null));
                 }
 
             }

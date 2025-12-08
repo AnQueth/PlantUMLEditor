@@ -22,13 +22,21 @@ namespace PlantUML
             throw new NotImplementedException();
         }
 
-        public static string Create(UMLClassDiagram classDiagram)
+        public static string Create(UMLClassDiagram classDiagram, bool pureUMLMode)
         {
             StringBuilder sb = new();
 
             using (TextWriter tw = new StringWriter(sb, CultureInfo.InvariantCulture))
             {
-                ClassDiagramGenerator.Create(classDiagram, tw);
+                if (pureUMLMode)
+                {
+                    ClassDiagramGeneratorUmlSyntax.Create(classDiagram, tw);
+                }
+                else
+                {
+                    ClassDiagramGenerator.Create(classDiagram, tw);
+                }
+        
             }
 
             return sb.ToString();

@@ -67,6 +67,19 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+                <Border Background="{StaticResource BackgroundSecondary}" CornerRadius="6" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Text="UML Generator Configuration" FontSize="14" FontWeight="SemiBold" Foreground="#1F1F1F"/>
+
+                        <StackPanel>
+                          
+                            <CheckBox Content="UML Class Generator Mode" IsChecked="{Binding UseTrueUMLGenMode, UpdateSourceTrigger=PropertyChanged}" Padding="8,6" Height="32" VerticalContentAlignment="Center" Margin="0,4,0,0"/>
+                        </StackPanel>
+
+                   
+                    </StackPanel>
+                </Border>
+
 
                 <!-- Section: Azure AI -->
                 <Border Background="{StaticResource BackgroundSecondary}" CornerRadius="6" Padding="16" BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}" Margin="0,0,0,16">

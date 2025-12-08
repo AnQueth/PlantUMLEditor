@@ -96,7 +96,7 @@ namespace PlantUMLEditor.Models
 
         protected override void RegenDocumentHandler()
         {
-            string t = PlantUMLGenerator.Create(Diagram);
+            string t = PlantUMLGenerator.Create(Diagram, AppSettings.Default.UMLPureMode);
 
             TextEditor?.TextWrite(t, true, GetColorCodingProvider(), GetIndenter());
 
@@ -111,14 +111,14 @@ namespace PlantUMLEditor.Models
                 {
                     if (TextEditor != null)
                     {
-                        Content = PlantUMLGenerator.Create(doc);
+                        Content = PlantUMLGenerator.Create(doc, AppSettings.Default.UMLPureMode);
                         //TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
                     }
                 };
             }
             else
             {
-                Content = PlantUMLGenerator.Create(doc);
+                Content = PlantUMLGenerator.Create(doc, AppSettings.Default.UMLPureMode);
                 // TextEditor.TextWrite(PlantUMLGenerator.Create(doc), true, GetColorCodingProvider());
             }
             IsDirty = true;

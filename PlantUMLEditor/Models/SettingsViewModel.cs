@@ -19,6 +19,16 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        public bool UseTrueUMLGenMode
+        {
+            get => AppSettings.Default.UMLPureMode;
+            set
+            {
+                AppSettings.Default.UMLPureMode = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseTrueUMLGenMode)));
+            }
+
+        }
         public string GITUser
         {
             get => AppSettings.Default.GITUser;
@@ -51,7 +61,7 @@ namespace PlantUMLEditor.Models
 
         }
 
-       public string TemplatesDirectory
+        public string TemplatesDirectory
         {
             get => AppSettings.Default.TemplatePath;
             set

@@ -90,7 +90,7 @@ Product "*" -- "1" Category : belongs to
             UMLInterface i1 = new("", "i1", string.Empty, new List<UMLDataType>());
             UMLClass class2 = new("", "ns", string.Empty, true, "c1", null, i1);
 
-            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false, false));
+            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false, false, null));
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType())));
             class2.Methods.Add(new UMLMethod(class2, UMLVisibility.Public));
@@ -100,7 +100,7 @@ Product "*" -- "1" Category : belongs to
             UMLClassDiagram d = new UMLClassDiagram("test", "");
             d.DataTypes.Add(i1);
             d.DataTypes.Add(class2);
-            _ = PlantUMLGenerator.Create(d);
+            _ = PlantUMLGenerator.Create(d, false);
         }
 
         [Test]
@@ -109,7 +109,7 @@ Product "*" -- "1" Category : belongs to
             UMLInterface i1 = new("", "i1", string.Empty, new List<UMLDataType>());
             UMLClass class2 = new("", "ns", string.Empty, true, "c1", null, i1);
 
-            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false, false));
+            class2.Properties.Add(new UMLProperty("prop1", i1, UMLVisibility.Public, ListTypes.List, false, false, false, null));
 
             i1.Methods.Add(new UMLMethod("Method1", new VoidDataType(), UMLVisibility.Public, new UMLParameter("parm1", new StringDataType()),
                  new UMLParameter("parm2", new BoolDataType()),
@@ -122,7 +122,7 @@ Product "*" -- "1" Category : belongs to
             d.DataTypes.Add(i1);
             d.DataTypes.Add(class2);
 
-            string s = PlantUMLGenerator.Create(d);
+            string s = PlantUMLGenerator.Create(d, false);
             _ = await UMLClassDiagramParser.ReadString(s);
         }
 

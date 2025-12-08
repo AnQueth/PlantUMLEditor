@@ -274,5 +274,17 @@ namespace PlantUMLEditor {
                 this["SelectedFont"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool UMLPureMode {
+            get {
+                return ((bool)(this["UMLPureMode"]));
+            }
+            set {
+                this["UMLPureMode"] = value;
+            }
+        }
     }
 }

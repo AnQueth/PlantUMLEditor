@@ -1,14 +1,18 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.NetworkInformation;
 using System.Text;
 using UMLModels;
 
 namespace PlantUML
 {
-    public static class ClassDiagramGenerator
+    /// <summary>
+    /// Generator that emits properties and methods using canonical UML syntax:
+    /// - Property: visibility name : Type [multiplicity] = default {modifiers}
+    /// - Method:   visibility name(param : Type, ...) : ReturnType {modifiers}
+    /// </summary>
+    public static class ClassDiagramGeneratorUmlSyntax
     {
         public static void Create(UMLClassDiagram classDiagram, TextWriter writer)
         {
@@ -25,15 +29,16 @@ namespace PlantUML
 
             foreach (var nc in classDiagram.NoteConnections)
             {
-
                 writer.Write(nc.First);
                 writer.Write(' ');
                 writer.Write(nc.Connector);
                 writer.Write(' ');
                 writer.WriteLine(nc.Second);
             }
+
             writer.WriteLine("@enduml");
         }
+
         private static void Write(List<UMLDataType> children, TextWriter writer, StringBuilder postWrites,
             List<UMLDataType> dataTypes)
         {
@@ -79,20 +84,20 @@ namespace PlantUML
                         }
 
                         writer.Write("class ");
-
-
                     }
 
-                    if (item.Name.Contains(" ") || item.Name.Contains("?") || item.Name.Contains("<") )
+                    if (item.Name.Contains(" ") || item.Name.Contains("?") || item.Name.Contains("<"))
                     {
                         writer.Write("\"");
                     }
 
                     writer.Write(item.Name);
+
                     if (item.Name.Contains(" ") || item.Name.Contains("?") || item.Name.Contains("<"))
                     {
                         writer.Write("\"");
                     }
+
                     if (item is UMLClass cl2)
                     {
                         if (!string.IsNullOrEmpty(cl2.StereoType))
@@ -109,72 +114,49 @@ namespace PlantUML
                         writer.Write(item.Alias);
                     }
 
-                    writer.WriteLine(" { ");
+                    writer.WriteLine(" {");
 
+                    // Properties: emit as "visibility name : Type [multiplicity] = default {modifiers}"
                     foreach (UMLProperty? prop in item.Properties.Where(z => !z.DrawnWithLine))
                     {
-
-
+                        // visibility
                         writer.Write(GetVisibility(prop.Visibility));
-                        if (prop.IsStatic)
+                        writer.Write(' ');
+
+                        // name
+                        writer.Write(prop.Name);
+
+                        writer.Write(" : ");
+
+                        // type + multiplicity
+                        WriteTypeWithMultiplicity(writer, prop.ObjectType.Name, prop.ListType);
+
+                        // default value
+                        if (prop.DefaultValue is not null)
                         {
-                            writer.Write(" {static}");
+                            writer.Write(" = ");
+                            writer.Write(prop.DefaultValue);
                         }
 
-                        if (prop.IsAbstract)
+                        // modifiers
+                        var modifiers = GetModifiers(prop.IsStatic, prop.IsAbstract);
+                        if (!string.IsNullOrEmpty(modifiers))
                         {
-                            writer.Write(" {abstract}");
+                            writer.Write(' ');
+                            writer.Write('{');
+                            writer.Write(modifiers);
+                            writer.Write('}');
                         }
 
-                        writer.Write(" ");
-
-                        if (prop.ListType == ListTypes.None)
-                        {
-                            writer.Write(prop.ObjectType.Name);
-                        }
-                        else if (prop.ListType == ListTypes.Array)
-                        {
-                            writer.Write(prop.ObjectType.Name);
-                            writer.Write("[]");
-                        }
-                        else if (prop.ListType == ListTypes.IReadOnlyCollection)
-                        {
-                            writer.Write("IReadOnlyCollection<");
-                            writer.Write(prop.ObjectType.Name);
-                            writer.Write(">");
-                        }
-                        else if (prop.ListType == ListTypes.List)
-                        {
-                            writer.Write("List<");
-                            writer.Write(prop.ObjectType.Name);
-                            writer.Write(">");
-                        }
-                        writer.Write(" ");
-                        writer.WriteLine(prop.Name);
-
-                        if(prop.DefaultValue is not null)
-                        {
-                            writer.Write(" ");
-                            writer.WriteLine(prop.DefaultValue);
-                        }
+                        writer.WriteLine();
                     }
 
+                    // Methods: emit as "visibility name(param : Type, ...) : ReturnType {modifiers}"
                     foreach (UMLMethod? me in item.Methods)
                     {
                         writer.Write(GetVisibility(me.Visibility));
-                        if (me.IsStatic)
-                        {
-                            writer.Write(" {static}");
-                        }
-
-                        if (me.IsAbstract)
-                        {
-                            writer.Write(" {abstract}");
-                        }
-
                         writer.Write(' ');
-                        writer.Write(me.ReturnType.Name);
-                        writer.Write(' ');
+
                         writer.Write(me.Name);
                         writer.Write('(');
 
@@ -182,38 +164,34 @@ namespace PlantUML
                         {
                             UMLParameter? p = me.Parameters[x];
 
-                            if (p.ListType == ListTypes.None)
-                            {
-                                writer.Write(p.ObjectType.Name);
-                            }
-                            else if (p.ListType == ListTypes.Array)
-                            {
-                                writer.Write(p.ObjectType.Name);
-                                writer.Write("[]");
-                            }
-                            else if (p.ListType == ListTypes.IReadOnlyCollection)
-                            {
-                                writer.Write("IReadOnlyCollection<");
-                                writer.Write(p.ObjectType.Name);
-                                writer.Write('>');
-                            }
-                            else if (p.ListType == ListTypes.List)
-                            {
-                                writer.Write("List<");
-                                writer.Write(p.ObjectType.Name);
-                                writer.Write(">");
-                            }
-                            writer.Write(" ");
+                            // parameter syntax: name : Type [multiplicity]
                             writer.Write(p.Name);
+                            writer.Write(" : ");
+                            WriteTypeWithMultiplicity(writer, p.ObjectType.Name, p.ListType);
 
                             if (x != me.Parameters.Count - 1)
                             {
                                 writer.Write(", ");
                             }
                         }
-                        writer.WriteLine(")");
+
+                        writer.Write(") : ");
+                        writer.Write(me.ReturnType.Name);
+
+                        var mmods = GetModifiers(me.IsStatic, me.IsAbstract);
+                        if (!string.IsNullOrEmpty(mmods))
+                        {
+                            writer.Write(' ');
+                            writer.Write('{');
+                            writer.Write(mmods);
+                            writer.Write('}');
+                        }
+
+                        writer.WriteLine();
                     }
-                    writer.WriteLine(" } ");
+
+                    writer.WriteLine(" }");
+
                     if (item is UMLClass c)
                     {
                         foreach (UMLDataType? b in item.Bases)
@@ -230,10 +208,9 @@ namespace PlantUML
                         _ = postWrites.Append(" --* ");
                         _ = postWrites.AppendLine(OrAlias(i.NonGenericName, i.Alias));
                     }
+
                     foreach (UMLProperty? prop in item.Properties.Where(z => z.DrawnWithLine && dataTypes.Any(p => p == z.ObjectType)))
                     {
-
-
                         postWrites.Append(item.NonGenericName);
                         if (prop.ListType != ListTypes.None)
                         {
@@ -247,7 +224,6 @@ namespace PlantUML
                         postWrites.Append(prop.ObjectType.NonGenericName);
                         if (!string.IsNullOrEmpty(prop.Name))
                         {
-
                             postWrites.Append(" : ");
                             postWrites.AppendLine(prop.Name);
                         }
@@ -255,19 +231,43 @@ namespace PlantUML
                         {
                             postWrites.AppendLine();
                         }
-
                     }
                 }
             }
+        }
 
+        private static void WriteTypeWithMultiplicity(TextWriter writer, string typeName, ListTypes listType)
+        {
+            switch (listType)
+            {
+                case ListTypes.None:
+                    writer.Write(typeName);
+                    break;
+                case ListTypes.Array:
+                case ListTypes.List:
+                case ListTypes.IReadOnlyCollection:
+                    // use UML multiplicity for collections
+                    writer.Write(typeName);
+                    writer.Write("[*]");
+                    break;
+                default:
+                    writer.Write(typeName);
+                    break;
+            }
+        }
 
+        private static string GetModifiers(bool isStatic, bool isAbstract)
+        {
+            var mods = new List<string>();
+            if (isStatic) mods.Add("static");
+            if (isAbstract) mods.Add("abstract");
+            return string.Join(",", mods);
         }
 
         private static string OrAlias(string nonGenericName, string? alias)
         {
             if (string.IsNullOrWhiteSpace(alias))
                 return nonGenericName;
-
 
             return alias;
         }

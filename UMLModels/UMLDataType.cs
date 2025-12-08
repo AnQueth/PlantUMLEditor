@@ -49,7 +49,7 @@ namespace UMLModels
                 NonGenericName = name;
             }
 
-            if (interfaces != null && interfaces.Length == 0)
+            if (interfaces != null && interfaces.Length > 0)
             {
                 Interfaces.AddRange(interfaces);
             }

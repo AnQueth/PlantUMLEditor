@@ -27,7 +27,8 @@ namespace UMLModels
             IfNoElse,
             Loop,
             Group,
-            Critical
+            Critical,
+            Ref
         }
 
         public List<UMLOrderedEntity> Entities
