@@ -284,7 +284,7 @@ namespace UmlTests
             @enduml
             """;
 
-            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            var diagram = await UMLComponentDiagramParser.ReadString(puml, false);
             Assert.That(diagram, Is.Not.Null);
 
             var implicitComp = diagram.Entities.FirstOrDefault(e => e.Name == "Implicit");
@@ -301,6 +301,51 @@ namespace UmlTests
             // connection should have been recorded either as imp.Consumes contains known or vice versa
             Assert.That(imp.Consumes.Contains(kn) || imp.Exposes.Contains(kn) || kn.Consumes.Contains(imp) || kn.Exposes.Contains(imp));
         }
+
+        [Test]
+        public async Task BackreferenceAlias()
+        {
+            string puml = """
+            @startuml
+            [Service] --> DB
+            component Service as S
+            
+            
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml, false);
+            Assert.That(diagram, Is.Not.Null);
+
+            var s = diagram.Entities.FirstOrDefault(e => e.Alias == "S") as UMLComponent;
+            var db = diagram.Entities.FirstOrDefault(e => e.Alias == "DB") as UMLComponent;
+            var serviceByName = diagram.Entities.FirstOrDefault(e => e.Name == "Service") as UMLComponent;
+            Assert.That(s.Name, Is.EqualTo("Service"));
+            Assert.That(s, Is.Not.Null);
+            Assert.That(db, Is.Not.Null);
+            Assert.That(serviceByName, Is.Not.Null);
+         
+            Assert.That(serviceByName.Consumes.Contains(db));
+        }
+
+        [Test]
+        public async Task DuplicateIdentifierError()
+        {
+            string puml = """
+            @startuml
+            [Service] --> DB
+            component Service as S
+            component Database as DB
+
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml, false);
+            Assert.That(diagram, Is.Not.Null);
+
+            Assert.That(diagram.LineErrors, Has.Some.Property("Text").Contains("Duplicate identifier : DB"));
+        }
+
 
         [Test]
         public async Task AliasReferencedConnectionsResolveToSameComponent()
@@ -548,7 +593,7 @@ namespace UmlTests
             @enduml
             """;
 
-            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            var diagram = await UMLComponentDiagramParser.ReadString(puml, false);
             Assert.That(diagram, Is.Not.Null);
 
             var implicitComp = diagram.Entities.FirstOrDefault(e => e.Name == "Implicit") as UMLComponent;
@@ -557,6 +602,27 @@ namespace UmlTests
             Assert.That(knownComp, Is.Not.Null);
 
             Assert.That(implicitComp.Consumes.Contains(knownComp) );
+        }
+
+        [Test]
+        public async Task ForwardBracketedReferenceResolvesConnectionFlagOn()
+        {
+            string puml = """
+            @startuml
+            [Implicit] --> Known
+            [Known]
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml, true);
+            Assert.That(diagram, Is.Not.Null);
+
+    
+            var knownComp = diagram.Entities.FirstOrDefault(e => e.Name == "Known") as UMLComponent;
+ 
+            Assert.That(knownComp, Is.Not.Null);
+
+            Assert.That(diagram.ExplainedErrors, Has.Some.Property("Line").Contains("[Implicit] --> Known"));
         }
     }
 }

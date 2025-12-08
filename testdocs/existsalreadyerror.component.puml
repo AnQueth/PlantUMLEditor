@@ -1,0 +1,6 @@
+      @startuml
+      [Service] --> DB
+      component Service as S
+      component Database as DB
+      
+      @enduml

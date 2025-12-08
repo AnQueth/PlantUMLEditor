@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <!-- Emit portable PDBs for Release builds so profilers can pick up managed symbols -->
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+</Project>

@@ -26,33 +26,36 @@ namespace PlantUML
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|folder|together|rectangle)\s+(?:""(?<name>[^""]+)""|(?<name>[^{}\r\n]+?))\s*\{", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
         private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+?)\]*\s*(?:""(?<leftcard>[\w ]+)""\s*)?(?<arrow>[\<\-\(\)o\[\]=,.\#\|\{\}\*]+(?<direction>[^\s""\]]+)?[\-\>\(\)o\[\].\#\|\{\}]*)\s*(?:""(?<rightcard>[\w ]+)""\s*)?(?<rightbracket>\[*)(?<right>[\w ]+)\]*\s*(?::\s*(?<label>.*))?$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _ports = new(@"^\s*(port |portin |portout )(?<name>.*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex _removeGenerics = new("\\w+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-
-        private static string Clean(string name)
+        private static ReadOnlySpan<char> Clean(ReadOnlySpan<char> name)
         {
-            string? t = name.Trim();
+            var t = name.Trim();
             return t.TrimEnd('{').Trim();
         }
 
-        private static (bool success, string name, string description, string alias, string color) ParseComponentLine(string line)
+        private record struct ComponentParseResult(bool success, string name, string description, string alias, string color);
+
+        private static ComponentParseResult ParseComponentLine(ReadOnlySpan<char> line)
         {
-            string remaining = line;
+            ReadOnlySpan<char> remaining = line;
 
             // Match component type
-            Match typeMatch = _componentType.Match(remaining);
+            Match typeMatch = _componentType.Match(remaining.ToString());
             if (!typeMatch.Success)
-                return (false, string.Empty, string.Empty, string.Empty, string.Empty);
+                return new (false, string.Empty, string.Empty, string.Empty, string.Empty);
 
-            remaining = remaining.Substring(typeMatch.Length);
+            remaining = remaining[(typeMatch.Length)..];
 
             // Match name
-            Match nameMatch = _componentName.Match(remaining);
+            Match nameMatch = _componentName.Match(remaining.ToString());
             if (!nameMatch.Success)
-                return (false, string.Empty, string.Empty, string.Empty, string.Empty);
+                return new(false, string.Empty, string.Empty, string.Empty, string.Empty);
 
-            string name = nameMatch.Groups["name"].Value;
+            var name = nameMatch.Groups["name"].ValueSpan;
             // Do not TrimStart before marker search to correctly detect leading "as "
-            remaining = remaining.Substring(nameMatch.Length);
+            remaining = remaining[nameMatch.Length..];
+            name = Clean(name);
 
             // Try to match description/stereotype (optional) - everything before alias or color marker
             string description = string.Empty;
@@ -69,32 +72,32 @@ namespace PlantUML
             else if (colorIndex >= 0)
                 endIndex = colorIndex;
 
-            description = remaining.Substring(0, endIndex).Trim();
-            remaining = remaining.Substring(endIndex).TrimStart();
+            description = remaining[..endIndex].ToString().Trim();
+            remaining = remaining[endIndex..].TrimStart();
 
             // Try to match alias (optional)
             string alias = string.Empty;
-            Match aliasMatch = _componentAlias.Match(remaining);
+            Match aliasMatch = _componentAlias.Match(remaining.ToString());
             if (aliasMatch.Success)
             {
                 alias = aliasMatch.Groups["alias"].Value;
-                remaining = remaining.Substring(aliasMatch.Length);
+                remaining = remaining[aliasMatch.Length..];
             }
 
             if(string.IsNullOrEmpty(alias))
             {
-                alias = name;
+                alias = name.ToString();
             }
 
             // Try to match color (optional)
             string color = string.Empty;
-            Match colorMatch = _componentColor.Match(remaining);
+            Match colorMatch = _componentColor.Match(remaining.ToString());
             if (colorMatch.Success)
             {
                 color = colorMatch.Groups["color"].Value;
             }
 
-            return (true, name, description, alias, color);
+            return new(true, name.ToString(), description, alias, color);
         }
 
         private static string GetPackage(Stack<string> packages)
@@ -117,7 +120,9 @@ namespace PlantUML
             return res;
         }
 
-        private static async Task<UMLComponentDiagram?> ReadComponentDiagram(StreamReader sr, string fileName)
+        // Changed to accept TextReader to avoid allocating MemoryStream when parsing strings
+        private static async Task<UMLComponentDiagram?> ReadComponentDiagram(TextReader sr, 
+            string fileName, bool componentsMustBeDefined)
         {
 
             bool started = false;
@@ -128,16 +133,15 @@ namespace PlantUML
             Dictionary<string, UMLDataType> aliases = new();
 
 
-
             Stack<string> brackets = new();
-            Regex removeGenerics = new("\\w+");
+       
             Stack<UMLPackage> packagesStack = new();
             Stack<UMLComponent> components = new();
             UMLComponent? currentComponent = null;
 
             UMLPackage defaultPackage = new("");
 
-            UMLComponentDiagram d = new(string.Empty, fileName, defaultPackage);
+            UMLComponentDiagram diagram = new(string.Empty, fileName, defaultPackage);
             packagesStack.Push(defaultPackage);
             UMLPackage? currentPackage = defaultPackage;
 
@@ -151,12 +155,19 @@ namespace PlantUML
 
                 try
                 {
-
+                    // Precompute regex matches so IsMatch isn't called repeatedly in the if/else chain
+                    Match mPorts = _ports.Match(line);
+                    Match mPackage1 = _packageRegex.Match(line);
+                    Match mPackage2 = _packageRegex2.Match(line);
+                    Match mComponentBracket = _componentBracketStyle.Match(line);
+                    Match mComponentType = _componentType.Match(line);
+                    Match mInterface = _interface.Match(line);
+                    Match mComposition = composition.Match(line);
 
 
                     if (cp.ParseStart(line, (str) =>
                     {
-                        d.Title = line[9..].Trim();
+                        diagram.Title = line[9..].Trim();
                     }))
                     {
                         started = true;
@@ -169,7 +180,7 @@ namespace PlantUML
 
                     if (cp.ParseTitle(line, (str) =>
                     {
-                        d.Title = str;
+                        diagram.Title = str;
 
                     }))
                     {
@@ -201,22 +212,22 @@ namespace PlantUML
                         continue;
                     }
 
-                    if (_ports.IsMatch(line))
+                    if (mPorts.Success)
                     {
-                        Match? m = _ports.Match(line);
+                       
                         if (currentComponent is not null)
                         {
-                            if (m.Groups[1].Value == "port ")
+                            if (mPorts.Groups[1].Value == "port ")
                             {
-                                currentComponent.Ports.Add(m.Groups["name"].Value);
+                                currentComponent.Ports.Add(mPorts.Groups["name"].Value);
                             }
-                            else if (m.Groups[1].Value == "portin ")
+                            else if (mPorts.Groups[1].Value == "portin ")
                             {
-                                currentComponent.PortsIn.Add(m.Groups["name"].Value);
+                                currentComponent.PortsIn.Add(mPorts.Groups["name"].Value);
                             }
-                            else if (m.Groups[1].Value == "portout ")
+                            else if (mPorts.Groups[1].Value == "portout ")
                             {
-                                currentComponent.PortsOut.Add(m.Groups["name"].Value);
+                                currentComponent.PortsOut.Add(mPorts.Groups["name"].Value);
                             }
                         }
                         continue;
@@ -247,35 +258,35 @@ namespace PlantUML
                         continue;
                     }
 
-                    if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex.IsMatch(line))
+                    if (line.EndsWith("{", StringComparison.Ordinal) && mPackage1.Success)
                     {
-                        Match? s = _packageRegex.Match(line);
+                        Match? s = mPackage1;
 
                         currentPackage = AddPackage(packages, aliases, brackets,
-                            packagesStack, d, currentPackage, s);
+                            packagesStack, diagram, currentPackage, s);
 
                         continue;
                     }
-                    else if (line.Trim().EndsWith("{", StringComparison.Ordinal) && _packageRegex2.IsMatch(line))
+                    else if (line.EndsWith("{", StringComparison.Ordinal) && mPackage2.Success)
                     {
-                        Match? s = _packageRegex2.Match(line);
+                        Match? s = mPackage2;
 
                         currentPackage = AddPackage(packages, aliases, brackets,
-                       packagesStack, d, currentPackage, s);
-
+                       packagesStack, diagram, currentPackage, s);
 
 
 
                         continue;
                     }
-                    else if (_componentBracketStyle.IsMatch(line))
+                    else if (mComponentBracket.Success)
                     {
-                        Match m = _componentBracketStyle.Match(line);
+                     
                         string package = GetPackage(packages);
-                        DataType = new UMLComponent(package, Clean(m.Groups["name"].Value), m.Groups["alias"].Value);
-                        if (!aliases.TryAdd(m.Groups["alias"].Value, DataType))
+                        DataType = new UMLComponent(package, Clean(mComponentBracket.Groups["name"].ValueSpan).ToString(),
+                            mComponentBracket.Groups["alias"].Value);
+                        if (!aliases.TryAdd(mComponentBracket.Groups["alias"].Value, DataType))
                         {
-                            d.AddLineError($"Duplicate identifier : {m.Groups["alias"].Value}", linenumber);
+                            diagram.AddLineError($"Duplicate identifier : {mComponentBracket.Groups["alias"].Value}", linenumber);
                         }
 
                         if (currentComponent is not null)
@@ -290,7 +301,7 @@ namespace PlantUML
                             currentComponent = (UMLComponent)DataType;
                         }
                     }
-                    else if (_componentType.IsMatch(line))
+                    else if (mComponentType.Success)
                     {
                         var parseResult = ParseComponentLine(line);
                         if (!parseResult.success || string.IsNullOrEmpty(parseResult.name))
@@ -300,11 +311,11 @@ namespace PlantUML
 
                         string package = GetPackage(packages);
 
-                        DataType = new UMLComponent(package, Clean(parseResult.name), parseResult.alias);
+                        DataType = new UMLComponent(package, parseResult.name, parseResult.alias);
 
                         if (!aliases.TryAdd(parseResult.alias, DataType))
                         {
-                            d.AddLineError($"Duplicate identifier : {parseResult.alias}", linenumber);
+                            diagram.AddLineError($"Duplicate identifier : {parseResult.alias}", linenumber);
 
                         }
 
@@ -320,19 +331,20 @@ namespace PlantUML
                             currentComponent = (UMLComponent)DataType;
                         }
                     }
-                    else if (_interface.IsMatch(line))
+                    else if (mInterface.Success)
                     {
-                        Match? g = _interface.Match(line);
+                       
                         string package = GetPackage(packages);
                         if (line.Length > 8)
                         {
-                            var alias = string.IsNullOrWhiteSpace(g.Groups["alias"].Value) ? g.Groups[PACKAGENAME].Value : g.Groups["alias"].Value;
-                            DataType = new UMLInterface(package, Clean(g.Groups[PACKAGENAME].Value), alias,
+                            var alias = string.IsNullOrWhiteSpace(mInterface.Groups["alias"].Value) 
+                                ? mInterface.Groups[PACKAGENAME].Value : mInterface.Groups["alias"].Value;
+                            DataType = new UMLInterface(package, Clean(mInterface.Groups[PACKAGENAME].ValueSpan).ToString(), alias,
                                 new List<UMLDataType>());
 
                             if(!aliases.TryAdd(alias, DataType))
                             {
-                                d.AddLineError($"Duplicate identifier : {alias}", linenumber);
+                                diagram.AddLineError($"Duplicate identifier : {alias}", linenumber);
                             }
                         }
                         if (line.EndsWith("{", StringComparison.Ordinal))
@@ -340,23 +352,28 @@ namespace PlantUML
                             brackets.Push("interface");
                         }
                     }
-                    else if (composition.IsMatch(line))
+                    else if (mComposition.Success)
                     {
                         try
                         {
-                            Match? m = composition.Match(line);
+                             
 
-                            string left = m.Groups["left"].Value.Trim();
-                            string right = m.Groups["right"].Value.Trim();
-
-                            var leftComponent = TryGetComponent(left, d, packages, currentPackage, aliases, m.Groups["leftbracket"].Length == 1);
-                            var rightComponent = TryGetComponent(right, d, packages, currentPackage, aliases, m.Groups["rightbracket"].Length == 1);
+                            string left = mComposition.Groups["left"].Value.Trim();
+                            string right = mComposition.Groups["right"].Value.Trim();
 
 
-                            string arrow = m.Groups["arrow"].Value.Trim();
+                            var leftComponent = TryGetComponent(left, diagram, packages, currentPackage, 
+                                aliases, mComposition.Groups["leftbracket"].Length == 1, componentsMustBeDefined);
+                            var rightComponent = TryGetComponent(right, diagram, packages, currentPackage, 
+                                aliases, mComposition.Groups["rightbracket"].Length == 1, componentsMustBeDefined);
+
+
+                            string arrow = mComposition.Groups["arrow"].Value.Trim();
                             if (leftComponent == null || rightComponent == null)
                             {
-                                d.ExplainedErrors.Add((line, linenumber, $"left: {leftComponent?.Alias} right: {rightComponent?.Alias}"));
+                                diagram.ExplainedErrors.Add(new UMLComponentDiagram.ExplainedError(line,
+                                    linenumber, 
+                                    $"(Left: {leftComponent?.Alias ?? "Not Found"}) (Right: {rightComponent?.Alias ?? "Not Found"})"));
                             }
                             else if (leftComponent is UMLComponent c)
                             {
@@ -403,7 +420,7 @@ namespace PlantUML
                     }
                     else
                     {
-                        d.AddLineError(line, linenumber);
+                        diagram.AddLineError(line, linenumber);
 
                     }
                     if (DataType != null)
@@ -415,29 +432,36 @@ namespace PlantUML
                 {
 
 
-                    d.ExplainedErrors.Add((line, linenumber, "Regex timeout"));
+                    diagram.ExplainedErrors.Add(new(line, linenumber, "Regex timeout"));
                 }
                 catch
                 {
-                    d.AddLineError(line, linenumber);
+                    diagram.AddLineError(line, linenumber);
 
                 }
+
 
 
             }
 
-            return d;
+            return diagram;
         }
 
-        private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, UMLPackage currentPackage, Dictionary<string, UMLDataType> aliases, bool bracketExists)
+        private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram diagram, 
+            Stack<string> packages, UMLPackage currentPackage, 
+            Dictionary<string, UMLDataType> aliases, bool bracketExists, bool componentsMustBeDefined)
         {
-            UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left && string.IsNullOrEmpty(p.Alias))
-                              ?? d.ContainedPackages.Find(p => p.Name == left);
+            UMLDataType? leftComponent = diagram.Entities.Find(p => p.Name == left && string.IsNullOrEmpty(p.Alias))
+                              ?? diagram.ContainedPackages.Find(p => p.Name == left);
             if (leftComponent == null)
             {
                 if (aliases.ContainsKey(left))
                 {
                     leftComponent = aliases[left];
+                }
+                else if(componentsMustBeDefined)
+                {
+                    leftComponent = null;
                 }
                 else
                 {
@@ -448,18 +472,18 @@ namespace PlantUML
 
              
 
-                        leftComponent = new UMLComponent(package, Clean(left), left);
+                        leftComponent = new UMLComponent(package, Clean(left.AsSpan()).ToString(), left);
                         currentPackage.Children.Add(leftComponent);
                         _ = aliases.TryAdd(left, leftComponent);
                     }
                     else if (left is not null && !bracketExists)
                     {
-                        leftComponent = d.Entities.OfType<UMLComponent>().FirstOrDefault(z => z.PortsIn.Contains(left)
+                        leftComponent = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(z => z.PortsIn.Contains(left)
                           || z.PortsOut.Contains(left) || z.Ports.Contains(left));
 
                         if(leftComponent is null)
                         {
-                            leftComponent = new UMLComponent(package, Clean(left), left);
+                            leftComponent = new UMLComponent(package, Clean(left.AsSpan()).ToString(), left);
                             currentPackage.Children.Add(leftComponent);
                             _ = aliases.TryAdd(left, leftComponent);
                         }
@@ -479,7 +503,7 @@ namespace PlantUML
 
         private static UMLPackage AddPackage(Stack<string> packages, Dictionary<string, UMLDataType> aliases, Stack<string> brackets, Stack<UMLPackage> packagesStack, UMLComponentDiagram d, UMLPackage currentPackage, Match s)
         {
-            string name = Clean(s.Groups[PACKAGENAME].Value);
+            string name = Clean(s.Groups[PACKAGENAME].ValueSpan).ToString();
             packages.Push(name);
             brackets.Push(PACKAGENAME);
 
@@ -501,20 +525,19 @@ namespace PlantUML
             return currentPackage;
         }
 
-        public static async Task<UMLComponentDiagram?> ReadFile(string file)
+        public static async Task<UMLComponentDiagram?> ReadFile(string file, bool componentsMustBeDefined = true)
         {
             using StreamReader sr = new(file);
-            UMLComponentDiagram? c = await ReadComponentDiagram(sr, file);
+            UMLComponentDiagram? c = await ReadComponentDiagram(sr, file, componentsMustBeDefined);
 
             return c;
         }
 
-        public static async Task<UMLComponentDiagram?> ReadString(string s)
+        public static async Task<UMLComponentDiagram?> ReadString(string s, bool componentsMustBeDefined = true)
         {
 
-            using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
-            using StreamReader sr = new(ms);
-            UMLComponentDiagram? c = await ReadComponentDiagram(sr, "");
+            using StringReader sr = new(s);
+            UMLComponentDiagram? c = await ReadComponentDiagram(sr, "", componentsMustBeDefined);
 
             return c;
         }

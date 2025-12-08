@@ -24,7 +24,9 @@ namespace UMLModels
             }
         }
 
-        public List<(string Line, int LineNumber, string message)> ExplainedErrors { get; } = new();
+        public record struct ExplainedError(string Line, int LineNumber, string Message);
+
+        public List<ExplainedError> ExplainedErrors { get; } = new();
         public UMLPackage? Package
         {
             get; init;

@@ -30,9 +30,8 @@ namespace PlantUML
 
         public static async Task<UMLSequenceDiagram?> ReadString(string s, LockedList<UMLClassDiagram> types, bool justLifeLines)
         {
-            using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
-            using StreamReader sr = new(ms);
-            UMLSequenceDiagram? c = await ReadDiagram(sr, types, "", justLifeLines);
+            using TextReader tr = new StringReader(s);
+            UMLSequenceDiagram? c = await ReadDiagram(tr, types, "", justLifeLines);
 
             return c;
         }
@@ -301,7 +300,7 @@ namespace PlantUML
             }
         }
 
-        private static async Task<UMLSequenceDiagram?> ReadDiagram(StreamReader sr, LockedList<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
+        private static async Task<UMLSequenceDiagram?> ReadDiagram(TextReader sr, LockedList<UMLClassDiagram> classDiagrams, string fileName, bool justLifeLines)
         {
             ILookup<string, UMLDataType>? types = classDiagrams.SelectMany(p => p.DataTypes).Where(p => p is UMLClass or UMLInterface or UMLStruct).ToLookup(p => p.Name);
 

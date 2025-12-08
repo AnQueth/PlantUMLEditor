@@ -214,7 +214,7 @@ namespace PlantUML
             }
         }
 
-        private static async Task<UMLClassDiagram?> ReadClassDiagram(StreamReader sr, string fileName)
+        private static async Task<UMLClassDiagram?> ReadClassDiagram(TextReader sr, string fileName)
         {
             UMLPackage defaultPackage = new("");
 
@@ -649,8 +649,8 @@ namespace PlantUML
 
         public static async Task<UMLClassDiagram?> ReadString(string s)
         {
-            using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
-            using StreamReader sr = new(ms);
+          
+            using StringReader sr = new(s);
             UMLClassDiagram? c = await ReadClassDiagram(sr, "");
 
             return c;
