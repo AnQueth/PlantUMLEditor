@@ -5,11 +5,19 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Newtonsoft.Json;
+using Prism.Commands;
 
 namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
+        // Document management command properties
+        public DelegateCommand<BaseDocumentModel> CloseDocument { get; }
+        public DelegateCommand<BaseDocumentModel> CloseDocumentAndSave { get; }
+        public DelegateCommand<BaseDocumentModel> SaveCommand { get; }
+        public DelegateCommand SaveAllCommand { get; }
+        public DelegateCommand<BaseDocumentModel> SelectDocumentCommand { get; }
+
         private static async Task Save(TextDocumentModel doc)
         {
             await doc.Save();

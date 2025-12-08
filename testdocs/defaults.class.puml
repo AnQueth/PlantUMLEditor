@@ -1,27 +1,27 @@
 @startuml
 title defaults.class
- 
-class void { 
- } 
-class G { 
- } 
-class string { 
- } 
+class void {
+ }
+class G {
+ }
+class string {
+ }
 note top of string
 aaa
 end note
 
 'aaaa fgggg
-class h { 
- } 
-class bool { 
- } 
-class DateTimeOffset { 
- } 
-class Task { 
- } 
-class IEnumerable { 
- } 
- 
+class h {
+ }
+class bool {
+ }
+class DateTimeOffset {
+ }
+class Task {
+ }
+class IEnumerable {
+ }
+class String {
+ }
 
 @enduml

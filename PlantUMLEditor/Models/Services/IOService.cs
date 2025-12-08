@@ -1,5 +1,6 @@
 ﻿using PlantUMLEditor.Models;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using SaveFileDialog = Microsoft.Win32.SaveFileDialog;
 
@@ -18,6 +19,16 @@ namespace PlantUMLEditor.Models.Services
             return null;
         }
 
+        public string? GetFile(params string[] extensions)
+        {
+            OpenFileDialog ofd = new();
+            ofd.Filter = "Files|" + string.Join(";", extensions.Select(ext => "*" + ext));
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                return ofd.FileName;
+            }
+            return null;
+        }
         public string? GetSaveFile(string filter, string defaultExt)
         {
             SaveFileDialog sfd = new()

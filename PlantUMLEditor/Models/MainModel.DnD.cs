@@ -5,11 +5,22 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Prism.Commands;
 
 namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
+        // File creation command properties
+        public DelegateCommand CreateNewJSONDocumentCommand { get; }
+        public DelegateCommand CreateNewUnknownDiagram { get; }
+        public DelegateCommand CreateNewURLLinkCommand { get; }
+        public DelegateCommand CreateNewSequenceDiagram { get; }
+        public DelegateCommand CreateNewClassDiagram { get; }
+        public DelegateCommand CreateNewComponentDiagram { get; }
+        public DelegateCommand CreateMarkDownDocument { get; }
+        public DelegateCommand CreateYAMLDocument { get; }
+
         private TreeViewModel? _selectedFile;
         private TreeViewModel? _selectedFolder;
 
@@ -186,9 +197,7 @@ namespace PlantUMLEditor.Models
             return default(T);
         }
 
-
-
-                private async void NewClassDiagramHandler()
+        private async void NewClassDiagramHandler()
         {
             await _newFileManager.CreateNewClassDiagram(_selectedFolder, FolderBase);
         }

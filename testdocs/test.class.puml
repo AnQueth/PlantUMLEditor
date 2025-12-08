@@ -1,54 +1,42 @@
 @startuml
 
 title test.class
-
 !$f = true
 skinparam lalaa aaa
 skinparam class {
-  color green
+color green
 }
 
 abstract class A {
-  {static} int counter
-  - {abstract} void start(int timeout)
-}
-
+  counter : int {static}
+- start(timeout : int) : void {abstract}
+ }
 package La {
-  class C1 {
-    int test()
-    C2 la()
-    C2 la2()
-  }
+class C1 {
+  test() : int
+  la() : C2
+  la2() : C2
+ }
 }
-
 package a {
-  class C2 {
-
-    void aaa(C1 la)
-    void doStuff()
-  }
-
-  class C3 {
-    + G la
-  }
-
-
-  note right of C3: lalala
-
+class C2 {
+  aaa(la : C1) : void
+  doStuff() : void
+ }
+class C3 {
++ la : G
+ }
+note right of C3: lalala
 }
-
-
 note right of A::counter
-
 This member is annotated
 end note
 
 note right of A::start
-
 This method is now explained in a UML note
 end note
 
 note on link: lalaala
-
 C3 -- C1
+
 @enduml

@@ -1,6 +1,7 @@
 ﻿using Markdig;
 using Prism.Mvvm;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Text.Json.Serialization;
@@ -42,7 +43,7 @@ namespace PlantUMLEditor.Models
 
         public bool IsUser { get; } = isUser;
 
-        public ObservableCollection<ToolCall> ToolCalls { get; } = new ObservableCollection<ToolCall>();
+        public ObservableCollection<ToolCall> ToolCalls { get; init; } = new ObservableCollection<ToolCall>();
 
         [JsonIgnore]
         public FlowDocument Document
@@ -91,6 +92,8 @@ namespace PlantUMLEditor.Models
                 }
             }
         }
+
+        internal List<Attachment>? Attachments { get; set; }
 
         public event PropertyChangedEventHandler? PropertyChanged;
 

@@ -13,7 +13,9 @@
 
         xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
         mc:Ignorable="d"
-        Title="Aaron's Plant UML Editor" Height="{Binding UIModel.WindowHeight, Mode=TwoWay, FallbackValue=850}" Width="{Binding UIModel.WindowWidth, Mode=TwoWay, FallbackValue=1000}"
+        Title="Aaron's Plant UML Editor" 
+    Height="{Binding UIModel.WindowHeight, Mode=TwoWay, FallbackValue=850}"
+    Width="{Binding UIModel.WindowWidth, Mode=TwoWay, FallbackValue=1200}"
 FontFamily="{DynamicResource FontFamily.Primary}"  Loaded="Window_Loaded"
     Left="{Binding UIModel.WindowLeft, Mode=TwoWay}"
     Top="{Binding UIModel.WindowTop, Mode=TwoWay}"
@@ -1615,45 +1617,106 @@ CanContentScroll="False">
                         </Button> 
                     </Grid>
                 </Border>
-                <Border Grid.Row="2"  BorderThickness="0,1,0,0" BorderBrush="{StaticResource BorderSubtle}" Background="{StaticResource BackgroundSecondary}" Padding="8">
+                <Border Grid.Row="2"  BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"
+                        Background="{StaticResource BackgroundSecondary}" 
+                        >
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
-                          
+
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
+                             
                         </Grid.ColumnDefinitions>
-                        <Button Content="New Chat" Margin="0,0,10,0"   Command="{Binding NewChatCommand}"></Button>
-                   
-                        <TextBox Grid.Column="1" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" AcceptsReturn="False" AcceptsTab="True"
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto"  />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock  Text="Prompt" HorizontalAlignment="Right" Margin="2" VerticalAlignment="Center"
+                         FontFamily="{DynamicResource FontFamily.Primary}" 
+                        FontSize="12" />
+                            <ComboBox  Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" 
+                                       Margin="2"
+ItemsSource="{Binding Prompts}" MinWidth="50"
+SelectedItem="{Binding SelectedPrompt}">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Name}" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                         
+                        <Button Content="New Chat" Grid.Row="1"  Margin="2"
+                                VerticalAlignment="Top" HorizontalAlignment="Center"
+                                Command="{Binding NewChatCommand}"></Button>
+
+                        <TextBox Grid.Column="1" Grid.Row="1" Margin="2" FontFamily="{DynamicResource FontFamily.Primary}" 
+                                 FontSize="12"   AcceptsTab="True"  MinHeight="64"
+                                 MaxHeight="200"
                                  Text="{Binding ChatText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                 Padding="10,8" MinHeight="40" MaxHeight="100"
+                                 Padding="10,8"   AcceptsReturn="True"
                                   HorizontalAlignment="Stretch"  VerticalAlignment="Center"
-                                 VerticalScrollBarVisibility="Auto"
+                                
+                                 VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
                                  BorderThickness="1" BorderBrush="{StaticResource BorderSubtle}"
+                                 
                                  Background="{StaticResource BackgroundMain}">
                             <b:Interaction.Triggers>
-                                <b:KeyTrigger Key="Return" ActiveOnFocus="True">
-                                    <b:InvokeCommandAction Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}" />
+                                <b:EventTrigger EventName="PreviewKeyDown">
+                                    <b:InvokeCommandAction Command="{Binding PasteFromClipboardCommand}" PassEventArgsToCommand="True" />
+                                </b:EventTrigger>
+                                <b:KeyTrigger Key="Return" Modifiers="Ctrl"  ActiveOnFocus="True">
+                                    <b:InvokeCommandAction Command="{Binding SendChatCommand}"  
+                                                           CommandParameter="{Binding CurrentDocument}" />
                                 </b:KeyTrigger>
                             </b:Interaction.Triggers>
                         </TextBox>
-                        <Button Grid.Column="2" Content="Send" Command="{Binding SendChatCommand}"  CommandParameter="{Binding CurrentDocument}"
-                                Padding="14,10" MinWidth="80" Height="40" Margin="8,0,0,0"
-                                Background="{StaticResource PrimaryAccent}" Foreground="White" FontWeight="SemiBold" FontSize="12"/>
-                        <StackPanel Orientation="Vertical" Grid.Column="3">
-                            <TextBlock Text="Prompt:" HorizontalAlignment="Center" VerticalAlignment="Center" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" />
-                            <ComboBox   HorizontalAlignment="Center"  VerticalAlignment="Center" Margin="8,0,0,0"
-               ItemsSource="{Binding Prompts}"
-               SelectedItem="{Binding SelectedPrompt}">
-                            <ComboBox.ItemTemplate>
+                        <Button Grid.Column="2" Grid.Row="1" Margin="2"
+        Command="{Binding ActiveSendCommand}"
+        CommandParameter="{Binding CurrentDocument}"
+        Content="{Binding ActiveSendContent}"
+        VerticalAlignment="Top" HorizontalAlignment="Center"
+       
+        FontWeight="SemiBold" FontSize="12" />
+
+                        <ListBox Grid.Row="2" Grid.ColumnSpan="2" IsHitTestVisible="True" ItemsSource="{Binding Attachments}"
+                                      Margin="2">
+                            <ListBox.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel  />
+                                </ItemsPanelTemplate>
+                            </ListBox.ItemsPanel>
+                            <b:Interaction.Triggers>
+                            <b:EventTrigger EventName="MouseDoubleClick">
+                                    <b:InvokeCommandAction Command="{Binding AttachmentDoubleClickCommand}"
+                                                       CommandParameter="{Binding SelectedItem, RelativeSource={RelativeSource AncestorType=ItemsControl}}" /> 
+                            </b:EventTrigger>
+                            </b:Interaction.Triggers>
+                            <ListBox.ItemTemplate>
+                                
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding Name}" FontFamily="{DynamicResource FontFamily.Primary}" FontSize="12" />
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                            <RowDefinition Height="Auto"></RowDefinition>
+                                        </Grid.RowDefinitions>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            
+                                        </Grid.ColumnDefinitions>
+                                        <Image Source="{Binding Image}" MaxHeight="50"></Image>
+                                        <TextBlock Grid.Row="1" Text="{Binding Type}" FontSize="10" ></TextBlock>
+                                    </Grid>
+                                
                                 </DataTemplate>
-                            </ComboBox.ItemTemplate>
-                        </ComboBox>
-                        </StackPanel>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <Button Grid.Row="2" Grid.Column="2" 
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Top"
+                                Command="{Binding AddAttachmentCommand}" Margin="2" Content="Add"/>
                     </Grid>
                 </Border>
             </Grid>

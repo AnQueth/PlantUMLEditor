@@ -132,7 +132,7 @@ namespace PlantUML
                         WriteTypeWithMultiplicity(writer, prop.ObjectType.Name, prop.ListType);
 
                         // default value
-                        if (prop.DefaultValue is not null)
+                        if (!string.IsNullOrWhiteSpace(prop.DefaultValue))
                         {
                             writer.Write(" = ");
                             writer.Write(prop.DefaultValue);

@@ -5,27 +5,36 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using Newtonsoft.Json;
 using PlantUMLEditor.Models.Runners;
+using Prism.Commands;
 
 namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
-            private string? _selectedMRUFolder;
+        // Workspace-related command properties
+        public ICommand OpenDirectoryCommand { get; }
+        public DelegateCommand<string> DeleteMRUCommand { get; }
+        public DelegateCommand OpenTerminalCommand { get; }
+        public DelegateCommand OpenExplorerCommand { get; }
+        public DelegateCommand ScanAllFiles { get; }
 
-            public string? SelectedMRUFolder
+        private string? _selectedMRUFolder;
+
+        public string? SelectedMRUFolder
+        {
+            get => _selectedMRUFolder;
+            set
             {
-                get => _selectedMRUFolder;
-                set
+                SetValue(ref _selectedMRUFolder, value);
+                if (!string.IsNullOrEmpty(_selectedMRUFolder) && value != FolderBase)
                 {
-                    SetValue(ref _selectedMRUFolder, value);
-                    if (!string.IsNullOrEmpty(_selectedMRUFolder) && value != FolderBase)
-                    {
-                        _ = OpenDirectoryHandler(false, _selectedMRUFolder);
-                    }
+                    _ = OpenDirectoryHandler(false, _selectedMRUFolder);
                 }
             }
+        }
 
     
         private void OpenExplorerHandler()

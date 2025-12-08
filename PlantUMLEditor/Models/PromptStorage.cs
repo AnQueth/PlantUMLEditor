@@ -25,6 +25,7 @@ namespace PlantUMLEditor.Models
 
         public static readonly string SystemPrompt = @"You are a plant uml expert to help users create and edit plantuml.
         You have the ability read html content from current documents.
+You are outputting text that will be viewed in a markdown viewer, markdig.
 Use the available tools. Ensure you verify any edits. Use tools to read and edit the current diagram.
 Ensure diagrams adhere to plantuml syntax. 
 If you create a new diagram you do not need to repeat the diagram code back to the user.
@@ -66,6 +67,9 @@ examples:
             {
                 await System.IO.File.WriteAllTextAsync(System.IO.Path.Combine(path, $"{prompt.Name}.prompt"), prompt.Content);
             }
+
+            Prompts.Clear();
+            await Load(path);
         }
 
         public async Task Load(string path)

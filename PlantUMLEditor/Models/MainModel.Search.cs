@@ -7,6 +7,11 @@ namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
+        // Search-related command properties
+        public DelegateCommand<string> GlobalSearchCommand { get; }
+        public DelegateCommand<string> GotoDefinitionCommand { get; init; }
+        public DelegateCommand<string> FindAllReferencesCommand { get; init; }
+
         private GlobalFindResult? _selectedFindResult;
 
         public GlobalFindResult? SelectedGlobalFindResult

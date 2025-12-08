@@ -1,27 +1,32 @@
 using System.Windows;
+using Prism.Commands;
 
 namespace PlantUMLEditor.Models
 {
     internal partial class MainModel 
     {
-            private bool _templatesEnabled = false;
-            private TemplateItem? _selectedTemplate;
+        // Template-related command properties
+        public DelegateCommand ApplyTemplateCommand { get; }
+        public DelegateCommand EditTemplatesCommand { get; }
 
-            public bool TemplatesEnabled
-            {
-                get => _templatesEnabled;
-                set => SetValue(ref _templatesEnabled, value);
-            }
+        private bool _templatesEnabled = false;
+        private TemplateItem? _selectedTemplate;
 
-            public TemplateItem? SelectedTemplate
+        public bool TemplatesEnabled
+        {
+            get => _templatesEnabled;
+            set => SetValue(ref _templatesEnabled, value);
+        }
+
+        public TemplateItem? SelectedTemplate
+        {
+            get => _selectedTemplate;
+            set
             {
-                get => _selectedTemplate;
-                set
-                {
-                    SetValue(ref _selectedTemplate, value);
-                    ApplyTemplateCommand.RaiseCanExecuteChanged();
-                }
+                SetValue(ref _selectedTemplate, value);
+                ApplyTemplateCommand.RaiseCanExecuteChanged();
             }
+        }
 
     
         private void ApplyTemplateCommandHandler()

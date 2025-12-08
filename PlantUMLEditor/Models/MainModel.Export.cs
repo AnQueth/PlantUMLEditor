@@ -6,11 +6,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using PlantUMLEditor.Models.Runners;
+using Prism.Commands;
 
 namespace PlantUMLEditor.Models
 {
     internal partial class MainModel
     {
+        // Export-related command properties
+        public DelegateCommand CreateUMLPngImage { get; }
+        public DelegateCommand CreateUMLSVGImage { get; }
+        public DelegateCommand GitCommitAndSyncCommand { get; }
+        public DelegateCommand DocFXServeCommand { get; }
 
         private async Task CreateUMLImage(bool svg)
         {

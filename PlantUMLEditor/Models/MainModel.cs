@@ -48,8 +48,8 @@ namespace PlantUMLEditor.Models
 
         private readonly Channel<bool> _messageCheckerTrigger = Channel.CreateUnbounded<bool>();
         private readonly NewFileManager _newFileManager;
-        private readonly TemplateStorage _templateStorage;
         private readonly PromptStorage _promptStorage;
+        private readonly TemplateStorage _templateStorage;
         private readonly MainWindow _window;
         private readonly OpenDocumentManager OpenDocumenntManager;
         private CancellationTokenSource? _cancelCurrentExecutingAction;
@@ -81,11 +81,11 @@ namespace PlantUMLEditor.Models
             {
                 return _cancelCurrentExecutingAction != null;
             });
-
+            AttachmentDoubleClickCommand = new DelegateCommand<Attachment>(AttachmentDoubleClickCommandHandler);
             OpenHyperlinkCommand = new DelegateCommand<Uri>(ExecuteUriLink);
-
+            PasteFromClipboardCommand = new AsyncDelegateCommand<KeyEventArgs>(PasteFromClipboardHandler);
             UndoAIEditsCommand = new AsyncDelegateCommand<ObservableCollection<UndoOperation>>(UndoEditCommandHandler);
-
+            AddAttachmentCommand = new AsyncDelegateCommand(AddAttechmantHandler);
             GotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
             FindAllReferencesCommand = new DelegateCommand<string>(FindAllReferencesInvoked);
             Documents = new UMLModels.UMLDocumentCollection();
@@ -94,6 +94,10 @@ namespace PlantUMLEditor.Models
                 {
                     return ChatText.Length > 0;
                 });
+
+            CancelAIProcessingCommand = new DelegateCommand(CancelAIProcessingHandler,
+                () => _aiCancellationTokenSource != null);
+
             _ioService = openDirectoryService;
             OpenDirectoryCommand = new DelegateCommand(() => _ = OpenDirectoryHandler());
             DeleteMRUCommand = new DelegateCommand<string>((s) => DeleteMRUCommandHandler(s));
@@ -173,34 +177,12 @@ namespace PlantUMLEditor.Models
             EditorFontSize = AppSettings.Default.EditorFontSize;
         }
 
-        public bool AllowContinueClosing
-        {
-            get;
-            set;
-        }
+        // Properties that have handlers in this main file
+        public bool AllowContinueClosing { get; set; }
 
-        public DelegateCommand ApplyTemplateCommand { get; }
+        public ICommand CancelExecutingAction { get; }
 
-        public ICommand CancelExecutingAction
-        {
-            get;
-        }
-
-        public bool CanClose
-        {
-            get;
-            private set;
-        }
-
-        public DelegateCommand<BaseDocumentModel> CloseDocument
-        {
-            get;
-        }
-
-        public DelegateCommand<BaseDocumentModel> CloseDocumentAndSave
-        {
-            get;
-        }
+        public bool CanClose { get; private set; }
 
         public bool ConfirmOpen
         {
@@ -218,56 +200,6 @@ namespace PlantUMLEditor.Models
 
                 SetValue(ref _confirmOpen, value);
             }
-        }
-
-        public DelegateCommand CreateMarkDownDocument
-        {
-            get;
-        }
-
-        public DelegateCommand CreateNewClassDiagram
-        {
-            get;
-        }
-
-        public DelegateCommand CreateNewComponentDiagram
-        {
-            get;
-        }
-
-        public DelegateCommand CreateNewJSONDocumentCommand
-        {
-            get;
-        }
-
-        public DelegateCommand CreateNewSequenceDiagram
-        {
-            get;
-        }
-
-        public DelegateCommand CreateNewUnknownDiagram
-        {
-            get;
-        }
-
-        public DelegateCommand CreateNewURLLinkCommand
-        {
-            get;
-        }
-
-        public DelegateCommand CreateUMLPngImage
-        {
-            get;
-        }
-
-        public DelegateCommand CreateUMLSVGImage
-        {
-            get;
-        }
-
-        public DelegateCommand CreateYAMLDocument
-        {
-            get;
         }
 
         public string? CurrentActionExecuting
@@ -334,11 +266,6 @@ namespace PlantUMLEditor.Models
 
         public ObservableCollection<DateTypeRecord> DataTypes => _dataTypes;
 
-        public DelegateCommand<string> DeleteMRUCommand
-        {
-            get;
-        }
-
         public string DocFXExe
         {
             get => AppSettings.Default.DocFXEXE;
@@ -351,13 +278,7 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public DelegateCommand DocFXServeCommand { get; }
-
-        public UMLModels.UMLDocumentCollection Documents
-        {
-            get;
-            init;
-        }
+        public UMLModels.UMLDocumentCollection Documents { get; init; }
 
         public double EditorFontSize
         {
@@ -371,32 +292,11 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        public DelegateCommand EditTemplatesCommand { get; }
-        public DelegateCommand EditPromptsCommand { get; }
-        public DelegateCommand<string> FindAllReferencesCommand
-        {
-            get;
-            init;
-        }
+        public ObservableCollection<GlobalFindResult> FindReferenceResults { get; } = new();
 
-        public ObservableCollection<GlobalFindResult> FindReferenceResults
-        {
-            get;
-        } = new();
-
-        public TreeViewModel Folder
-        {
-            get;
-            init;
-        }
-
-        public DelegateCommand GitCommitAndSyncCommand
-        {
-            get;
-        }
+        public TreeViewModel Folder { get; init; }
 
         public string? GitMessages
-
         {
             get => _gitMessages;
             set => SetValue(ref _gitMessages, value);
@@ -404,40 +304,11 @@ namespace PlantUMLEditor.Models
 
         public ObservableCollection<GlobalFindResult> GlobalFindResults { get; } = new ObservableCollection<GlobalFindResult>();
 
-        public DelegateCommand<string> GlobalSearchCommand
-        {
-            get;
-        }
-
-        public DelegateCommand<string> GotoDefinitionCommand
-        {
-            get;
-            init;
-        }
-
-        public ObservableCollection<DocumentMessage> Messages
-        {
-            get;
-        }
+        public ObservableCollection<DocumentMessage> Messages { get; }
 
         public ObservableCollection<string> MRUFolders { get; } = new ObservableCollection<string>();
 
-        public ICommand NewChatCommand { get; init; }
-
-        public ICommand OpenDirectoryCommand
-        {
-            get;
-        }
-
-        public ObservableCollection<BaseDocumentModel> OpenDocuments
-        {
-            get;
-        }
-
-        public DelegateCommand OpenExplorerCommand
-        {
-            get;
-        }
+        public ObservableCollection<BaseDocumentModel> OpenDocuments { get; }
 
         public DelegateCommand OpenHelpCommand { get; }
 
@@ -447,31 +318,11 @@ namespace PlantUMLEditor.Models
 
         public DelegateCommand OpenSettingsCommand { get; }
 
-        public DelegateCommand OpenTerminalCommand
-        {
-            get;
-        }
-
         public DelegateCommand OpenUMLColorConfigCommand { get; }
 
-        public DelegateCommand SaveAllCommand
+        public PromptStorage PromptStorage
         {
-            get;
-        }
-
-        public DelegateCommand<BaseDocumentModel> SaveCommand
-        {
-            get;
-        }
-
-        public DelegateCommand ScanAllFiles
-        {
-            get;
-        }
-
-        public DelegateCommand<BaseDocumentModel> SelectDocumentCommand
-        {
-            get;
+            get => _promptStorage;
         }
 
         public DocumentMessage? SelectedMessage
@@ -494,8 +345,6 @@ namespace PlantUMLEditor.Models
             set => SetValue(ref _selectedTab, value);
         }
 
-        public IAsyncCommand SendChatCommand { get; init; }
-
         public bool SpellCheck
         {
             get => _spellCheck;
@@ -507,14 +356,7 @@ namespace PlantUMLEditor.Models
             get => _templateStorage;
         }
 
-        public PromptStorage PromptStorage
-        {
-            get => _promptStorage;
-        }
-
         public UISettingsModel UIModel { get; }
-
-        public ICommand UndoAIEditsCommand { get; init; }
 
         public DelegateCommand<TreeViewModel> UndoGitChangesCommand { get; private set; }
 
@@ -527,7 +369,6 @@ namespace PlantUMLEditor.Models
                 GlobalSearch.RootDirectory = value ?? string.Empty;
             }
         }
-
         public async void GotoDataType(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0)
@@ -676,8 +517,6 @@ namespace PlantUMLEditor.Models
                 Debug.WriteLine(ex);
             }
         }
-
-       
 
         private void OpenHelpCommandHandler()
         {
