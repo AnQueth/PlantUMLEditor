@@ -270,7 +270,7 @@ namespace PlantUMLEditor.Models
 
         internal void ReportMessage(DocumentMessage d)
         {
-            _textEditor?.ReportError(d.LineNumber, 0);
+            _textEditor?.ReportError(d.LineNumber, 0, d.Text);
         }
 
         internal void ClearMessages()

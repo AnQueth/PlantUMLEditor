@@ -10,7 +10,7 @@ namespace PlantUMLEditor.Models
 
         void InsertTextAt(string text, int where, int originalLength);
 
-        void ReportError(int line, int character);
+        void ReportError(int line, int character, string errorText);
         void ClearErrors();
 
 

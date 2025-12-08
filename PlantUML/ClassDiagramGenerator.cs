@@ -150,13 +150,14 @@ namespace PlantUML
                             writer.Write(">");
                         }
                         writer.Write(" ");
-                        writer.WriteLine(prop.Name);
+                        writer.Write(prop.Name);
 
-                        if(prop.DefaultValue is not null)
+                        if(!string.IsNullOrWhiteSpace(prop.DefaultValue) )
                         {
                             writer.Write(" ");
-                            writer.WriteLine(prop.DefaultValue);
+                            writer.Write(prop.DefaultValue);
                         }
+                        writer.WriteLine();
                     }
 
                     foreach (UMLMethod? me in item.Methods)

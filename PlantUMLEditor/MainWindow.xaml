@@ -207,7 +207,10 @@ FontFamily="{DynamicResource FontFamily.Primary}"  Loaded="Window_Loaded"
                             <RowDefinition  Height="{Binding FindHeight,  ElementName=Editor}" ></RowDefinition>
                         </Grid.RowDefinitions>
                         <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
-                        <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True" AllowDrop="True"
+                        <localControls:MyTextBox Grid.Column="1"
+                                                     ToolTipService.ShowDuration="5000"
+    ToolTipService.InitialShowDelay="500"
+                                                 IsInactiveSelectionHighlightEnabled="True" AllowDrop="True"
                                               UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                             DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
  Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"
@@ -347,7 +350,10 @@ FontFamily="{DynamicResource FontFamily.Primary}"  Loaded="Window_Loaded"
                             <RowDefinition  Height="{Binding FindHeight,  ElementName=Editor}" ></RowDefinition>
                         </Grid.RowDefinitions>
                         <Image Source="{Binding Children[1].LineNumbers, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}}" ></Image>
-                        <localControls:MyTextBox Grid.Column="1" IsInactiveSelectionHighlightEnabled="True" AllowDrop="True"
+                        <localControls:MyTextBox Grid.Column="1"
+                                                                                                  ToolTipService.ShowDuration="5000"
+ToolTipService.InitialShowDelay="500"
+                                                 IsInactiveSelectionHighlightEnabled="True" AllowDrop="True"
                                              UndoLimit="100" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible"
                                            DataContext="{Binding}"   HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
 Style="{DynamicResource TextBoxStyle1}" x:Name="Editor"

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -37,46 +36,46 @@ namespace PlantUML
 
         private static readonly Regex _composition = new("""(?<first>\w+)( | \"(?<fm>[01\*\.]+)\" )(?<arrow>[\*o\|\<]*[\-\.]+[\*o\|\>]*)( | \"(?<sm>[01\*\.\w]+)\" )(?<second>\w+) *:*(?<text>.*)""", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-      
         private static readonly Regex _rtypeSuffix = new(@"\)\s*:\s*(?<rtype>.+)$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
-        private static string Clean(string name)
+        private static readonly Regex _removeGenerics = new("\\w+", RegexOptions.Compiled);
+
+        private static string Clean(ReadOnlySpan<char> name)
         {
-            string? t = name.Trim();
-            return t.TrimEnd('{').Trim();
+            ReadOnlySpan<char> t = name.Trim();
+            int endIndex = t.LastIndexOf('{');
+            if (endIndex != -1)
+            {
+                t = t[..endIndex];
+            }
+            return t.Trim().ToString();
         }
 
-        private static CollectionRecord CreateFrom(string v)
+        private static CollectionRecord CreateFrom(ReadOnlySpan<char> v)
         {
-
-            v = v.Trim();
-
-
+            ReadOnlySpan<char> span = v.Trim();
 
             foreach ((string word, ListTypes listType) in COLLECTIONS)
             {
-                if (v.StartsWith(word, StringComparison.OrdinalIgnoreCase))
+                if (span.StartsWith(word.AsSpan(), StringComparison.OrdinalIgnoreCase))
                 {
-                    string tmp = v[word.Length..];
-
-                    return new CollectionRecord(listType, tmp.Remove(tmp.Length - 1));
+                    ReadOnlySpan<char> tmp = span[word.Length..];
+                    return new CollectionRecord(listType, tmp[..^1].ToString());
                 }
             }
 
-
-            if (v.EndsWith("[]", StringComparison.Ordinal))
+            if (span.EndsWith("[]", StringComparison.Ordinal))
             {
-                return new CollectionRecord(ListTypes.Array, v[0..^2]);
+                return new CollectionRecord(ListTypes.Array, span[..^2].ToString());
             }
             else
             {
-                return new CollectionRecord(ListTypes.None, v);
+                return new CollectionRecord(ListTypes.None, span.ToString());
             }
         }
 
         private static string GetPackage(Stack<string> packages)
         {
-            // estimate capacity: sum of package name lengths + separators
             int estimated = 0;
             foreach (var it in packages)
                 estimated += (it?.Length ?? 0) + 1;
@@ -90,7 +89,6 @@ namespace PlantUML
                 {
                     _ = sb.Append('.');
                 }
-
                 x++;
             }
 
@@ -104,7 +102,6 @@ namespace PlantUML
         {
             if (s.Length == 0) return string.Empty;
 
-            // First pass: compute resulting length
             int outLen = 0;
             bool lastSpace = false;
             for (int i = 0; i < s.Length; i++)
@@ -127,11 +124,9 @@ namespace PlantUML
 
             if (outLen == s.Length)
             {
-                // no change required
                 return new string(s);
             }
 
-            // Second pass: fill the string directly
             return string.Create(outLen, s, (span, src) =>
             {
                 int idx = 0;
@@ -156,6 +151,69 @@ namespace PlantUML
             });
         }
 
+        private static void ExtractStereotypeAndName(ReadOnlySpan<char> name, out string stereotype, out string cleanName)
+        {
+            stereotype = string.Empty;
+            int ix = name.IndexOf(" <<", StringComparison.Ordinal);
+            if (ix != -1)
+            {
+                int eix = name[(ix + 3)..].IndexOf(">>", StringComparison.Ordinal);
+                if (eix != -1)
+                {
+                    eix += ix + 3;
+                    stereotype = name[(ix + 3)..eix].Trim().ToString();
+                    cleanName = name[..ix].Trim().ToString();
+                    return;
+                }
+            }
+            cleanName = name.Trim().ToString();
+        }
+
+        private static void ExtractAliasAndName(ReadOnlySpan<char> line, int startIndex, int endIndex, out string? alias, out string name)
+        {
+            alias = null;
+            ReadOnlySpan<char> searchSpan = line[startIndex..endIndex];
+            int asIndex = searchSpan.IndexOf(" as ", StringComparison.Ordinal);
+            if (asIndex != -1)
+            {
+                asIndex += startIndex;
+                ReadOnlySpan<char> remainingLine = line[(asIndex + 4)..];
+                // Trim end manually since Span doesn't have TrimEnd with chars
+                while (remainingLine.Length > 0 && (remainingLine[^1] == ' ' || remainingLine[^1] == '{'))
+                {
+                    remainingLine = remainingLine[..^1];
+                }
+                alias = remainingLine.ToString();
+                ReadOnlySpan<char> beforeAs = line[startIndex..asIndex];
+                name = Clean(beforeAs);
+            }
+            else
+            {
+                name = Clean(line[startIndex..endIndex]);
+                alias = null;
+            }
+        }
+
+        /// <summary>
+        /// Extract name and alias from a regex match group span with minimal allocations
+        /// </summary>
+        private static void ExtractNameFromMatchGroup(ReadOnlySpan<char> groupSpan, out string name, out string? alias)
+        {
+            alias = null;
+            int asIndex = groupSpan.IndexOf(" as ", StringComparison.Ordinal);
+            if (asIndex != -1)
+            {
+                ReadOnlySpan<char> beforeAs = groupSpan[..asIndex].Trim();
+                ReadOnlySpan<char> afterAs = groupSpan[(asIndex + 4)..].Trim();
+                name = Clean(beforeAs);
+                alias = afterAs.ToString();
+            }
+            else
+            {
+                name = Clean(groupSpan);
+            }
+        }
+
         private static async Task<UMLClassDiagram?> ReadClassDiagram(StreamReader sr, string fileName)
         {
             UMLPackage defaultPackage = new("");
@@ -164,30 +222,27 @@ namespace PlantUML
             bool started = false;
             string? line = null;
 
-            List<string> readPackges = new();
+            HashSet<string> readPackges = new();
             Stack<string> packages = new();
-
             Dictionary<string, UMLDataType> aliases = new();
 
-
-
             Stack<string> brackets = new();
-            Regex removeGenerics = new("\\w+");
             Stack<UMLPackage> packagesStack = new();
 
             CommonParsings cp = new();
             packagesStack.Push(defaultPackage);
             UMLPackage? currentPackage = defaultPackage;
             int lineNumber = 0;
+            
             while ((line = await sr.ReadLineAsync()) != null)
             {
                 lineNumber++;
-
                 line = line.Trim();
+                ReadOnlySpan<char> lineSpan = line.AsSpan();
 
                 if (cp.ParseStart(line, (str) =>
                 {
-                    d.Title = line[9..].Trim();
+                    d.Title = line.AsSpan()[9..].Trim().ToString();
                 }))
                 {
                     started = true;
@@ -201,7 +256,6 @@ namespace PlantUML
                 if (cp.ParseTitle(line, (str) =>
                 {
                     d.Title = str;
-
                 }))
                 {
                     continue;
@@ -237,11 +291,8 @@ namespace PlantUML
                     continue;
                 }
 
-
-
-
-                if (line.StartsWith("participant", StringComparison.Ordinal)
-                    || line.StartsWith("actor", StringComparison.Ordinal))
+                if (lineSpan.StartsWith("participant", StringComparison.Ordinal)
+                    || lineSpan.StartsWith("actor", StringComparison.Ordinal))
                 {
                     return null;
                 }
@@ -253,159 +304,109 @@ namespace PlantUML
                     _ = brackets.Pop();
                     _ = packages.Pop();
                     _ = packagesStack.Pop();
-                    currentPackage = packagesStack.First();
+                    currentPackage = packagesStack.Peek();
                 }
 
-                if (line.StartsWith("title", StringComparison.Ordinal))
+                if (lineSpan.StartsWith("title", StringComparison.Ordinal))
                 {
                     if (line.Length > 6)
                     {
-                        d.Title = line[6..];
+                        d.Title = lineSpan[6..].ToString();
                     }
-
                     continue;
                 }
                 else if (_packageRegex.IsMatch(line))
                 {
                     Match? s = _packageRegex.Match(line);
-
                     string pn = Clean(s.Groups[PACKAGE].Value);
 
-                    if (readPackges.Any(z => z == pn))
+                    if (!readPackges.Add(pn))
                     {
                         d.Errors.Add(new UMLError($"Package {pn} exists already and will cause rendering issues",
                             string.Empty, lineNumber));
                     }
-                    readPackges.Add(pn);
                     packages.Push(pn);
                     brackets.Push(PACKAGE);
 
-
                     UMLPackage? c = new UMLPackage(pn);
-
-
-
                     currentPackage.Children.Add(c);
                     currentPackage = c;
-
                     packagesStack.Push(c);
-
 
                     continue;
                 }
                 else if (_class.IsMatch(line))
                 {
                     Match? g = _class.Match(line);
-                    if (string.IsNullOrEmpty(g.Groups["name"].Value))
+                    var nameGroup = g.Groups["name"];
+                    if (nameGroup.Length == 0)
                     {
                         continue;
                     }
 
                     string package = GetPackage(packages);
-                    string name = Clean(g.Groups["name"].Value);
-                    string stereotype = string.Empty;
-                    var ix = name.IndexOf(" <<", StringComparison.Ordinal);
-                    if (ix != -1)
-                    {
-
-                        var eix = name.IndexOf(">>", ix, StringComparison.Ordinal);
-                        if (eix != -1)
-                        {
-                            stereotype = name[(ix + 3)..eix];
-                            name = name[..ix].Trim();
-                        }
-                    }
-                    string? alias = g.Groups["alias"].Length > 0 ? g.Groups["alias"].Value : null;
+                    ExtractStereotypeAndName(nameGroup.ValueSpan, out string stereotype, out string name);
+                    var aliasGroup = g.Groups["alias"];
+                    string? alias = aliasGroup.Length > 0 ? aliasGroup.Value : null;
 
                     currentDataType = new UMLClass(stereotype, package, alias,
-                        !string.IsNullOrEmpty(g.Groups["abstract"].Value)
-                        , name, new List<UMLDataType>());
-
+                        !string.IsNullOrEmpty(g.Groups["abstract"].Value), name, new List<UMLDataType>());
 
                     if (alias != null)
                     {
                         aliases.Add(alias, currentDataType);
                     }
 
-                    if (line.EndsWith("{", StringComparison.Ordinal))
+                    if (lineSpan.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("class");
                     }
                 }
-                else if (line.StartsWith("enum", StringComparison.Ordinal))
+                else if (lineSpan.StartsWith("enum", StringComparison.Ordinal))
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 4)
                     {
-                        currentDataType = new UMLEnum(package, Clean(line[5..]));
+                        currentDataType = new UMLEnum(package, Clean(lineSpan[5..]));
                     }
 
-                    if (line.EndsWith("{", StringComparison.Ordinal))
+                    if (lineSpan.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("interface");
                     }
                 }
-                else if (line.StartsWith("struct", StringComparison.Ordinal))
+                else if (lineSpan.StartsWith("struct", StringComparison.Ordinal))
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 8)
                     {
-                        string? alias = null;
-                        string? name = null;
-
-                        if (line.Contains(" as "))
-                        {
-                            line = line.Replace("\"", string.Empty);
-                            alias = line[(line.IndexOf(" as ", StringComparison.Ordinal) + 4)..].TrimEnd(' ', '{');
-                            name = Clean(line[6..line.IndexOf(" as ", StringComparison.Ordinal)]);
-                        }
-                        else
-                        {
-                            name = Clean(line[6..]).Replace("\"", string.Empty);
-                        }
-
-                        currentDataType = new UMLStruct(package, name, alias
-                          , new List<UMLDataType>());
+                        ExtractAliasAndName(lineSpan, 6, line.Length, out string? alias, out string name);
+                        currentDataType = new UMLStruct(package, name, alias, new List<UMLDataType>());
 
                         if (alias != null)
                         {
                             aliases.Add(alias, currentDataType);
                         }
                     }
-                    if (line.EndsWith("{", StringComparison.Ordinal))
+                    if (lineSpan.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("struct");
                     }
                 }
-                else if (line.StartsWith("interface", StringComparison.Ordinal))
+                else if (lineSpan.StartsWith("interface", StringComparison.Ordinal))
                 {
                     string package = GetPackage(packages);
                     if (line.Length > 8)
                     {
-                        string? alias = null;
-                        string? name = null;
-
-                        if (line.Contains(" as "))
-                        {
-                            line = line.Replace("\"", string.Empty);
-                            alias = line[(line.IndexOf(" as ", StringComparison.Ordinal) + 4)..].TrimEnd(' ', '{');
-                            name = Clean(line[9..line.IndexOf(" as ", StringComparison.Ordinal)]);
-                        }
-                        else
-                        {
-                            name = Clean(line[9..]).Replace("\"", string.Empty);
-                        }
-
-                        currentDataType = new UMLInterface(package, name, alias
-                          ,
-                            new List<UMLDataType>());
+                        ExtractAliasAndName(lineSpan, 9, line.Length, out string? alias, out string name);
+                        currentDataType = new UMLInterface(package, name, alias, new List<UMLDataType>());
 
                         if (alias != null)
                         {
                             aliases.Add(alias, currentDataType);
                         }
                     }
-                    if (line.EndsWith("{", StringComparison.Ordinal))
+                    if (lineSpan.EndsWith("{", StringComparison.Ordinal))
                     {
                         brackets.Push("interface");
                     }
@@ -419,27 +420,68 @@ namespace PlantUML
 
                     if (m.Groups["arrow"].ValueSpan.Contains("<", StringComparison.InvariantCulture))
                     {
-                        var f = first;
-                        first = second;
-                        second = f;
+                        (first, second) = (second, first);
                     }
 
-                    UMLDataType? cl = d.DataTypes.FirstOrDefault(p => p.Name == first);
-
-                    if (cl == null && d.Notes.FirstOrDefault(z => z.Alias == first) == null)
+                    // Manual loop instead of FirstOrDefault to avoid LINQ allocations
+                    UMLDataType? cl = null;
+                    foreach (var dt in d.DataTypes)
                     {
-                        if (!aliases.TryGetValue(m.Groups["first"].Value, out cl))
+                        if (dt.Name == first)
+                        {
+                            cl = dt;
+                            break;
+                        }
+                    }
+
+                    if (cl == null)
+                    {
+                        bool foundNote = false;
+                        foreach (var note in d.Notes)
+                        {
+                            if (note.Alias == first)
+                            {
+                                foundNote = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!foundNote && !aliases.TryGetValue(first, out cl))
                         {
                             d.Errors.Add(new UMLError("Could not find parent type", first, lineNumber));
                             continue;
                         }
                     }
 
-                    UMLDataType? i = d.DataTypes.FirstOrDefault(p => p.Name == second || removeGenerics.Match(p.Name).Value == second);
-
-                    if (i == null && d.Notes.FirstOrDefault(z => z.Alias == second) == null)
+                    // Manual loop instead of FirstOrDefault to avoid LINQ allocations
+                    UMLDataType? i = null;
+                    foreach (var dt in d.DataTypes)
                     {
-                        if (!aliases.TryGetValue(m.Groups["second"].Value, out i))
+                        if (dt.Name == second)
+                        {
+                            i = dt;
+                            break;
+                        }
+                        if (_removeGenerics.Match(dt.Name).Value == second)
+                        {
+                            i = dt;
+                            break;
+                        }
+                    }
+
+                    if (i == null)
+                    {
+                        bool foundNote = false;
+                        foreach (var note in d.Notes)
+                        {
+                            if (note.Alias == second)
+                            {
+                                foundNote = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!foundNote && !aliases.TryGetValue(second, out i))
                         {
                             d.Errors.Add(new UMLError("Could not find base type", second, lineNumber));
                             continue;
@@ -469,53 +511,60 @@ namespace PlantUML
 
                     if (m.Groups["text"].Success)
                     {
-                        string second2 = m.Groups["second"].Value;
+                        ReadOnlySpan<char> secondSpan = m.Groups["second"].ValueSpan;
+                        string second2 = secondSpan.ToString();
 
+                        // Use Find instead of LINQ: already efficient
                         UMLDataType? propTyper = d.DataTypes.Find(p => string.Equals(p.NonGenericName, second2, StringComparison.Ordinal));
                         if (propTyper == null)
                         {
                             d.AddLineError(line, lineNumber);
-
-
                         }
                         else
                         {
-
-                            string first = m.Groups["first"].Value.Trim();
-
+                            ReadOnlySpan<char> firstSpan = m.Groups["first"].ValueSpan.Trim();
+                            string first = firstSpan.ToString();
                             UMLDataType? fromType = d.DataTypes.Find(p => p.NonGenericName == first);
 
                             if (fromType is null)
                             {
                                 d.AddLineError(line, lineNumber);
-
                             }
-
-
-                            else if (!fromType.Properties.Any(p => p.Name == first))
+                            else
                             {
-                                ListTypes l = ListTypes.None;
-                                if (m.Groups["fm"].Success)
+                                // Manual loop instead of Any() to avoid LINQ allocation
+                                bool propertyExists = false;
+                                foreach (var prop in fromType.Properties)
                                 {
-                                }
-                                if (m.Groups["sm"].Success)
-                                {
-                                    if (m.Groups["sm"].ValueSpan.Contains("*", StringComparison.InvariantCulture) ||
-                                        m.Groups["sm"].ValueSpan.Contains("many", StringComparison.InvariantCulture))
+                                    if (prop.Name == first)
                                     {
-                                        l = ListTypes.List;
+                                        propertyExists = true;
+                                        break;
                                     }
                                 }
 
-                                fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), 
-                                    propTyper, UMLVisibility.Public, l, false, false, true, null));
+                                if (!propertyExists)
+                                {
+                                    ListTypes l = ListTypes.None;
+                                    if (m.Groups["sm"].Success)
+                                    {
+                                        if (m.Groups["sm"].ValueSpan.Contains("*", StringComparison.InvariantCulture) ||
+                                            m.Groups["sm"].ValueSpan.Contains("many", StringComparison.InvariantCulture))
+                                        {
+                                            l = ListTypes.List;
+                                        }
+                                    }
+
+                                    fromType.Properties.Add(new UMLProperty(m.Groups["text"].Value.Trim(), 
+                                        propTyper, UMLVisibility.Public, l, false, false, true, null));
+                                }
                             }
                         }
                         continue;
                     }
                 }
 
-                if (currentDataType != null && line.EndsWith("{", StringComparison.Ordinal))
+                if (currentDataType != null && lineSpan.EndsWith("{", StringComparison.Ordinal))
                 {
                     if (aliases.TryGetValue(currentDataType.Name, out UMLDataType? newType))
                     {
@@ -525,7 +574,6 @@ namespace PlantUML
                     {
                         aliases.Add(currentDataType.Name, currentDataType);
                     }
-
 
                     currentDataType.LineNumber = lineNumber;
                     currentPackage.Children.Add(currentDataType);
@@ -563,7 +611,6 @@ namespace PlantUML
                             {
                                 _ = brackets.Pop();
                             }
-
                             break;
                         }
 
@@ -576,33 +623,21 @@ namespace PlantUML
                 }
             }
 
-
-
-
             return d;
         }
 
-        private static UMLVisibility ReadVisibility(string item)
+        private static UMLVisibility ReadVisibility(ReadOnlySpan<char> item) => item.Length switch
         {
-            if (item == "-")
+            1 => item[0] switch
             {
-                return UMLVisibility.Private;
-            }
-            else if (item == "#")
-            {
-                return UMLVisibility.Protected;
-            }
-            else if (item == "+")
-            {
-                return UMLVisibility.Public;
-            }
-            else if (item == "~")
-            {
-                return UMLVisibility.Internal;
-            }
-
-            return UMLVisibility.None;
-        }
+                '-' => UMLVisibility.Private,
+                '#' => UMLVisibility.Protected,
+                '+' => UMLVisibility.Public,
+                '~' => UMLVisibility.Internal,
+                _ => UMLVisibility.None
+            },
+            _ => UMLVisibility.None
+        };
 
         public static async Task<UMLClassDiagram?> ReadFile(string file)
         {
@@ -614,8 +649,6 @@ namespace PlantUML
 
         public static async Task<UMLClassDiagram?> ReadString(string s)
         {
-
-
             using MemoryStream ms = new(Encoding.UTF8.GetBytes(s));
             using StreamReader sr = new(ms);
             UMLClassDiagram? c = await ReadClassDiagram(sr, "");
@@ -628,10 +661,10 @@ namespace PlantUML
             Match? methodMatch = _classLine.Match(line);
             if (methodMatch.Success)
             {
-                UMLVisibility visibility = ReadVisibility(methodMatch.Groups["visibility"].Value);
+                ReadOnlySpan<char> visSpan = methodMatch.Groups["visibility"].ValueSpan;
+                UMLVisibility visibility = ReadVisibility(visSpan);
                 string name = methodMatch.Groups["name"].Value;
 
-                // build return type from captures using StringBuilder to reduce allocations
                 var rtBuilder = StringBuilderPool.Rent();
                 for (int x = 0; x < methodMatch.Groups["type"].Captures.Count; x++)
                 {
@@ -639,7 +672,6 @@ namespace PlantUML
                     {
                         rtBuilder.Append(' ');
                     }
-
                     rtBuilder.Append(methodMatch.Groups["type"].Captures[x].Value);
                 }
                 string returntype = rtBuilder.ToString().Trim();
@@ -662,7 +694,6 @@ namespace PlantUML
                     returntype = returntype2;
                 }
 
-                // If return type wasn't captured in the C#-style group, attempt to read UML-style ") : type" suffix.
                 if (string.IsNullOrWhiteSpace(returntype))
                 {
                     var m = _rtypeSuffix.Match(line);
@@ -684,64 +715,52 @@ namespace PlantUML
 
                 List<UMLParameter> pars = new();
 
-                // Robust parameter tokenization that supports:
-                // - C# style: "int id, Product dto"
-                // - UML style: "id:int, dto:Product"
-                // - Generics with angle brackets (no splitting inside <>)
-                string v = methodMatch.Groups["params"].Value;
-                v = CollapseSpaces(v.AsSpan());
+                var paramsSpan = methodMatch.Groups["params"].ValueSpan;
+                paramsSpan = CollapseSpaces(paramsSpan);
 
-                List<string> tokens = new();
-                var current = StringBuilderPool.Rent();
+                // Use span-based tokenization instead of List<string> to defer ToString()
+                var tokenRanges = new List<(int start, int length)>();
+
+                int tokenStart = 0;
                 int genericDepth = 0;
-                for (int i = 0; i < v.Length; i++)
+                for (int i = 0; i < paramsSpan.Length; i++)
                 {
-                    char ch = v[i];
+                    char ch = paramsSpan[i];
                     if (ch == '<')
                     {
                         genericDepth++;
-                        current.Append(ch);
                     }
                     else if (ch == '>')
                     {
                         if (genericDepth > 0) genericDepth--;
-                        current.Append(ch);
                     }
                     else if (ch == ',' && genericDepth == 0)
                     {
-                        tokens.Add(current.ToString());
-                        current.Clear();
-                    }
-                    else
-                    {
-                        current.Append(ch);
+                        if (i > tokenStart)
+                        {
+                            tokenRanges.Add((tokenStart, i - tokenStart));
+                        }
+                        tokenStart = i + 1;
                     }
                 }
-                if (current.Length > 0)
+                if (tokenStart < paramsSpan.Length)
                 {
-                    tokens.Add(current.ToString());
+                    tokenRanges.Add((tokenStart, paramsSpan.Length - tokenStart));
                 }
 
-                // return the pooled builder used for token accumulation
-                StringBuilderPool.Return(current);
-
-                foreach (var token in tokens)
+                foreach (var (tStart, tLen) in tokenRanges)
                 {
-                    string tkn = token.Trim();
-                    if (string.IsNullOrEmpty(tkn))
+                    ReadOnlySpan<char> tokenSpan = paramsSpan[tStart..(tStart + tLen)].Trim();
+                    if (tokenSpan.IsEmpty)
                     {
                         continue;
                     }
 
-                    string paramName = string.Empty;
-                    string typeString = string.Empty;
-
-                    // UML style: "name:type"
                     int colonIndex = -1;
                     int depth = 0;
-                    for (int i = 0; i < tkn.Length; i++)
+                    for (int i = 0; i < tokenSpan.Length; i++)
                     {
-                        char ch = tkn[i];
+                        char ch = tokenSpan[i];
                         if (ch == '<') depth++;
                         else if (ch == '>') depth = Math.Max(0, depth - 1);
                         else if (ch == ':' && depth == 0)
@@ -751,20 +770,21 @@ namespace PlantUML
                         }
                     }
 
+                    ReadOnlySpan<char> paramName;
+                    ReadOnlySpan<char> typeSpan;
+
                     if (colonIndex != -1)
                     {
-                        paramName = tkn[..colonIndex].Trim();
-                        typeString = tkn[(colonIndex + 1)..].Trim();
+                        paramName = tokenSpan[..colonIndex].Trim();
+                        typeSpan = tokenSpan[(colonIndex + 1)..].Trim();
                     }
                     else
                     {
-                        // Fallback to C# style: "type name" or "ref/out type name"
-                        // find last space that is not inside generics
                         int lastSpace = -1;
                         depth = 0;
-                        for (int i = tkn.Length - 1; i >= 0; i--)
+                        for (int i = tokenSpan.Length - 1; i >= 0; i--)
                         {
-                            char ch = tkn[i];
+                            char ch = tokenSpan[i];
                             if (ch == '>') depth++;
                             else if (ch == '<') depth = Math.Max(0, depth - 1);
                             else if (ch == ' ' && depth == 0)
@@ -776,19 +796,18 @@ namespace PlantUML
 
                         if (lastSpace != -1)
                         {
-                            paramName = tkn[(lastSpace + 1)..].Trim();
-                            typeString = tkn[..lastSpace].Trim();
+                            paramName = tokenSpan[(lastSpace + 1)..].Trim();
+                            typeSpan = tokenSpan[..lastSpace].Trim();
                         }
                         else
                         {
-                            // If we cannot split, treat whole token as name (no type)
-                            paramName = tkn;
-                            typeString = string.Empty;
+                            paramName = tokenSpan;
+                            typeSpan = default;
                         }
                     }
 
-                    // Normalize typeString (if empty, keep as empty string)
-                    CollectionRecord collection = CreateFrom(typeString);
+                
+                    CollectionRecord collection = CreateFrom(typeSpan);
 
                     UMLDataType? paramType;
                     if (!aliases.TryGetValue(collection.Word, out paramType))
@@ -797,7 +816,7 @@ namespace PlantUML
                         aliases[collection.Word] = paramType;
                     }
 
-                    pars.Add(new UMLParameter(paramName.Trim(), paramType, collection.ListType));
+                    pars.Add(new UMLParameter(paramName.Trim().ToString(), paramType, collection.ListType));
                 }
 
                 dataType.Methods.Add(new UMLMethod(name, returnType, visibility, pars.ToArray())
@@ -810,11 +829,10 @@ namespace PlantUML
             {
                 Match? g = _propertyLine2.Match(line);
 
-                UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
-
+                ReadOnlySpan<char> visSpan = g.Groups["visibility"].ValueSpan;
+                UMLVisibility visibility = ReadVisibility(visSpan);
                 string modifier = g.Groups["modifier"].Value;
-
-                CollectionRecord? p = CreateFrom(g.Groups["type"].Value);
+                CollectionRecord? p = CreateFrom(g.Groups["type"].ValueSpan);
 
                 UMLDataType? c;
 
@@ -834,17 +852,15 @@ namespace PlantUML
 
                 dataType.Properties.Add(new UMLProperty(g.Groups["name"].Value, c, 
                     visibility, p.ListType, modifier == "{static}", modifier == "{abstract}", false, defaultValue));
-
             }
             else if (_propertyLine.IsMatch(line))
             {
                 Match? g = _propertyLine.Match(line);
 
-                UMLVisibility visibility = ReadVisibility(g.Groups["visibility"].Value);
-
+                ReadOnlySpan<char> visSpan = g.Groups["visibility"].ValueSpan;
+                UMLVisibility visibility = ReadVisibility(visSpan);
                 string modifier = g.Groups["modifier"].Value;
-
-                CollectionRecord? p = CreateFrom(g.Groups["type"].Value);
+                CollectionRecord? p = CreateFrom(g.Groups["type"].ValueSpan);
 
                 UMLDataType? c;
 
@@ -866,12 +882,10 @@ namespace PlantUML
                 {
                     dataType.Properties.Add(new UMLProperty(enumValue, new UMLDataType("int"), UMLVisibility.Public, ListTypes.None, false, false, false, null));
                 }
-
             }
             else
             {
                 diagram?.Errors.Add(new UMLError("Could not parse method or property line", line, dataType.LineNumber));
-
             }
         }
     }

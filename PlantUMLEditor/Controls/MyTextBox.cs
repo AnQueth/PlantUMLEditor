@@ -24,7 +24,7 @@ namespace PlantUMLEditor.Controls
 {
     public class MyTextBox : TextBox, INotifyPropertyChanged, ITextEditor, IAutoComplete
     {
-        private record Error(int Line, int Character);
+        private record Error(int Line, int Character, string Text);
 
         private record FindItem(int Start, int Length);
         public record FindResult(int Index, string Line, int LineNumber, string ReplacePreview);
@@ -365,7 +365,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                     }
                 }
 
-                foreach ((int line, int character) in _errors)
+                foreach ((int line, int character, _) in _errors)
                 {
                     try
                     {
@@ -376,7 +376,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
                             TextDecoration td = new(TextDecorationLocation.Underline,
                                 s_errorPen, 0, TextDecorationUnit.FontRecommended,
                                  TextDecorationUnit.FontRecommended);
-
+                            
                             TextDecorationCollection textDecorations = new()
                             {
                                 td
@@ -491,15 +491,24 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             ForceDraw();
         }
 
-        public void ReportError(int line, int character)
+        public void ReportError(int line, int character, string text)
         {
-            Error? e = new Error(line, character);
-
-            if (!_errors.Contains(e))
+            Error? e = new Error(line, character, text);
+            var existingError = _errors.Where(z => z.Line == line).FirstOrDefault();
+            if (existingError is not null)
             {
-                _errors.Add(e);
-                ForceDraw();
+                _errors.Remove(existingError);
+
+                string combinedtext = existingError.Text + $"\n{text}";
+                _errors.Add(new Error(line, character, combinedtext));
             }
+            else
+            {
+                _errors.Add(new Error(line, character, text));
+            }
+
+            ForceDraw();
+
         }
 
         public void ShowAutoComplete(IAutoCompleteCallback autoCompleteCallback)
@@ -628,6 +637,90 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             _autoComplete.CloseAutoComplete();
         }
 
+        private Popup? _errorTooltipPopup;
+        private TextBlock? _errorTooltipContent;
+
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
+
+            int charIndex = GetCharacterIndexFromPoint(e.GetPosition(this), true);
+            if (charIndex < 0 || charIndex > Text.Length)
+            {
+                if (_errorTooltipPopup != null)
+                    _errorTooltipPopup.IsOpen = false;
+                return;
+            }
+
+            int lineNumber = GetLineIndexFromCharacterIndex(charIndex) + 1;
+
+            string? tooltip = null;
+            foreach (var error in _errors)
+            {
+                if (error.Line == lineNumber)
+                {
+                    tooltip = error.Text;
+                    break;
+                }
+            }
+
+            if (tooltip != null)
+            {
+                if (_errorTooltipPopup == null)
+                {
+                    _errorTooltipContent = new TextBlock
+                    {
+                        Text = tooltip,
+                        Foreground = Brushes.Black,
+                        Background = Brushes.LightYellow,
+                        Padding = new Thickness(8),
+                        MaxWidth = 400,
+                        TextWrapping = TextWrapping.Wrap
+                    };
+
+                    Border border = new Border
+                    {
+                        Child = _errorTooltipContent,
+                        BorderThickness = new Thickness(1),
+                        BorderBrush = Brushes.Gray,
+                        CornerRadius = new CornerRadius(4),
+                        Background = Brushes.LightYellow
+                    };
+
+                    _errorTooltipPopup = new Popup
+                    {
+                        Child = border,
+                        PlacementTarget = this,
+                        Placement = PlacementMode.RelativePoint,
+                        AllowsTransparency = true,
+                        StaysOpen = true
+                    };
+                }
+
+                if (_errorTooltipContent!.Text != tooltip)
+                {
+                    _errorTooltipContent.Text = tooltip;
+                }
+
+                Point mousePos = e.GetPosition(this);
+                _errorTooltipPopup.HorizontalOffset = mousePos.X + 10;
+                _errorTooltipPopup.VerticalOffset = mousePos.Y + 20;
+                _errorTooltipPopup.IsOpen = true;
+            }
+            else
+            {
+                if (_errorTooltipPopup != null)
+                    _errorTooltipPopup.IsOpen = false;
+            }
+        }
+
+        protected override void OnMouseLeave(MouseEventArgs e)
+        {
+            base.OnMouseLeave(e);
+            if (_errorTooltipPopup != null)
+                _errorTooltipPopup.IsOpen = false;
+        }
         protected override void OnMouseDown(MouseButtonEventArgs e)
         {
 

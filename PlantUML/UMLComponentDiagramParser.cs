@@ -15,17 +15,17 @@ namespace PlantUML
         private const string PACKAGENAME = "name";
 
         // Component regex broken into smaller parts for better maintainability
-        private static readonly Regex _componentBracketStyle = new(@"^\[(?<name>[^]]+)\]\s*(?:as\s+(?<alias>\w+))?\s*(?:<<(?<stereotype>[\w\s]+)>>)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _componentType = new(@"^(component|entity|database|queue|actor|rectangle|cloud)\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _componentName = new(@"^(?:""(?<name>[^""]+)""|(?<name>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _componentAlias = new(@"^\s*as\s+(?<alias>\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _componentColor = new(@"^\s*(?<color>#(?:[0-9A-Fa-f]{3,6}|[A-Za-z]+))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex _componentBracketStyle = new(@"^\[(?<name>[^]]+)\]\s*(?:as\s+(?<alias>\w+))?\s*(?:<<(?<stereotype>[\w\s]+)>>)?$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static readonly Regex _componentType = new(@"^(component|entity|database|queue|actor|rectangle|cloud)\s+", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static readonly Regex _componentName = new(@"^(?:""(?<name>[^""]+)""|(?<name>\w+))", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static readonly Regex _componentAlias = new(@"^\s*as\s+(?<alias>\w+)", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        private static readonly Regex _componentColor = new(@"^\s*(?<color>#(?:[0-9A-Fa-f]{3,6}|[A-Za-z]+))", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|folder|together|rectangle)\s+(?:""(?<name>[^""]+)""|(?<name>[^{}\r\n]+?))\s*\{", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+)\]* *(?<arrow>[\<\-\(\)o\[\]\=\,\.\#\<\|\{\}]+(?<direction>[\w\,\=\[\]]+)*[\->\(\)o\[\]\.\#\|\>\{\}]*) *(?<rightbracket>\[*)(?<right>[\w ]+)\]*", RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex _ports = new(@"^\s*(port |portin |portout )(?<name>.*)", RegexOptions.Compiled);
+        private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
+        private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|folder|together|rectangle)\s+(?:""(?<name>[^""]+)""|(?<name>[^{}\r\n]+?))\s*\{", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
+        private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+?)\]*\s*(?:""(?<leftcard>[\w ]+)""\s*)?(?<arrow>[\<\-\(\)o\[\]=,.\#\|\{\}\*]+(?<direction>[^\s""\]]+)?[\-\>\(\)o\[\].\#\|\{\}]*)\s*(?:""(?<rightcard>[\w ]+)""\s*)?(?<rightbracket>\[*)(?<right>[\w ]+)\]*\s*(?::\s*(?<label>.*))?$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
+        private static readonly Regex _ports = new(@"^\s*(port |portin |portout )(?<name>.*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 
         private static string Clean(string name)
@@ -349,8 +349,8 @@ namespace PlantUML
                             string left = m.Groups["left"].Value.Trim();
                             string right = m.Groups["right"].Value.Trim();
 
-                            var leftComponent = TryGetComponent(left, d, packages, aliases, m.Groups["leftbracket"].Length == 1);
-                            var rightComponent = TryGetComponent(right, d, packages, aliases, m.Groups["rightbracket"].Length == 1);
+                            var leftComponent = TryGetComponent(left, d, packages, currentPackage, aliases, m.Groups["leftbracket"].Length == 1);
+                            var rightComponent = TryGetComponent(right, d, packages, currentPackage, aliases, m.Groups["rightbracket"].Length == 1);
 
 
                             string arrow = m.Groups["arrow"].Value.Trim();
@@ -360,6 +360,27 @@ namespace PlantUML
                             }
                             else if (leftComponent is UMLComponent c)
                             {
+                                if (rightComponent is UMLComponent rc)
+                                {
+
+
+                                    if (arrow.StartsWith("o", StringComparison.Ordinal))
+                                    {
+                                        rc.Exposes.Add(leftComponent);
+                                    }
+                                    else if (arrow.StartsWith("(", StringComparison.Ordinal))
+                                    {
+                                        rc.Consumes.Add(leftComponent);
+                                    }
+                                    else if (arrow.StartsWith("<", StringComparison.Ordinal))
+                                    {
+                                        rc.Consumes.Add(leftComponent);
+                                    }
+                                    else if (arrow.StartsWith("*", StringComparison.Ordinal))
+                                    {
+                                        rc.Consumes.Add(leftComponent);
+                                    }
+                                }
                                 if (arrow.EndsWith("o", StringComparison.Ordinal))
                                 {
                                     c.Exposes.Add(rightComponent);
@@ -369,6 +390,10 @@ namespace PlantUML
                                     c.Consumes.Add(rightComponent);
                                 }
                                 else if (arrow.EndsWith(">", StringComparison.Ordinal))
+                                {
+                                    c.Consumes.Add(rightComponent);
+                                }
+                                else if (arrow.EndsWith("*", StringComparison.Ordinal))
                                 {
                                     c.Consumes.Add(rightComponent);
                                 }
@@ -404,7 +429,7 @@ namespace PlantUML
             return d;
         }
 
-        private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, Dictionary<string, UMLDataType> aliases, bool bracketExists)
+        private static UMLDataType? TryGetComponent(string left, UMLComponentDiagram d, Stack<string> packages, UMLPackage currentPackage, Dictionary<string, UMLDataType> aliases, bool bracketExists)
         {
             UMLDataType? leftComponent = d.Entities.Find(p => p.Name == left && string.IsNullOrEmpty(p.Alias))
                               ?? d.ContainedPackages.Find(p => p.Name == left);
@@ -416,12 +441,15 @@ namespace PlantUML
                 }
                 else
                 {
+                    string package = GetPackage(packages);
+
                     if (left is not null && bracketExists)
                     {
 
-                        string package = GetPackage(packages);
+             
 
                         leftComponent = new UMLComponent(package, Clean(left), left);
+                        currentPackage.Children.Add(leftComponent);
                         _ = aliases.TryAdd(left, leftComponent);
                     }
                     else if (left is not null && !bracketExists)
@@ -429,6 +457,12 @@ namespace PlantUML
                         leftComponent = d.Entities.OfType<UMLComponent>().FirstOrDefault(z => z.PortsIn.Contains(left)
                           || z.PortsOut.Contains(left) || z.Ports.Contains(left));
 
+                        if(leftComponent is null)
+                        {
+                            leftComponent = new UMLComponent(package, Clean(left), left);
+                            currentPackage.Children.Add(leftComponent);
+                            _ = aliases.TryAdd(left, leftComponent);
+                        }
 
                     }
                     else
