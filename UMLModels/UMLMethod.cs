@@ -7,7 +7,7 @@ namespace UMLModels
     public class UMLMethod : UMLSignature
     {
 
-        public UMLMethod(string name, UMLDataType type, UMLVisibility visibility,  params UMLParameter[] parameters)
+        public UMLMethod(string name, UMLDataType type, UMLVisibility visibility, params UMLParameter[] parameters)
         {
             Name = name;
             ReturnType = type;
@@ -16,7 +16,7 @@ namespace UMLModels
             Visibility = visibility;
         }
 
-     
+
 
 
         public bool IsStatic
@@ -50,31 +50,38 @@ namespace UMLModels
         {
             string vs = Visibility == UMLVisibility.Public ? "+" : Visibility == UMLVisibility.Protected ? "#" : "-";
 
-            StringBuilder sb = new();
+            StringBuilder sb = StringBuilderPool.Rent();
 
-            if (ReturnType != null && !string.IsNullOrEmpty(ReturnType.Name))
+            try
             {
-                sb.Append(ReturnType.Name);
-                sb.Append(' ');
-            }
-            sb.Append(Name);
-            sb.Append('(');
-
-            if (Parameters != null)
-            {
-                for (int x = 0; x < Parameters.Count; x++)
+                if (ReturnType != null && !string.IsNullOrEmpty(ReturnType.Name))
                 {
-                    sb.Append(Parameters[x].ToString());
-                    if (x < Parameters.Count - 1)
+                    sb.Append(ReturnType.Name);
+                    sb.Append(' ');
+                }
+                sb.Append(Name);
+                sb.Append('(');
+
+                if (Parameters != null)
+                {
+                    for (int x = 0; x < Parameters.Count; x++)
                     {
-                        sb.Append(", ");
+                        sb.Append(Parameters[x].ToString());
+                        if (x < Parameters.Count - 1)
+                        {
+                            sb.Append(", ");
+                        }
                     }
                 }
+
+                sb.Append(')');
+
+                return sb.ToString();
             }
-
-            sb.Append(')');
-
-            return sb.ToString();
+            finally
+            {
+                StringBuilderPool.Return(sb);
+            }
         }
     }
 }
