@@ -87,7 +87,7 @@ namespace PlantUMLEditor.Models
             UndoAIEditsCommand = new AsyncDelegateCommand<ObservableCollection<UndoOperation>>(UndoEditCommandHandler);
             AddAttachmentCommand = new AsyncDelegateCommand(AddAttechmantHandler);
             GotoDefinitionCommand = new DelegateCommand<string>(GotoDefinitionInvoked);
-            FindAllReferencesCommand = new DelegateCommand<string>(FindAllReferencesInvoked);
+            FindAllReferencesCommand = new DelegateCommand<FindReferenceParam>(FindAllReferencesInvoked);
             Documents = new UMLModels.UMLDocumentCollection();
             SendChatCommand = new AsyncDelegateCommand<BaseDocumentModel>(SendChat,
                 (doc) =>
@@ -249,6 +249,9 @@ namespace PlantUMLEditor.Models
                 }
                 ApplyTemplateCommand.RaiseCanExecuteChanged();
                 _messageCheckerTrigger.Writer.TryWrite(true);
+
+                AppSettings.Default.LastOpenedDocument = _currentDocument?.FileName ?? string.Empty;
+                AppSettings.Default.Save();
             }
         }
 
@@ -309,6 +312,8 @@ namespace PlantUMLEditor.Models
         public ObservableCollection<string> MRUFolders { get; } = new ObservableCollection<string>();
 
         public ObservableCollection<BaseDocumentModel> OpenDocuments { get; }
+
+     
 
         public DelegateCommand OpenHelpCommand { get; }
 
@@ -387,6 +392,7 @@ namespace PlantUMLEditor.Models
 
             await InitializeAI();
 
+            var lastFile = AppSettings.Default.LastOpenedDocument;
             List<string>? files = JsonConvert.DeserializeObject<List<string>>(AppSettings.Default.Files);
             if (files == null)
             {
@@ -400,6 +406,8 @@ namespace PlantUMLEditor.Models
                     await AttemptOpeningFile(file);
                 }
             }
+
+      
 
             DocFXServeCommand.RaiseCanExecuteChanged();
 
@@ -423,6 +431,19 @@ namespace PlantUMLEditor.Models
                     CurrentGitBranch = string.Empty;
                     CurrentGitRepoRoot = string.Empty;
                 }
+            }
+
+            if (File.Exists(lastFile))
+            {
+                foreach(var doc in OpenDocuments)
+                {
+                    if (string.Equals(doc.FileName, lastFile, StringComparison.Ordinal))
+                    {
+                        CurrentDocument = doc;
+                        return;
+                    }
+                }
+              
             }
         }
 

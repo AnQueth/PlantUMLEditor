@@ -7,7 +7,7 @@ namespace UMLModels
     public class UMLMethod : UMLSignature
     {
 
-        public UMLMethod(string name, UMLDataType type, UMLVisibility visibility, params UMLParameter[] parameters)
+        public UMLMethod(string name, UMLDataType type, UMLVisibility visibility,  params UMLParameter[] parameters)
         {
             Name = name;
             ReturnType = type;
@@ -16,15 +16,8 @@ namespace UMLModels
             Visibility = visibility;
         }
 
-        public UMLMethod(UMLDataType type, UMLVisibility visibility, params UMLParameter[] parameters) : this("constructor", type, visibility, parameters)
-        {
-            IsConstructor = true;
-        }
+     
 
-        public bool IsConstructor
-        {
-            get; init;
-        }
 
         public bool IsStatic
         {

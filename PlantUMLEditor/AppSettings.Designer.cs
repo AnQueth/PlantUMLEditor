@@ -298,5 +298,17 @@ namespace PlantUMLEditor {
                 this["Prompts"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastOpenedDocument {
+            get {
+                return ((string)(this["LastOpenedDocument"]));
+            }
+            set {
+                this["LastOpenedDocument"] = value;
+            }
+        }
     }
 }

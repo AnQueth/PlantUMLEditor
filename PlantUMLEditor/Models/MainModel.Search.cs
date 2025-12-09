@@ -2,15 +2,19 @@ using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Prism.Commands;
+using System.Linq;
 
 namespace PlantUMLEditor.Models
 {
+    public record FindReferenceParam(string line, string word);
     internal partial class MainModel
     {
+       
+
         // Search-related command properties
         public DelegateCommand<string> GlobalSearchCommand { get; }
         public DelegateCommand<string> GotoDefinitionCommand { get; init; }
-        public DelegateCommand<string> FindAllReferencesCommand { get; init; }
+        public DelegateCommand<FindReferenceParam> FindAllReferencesCommand { get; init; }
 
         private GlobalFindResult? _selectedFindResult;
 
@@ -28,15 +32,24 @@ namespace PlantUMLEditor.Models
             }
         }
 
-        private void FindAllReferencesInvoked(string text)
+        private void FindAllReferencesInvoked(FindReferenceParam findParams)
         {
             SelectedToolTab = 2;
+
+            HashSet<GlobalFindResult> hs = new();
+
             FindReferenceResults.Clear();
 
-            foreach (var item in DataTypeServices.FindAllReferences(Documents, text))
+            foreach (var item in DataTypeServices.FindAllReferences(Documents, findParams))
+            {
+                hs.Add(item);
+               
+            }
+            foreach (var item in hs.OrderBy(z=>z.FileName).ThenBy(z=>z.LineNumber))
             {
                 FindReferenceResults.Add(item);
             }
+           
         }
 
         private async void GlobalSearchHandler(string obj)

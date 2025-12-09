@@ -49,13 +49,6 @@ namespace UMLModels
 
 
 
-        public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to, int lineNumber)
-        {
-            UMLSequenceConnection? f = new UMLSequenceConnection(source, to, lineNumber);
-            Entities.Add(f);
-
-            return f;
-        }
 
 
     }

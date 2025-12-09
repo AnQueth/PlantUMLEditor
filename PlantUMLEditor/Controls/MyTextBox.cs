@@ -18,6 +18,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using static PlantUMLEditor.Models.MainModel;
 
 namespace PlantUMLEditor.Controls
 {
@@ -29,7 +30,7 @@ namespace PlantUMLEditor.Controls
         public record FindResult(int Index, string Line, int LineNumber, string ReplacePreview);
 
         public static readonly DependencyProperty FindAllReferencesCommandProperty =
-DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
+DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<FindReferenceParam>), typeof(MyTextBox));
 
         public static readonly DependencyProperty GotoDefinitionCommandProperty =
             DependencyProperty.Register("GotoDefinitionCommand", typeof(DelegateCommand<string>), typeof(MyTextBox));
@@ -124,9 +125,9 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
             get;
         }
 
-        public DelegateCommand<string> FindAllReferencesCommand
+        public DelegateCommand<FindReferenceParam> FindAllReferencesCommand
         {
-            get => (DelegateCommand<string>)GetValue(FindAllReferencesCommandProperty);
+            get => (DelegateCommand<FindReferenceParam>)GetValue(FindAllReferencesCommandProperty);
 
             set => SetValue(FindAllReferencesCommandProperty, value);
         }
@@ -1100,9 +1101,11 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<s
 
         public void FindAllReferences()
         {
-            string found = GetWordFromCursor();
+           
+            string line = GetLineText(GetLineIndexFromCharacterIndex(CaretIndex));
+            string word = GetWordFromCursor();
 
-            FindAllReferencesCommand?.Execute(found.Trim());
+            FindAllReferencesCommand?.Execute(new FindReferenceParam(line.Trim(), word.Trim()));
         }
 
         private void FindHandler()

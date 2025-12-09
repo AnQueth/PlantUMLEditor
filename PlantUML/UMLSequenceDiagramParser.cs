@@ -84,17 +84,17 @@ namespace PlantUML
                 {
                     if (arrow.StartsWith("<", StringComparison.Ordinal))
                     {
-                        if (TryParseReturnToEmpty(toAlias, arrow, actionSignature, diagram, types, previous, lineNumber, out connection))
+                        if (TryParseReturnToEmpty(toAlias, arrow, actionSignature, diagram, types, previous, lineNumber, line, out connection))
                         {
                             return true;
                         }
                     }
-                    else if (TypeParseConnectionFromEmpty(arrow, toAlias, actionSignature, diagram, types, previous, lineNumber, out connection))
+                    else if (TypeParseConnectionFromEmpty(arrow, toAlias, actionSignature, diagram, types, previous, lineNumber, line, out connection))
                     {
                         return true;
                     }
                 }
-                else if (TryParseConnection(fromAlias, arrow, toAlias, actionSignature, diagram, types, previous, lineNumber, out connection))
+                else if (TryParseConnection(fromAlias, arrow, toAlias, actionSignature, diagram, types, previous, lineNumber, line, out connection))
                 {
                     return !string.IsNullOrWhiteSpace(connection.ToName) && !string.IsNullOrWhiteSpace(connection.FromName);
                 }
@@ -135,11 +135,11 @@ namespace PlantUML
 
                 if (!types.Contains(name))
                 {
-                    lifeline = new UMLSequenceLifeline(type, name, alias, null, lineNumber);
+                    lifeline = new UMLSequenceLifeline(type, name, alias, null, lineNumber, line);
                 }
                 else
                 {
-                    lifeline = new UMLSequenceLifeline(type, name, alias, types[name].First().Id, lineNumber);
+                    lifeline = new UMLSequenceLifeline(type, name, alias, types[name].First().Id, lineNumber, line);
                 }
 
                 return true;
@@ -499,7 +499,7 @@ namespace PlantUML
         private static bool TryParseConnection(string fromAlias, string arrow, string toAlias,
             string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types,
               UMLSequenceConnection? previous,
-                int lineNumber,
+                int lineNumber, string line,
             [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
             connection = null;
@@ -512,7 +512,8 @@ namespace PlantUML
             {
                 action = GetActionSignature(actionSignature, types, to, previous, d);
             }
-            connection = new UMLSequenceConnection(from, to, action, fromAlias, toAlias, true, true, lineNumber);
+            connection = new UMLSequenceConnection(from, to, action, fromAlias,
+                toAlias, true, true, lineNumber, line);
 
             return true;
         }
@@ -520,7 +521,7 @@ namespace PlantUML
         private static bool TryParseReturnToEmpty(string fromAlias, string arrow,
             string actionSignature, UMLSequenceDiagram d, ILookup<string, UMLDataType> types,
               UMLSequenceConnection? previous,
-            int lineNumber,
+            int lineNumber, string line,
            [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
             if (arrow.StartsWith("<", StringComparison.Ordinal))
@@ -534,7 +535,7 @@ namespace PlantUML
                     connection = null;
                     return false;
                 }
-                connection = new UMLSequenceConnection(ft, method, lineNumber);
+                connection = new UMLSequenceConnection(ft, method, lineNumber, line);
 
                 return true;
             }
@@ -633,6 +634,7 @@ namespace PlantUML
         private static bool TypeParseConnectionFromEmpty(string arrow, string toAlias,
             string actionSignature, UMLSequenceDiagram d,
             ILookup<string, UMLDataType> types, UMLSequenceConnection? previous, int lineNumber,
+            string line,
             [NotNullWhen(true)] out UMLSequenceConnection? connection)
         {
             if (arrow.StartsWith("-", StringComparison.Ordinal))
@@ -645,7 +647,7 @@ namespace PlantUML
                     action = GetActionSignature(actionSignature, types, to, previous, d);
                 }
 
-                connection = new UMLSequenceConnection(to, true, action, toAlias, lineNumber);
+                connection = new UMLSequenceConnection(to, true, action, toAlias, lineNumber, line);
 
                 return true;
             }

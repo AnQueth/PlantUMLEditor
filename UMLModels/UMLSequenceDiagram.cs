@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace UMLModels
 {
@@ -11,6 +12,36 @@ namespace UMLModels
 
 
             ValidateAgainstClasses = true;
+        }
+
+        public List<UMLOrderedEntity> FlattenedEntities 
+        { 
+            get
+            {
+                var list = new List<UMLOrderedEntity>();
+                
+               
+                foreach (var entity in Entities)
+                {
+                    AddRecursive(entity, list);
+                   
+                }
+
+                return list;
+            }
+        }
+
+        private void AddRecursive(UMLOrderedEntity entity, List<UMLOrderedEntity> list)
+        {
+            list.Add(entity);
+            if(entity is UMLSequenceBlockSection blockSection)
+            {
+                foreach(var child in blockSection.Entities)
+                {
+                    AddRecursive(child, list);
+                }
+            }
+        
         }
 
         public List<UMLOrderedEntity> Entities { get; init; } = new();
@@ -27,13 +58,6 @@ namespace UMLModels
             get; set;
         }
 
-        public UMLSequenceConnection AddConnection(UMLSequenceLifeline source, UMLSequenceLifeline to, int lineNumber)
-        {
-            UMLSequenceConnection? f = new UMLSequenceConnection(source, to, lineNumber);
-
-            Entities.Add(f);
-
-            return f;
-        }
+      
     }
 }

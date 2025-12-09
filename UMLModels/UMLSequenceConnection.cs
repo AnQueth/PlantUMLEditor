@@ -2,22 +2,24 @@
 {
     public class UMLSequenceConnection : UMLOrderedEntity
     {
-        public UMLSequenceConnection(UMLSequenceLifeline from, UMLSequenceLifeline to, int lineNumber) : base(lineNumber)
+        public UMLSequenceConnection(UMLSequenceLifeline from, UMLSequenceLifeline to, int lineNumber, string line) : base(lineNumber)
         {
             From = from;
             To = to;
             ToName = string.Empty;
             FromName = string.Empty;
+            Line = line;
         }
-        public UMLSequenceConnection(UMLSequenceLifeline from, UMLSignature action, int lineNumber) : base(lineNumber)
+        public UMLSequenceConnection(UMLSequenceLifeline from, UMLSignature action, int lineNumber, string line) : base(lineNumber)
         {
             From = from;
             Action = action;
             ToName = string.Empty;
             FromName = string.Empty;
+            Line = line;
         }
 
-        public UMLSequenceConnection(UMLSequenceLifeline? to, bool toShouldBeUsed, UMLSignature? action, string toAlias, int lineNumber) : base(lineNumber)
+        public UMLSequenceConnection(UMLSequenceLifeline? to, bool toShouldBeUsed, UMLSignature? action, string toAlias, int lineNumber, string line) : base(lineNumber)
         {
             From = null;
             FromName = string.Empty;
@@ -25,9 +27,10 @@
             ToShouldBeUsed = toShouldBeUsed;
             Action = action;
             ToName = toAlias;
+            Line = line;
         }
         public UMLSequenceConnection(UMLSequenceLifeline? from, UMLSequenceLifeline? to, UMLSignature? action,
-            string fromAlias, string toAlias, bool fromShouldBeUsed, bool toShouldBeUsed, int lineNumber) : base(lineNumber)
+            string fromAlias, string toAlias, bool fromShouldBeUsed, bool toShouldBeUsed, int lineNumber, string line) : base(lineNumber)
         {
             From = from;
             FromName = fromAlias;
@@ -36,6 +39,7 @@
             ToShouldBeUsed = toShouldBeUsed;
             Action = action;
             ToName = toAlias;
+            Line = line;
         }
         public UMLSignature? Action
         {
@@ -49,6 +53,7 @@
         {
             get; set;
         }
+        public string Line { get; private set; }
         public bool FromShouldBeUsed
         {
             get; set;

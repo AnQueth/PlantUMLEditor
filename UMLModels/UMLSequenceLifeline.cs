@@ -2,19 +2,20 @@
 {
     public class UMLSequenceLifeline : UMLOrderedEntity
     {
-        public UMLSequenceLifeline(string type, string name, string alias, string? dataTypeId, int lineNumber) : base(lineNumber)
+        public UMLSequenceLifeline(string type, string name, string alias, string? dataTypeId, int lineNumber, string line) : base(lineNumber)
         {
             LifeLineType = type;
             Text = name;
             DataTypeId = dataTypeId;
             Alias = alias;
+            Line = line;
         }
 
         public string Alias
         {
             get; set;
         }
-
+        public string Line { get;   set; }
         public string? DataTypeId
         {
             get; set;
