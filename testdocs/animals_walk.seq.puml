@@ -11,11 +11,11 @@ activate Controller
 
 Controller -> Dog: walk()
 activate Dog
-Dog -> Dog: performSteps()
+Dog -> Dog: void walk()
 Dog --> Controller: walked()
 deactivate Dog
 
-Controller -> Bird: walk()
+Controller -> Bird: void walk()	
 activate Bird
 alt can fly while walking
   Bird -> Bird: flapWingsAndWalk()

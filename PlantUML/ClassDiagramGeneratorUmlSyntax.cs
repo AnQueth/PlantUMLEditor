@@ -192,7 +192,7 @@ namespace PlantUML
 
                 // parameter syntax: name : Type [multiplicity]
                 writer.Write(p.Name);
-                writer.Write(" : ");
+                writer.Write(": ");
                 WriteTypeWithMultiplicity(writer, p.ObjectType.Name, p.ListType);
 
                 if (x != me.Parameters.Count - 1)
@@ -224,7 +224,7 @@ namespace PlantUML
             // name
             writer.Write(prop.Name);
 
-            writer.Write(" : ");
+            writer.Write(": ");
 
             // type + multiplicity
             WriteTypeWithMultiplicity(writer, prop.ObjectType.Name, prop.ListType);

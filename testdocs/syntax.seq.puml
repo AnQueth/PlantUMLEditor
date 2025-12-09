@@ -25,7 +25,7 @@ alt#Gold #LightBlue Successful case
 else #Pink Failure
     Bob -> Alice: Authentication Rejected
 end
-Bob -> Alice
+Bob -> Alice 
 Alice -> Bob
  
 note over Alice : test
