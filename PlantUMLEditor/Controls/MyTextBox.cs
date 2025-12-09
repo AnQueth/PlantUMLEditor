@@ -432,6 +432,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<F
                     }
                     else
                     {
+                        lineNumber++;
                         ScrollToLine(lineNumber < 5 ? 1 : lineNumber - 5);
                     }
                 });
@@ -1250,7 +1251,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<F
             var sb = StringBuilderPool.Rent(20);
             ReadOnlySpan<char> tp = Text.AsSpan();
 
-            for (int c = CaretIndex; c >= 0; c--)
+            for (int c = CaretIndex - 1; c >= 0; c--)
             {
                 if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
                 {
@@ -1259,7 +1260,7 @@ DependencyProperty.Register("FindAllReferencesCommand", typeof(DelegateCommand<F
 
                 sb.Insert(0, tp[c]);
             }
-            for (int c = CaretIndex + 1; c <= tp.Length; c++)
+            for (int c = CaretIndex; c <= tp.Length; c++)
             {
                 if (tp[c] is ' ' or '(' or ')' or '{' or '}' or '<' or '>' or '[' or ']' or ',' or '\r' or '\n')
                 {

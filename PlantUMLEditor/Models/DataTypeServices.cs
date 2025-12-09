@@ -2,6 +2,7 @@
 using SharpVectors.Dom;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,17 +28,77 @@ namespace PlantUMLEditor.Models
             }
         }
 
+        static string ToCompareText(UMLMethod method)
+        {
+            if (AppSettings.Default.UMLPureMode)
+            {
+                var sb = StringBuilderPool.Rent();
+                using var writer = new StringWriter(sb);
+                try
+                {
+                    ClassDiagramGeneratorUmlSyntax.Write(writer, method);
+                    return sb.ToString();
+                }
+                finally
+                {
+                    StringBuilderPool.Return(sb);
+                }
+
+
+            }
+            else
+            {
+                return method.ToString();
+            }
+        }
+
+        static string ToCompareText(UMLProperty property)
+        {
+            if (AppSettings.Default.UMLPureMode)
+            {
+                var sb = StringBuilderPool.Rent();
+                using var writer = new StringWriter(sb);
+                try
+                {
+                    ClassDiagramGeneratorUmlSyntax.Write(writer, property);
+                    return sb.ToString();
+                }
+                finally
+                {
+                    StringBuilderPool.Return(sb);
+                }
+
+            }
+            else
+            {
+                return property.ToString();
+            }
+        }
+
         internal static IEnumerable<GlobalFindResult> FindAllReferences(UMLDocumentCollection documents,
             FindReferenceParam findParams)
         {
             List<UMLDataType> dataTypes = documents.ClassDocuments.SelectMany(z => z.DataTypes).ToList();
+
+            var dataTypesByIdDupes = documents.ClassDocuments
+                .Select(z =>
+                z.DataTypes.Where(z => z is UMLClass || z is UMLEnum || z is UMLInterface)
+                .Select(p => new { FileName = z.FileName, DataType = p }))
+                .SelectMany(z => z)
+                .ToLookup(z => z.DataType.Id, z => z);
+
+            var dupes= from o in dataTypesByIdDupes
+                       where o.Count() > 1
+                       select o;
+
+      
 
             var dataTypesById = documents.ClassDocuments
                 .Select(z =>
                 z.DataTypes.Where(z => z is UMLClass || z is UMLEnum || z is UMLInterface)
                 .Select(p => new { FileName = z.FileName, DataType = p }))
                 .SelectMany(z => z)
-                .ToDictionary(z => z.DataType.Id, z => z);
+                .ToLookup(z =>   z.DataType.Id, z => z);
 
             var methods = from o in documents.ClassDocuments
                           from dt in o.DataTypes
@@ -94,27 +155,29 @@ namespace PlantUMLEditor.Models
                 {
                     if(conn.From.Alias == findParams.word)
                     {
-                        dataTypeToFind = dataTypesById[conn.From.DataTypeId].DataType;
+                        dataTypeToFind = dataTypesById[conn.From.DataTypeId].First().DataType;
                     }
 
                     else if(conn.To.Alias == findParams.word)
                     {
-                        dataTypeToFind = dataTypesById[conn.To.DataTypeId].DataType;
+                        dataTypeToFind = dataTypesById[conn.To.DataTypeId].First().DataType;
                     }
 
                     else if (conn.Action.Signature.Contains(findParams.word, StringComparison.Ordinal))
                     {
-                        dataTypeToFind = dataTypesById[conn.To.DataTypeId].DataType;
+                        dataTypeToFind = dataTypesById[conn.To.DataTypeId].First().DataType;
                         signatureToFind = conn.Action;
 
 
                     }
 
+               
+
                     if (dataTypeToFind is not null)
                     {
                         var classOrInterfaceRefMatches = from o in classesOrInterfaces
-                                                         where o.DataType is UMLClass || o.DataType is UMLInterface
-                                                         where string.CompareOrdinal( o.DataType.Id , dataTypeToFind.Id) == 0
+                                                         where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
+                                                         where string.CompareOrdinal(  o.DataType.Id , dataTypeToFind.Id) == 0
                                                          select new GlobalFindResult(o.FileName, o.DataType.LineNumber, o.DataType.Name, findParams.word);
                         foreach (var item in classOrInterfaceRefMatches)
                         {
@@ -126,7 +189,7 @@ namespace PlantUMLEditor.Models
                     if(dataTypeToFind is not null && signatureToFind is null)
                     {
                         var sequenceDiagramsMatching = from o in classesOrInterfaces
-                                                       where o.DataType is UMLClass || o.DataType is UMLInterface
+                                                       where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                        where string.CompareOrdinal(o.DataType.Id, dataTypeToFind.Id) == 0
 
                                                        from s in documents.SequenceDiagrams
@@ -143,7 +206,7 @@ namespace PlantUMLEditor.Models
                     if(signatureToFind is not null && dataTypeToFind is not null)
                     {
                         var methodRefMatches = from o in classesOrInterfaces
-                                               where o.DataType is UMLClass || o.DataType is UMLInterface
+                                               where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                where string.CompareOrdinal(o.DataType.Id , dataTypeToFind.Id) == 0
                                                   from m in o.DataType.Methods
                                                   where string.CompareOrdinal( m.Signature , signatureToFind.Signature) == 0
@@ -158,7 +221,7 @@ namespace PlantUMLEditor.Models
                         }
 
                         var propertyRefMatches = from o in classesOrInterfaces
-                                               where o.DataType is UMLClass || o.DataType is UMLInterface
+                                               where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                where string.CompareOrdinal(o.DataType.Id, dataTypeToFind.Id) == 0
                                                from m in o.DataType.Properties
                                                where string.CompareOrdinal(m.Signature, signatureToFind.Signature) == 0
@@ -182,12 +245,12 @@ namespace PlantUMLEditor.Models
             var firstLifeLineFound = foundSequenceLifeline.FirstOrDefault();
             if(firstLifeLineFound is not null)
             {
-                var dataTypeToFind2 = dataTypesById[firstLifeLineFound.Connection.DataTypeId].DataType;
+                var dataTypeToFind2 = dataTypesById[firstLifeLineFound.Connection.DataTypeId].First().DataType;
 
                 if(dataTypeToFind2 is not null)
                 {
                     var classOrInterfaceRefMatches = from o in classesOrInterfaces
-                                                     where o.DataType is UMLClass || o.DataType is UMLInterface
+                                                     where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                      where string.CompareOrdinal(o.DataType.Id, dataTypeToFind2.Id) == 0
                                                      select new GlobalFindResult(o.FileName, o.DataType.LineNumber, o.DataType.Name, findParams.word);
                     foreach (var item in classOrInterfaceRefMatches)
@@ -196,7 +259,7 @@ namespace PlantUMLEditor.Models
                     }
 
                     var classOrInterfaceMethodsRefMatches = from o in classesOrInterfaces
-                                                     where o.DataType is UMLClass || o.DataType is UMLInterface
+                                                     where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                      from m in o.DataType.Methods
                                                      where string.CompareOrdinal( m.ReturnType.Id, dataTypeToFind2.Id) == 0
                                                   
@@ -221,7 +284,7 @@ namespace PlantUMLEditor.Models
 
 
                     var classOrInterfacePropertyRefMatches = from o in classesOrInterfaces
-                                                             where o.DataType is UMLClass || o.DataType is UMLInterface
+                                                             where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                              from m in o.DataType.Properties
                                                              where string.CompareOrdinal(m.ObjectType.Id, dataTypeToFind2.Id) == 0
 
@@ -234,7 +297,7 @@ namespace PlantUMLEditor.Models
 
 
                     var sequenceLifelinesMatching = from o in classesOrInterfaces
-                                                   where o.DataType is UMLClass || o.DataType is UMLInterface
+                                                   where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                    where string.CompareOrdinal(o.DataType.Id, dataTypeToFind2.Id) == 0
 
                                                    from s in documents.SequenceDiagrams
@@ -249,7 +312,7 @@ namespace PlantUMLEditor.Models
 
 
                     var sequenceDiagramsMatching = from o in classesOrInterfaces
-                                                   where o.DataType is UMLClass || o.DataType is UMLInterface
+                                                   where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
                                                    where string.CompareOrdinal(o.DataType.Id, dataTypeToFind2.Id) == 0
 
                                                    from s in documents.SequenceDiagrams
@@ -269,105 +332,14 @@ namespace PlantUMLEditor.Models
             }
 
 
-
-
-            var classOrInterfaceMatches = from o in classesOrInterfaces
-                                          where o.DataType is UMLClass || o.DataType is UMLInterface
-                                          where string.CompareOrdinal(o.DataType.Name, findParams.word) == 0
-                                          select new GlobalFindResult(o.FileName, o.DataType.LineNumber, o.DataType.Name, findParams.word);
-
-
-
-
-
-            foreach (var item in classOrInterfaceMatches)
-            {
-                yield return item;
-            }
-
-
-       
-            
-                
-
-
-            var propertyMatches = from o in properties
-                                    where string.CompareOrdinal(o.Property.Name, findParams.word) == 0
-                                    select new GlobalFindResult(o.FileName, o.LineNumber, o.Property.Signature, findParams.word);
-
-            foreach (var item in propertyMatches)
-            {
-                yield return item;
-            }
-
-            var propertyReturnMatches = from o in properties
-                                  where string.CompareOrdinal(o.Property.ObjectType.Name, findParams.word) == 0
-                                  select new GlobalFindResult(o.FileName, o.LineNumber, o.Property.Signature, findParams.word);
-
-            foreach (var item in propertyReturnMatches)
-            {
-                yield return item;
-            }
-
-            var methodMatches = from o in methods
-                                    where string.CompareOrdinal(o.Method.Name, findParams.word) == 0
-                                    select new GlobalFindResult(o.FileName, o.LineNumber, o.Method.Signature, findParams.word);
-
-            foreach (var item in methodMatches)
-            {
-                yield return item;
-            }
-
-            var methodReturnsMatches = from o in methods
-                                where string.CompareOrdinal(o.Method.ReturnType.Name, findParams.word) == 0
-                                select new GlobalFindResult(o.FileName, o.LineNumber, o.Method.Signature, findParams.word);
-
-            foreach (var item in methodReturnsMatches)
-            {
-                yield return item;
-            }
-
-
-            var methodParamMatches = from o in methods
-                                     from p in o.Method.Parameters
-                                 
-                                     where string.CompareOrdinal(p.Name, findParams.word) == 0
-                                       select new GlobalFindResult(o.FileName, o.LineNumber, o.Method.Signature, findParams.word);
-
-            foreach (var item in methodParamMatches)
-            {
-                yield return item;
-            }
-
-            var classMatches = from o in classesOrInterfaces
-                                 where string.CompareOrdinal(o.DataType.NonGenericName, findParams.word) == 0
-                                 select new GlobalFindResult(o.FileName, o.DataType.LineNumber, o.DataType.Name, findParams.word);
-
-            foreach (var item in classMatches)
-            {
-                yield return item;
-            }
-
-
-                var lifeLineMatches = from o in sequenceLifeLines
-                                      where o.LifeLine.DataTypeId != null
-                                      let dt = dataTypesById.GetValueOrDefault(o.LifeLine.DataTypeId)
-                                  where dt != null && string.CompareOrdinal(dt.DataType.NonGenericName, findParams.word) == 0
-                                  select new GlobalFindResult(o.FileName, o.LifeLine.LineNumber, o.LifeLine.Text, findParams.word);
-
-            foreach (var item in lifeLineMatches)
-            {
-                yield return item;
-            }
-
             var classMethods = from o in dataTypes
                                from pm in o.Methods
-                               where string.CompareOrdinal(pm.Signature, findParams.line) == 0
+                               where string.CompareOrdinal(ToCompareText( pm), findParams.line) == 0
                                select new { DataType = o, Method = pm };
 
             var classProperties = from o in dataTypes
                                   from pm in o.Properties
-                                  where string.CompareOrdinal(pm.Signature, findParams.line) == 0
+                                  where string.CompareOrdinal(ToCompareText(pm), findParams.line) == 0
                                   select new { DataType = o, Property = pm };
 
             var foundDt = classMethods.FirstOrDefault()?.DataType ?? classProperties.FirstOrDefault()?.DataType;
@@ -376,6 +348,9 @@ namespace PlantUMLEditor.Models
 
             if (foundDt is not null)
             {
+                var fr = new GlobalFindResult(dataTypesById[foundDt.Id].First().FileName, 
+                    foundDt.LineNumber, foundDt.Name, foundDt.Name);
+                yield return fr;
 
                 var actionMatches = from o in documents.SequenceDiagrams
                                     from lc in o.FlattenedEntities.OfType<UMLSequenceConnection>()
@@ -390,23 +365,107 @@ namespace PlantUMLEditor.Models
                     yield return item;
                 }
 
-                //var typeMatches = from o in documents.SequenceDiagrams
-                //                    from lc in o.FlattenedEntities.OfType<UMLSequenceConnection>()
-                //                    where lc is not null &&
-                //                    (string.CompareOrdinal(lc.To?.DataTypeId, foundDt.Id) == 0 ||
-                //                    string.CompareOrdinal(lc.From?.DataTypeId, foundDt.Id) == 0)
-                                     
-                //                    select new GlobalFindResult(o.FileName, lc.LineNumber, lc.Line, lc.Line);
+                var lifeLineMatches = from o in sequenceLifeLines
+                                      where o.LifeLine.DataTypeId != null
+                                      let dt = dataTypesById[o.LifeLine.DataTypeId].FirstOrDefault()
+                                      where dt != null && string.CompareOrdinal(dt.DataType.Id,  foundDt.Id) == 0
+                                      select new GlobalFindResult(o.FileName, o.LifeLine.LineNumber, o.LifeLine.Text, findParams.word);
 
-                //foreach (var item in typeMatches)
-                //{
-                //    yield return item;
-                //}
+                foreach (var item in lifeLineMatches)
+                {
+                    yield return item;
+                }
+
+                if (foundProp is not null)
+                {
+                    var propertyTypes  = from o in classesOrInterfaces
+                                                  where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
+                                                  where string.CompareOrdinal(o.DataType.Id, foundProp.ObjectType.Id) == 0
+                                                  select new GlobalFindResult(o.FileName, o.DataType.LineNumber, o.DataType.Name, findParams.word);
+                    foreach( var item in propertyTypes)
+                    {
+                        yield return item;
+                    }
+
+                }
+
+                yield break;
 
             }
 
+            var classOrInterfaceMatches = from o in classesOrInterfaces
+                                          where o.DataType is UMLClass || o.DataType is UMLEnum || o.DataType is UMLInterface
+                                          where string.CompareOrdinal(o.DataType.Name, findParams.word) == 0
+                                          select new GlobalFindResult(o.FileName, o.DataType.LineNumber, o.DataType.Name, findParams.word);
 
 
+
+
+
+            foreach (var item in classOrInterfaceMatches)
+            {
+                yield return item;
+            }
+
+            var propertyMatches = from o in properties
+                                  where string.CompareOrdinal(o.Property.Name, findParams.word) == 0
+                                  select new GlobalFindResult(o.FileName, o.LineNumber, o.Property.Signature, findParams.word);
+
+            foreach (var item in propertyMatches)
+            {
+                yield return item;
+            }
+
+            var propertyReturnMatches = from o in properties
+                                        where string.CompareOrdinal(o.Property.ObjectType.Name, findParams.word) == 0
+                                        select new GlobalFindResult(o.FileName, o.LineNumber, o.Property.Signature, findParams.word);
+
+            foreach (var item in propertyReturnMatches)
+            {
+                yield return item;
+            }
+
+            var methodMatches = from o in methods
+                                where string.CompareOrdinal(o.Method.Name, findParams.word) == 0
+                                select new GlobalFindResult(o.FileName, o.LineNumber, o.Method.Signature, findParams.word);
+
+            foreach (var item in methodMatches)
+            {
+                yield return item;
+            }
+
+            var methodReturnsMatches = from o in methods
+                                       where string.CompareOrdinal(o.Method.ReturnType.Name, findParams.word) == 0
+                                       select new GlobalFindResult(o.FileName, o.LineNumber, o.Method.Signature, findParams.word);
+
+            foreach (var item in methodReturnsMatches)
+            {
+                yield return item;
+            }
+
+
+            var methodParamMatches = from o in methods
+                                     from p in o.Method.Parameters
+
+                                     where string.CompareOrdinal(p.Name, findParams.word) == 0
+                                     select new GlobalFindResult(o.FileName, o.LineNumber, o.Method.Signature, findParams.word);
+
+            foreach (var item in methodParamMatches)
+            {
+                yield return item;
+            }
+
+            var classMatches = from o in classesOrInterfaces
+                               where string.CompareOrdinal(o.DataType.NonGenericName, findParams.word) == 0
+                               select new GlobalFindResult(o.FileName, o.DataType.LineNumber, o.DataType.Name, findParams.word);
+
+            foreach (var item in classMatches)
+            {
+                yield return item;
+            }
+
+
+      
 
             /*
 

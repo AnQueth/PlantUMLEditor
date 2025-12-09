@@ -368,6 +368,7 @@ namespace PlantUML
                     if (line.Length > 4)
                     {
                         currentDataType = new UMLEnum(package, Clean(lineSpan[5..]));
+                        aliases[currentDataType.Name] = currentDataType;
                     }
 
                     if (lineSpan.EndsWith("{", StringComparison.Ordinal))

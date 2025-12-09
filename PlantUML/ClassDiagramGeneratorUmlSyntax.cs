@@ -119,34 +119,7 @@ namespace PlantUML
                     // Properties: emit as "visibility name : Type [multiplicity] = default {modifiers}"
                     foreach (UMLProperty? prop in item.Properties.Where(z => !z.DrawnWithLine))
                     {
-                        // visibility
-                        writer.Write(GetVisibility(prop.Visibility));
-                        writer.Write(' ');
-
-                        // name
-                        writer.Write(prop.Name);
-
-                        writer.Write(" : ");
-
-                        // type + multiplicity
-                        WriteTypeWithMultiplicity(writer, prop.ObjectType.Name, prop.ListType);
-
-                        // default value
-                        if (!string.IsNullOrWhiteSpace(prop.DefaultValue))
-                        {
-                            writer.Write(" = ");
-                            writer.Write(prop.DefaultValue);
-                        }
-
-                        // modifiers
-                        var modifiers = GetModifiers(prop.IsStatic, prop.IsAbstract);
-                        if (!string.IsNullOrEmpty(modifiers))
-                        {
-                            writer.Write(' ');
-                            writer.Write('{');
-                            writer.Write(modifiers);
-                            writer.Write('}');
-                        }
+                        Write(writer, prop);
 
                         writer.WriteLine();
                     }
@@ -154,38 +127,7 @@ namespace PlantUML
                     // Methods: emit as "visibility name(param : Type, ...) : ReturnType {modifiers}"
                     foreach (UMLMethod? me in item.Methods)
                     {
-                        writer.Write(GetVisibility(me.Visibility));
-                        writer.Write(' ');
-
-                        writer.Write(me.Name);
-                        writer.Write('(');
-
-                        for (int x = 0; x < me.Parameters.Count; x++)
-                        {
-                            UMLParameter? p = me.Parameters[x];
-
-                            // parameter syntax: name : Type [multiplicity]
-                            writer.Write(p.Name);
-                            writer.Write(" : ");
-                            WriteTypeWithMultiplicity(writer, p.ObjectType.Name, p.ListType);
-
-                            if (x != me.Parameters.Count - 1)
-                            {
-                                writer.Write(", ");
-                            }
-                        }
-
-                        writer.Write(") : ");
-                        writer.Write(me.ReturnType.Name);
-
-                        var mmods = GetModifiers(me.IsStatic, me.IsAbstract);
-                        if (!string.IsNullOrEmpty(mmods))
-                        {
-                            writer.Write(' ');
-                            writer.Write('{');
-                            writer.Write(mmods);
-                            writer.Write('}');
-                        }
+                        Write(writer, me);
 
                         writer.WriteLine();
                     }
@@ -233,6 +175,75 @@ namespace PlantUML
                         }
                     }
                 }
+            }
+        }
+
+        public static void Write(TextWriter writer, UMLMethod me)
+        {
+            writer.Write(GetVisibility(me.Visibility));
+            writer.Write(' ');
+
+            writer.Write(me.Name);
+            writer.Write('(');
+
+            for (int x = 0; x < me.Parameters.Count; x++)
+            {
+                UMLParameter? p = me.Parameters[x];
+
+                // parameter syntax: name : Type [multiplicity]
+                writer.Write(p.Name);
+                writer.Write(" : ");
+                WriteTypeWithMultiplicity(writer, p.ObjectType.Name, p.ListType);
+
+                if (x != me.Parameters.Count - 1)
+                {
+                    writer.Write(", ");
+                }
+            }
+
+            writer.Write(") : ");
+            writer.Write(me.ReturnType.Name);
+
+            var mmods = GetModifiers(me.IsStatic, me.IsAbstract);
+            if (!string.IsNullOrEmpty(mmods))
+            {
+                writer.Write(' ');
+                writer.Write('{');
+                writer.Write(mmods);
+                writer.Write('}');
+            }
+        }
+
+        public static void Write(TextWriter writer, UMLProperty prop)
+        {
+
+            // visibility
+            writer.Write(GetVisibility(prop.Visibility));
+            writer.Write(' ');
+
+            // name
+            writer.Write(prop.Name);
+
+            writer.Write(" : ");
+
+            // type + multiplicity
+            WriteTypeWithMultiplicity(writer, prop.ObjectType.Name, prop.ListType);
+
+            // default value
+            if (!string.IsNullOrWhiteSpace(prop.DefaultValue))
+            {
+                writer.Write(" = ");
+                writer.Write(prop.DefaultValue);
+            }
+
+            // modifiers
+            var modifiers = GetModifiers(prop.IsStatic, prop.IsAbstract);
+            if (!string.IsNullOrEmpty(modifiers))
+            {
+                writer.Write(' ');
+                writer.Write('{');
+                writer.Write(modifiers);
+                writer.Write('}');
             }
         }
 
