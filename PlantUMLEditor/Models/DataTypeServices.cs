@@ -243,7 +243,7 @@ namespace PlantUMLEditor.Models
             }
 
             var firstLifeLineFound = foundSequenceLifeline.FirstOrDefault();
-            if(firstLifeLineFound is not null)
+            if(firstLifeLineFound is not null && firstLifeLineFound.Connection.DataTypeId is not null)
             {
                 var dataTypeToFind2 = dataTypesById[firstLifeLineFound.Connection.DataTypeId].First().DataType;
 
