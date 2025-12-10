@@ -24,7 +24,7 @@ namespace PlantUML
         private static readonly Regex _interface = new(@"^(\(\)|interface)\s+\""*((?<name>[\w \\]+)\""*(\s+as\s+(?<alias>[\w]+))|(?<name>[\w \\]+)\""*)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         private static readonly Regex _packageRegex = new(@"^\s*(?<type>package|frame|node|cloud|node|folder|together|rectangle) +((?<name>[\w]+)|\""(?<name>[\w\s\W]+)\"")\s+as (?<alias>[\w\s]+)*\s+\{", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _packageRegex2 = new(@"^\s*(?<type>package|frame|node|cloud|folder|together|rectangle)\s+(?:""(?<name>[^""]+)""|(?<name>[^{}\r\n]+?))\s*\{", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
-        private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+?)\]*\s*(?:""(?<leftcard>[\w ]+)""\s*)?(?<arrow>[\<\-\(\)o\[\]=,.\#\|\{\}\*]+(?<direction>[^\s""\]]+)?[\-\>\(\)o\[\].\#\|\{\}]*)\s*(?:""(?<rightcard>[\w ]+)""\s*)?(?<rightbracket>\[*)(?<right>[\w ]+)\]*\s*(?::\s*(?<label>.*))?$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
+        private static readonly Regex composition = new(@"^(?<leftbracket>\[*)(?<left>[\w ]+?)\]*\s+(?:""(?<leftcard>[\w ]+)""\s*)?(?<arrow>(?:-+|<+|>+|=+|\.|\(|\)|o|\#|\||\{|\}|\*|,)+(?:\[(?<attrs>[^\]]+)\])?(?<direction>[^\s""\-]+)?(?:-+|>+|<+|=+|\.|\(|\)|o|\#|\||\{|\}|\*|,)*?)\s*(?:""(?<rightcard>[\w ]+)"")?\s+(?<rightbracket>\[*)(?<right>[\w ]+)\]*\s*(?::\s*(?<label>.*))?$", RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromMilliseconds(200));
         private static readonly Regex _ports = new(@"^\s*(port |portin |portout )(?<name>.*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static readonly Regex _removeGenerics = new("\\w+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
@@ -397,6 +397,11 @@ namespace PlantUML
                                     {
                                         rc.Consumes.Add(leftComponent);
                                     }
+                                    else if (arrow.StartsWith("-", StringComparison.Ordinal) && arrow.EndsWith("-", StringComparison.Ordinal))
+                                    {
+                                        rc.Consumes.Add(leftComponent);
+                                        c.Exposes.Add(rightComponent);
+                                    }
                                 }
                                 if (arrow.EndsWith("o", StringComparison.Ordinal))
                                 {
@@ -453,6 +458,14 @@ namespace PlantUML
         {
             UMLDataType? leftComponent = diagram.Entities.Find(p => p.Name == left && string.IsNullOrEmpty(p.Alias))
                               ?? diagram.ContainedPackages.Find(p => p.Name == left);
+
+            if (leftComponent == null)
+            {
+                var ports = from o in diagram.Entities.OfType<UMLComponent>()
+                            where o.Ports.Contains(left) || o.PortsIn.Contains(left) || o.PortsOut.Contains(left)
+                            select o;
+                leftComponent = ports.FirstOrDefault();
+            }
             if (leftComponent == null)
             {
                 if (aliases.ContainsKey(left))
