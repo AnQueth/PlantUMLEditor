@@ -322,6 +322,15 @@ namespace PlantUMLEditor.Models
                 SourceName = "PlantUML"
             };
 
+            if(string.IsNullOrWhiteSpace( settings.Key) || string.IsNullOrWhiteSpace( settings.Endpoint) 
+                || string.IsNullOrWhiteSpace(settings.Deployment))
+            {
+                currentMessage.Message = "AI settings are not configured. Please set up Azure AI settings in the application settings.";
+                currentMessage.IsBusy = false;
+                IsBusy = false;
+                return;
+            }
+
             if (currentDoc is TextDocumentModel tdm)
             {
                 var aiTools = new AIToolsEditable(tdm, currentMessage, OpenDocument, FolderBase);
