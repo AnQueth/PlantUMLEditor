@@ -201,7 +201,7 @@ namespace PlantUML
                 }
             }
 
-            writer.Write(") : ");
+            writer.Write("): ");
             writer.Write(me.ReturnType.Name);
 
             var mmods = GetModifiers(me.IsStatic, me.IsAbstract);
