@@ -419,6 +419,505 @@ namespace UmlTests
         }
 
         [Test]
+        public async Task ParseArrowWithColorAndThicknessAttributes()
+        {
+            string puml = """
+            @startuml
+            component asapdb
+            component asaprep3
+            component asaprep4
+            component asaprep5
+            asapdb --[#green,thickness=2]---> asaprep3
+            asapdb --[#green,thickness=2]---> asaprep4
+            asapdb --[#green,thickness=2]---> asaprep5
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var asapdb = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asapdb");
+            var asaprep3 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep3");
+            var asaprep4 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep4");
+            var asaprep5 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep5");
+
+            Assert.That(asapdb, Is.Not.Null);
+            Assert.That(asaprep3, Is.Not.Null);
+            Assert.That(asaprep4, Is.Not.Null);
+            Assert.That(asaprep5, Is.Not.Null);
+
+            // Arrow ends with '>' so left component consumes right components
+            Assert.That(asapdb.Consumes.Contains(asaprep3), Is.True, "asapdb should consume asaprep3");
+            Assert.That(asapdb.Consumes.Contains(asaprep4), Is.True, "asapdb should consume asaprep4");
+            Assert.That(asapdb.Consumes.Contains(asaprep5), Is.True, "asapdb should consume asaprep5");
+        }
+
+        [Test]
+        public async Task ParseDirectionalArrowWithRightKeyword()
+        {
+            string puml = """
+            @startuml
+            component asapdb
+            component asaprep3
+            asapdb --[#green,thickness=2]right---> asaprep3
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var asapdb = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asapdb");
+            var asaprep3 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep3");
+
+            Assert.That(asapdb, Is.Not.Null);
+            Assert.That(asaprep3, Is.Not.Null);
+
+            // Direction keyword should not break connection parsing
+            Assert.That(asapdb.Consumes.Contains(asaprep3), Is.True, "asapdb should consume asaprep3 with directional arrow");
+        }
+
+        [Test]
+        public async Task ParseLongDashArrowConnections()
+        {
+            string puml = """
+            @startuml
+            component OnYard
+            component asapp7
+            OnYard ----- asapp7
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var onYard = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "OnYard");
+            var asapp7 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asapp7");
+
+            Assert.That(onYard, Is.Not.Null);
+            Assert.That(asapp7, Is.Not.Null);
+
+            // Long dash without arrow should create some form of connection
+            Assert.That(onYard.Consumes.Contains(asapp7) || onYard.Exposes.Contains(asapp7) || 
+                        asapp7.Consumes.Contains(onYard) || asapp7.Exposes.Contains(onYard), 
+                        Is.True, "OnYard and asapp7 should have some connection");
+        }
+
+        [Test]
+        public async Task ParseShortDashConnection()
+        {
+            string puml = """
+            @startuml
+            component asaprep3
+            component acintegrationhost
+            asaprep3 -- acintegrationhost
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var asaprep3 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep3");
+            var acintegrationhost = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acintegrationhost");
+
+            Assert.That(asaprep3, Is.Not.Null);
+            Assert.That(acintegrationhost, Is.Not.Null);
+
+            // Short dash connection should be recognized
+            Assert.That(asaprep3.Consumes.Contains(acintegrationhost) || asaprep3.Exposes.Contains(acintegrationhost) || 
+                        acintegrationhost.Consumes.Contains(asaprep3) || acintegrationhost.Exposes.Contains(asaprep3), 
+                        Is.True, "asaprep3 and acintegrationhost should have some connection");
+        }
+
+        [Test]
+        public async Task ParseSingleDashConnection()
+        {
+            string puml = """
+            @startuml
+            component acintegrationhost
+            component acdb
+            acintegrationhost - acdb
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var acintegrationhost = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acintegrationhost");
+            var acdb = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acdb");
+
+            Assert.That(acintegrationhost, Is.Not.Null);
+            Assert.That(acdb, Is.Not.Null);
+
+            // Single dash connection should be recognized
+            Assert.That(acintegrationhost.Consumes.Contains(acdb) || acintegrationhost.Exposes.Contains(acdb) || 
+                        acdb.Consumes.Contains(acintegrationhost) || acdb.Exposes.Contains(acintegrationhost), 
+                        Is.True, "acintegrationhost and acdb should have some connection");
+        }
+
+        [Test]
+        public async Task ParseArrowConnectionWithThreeComponents()
+        {
+            string puml = """
+            @startuml
+            component acintegrationhost
+            component acint1
+            acintegrationhost ---> acint1
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var acintegrationhost = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acintegrationhost");
+            var acint1 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acint1");
+
+            Assert.That(acintegrationhost, Is.Not.Null);
+            Assert.That(acint1, Is.Not.Null);
+
+            // Standard arrow should create consume relationship
+            Assert.That(acintegrationhost.Consumes.Contains(acint1), Is.True, "acintegrationhost should consume acint1");
+        }
+
+        [Test]
+        public async Task ParseComplexDiagramWithMultipleConnectionTypes()
+        {
+            string puml = """
+            @startuml
+            component asapdb
+            component asaprep3
+            component asaprep4
+            component asaprep5
+            component OnYard
+            component asapp7
+            component acintegrationhost
+            component acdb
+            component acint1
+
+            asapdb --[#green,thickness=2]---> asaprep3
+            asapdb --[#green,thickness=2]---> asaprep4
+            asapdb --[#green,thickness=2]---> asaprep5
+            OnYard ----- asapp7
+            asaprep3 -- acintegrationhost
+            asapdb --[#green,thickness=2]right---> asaprep3
+            acintegrationhost - acdb
+            acintegrationhost ---> acint1
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            // Verify all components exist
+            var asapdb = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asapdb");
+            var asaprep3 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep3");
+            var asaprep4 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep4");
+            var asaprep5 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asaprep5");
+            var onYard = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "OnYard");
+            var asapp7 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "asapp7");
+            var acintegrationhost = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acintegrationhost");
+            var acdb = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acdb");
+            var acint1 = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "acint1");
+
+            Assert.That(asapdb, Is.Not.Null);
+            Assert.That(asaprep3, Is.Not.Null);
+            Assert.That(asaprep4, Is.Not.Null);
+            Assert.That(asaprep5, Is.Not.Null);
+            Assert.That(onYard, Is.Not.Null);
+            Assert.That(asapp7, Is.Not.Null);
+            Assert.That(acintegrationhost, Is.Not.Null);
+            Assert.That(acdb, Is.Not.Null);
+            Assert.That(acint1, Is.Not.Null);
+
+            // Verify connections
+            Assert.That(asapdb.Consumes.Contains(asaprep3), Is.True);
+            Assert.That(asapdb.Consumes.Contains(asaprep4), Is.True);
+            Assert.That(asapdb.Consumes.Contains(asaprep5), Is.True);
+            Assert.That(acintegrationhost.Consumes.Contains(acint1), Is.True);
+
+            // Verify bidirectional or connection existence for undirected arrows
+            Assert.That(onYard.Consumes.Contains(asapp7) || onYard.Exposes.Contains(asapp7) || 
+                        asapp7.Consumes.Contains(onYard) || asapp7.Exposes.Contains(onYard), Is.True);
+            Assert.That(asaprep3.Consumes.Contains(acintegrationhost) || asaprep3.Exposes.Contains(acintegrationhost) || 
+                        acintegrationhost.Consumes.Contains(asaprep3) || acintegrationhost.Exposes.Contains(asaprep3), Is.True);
+            Assert.That(acintegrationhost.Consumes.Contains(acdb) || acintegrationhost.Exposes.Contains(acdb) || 
+                        acdb.Consumes.Contains(acintegrationhost) || acdb.Exposes.Contains(acintegrationhost), Is.True);
+        }
+
+        [Test]
+        public async Task ParseArrowWithMultipleAttributesCombinations()
+        {
+            string puml = """
+            @startuml
+            component A
+            component B
+            component C
+            component D
+            component E
+
+            A --[#red]---> B
+            B --[#blue,thickness=3]---> C
+            C --[bold]---> D
+            D --[dotted,#green]---> E
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var a = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "A");
+            var b = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "B");
+            var c = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "C");
+            var d = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "D");
+            var e = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "E");
+
+            Assert.That(a, Is.Not.Null);
+            Assert.That(b, Is.Not.Null);
+            Assert.That(c, Is.Not.Null);
+            Assert.That(d, Is.Not.Null);
+            Assert.That(e, Is.Not.Null);
+
+            // All arrows end with '>' so should create consume relationships
+            Assert.That(a.Consumes.Contains(b), Is.True, "A should consume B");
+            Assert.That(b.Consumes.Contains(c), Is.True, "B should consume C");
+            Assert.That(c.Consumes.Contains(d), Is.True, "C should consume D");
+            Assert.That(d.Consumes.Contains(e), Is.True, "D should consume E");
+        }
+
+        [Test]
+        public async Task ParseDirectionalArrowsWithVariousDirections()
+        {
+            string puml = """
+            @startuml
+            component A
+            component B
+            component C
+            component D
+            component E
+
+            A --right--> B
+            B --down--> C
+            C --left--> D
+            D --up--> E
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var a = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "A");
+            var b = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "B");
+            var c = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "C");
+            var d = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "D");
+            var e = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "E");
+
+            Assert.That(a, Is.Not.Null);
+            Assert.That(b, Is.Not.Null);
+            Assert.That(c, Is.Not.Null);
+            Assert.That(d, Is.Not.Null);
+            Assert.That(e, Is.Not.Null);
+
+            // Direction keywords should not break connection parsing
+            Assert.That(a.Consumes.Contains(b), Is.True, "A should consume B with right direction");
+            Assert.That(b.Consumes.Contains(c), Is.True, "B should consume C with down direction");
+            Assert.That(c.Consumes.Contains(d), Is.True, "C should consume D with left direction");
+            Assert.That(d.Consumes.Contains(e), Is.True, "D should consume E with up direction");
+        }
+
+        [Test]
+        public async Task ParseHiddenArrowConnection()
+        {
+            string puml = """
+            @startuml
+            component ICF
+            component AC
+            ICF -[hidden]-- AC
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var icf = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "ICF");
+            var ac = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "AC");
+
+            Assert.That(icf, Is.Not.Null);
+            Assert.That(ac, Is.Not.Null);
+
+            // Hidden arrows are handled by CommonParsings and added as UMLOther
+            // They should not create actual connections but should not crash the parser
+            Assert.That(diagram.Entities.Count, Is.GreaterThanOrEqualTo(2));
+        }
+
+        [Test]
+        public async Task ParseHiddenArrowWithLeftDirection()
+        {
+            string puml = """
+            @startuml
+            component ASAP
+            component Director
+            ASAP -[hidden]left- Director
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var asap = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "ASAP");
+            var director = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "Director");
+
+            Assert.That(asap, Is.Not.Null);
+            Assert.That(director, Is.Not.Null);
+
+            // Hidden arrows with direction should be parsed without creating connections
+            Assert.That(diagram.Entities.Count, Is.GreaterThanOrEqualTo(2));
+        }
+
+        [Test]
+        public async Task ParseHiddenArrowWithDownDirection()
+        {
+            string puml = """
+            @startuml
+            component AC
+            component CSA
+            AC --[hidden]down- CSA
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var ac = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "AC");
+            var csa = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "CSA");
+
+            Assert.That(ac, Is.Not.Null);
+            Assert.That(csa, Is.Not.Null);
+
+            // Hidden arrows should not create actual connections
+            Assert.That(diagram.Entities.Count, Is.GreaterThanOrEqualTo(2));
+        }
+
+        [Test]
+        public async Task ParseMultipleHiddenArrows()
+        {
+            string puml = """
+            @startuml
+            component ICF
+            component AC
+            component ASAP
+            component Director
+            component CSA
+
+            ICF -[hidden]-- AC
+            ASAP -[hidden]left- Director
+            AC --[hidden]down- CSA
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            // Verify all components exist
+            var icf = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "ICF");
+            var ac = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "AC");
+            var asap = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "ASAP");
+            var director = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "Director");
+            var csa = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "CSA");
+
+            Assert.That(icf, Is.Not.Null);
+            Assert.That(ac, Is.Not.Null);
+            Assert.That(asap, Is.Not.Null);
+            Assert.That(director, Is.Not.Null);
+            Assert.That(csa, Is.Not.Null);
+
+            // Hidden arrows should not create actual connections between components
+            // Verify no consume/expose relationships exist for hidden connections
+            Assert.That(icf.Consumes.Contains(ac), Is.False, "Hidden arrow should not create consume relationship");
+            Assert.That(icf.Exposes.Contains(ac), Is.False, "Hidden arrow should not create expose relationship");
+            Assert.That(asap.Consumes.Contains(director), Is.False, "Hidden arrow should not create consume relationship");
+            Assert.That(asap.Exposes.Contains(director), Is.False, "Hidden arrow should not create expose relationship");
+            Assert.That(ac.Consumes.Contains(csa), Is.False, "Hidden arrow should not create consume relationship");
+            Assert.That(ac.Exposes.Contains(csa), Is.False, "Hidden arrow should not create expose relationship");
+        }
+
+        [Test]
+        public async Task ParseMixedHiddenAndVisibleArrows()
+        {
+            string puml = """
+            @startuml
+            component A
+            component B
+            component C
+            component D
+
+            A --> B
+            B -[hidden]-- C
+            C --> D
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var a = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "A");
+            var b = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "B");
+            var c = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "C");
+            var d = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "D");
+
+            Assert.That(a, Is.Not.Null);
+            Assert.That(b, Is.Not.Null);
+            Assert.That(c, Is.Not.Null);
+            Assert.That(d, Is.Not.Null);
+
+            // Visible arrows should create connections
+            Assert.That(a.Consumes.Contains(b), Is.True, "Visible arrow A --> B should create connection");
+            Assert.That(c.Consumes.Contains(d), Is.True, "Visible arrow C --> D should create connection");
+
+            // Hidden arrow should not create connection
+            Assert.That(b.Consumes.Contains(c), Is.False, "Hidden arrow should not create consume relationship");
+            Assert.That(b.Exposes.Contains(c), Is.False, "Hidden arrow should not create expose relationship");
+        }
+
+        [Test]
+        public async Task ParseHiddenArrowsWithVariousDirections()
+        {
+            string puml = """
+            @startuml
+            component A
+            component B
+            component C
+            component D
+            component E
+
+            A -[hidden]right- B
+            B -[hidden]down- C
+            C -[hidden]left- D
+            D -[hidden]up- E
+            @enduml
+            """;
+
+            var diagram = await UMLComponentDiagramParser.ReadString(puml);
+            Assert.That(diagram, Is.Not.Null);
+
+            var a = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "A");
+            var b = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "B");
+            var c = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "C");
+            var d = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "D");
+            var e = diagram.Entities.OfType<UMLComponent>().FirstOrDefault(c => c.Name == "E");
+
+            Assert.That(a, Is.Not.Null);
+            Assert.That(b, Is.Not.Null);
+            Assert.That(c, Is.Not.Null);
+            Assert.That(d, Is.Not.Null);
+            Assert.That(e, Is.Not.Null);
+
+            // Hidden arrows with directions should not create any connections
+            Assert.That(a.Consumes.Contains(b) || a.Exposes.Contains(b), Is.False);
+            Assert.That(b.Consumes.Contains(c) || b.Exposes.Contains(c), Is.False);
+            Assert.That(c.Consumes.Contains(d) || c.Exposes.Contains(d), Is.False);
+            Assert.That(d.Consumes.Contains(e) || d.Exposes.Contains(e), Is.False);
+        }
+
+        [Test]
         public async Task ComponentKeywordsLikeEntityDatabaseQueueActorWork()
         {
             string puml = """
