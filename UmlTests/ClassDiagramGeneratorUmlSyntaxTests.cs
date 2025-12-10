@@ -62,7 +62,7 @@ namespace UmlTests
             var cls = new UMLClass("", "", null, false, "User", Enumerable.Empty<UMLDataType>(), new UMLInterface[0]);
             var method = new UMLMethod("getName", new StringDataType(), UMLVisibility.Public);
             cls.Methods.Add(method);
-            diagram.Package.Children.Add(cls);
+            diagram.Package.Children.Add(cls); 
 
             var result = GeneratePlantUML(diagram);
 
