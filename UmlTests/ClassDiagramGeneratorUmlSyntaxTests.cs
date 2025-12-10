@@ -35,8 +35,8 @@ namespace UmlTests
 
             var result = GeneratePlantUML(diagram);
 
-            Assert.That(result, Does.Contain("name : string"));
-            Assert.That(result, Does.Contain("+ name : string"));
+            Assert.That(result, Does.Contain("name: string"));
+            Assert.That(result, Does.Contain("+ name: string"));
         }
 
         [Test]
@@ -50,7 +50,7 @@ namespace UmlTests
 
             var result = GeneratePlantUML(diagram);
 
-            Assert.That(result, Does.Contain("count : int"));
+            Assert.That(result, Does.Contain("count: int"));
             Assert.That(result, Does.Contain("= 0"));
             Assert.That(result, Does.Contain("{static,abstract}").Or.Contains("{static}"));
         }
@@ -83,7 +83,7 @@ namespace UmlTests
 
             var result = GeneratePlantUML(diagram);
 
-            Assert.That(result, Does.Contain("setData(name : string, age : int)").Or.Contains("setData(string name, int age)") );
+            Assert.That(result, Does.Contain("setData(name: string, age: int)").Or.Contains("setData(string name, int age)") );
         }
 
         [Test]
@@ -97,7 +97,7 @@ namespace UmlTests
 
             var result = GeneratePlantUML(diagram);
 
-            Assert.That(result, Does.Contain("employees : string[*]").Or.Contains("employees : List<string>"));
+            Assert.That(result, Does.Contain("employees: string[*]").Or.Contains("employees: List<string>"));
         }
     }
 }
