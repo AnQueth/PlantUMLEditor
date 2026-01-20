@@ -231,7 +231,7 @@ namespace PlantUMLEditor.Models
             File.Copy(filePath, tmpfn, true);
 
             PlantUMLImageGenerator plantUMLImageGenerator = new(AppSettings.Default.JARLocation,
-                tmpfn, dir, true);
+                tmpfn, null, true);
             var result = await plantUMLImageGenerator.Create();
    
             if (File.Exists(tmpfn))
@@ -252,7 +252,7 @@ namespace PlantUMLEditor.Models
             [Description("the text to find")] string text,
             [Description("the new text")] string newText)
         {
-            if (_currentTdm != null && string.IsNullOrEmpty(filePath))
+            if (_currentTdm != null && (string.IsNullOrEmpty(filePath) || filePath == "current_document"))
             {
                 var original = _currentTdm.Content;
                 var found = original.Contains(text);
@@ -341,7 +341,7 @@ namespace PlantUMLEditor.Models
             [Description("the file path to rewrite if not the current document")] string filePath,
             [Description("the new text for the document")] string text)
         {
-            if (_currentTdm != null && string.IsNullOrEmpty(filePath))
+            if (_currentTdm != null && (string.IsNullOrEmpty(filePath) || filePath == "current_document"))
             {
                 var original = _currentTdm.Content;
                 _currentMessage.Undos.Add(new UndoOperation(UndoTypes.ReplaceAll, _currentTdm.FileName, original, text));

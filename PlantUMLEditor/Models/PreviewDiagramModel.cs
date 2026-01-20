@@ -315,7 +315,7 @@ namespace PlantUMLEditor.Models
                         _lastProcessed = res;
                         _lastImageData = await File.ReadAllBytesAsync(res.path, token);
 
-                        PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, dir, true);
+                        PlantUMLImageGenerator generator = new PlantUMLImageGenerator(_jarLocation, res.path, null, true);
 
                         PlantUMLImageGenerator.UMLImageCreateRecord? createResult = await generator.Create();
 
