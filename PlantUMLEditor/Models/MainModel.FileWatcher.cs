@@ -127,14 +127,17 @@ namespace PlantUMLEditor.Models
                     {
                         foreach (var p in paths)
                         {
-                            var doc = OpenDocuments.FirstOrDefault(d => string.Equals(d.FileName, p, StringComparison.Ordinal));
-                            if (doc is TextDocumentModel tdm)
+                            if (File.Exists(p))
                             {
-                               
-                              
+                                var doc = OpenDocuments.FirstOrDefault(d => string.Equals(d.FileName, p, StringComparison.Ordinal));
+                                if (doc is TextDocumentModel tdm)
+                                {
+
+
                                     tdm.Content = File.ReadAllText(p);
-                              
-                               
+
+
+                                }
                             }
                         }
                     }
